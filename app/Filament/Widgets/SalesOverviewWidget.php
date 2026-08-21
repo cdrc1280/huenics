@@ -24,28 +24,45 @@ class SalesOverviewWidget extends BaseWidget
     {
         $year = (int) ($this->selectedYear ?: now()->year);
 
-        return match ($this->periodType) {
-            'days' => [
-                $date = !empty($this->selectedDate) ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay(),
-                $date->copy()->endOfDay(),
-                $date->format('F d, Y'),
-            ],
-            'weeks' => [
-                $start = Carbon::now()->setISODate($year, $this->selectedWeek ?: now()->weekOfYear)->startOfWeek(),
-                $end = $start->copy()->endOfWeek(),
-                "Week " . ($this->selectedWeek ?: now()->weekOfYear) . " (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
-            ],
-            'years' => [
-                $start = Carbon::create($year, 1, 1)->startOfYear(),
-                $end = Carbon::create($year, 12, 31)->endOfYear(),
-                "Year {$year}",
-            ],
-            default => [
-                $start = Carbon::create($year, (int) ($this->selectedMonth ?: now()->month), 1)->startOfMonth(),
-                $end = $start->copy()->endOfMonth(),
-                $start->format('F Y'),
-            ],
-        };
+        switch ($this->periodType) {
+            case 'days':
+                $date = !empty($this->selectedDate) ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay();
+                return [
+                    $date,
+                    $date->copy()->endOfDay(),
+                    $date->format('F d, Y'),
+                ];
+
+            case 'weeks':
+                $week = (int) ($this->selectedWeek ?: now()->weekOfYear);
+                $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
+                $end = $start->copy()->endOfWeek();
+                return [
+                    $start,
+                    $end,
+                    "Week {$week} (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
+                ];
+
+            case 'years':
+                $start = Carbon::create($year, 1, 1)->startOfYear();
+                $end = Carbon::create($year, 12, 31)->endOfYear();
+                return [
+                    $start,
+                    $end,
+                    "Year {$year}",
+                ];
+
+            case 'month':
+            default:
+                $month = (int) ($this->selectedMonth ?: now()->month);
+                $start = Carbon::create($year, $month, 1)->startOfMonth();
+                $end = $start->copy()->endOfMonth();
+                return [
+                    $start,
+                    $end,
+                    $start->format('F Y'),
+                ];
+        }
     }
 
     protected function getStats(): array

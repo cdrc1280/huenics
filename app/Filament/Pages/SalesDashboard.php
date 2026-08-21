@@ -3,18 +3,22 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\SalesOverviewWidget;
-use App\Models\PurchaseOrder;
-use App\Models\Quotation;
 use App\Models\User;
 use Carbon\Carbon;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 use BackedEnum;
 
@@ -30,13 +34,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
     protected string $view                    = 'filament.pages.sales-dashboard';
     protected static ?int $navigationSort     = 1;
 
-    public string $periodType = 'month'; // 'days', 'weeks', 'month', 'years'
-    public ?string $selectedDate = null;
-    public ?int $selectedWeek = null;
-    public int $selectedMonth;
-    public int $selectedYear;
-    public ?int $selectedAgentId = null;
-    public bool $filterInhouse = false;
+    public ?array $filterData = [];
 
     public static function canAccess(): bool
     {
@@ -45,112 +43,196 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
     public function mount(): void
     {
-        $this->selectedDate  = now()->toDateString();
-        $this->selectedWeek  = now()->weekOfYear;
-        $this->selectedMonth = now()->month;
-        $this->selectedYear  = now()->year;
-
         $user = auth()->user();
-        if ($user && $user->isSalesExecutive()) {
-            $this->selectedAgentId = $user->id;
-        }
+        $defaultAgentId = ($user && $user->isSalesExecutive()) ? $user->id : null;
+
+        $this->form->fill([
+            'selectedAgentId' => $defaultAgentId,
+            'filterInhouse'   => false,
+            'periodType'      => 'month',
+            'selectedDate'    => now()->toDateString(),
+            'selectedWeek'    => (int) now()->weekOfYear,
+            'selectedMonth'   => (int) now()->month,
+            'selectedYear'    => (int) now()->year,
+        ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->statePath('filterData')
+            ->components([
+                Section::make('Sales Performance Filters')
+                    ->description('Filter leaderboard rankings and revenue KPIs by sales executive, inhouse ownership, and timeframe granularity.')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->collapsible()
+                    ->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'md' => 4,
+                            'lg' => 12,
+                        ])->schema([
+                            Select::make('selectedAgentId')
+                                ->label('Filter by S.E.')
+                                ->options(fn() => User::whereIn('role', [
+                                    User::ROLE_SALES_EXECUTIVE,
+                                    User::ROLE_ADMIN,
+                                    User::ROLE_OPERATIONS_MANAGER,
+                                ])->pluck('name', 'id'))
+                                ->placeholder('All Sales Executives')
+                                ->searchable()
+                                ->live()
+                                ->disabled(fn($get) => (bool) $get('filterInhouse'))
+                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
+
+                            Toggle::make('filterInhouse')
+                                ->label('Inhouse (Owner)')
+                                ->helperText('Filter by owner accounts')
+                                ->inline(false)
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 2]),
+
+                            ToggleButtons::make('periodType')
+                                ->label('Filter Granularity')
+                                ->options([
+                                    'days'  => 'Days',
+                                    'weeks' => 'Weeks',
+                                    'month' => 'Month',
+                                    'years' => 'Years',
+                                ])
+                                ->icons([
+                                    'days'  => 'heroicon-m-calendar',
+                                    'weeks' => 'heroicon-m-calendar-days',
+                                    'month' => 'heroicon-m-chart-bar',
+                                    'years' => 'heroicon-m-presentation-chart-line',
+                                ])
+                                ->colors([
+                                    'days'  => 'info',
+                                    'weeks' => 'warning',
+                                    'month' => 'primary',
+                                    'years' => 'success',
+                                ])
+                                ->default('month')
+                                ->inline()
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 4, 'lg' => 4]),
+
+                            DatePicker::make('selectedDate')
+                                ->label('Select Day')
+                                ->default(now()->toDateString())
+                                ->visible(fn($get) => $get('periodType') === 'days')
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
+
+                            Select::make('selectedWeek')
+                                ->label('Select Week')
+                                ->options(function ($get) {
+                                    $year = (int) ($get('selectedYear') ?: now()->year);
+                                    $weeks = [];
+                                    for ($w = 1; $w <= 52; $w++) {
+                                        $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
+                                        $wEnd = $wStart->copy()->endOfWeek();
+                                        $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
+                                    }
+                                    return $weeks;
+                                })
+                                ->default((int) now()->weekOfYear)
+                                ->visible(fn($get) => $get('periodType') === 'weeks')
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
+
+                            Select::make('selectedMonth')
+                                ->label('Month')
+                                ->options([
+                                    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                                    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                                    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
+                                ])
+                                ->default((int) now()->month)
+                                ->visible(fn($get) => $get('periodType') === 'month')
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
+
+                            Select::make('selectedYear')
+                                ->label('Year')
+                                ->options(function () {
+                                    $years = [];
+                                    for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
+                                        $years[$y] = (string) $y;
+                                    }
+                                    return $years;
+                                })
+                                ->default((int) now()->year)
+                                ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
+                                ->live()
+                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 1]),
+                        ]),
+                    ]),
+            ]);
     }
 
     public function getDateRange(): array
     {
-        $year = (int) ($this->selectedYear ?: now()->year);
+        $periodType = $this->filterData['periodType'] ?? 'month';
+        $year = (int) ($this->filterData['selectedYear'] ?? now()->year);
 
-        return match ($this->periodType) {
-            'days' => [
-                $date = !empty($this->selectedDate) ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay(),
-                $date->copy()->endOfDay(),
-                $date->format('F d, Y'),
-            ],
-            'weeks' => [
-                $start = Carbon::now()->setISODate($year, $this->selectedWeek ?: now()->weekOfYear)->startOfWeek(),
-                $end = $start->copy()->endOfWeek(),
-                "Week " . ($this->selectedWeek ?: now()->weekOfYear) . " (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
-            ],
-            'years' => [
-                $start = Carbon::create($year, 1, 1)->startOfYear(),
-                $end = Carbon::create($year, 12, 31)->endOfYear(),
-                "Year {$year}",
-            ],
-            default => [
-                $start = Carbon::create($year, (int) ($this->selectedMonth ?: now()->month), 1)->startOfMonth(),
-                $end = $start->copy()->endOfMonth(),
-                $start->format('F Y'),
-            ],
-        };
-    }
+        switch ($periodType) {
+            case 'days':
+                $date = !empty($this->filterData['selectedDate'])
+                    ? Carbon::parse($this->filterData['selectedDate'])->startOfDay()
+                    : now()->startOfDay();
+                return [
+                    $date,
+                    $date->copy()->endOfDay(),
+                    $date->format('F d, Y'),
+                ];
 
-    public function setPeriodType(string $type): void
-    {
-        $this->periodType = $type;
-    }
+            case 'weeks':
+                $week = (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear);
+                $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
+                $end = $start->copy()->endOfWeek();
+                return [
+                    $start,
+                    $end,
+                    "Week {$week} (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
+                ];
 
-    public function setToday(): void
-    {
-        $this->periodType = 'days';
-        $this->selectedDate = now()->toDateString();
-    }
+            case 'years':
+                $start = Carbon::create($year, 1, 1)->startOfYear();
+                $end = Carbon::create($year, 12, 31)->endOfYear();
+                return [
+                    $start,
+                    $end,
+                    "Year {$year}",
+                ];
 
-    public function setYesterday(): void
-    {
-        $this->periodType = 'days';
-        $this->selectedDate = now()->subDay()->toDateString();
-    }
-
-    public function setThisWeek(): void
-    {
-        $this->periodType = 'weeks';
-        $this->selectedYear = now()->year;
-        $this->selectedWeek = now()->weekOfYear;
-    }
-
-    public function setLastWeek(): void
-    {
-        $this->periodType = 'weeks';
-        $lastWeek = now()->subWeek();
-        $this->selectedYear = $lastWeek->year;
-        $this->selectedWeek = $lastWeek->weekOfYear;
-    }
-
-    public function setThisMonth(): void
-    {
-        $this->periodType = 'month';
-        $this->selectedMonth = now()->month;
-        $this->selectedYear = now()->year;
-    }
-
-    public function setThisYear(): void
-    {
-        $this->periodType = 'years';
-        $this->selectedYear = now()->year;
+            case 'month':
+            default:
+                $month = (int) ($this->filterData['selectedMonth'] ?? now()->month);
+                $start = Carbon::create($year, $month, 1)->startOfMonth();
+                $end = $start->copy()->endOfMonth();
+                return [
+                    $start,
+                    $end,
+                    $start->format('F Y'),
+                ];
+        }
     }
 
     protected function getHeaderWidgets(): array
     {
         return [
             SalesOverviewWidget::make([
-                'agentId'       => $this->selectedAgentId,
-                'isInhouse'     => $this->filterInhouse,
-                'periodType'    => $this->periodType,
-                'selectedDate'  => $this->selectedDate,
-                'selectedWeek'  => $this->selectedWeek,
-                'selectedMonth' => $this->selectedMonth,
-                'selectedYear'  => $this->selectedYear,
+                'agentId'       => $this->filterData['selectedAgentId'] ?? null,
+                'isInhouse'     => (bool) ($this->filterData['filterInhouse'] ?? false),
+                'periodType'    => $this->filterData['periodType'] ?? 'month',
+                'selectedDate'  => $this->filterData['selectedDate'] ?? now()->toDateString(),
+                'selectedWeek'  => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
+                'selectedMonth' => (int) ($this->filterData['selectedMonth'] ?? now()->month),
+                'selectedYear'  => (int) ($this->filterData['selectedYear'] ?? now()->year),
             ]),
         ];
-    }
-
-    public function getSalesAgentsProperty(): array
-    {
-        return User::whereIn('role', [
-            User::ROLE_SALES_EXECUTIVE,
-            User::ROLE_ADMIN,
-            User::ROLE_OPERATIONS_MANAGER,
-        ])->pluck('name', 'id')->toArray();
     }
 
     public function table(Table $table): Table
@@ -158,6 +240,9 @@ class SalesDashboard extends Page implements HasTable, HasForms
         [$startDate, $endDate, $periodLabel] = $this->getDateRange();
         $startStr = $startDate->toDateString();
         $endStr = $endDate->toDateString();
+
+        $selectedAgentId = $this->filterData['selectedAgentId'] ?? null;
+        $filterInhouse = (bool) ($this->filterData['filterInhouse'] ?? false);
 
         $query = User::query()
             ->whereIn('role', [
@@ -176,10 +261,10 @@ class SalesDashboard extends Page implements HasTable, HasForms
                 'purchaseOrders as period_profit' => fn($q) => $q->whereBetween('order_date', [$startStr, $endStr]),
             ], 'realized_profit');
 
-        if ($this->filterInhouse) {
+        if ($filterInhouse) {
             $query->where('is_owner', true);
-        } elseif ($this->selectedAgentId) {
-            $query->where('id', $this->selectedAgentId);
+        } elseif ($selectedAgentId) {
+            $query->where('id', $selectedAgentId);
         }
 
         return $table
