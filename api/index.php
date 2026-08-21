@@ -6,6 +6,12 @@ use Illuminate\Support\Facades\Artisan;
 
 define('LARAVEL_START', microtime(true));
 
+// Force HTTPS environment when behind Vercel edge reverse proxy
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['SERVER_PORT'] = '443';
+}
+
 // Ensure writable storage directories exist in /tmp for Vercel Serverless
 $storageDirs = [
     '/tmp/storage/app/public',

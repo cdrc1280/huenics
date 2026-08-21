@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\PurchaseOrder;
 use App\Observers\PurchaseOrderObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production & behind reverse proxies (Vercel, Cloudflare, AWS)
+        if ($this->app->environment('production') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+            URL::forceScheme('https');
+        }
+
         // Register Eloquent Observers
         PurchaseOrder::observe(PurchaseOrderObserver::class);
     }
