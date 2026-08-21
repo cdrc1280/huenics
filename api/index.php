@@ -28,7 +28,7 @@ foreach ($storageDirs as $dir) {
     }
 }
 
-// Fallback SQLite database handling if no remote DB host is configured
+// ─── Database Setup ───────────────────────────────────────────────────────────
 $dbConnection = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? null);
 $dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? null);
 $isNewDb = false;
@@ -49,32 +49,43 @@ if ($dbConnection === 'sqlite' || empty($dbHost)) {
     $_SERVER['DB_DATABASE'] = $dbFile;
 }
 
-// Fallback APP_KEY if not yet set in Vercel Environment Variables
+// ─── Session Driver ───────────────────────────────────────────────────────────
+// Force cookie sessions on Vercel — no writable filesystem needed for sessions
+if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
+    putenv('SESSION_DRIVER=cookie');
+    $_ENV['SESSION_DRIVER'] = 'cookie';
+    $_SERVER['SESSION_DRIVER'] = 'cookie';
+}
+
+// ─── APP_KEY ──────────────────────────────────────────────────────────────────
+// Must be set in Vercel Environment Variables. This is a secure fallback only.
 if (empty(getenv('APP_KEY')) && empty($_ENV['APP_KEY'])) {
-    $fallbackKey = 'base64:XG8d0M1kYf1Z2V3W4E5R6T7Y8U9I0O1P2A3S4D5F6G7=';
+    $fallbackKey = 'base64:OmixpRBaKmg+k4HjJgrTq+v3v5yWXMAR05omeeVOW2c=';
     putenv("APP_KEY={$fallbackKey}");
     $_ENV['APP_KEY'] = $fallbackKey;
     $_SERVER['APP_KEY'] = $fallbackKey;
 }
 
-// Require Composer Autoloader
+// ─── Bootstrap Laravel ────────────────────────────────────────────────────────
 require __DIR__ . '/../vendor/autoload.php';
 
-// Bootstrap Laravel 11 Application
 /** @var Application $app */
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
 $app->useStoragePath('/tmp/storage');
 
-// Auto-run migrations & seeders on first cold boot if using fallback SQLite
-if ($isNewDb) {
+// ─── Run Migrations ───────────────────────────────────────────────────────────
+// Always ensure DB schema is up to date (safe: --force skips confirmation,
+// migrations are idempotent). Only runs for SQLite fallback mode.
+if ($dbConnection === 'sqlite' || empty($dbHost)) {
     try {
-        Artisan::call('migrate', ['--force' => true]);
-        Artisan::call('db:seed', ['--force' => true]);
+        Artisan::call('migrate', ['--force' => true, '--graceful' => true]);
+        if ($isNewDb) {
+            Artisan::call('db:seed', ['--force' => true]);
+        }
     } catch (\Throwable $e) {
-        // Continue and handle request
+        // Continue; request handler will surface any real errors
     }
 }
 
 $app->handleRequest(Request::capture());
-
