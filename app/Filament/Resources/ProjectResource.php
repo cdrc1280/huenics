@@ -18,13 +18,10 @@ class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Reconciliation & Records';
-
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-briefcase';
-
+    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationLabel = 'Projects & Job Sites';
-
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function canCreate(): bool
     {

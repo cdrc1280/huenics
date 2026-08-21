@@ -21,9 +21,9 @@ class SalesDashboard extends Page implements HasTable, HasForms
     use InteractsWithTable;
     use InteractsWithForms;
 
-    protected static \BackedEnum|string|null $navigationIcon  = 'heroicon-o-chart-bar';
-    protected static \UnitEnum|string|null   $navigationGroup = 'Reports & Analytics';
-    protected static ?string $navigationLabel = 'Sales Dashboard';
+    protected static \BackedEnum|string|null $navigationIcon  = 'heroicon-o-chart-bar-square';
+    protected static \UnitEnum|string|null   $navigationGroup = 'Analytics & Dashboards';
+    protected static ?string $navigationLabel = 'Sales Analytics & Leaderboard';
     protected static ?string $title           = 'Sales & Performance Dashboard';
     protected string $view                    = 'filament.pages.sales-dashboard';
     protected static ?int $navigationSort     = 1;

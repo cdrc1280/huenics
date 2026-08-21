@@ -20,11 +20,10 @@ class VendorResource extends Resource
 {
     protected static ?string $model = Vendor::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
-
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-office-2';
-
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-storefront';
+    protected static ?string $navigationLabel = 'Vendors & Suppliers';
+    protected static ?int $navigationSort = 4;
 
     public static function canCreate(): bool
     {

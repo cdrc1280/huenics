@@ -34,9 +34,9 @@ class SalesInvoiceResource extends Resource
 {
     protected static ?string $model = SalesInvoice::class;
 
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-currency-dollar';
-    protected static UnitEnum|string|null $navigationGroup = 'Sales & Quotations';
-    protected static ?string $navigationLabel = 'Sales Invoices';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-receipt-percent';
+    protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+    protected static ?string $navigationLabel = 'Sales Invoices (SI)';
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema

@@ -18,12 +18,12 @@ class EditProfilePage extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationLabel = 'Edit Profile';
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user';
+    protected static ?string $navigationLabel = 'My Profile & E-Signature';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $slug = 'edit-profile';
-    protected static UnitEnum|string|null $navigationGroup = 'System Administration';
+    protected static UnitEnum|string|null $navigationGroup = 'System & Security';
     protected string $view = 'filament.pages.edit-profile-page';
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
 

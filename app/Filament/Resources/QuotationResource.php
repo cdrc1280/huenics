@@ -37,8 +37,8 @@ class QuotationResource extends Resource
 {
     protected static ?string $model = Quotation::class;
 
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
-    protected static UnitEnum|string|null $navigationGroup = 'Sales & Quotations';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-currency-dollar';
+    protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Quotations';
     protected static ?int $navigationSort = 1;
 

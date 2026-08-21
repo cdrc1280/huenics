@@ -20,13 +20,10 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
-
+    protected static \UnitEnum|string|null $navigationGroup = 'System & Security';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-users';
-
-    protected static ?string $navigationLabel = 'Staff & User Accounts';
-
-    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationLabel = 'User Accounts & RBAC';
+    protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
     {

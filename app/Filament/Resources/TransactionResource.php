@@ -24,11 +24,10 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Reconciliation & Records';
-
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-currency-dollar';
-
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-table-cells';
+    protected static ?string $navigationLabel = 'Master Transactions Ledger';
+    protected static ?int $navigationSort = 6;
 
     public static function canCreate(): bool
     {

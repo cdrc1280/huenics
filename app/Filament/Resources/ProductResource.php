@@ -18,10 +18,9 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Mapping';
-
+    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-cube';
-
+    protected static ?string $navigationLabel = 'Products Catalog';
     protected static ?int $navigationSort = 1;
 
     public static function canCreate(): bool

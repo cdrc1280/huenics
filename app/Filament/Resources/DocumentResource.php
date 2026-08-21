@@ -31,10 +31,9 @@ class DocumentResource extends Resource
 {
     protected static ?string $model = Document::class;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Document Ingestion';
-
+    protected static UnitEnum|string|null $navigationGroup = 'Document OCR & Ingestion';
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-arrow-up';
-
+    protected static ?string $navigationLabel = 'Upload & Ingestion Vault';
     protected static ?int $navigationSort = 1;
 
     public static function canCreate(): bool

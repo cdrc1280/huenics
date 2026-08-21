@@ -34,7 +34,7 @@ class PurchaseOrderResource extends Resource
     protected static ?string $model = PurchaseOrder::class;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-shopping-cart';
-    protected static \UnitEnum|string|null $navigationGroup = 'Sales & Quotations';
+    protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Purchase Orders';
     protected static ?int $navigationSort = 2;
 

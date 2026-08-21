@@ -32,9 +32,9 @@ class DeliveryReceiptResource extends Resource
 {
     protected static ?string $model = DeliveryReceipt::class;
 
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
-    protected static UnitEnum|string|null $navigationGroup = 'Sales & Quotations';
-    protected static ?string $navigationLabel = 'Delivery Receipts';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-truck';
+    protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+    protected static ?string $navigationLabel = 'Delivery Receipts (DR)';
     protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
