@@ -54,3 +54,8 @@ Thumbs.db
 /.zed
 /.codex
 /auth.json
+
+# Documents & Artifacts (never commit generated proposal docx/pdf to project)
+*.docx
+*.doc
+/scratch/
