@@ -26,11 +26,11 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
 {
     use InteractsWithTable, InteractsWithForms;
 
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-map-pin';
-    protected static ?string $navigationLabel = 'Fleet & Delivery Tracker';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationLabel = 'Delivery & Warranty Tracker';
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected string $view = 'filament.pages.delivery-monitoring-page';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 5;
 
     public function table(Table $table): Table
     {

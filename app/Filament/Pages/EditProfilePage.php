@@ -21,7 +21,7 @@ class EditProfilePage extends Page implements HasForms
     protected static ?string $navigationLabel = 'My Profile & E-Signature';
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $slug = 'edit-profile';
-    protected static UnitEnum|string|null $navigationGroup = 'System & Security';
+    protected static UnitEnum|string|null $navigationGroup = 'System Administration';
     protected string $view = 'filament.pages.edit-profile-page';
     protected static ?int $navigationSort = 2;
 

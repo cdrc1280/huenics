@@ -21,7 +21,7 @@ class ProductAliasResource extends Resource
 {
     protected static ?string $model = ProductAlias::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
+    protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-arrows-right-left';
     protected static ?string $navigationLabel = 'Product Aliases & Matching';
     protected static ?int $navigationSort = 2;

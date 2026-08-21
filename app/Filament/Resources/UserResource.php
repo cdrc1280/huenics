@@ -20,7 +20,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'System & Security';
+    protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'User Accounts & RBAC';
     protected static ?int $navigationSort = 1;

@@ -18,7 +18,7 @@ class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
+    protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationLabel = 'Projects & Job Sites';
     protected static ?int $navigationSort = 3;

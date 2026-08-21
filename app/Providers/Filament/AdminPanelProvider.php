@@ -35,10 +35,11 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->navigationGroups([
-                'Analytics & Dashboards',
                 'Sales & Order Lifecycle',
-                'Catalog & Master Data',
-                'System & Security',
+                'Inventory & Operations',
+                'Reports & Analytics',
+                'Master Data & Registry',
+                'System Administration',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
