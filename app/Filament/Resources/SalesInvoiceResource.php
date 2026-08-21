@@ -97,19 +97,24 @@ class SalesInvoiceResource extends Resource
                         ->label('Subtotal (₱)')
                         ->numeric()
                         ->prefix('₱')
+                        ->disabled()
+                        ->dehydrated()
                         ->default(0),
 
                     TextInput::make('vat_amount')
                         ->label('12% VAT (₱)')
                         ->numeric()
                         ->prefix('₱')
+                        ->disabled()
+                        ->dehydrated()
                         ->default(0),
 
                     TextInput::make('total_amount')
                         ->label('Total Amount (₱)')
                         ->numeric()
                         ->prefix('₱')
-                        ->required()
+                        ->disabled()
+                        ->dehydrated()
                         ->default(0),
 
                     Textarea::make('notes')
@@ -134,6 +139,8 @@ class SalesInvoiceResource extends Resource
                                 ->label('Qty')
                                 ->numeric()
                                 ->required()
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * (float) $get('unit_price'), 2)))
                                 ->columnSpan(1),
 
                             TextInput::make('unit')
@@ -147,13 +154,16 @@ class SalesInvoiceResource extends Resource
                                 ->numeric()
                                 ->prefix('₱')
                                 ->required()
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * (float) $state, 2)))
                                 ->columnSpan(1),
 
                             TextInput::make('line_total')
                                 ->label('Total')
                                 ->numeric()
                                 ->prefix('₱')
-                                ->required()
+                                ->disabled()
+                                ->dehydrated()
                                 ->columnSpan(2),
                         ])
                         ->columns(12)

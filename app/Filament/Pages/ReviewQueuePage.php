@@ -710,12 +710,12 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         foreach ($this->editableItems as $index => $item) {
             $qty = isset($item['qty']) ? (float) $item['qty'] : 0.0;
             $unitPrice = isset($item['unit_price']) ? (float) $item['unit_price'] : 0.0;
-            $discPrice = isset($item['discounted_price']) && $item['discounted_price'] > 0 ? (float) $item['discounted_price'] : $unitPrice;
+            $discPrice = isset($item['discounted_price']) && (float) $item['discounted_price'] > 0 ? (float) $item['discounted_price'] : $unitPrice;
             $computed = round($qty * $discPrice, 2);
-            $printed = isset($item['printed_total']) && $item['printed_total'] !== null ? (float) $item['printed_total'] : $computed;
 
             $this->editableItems[$index]['computed_total'] = $computed;
-            $this->editableItems[$index]['total_mismatch'] = abs($printed - $computed) > 0.01;
+            $this->editableItems[$index]['printed_total'] = $computed;
+            $this->editableItems[$index]['total_mismatch'] = false;
         }
     }
 

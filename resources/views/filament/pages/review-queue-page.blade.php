@@ -497,9 +497,9 @@
                                         <x-filament::input.wrapper size="sm" prefix="₱"
                                             :color="!empty($item['total_mismatch']) ? 'danger' : 'gray'">
                                             <x-filament::input type="number" step="0.01"
-                                                wire:model.live="editableItems.{{ $index }}.printed_total"
-                                                :disabled="$this->isReadOnly"
-                                                class="text-right font-mono text-xs font-bold" />
+                                                wire:model="editableItems.{{ $index }}.printed_total"
+                                                disabled
+                                                class="text-right font-mono text-xs font-bold bg-gray-50 dark:bg-white/5 cursor-not-allowed opacity-85" />
                                         </x-filament::input.wrapper>
                                         @if (!empty($item['total_mismatch']))
                                             <span class="mt-1 block text-right font-mono font-semibold leading-tight text-[11px] text-danger-600 dark:text-danger-400">
