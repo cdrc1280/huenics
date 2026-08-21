@@ -9,6 +9,34 @@
     },
     "routes": [
         {
+            "src": "^/css/(.*)",
+            "dest": "/css/$1"
+        },
+        {
+            "src": "^/js/(.*)",
+            "dest": "/js/$1"
+        },
+        {
+            "src": "^/fonts/(.*)",
+            "dest": "/fonts/$1"
+        },
+        {
+            "src": "^/images/(.*)",
+            "dest": "/images/$1"
+        },
+        {
+            "src": "^/build/(.*)",
+            "dest": "/build/$1"
+        },
+        {
+            "src": "^/favicon\\.ico",
+            "dest": "/favicon.ico"
+        },
+        {
+            "src": "^/robots\\.txt",
+            "dest": "/robots.txt"
+        },
+        {
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
