@@ -419,7 +419,7 @@ class DynamicDocumentParser
                     'printed_total' => $printedTotal,
                     'computed_total' => $computedTotal,
                     'total_mismatch' => $totalMismatch,
-                    'product_id' => $this->matchProductByDescription($desc, $document->vendor_id),
+                    'product_id' => $this->matchProductByDescription($desc, $document->vendor_id, $itemCode, $unitPrice, $unit),
                     'raw_line_text' => $this->sanitizeUtf8($rawLine),
                 ];
 
@@ -509,34 +509,78 @@ class DynamicDocumentParser
     }
 
     /**
-     * Normalize description and lookup product aliases.
+     * Normalize description, lookup product aliases or canonical match, and auto-create product if not existing.
      */
-    protected function matchProductByDescription(string $description, ?int $vendorId = null): ?int
+    protected function matchProductByDescription(string $description, ?int $vendorId = null, ?string $itemCode = null, ?float $unitPrice = null, ?string $unit = null): ?int
     {
-        $normalized = ProductAlias::normalize($description);
-        if (empty($normalized)) {
+        $cleanName = trim($description);
+        if (empty($cleanName)) {
             return null;
         }
 
-        // 1. Direct alias match (vendor-specific first)
-        $alias = ProductAlias::where('normalized_alias', $normalized)
-            ->where(function ($q) use ($vendorId) {
-                if ($vendorId) {
-                    $q->where('vendor_id', $vendorId)->orWhereNull('vendor_id');
-                } else {
-                    $q->whereNull('vendor_id');
-                }
-            })
-            ->first();
+        $normalized = ProductAlias::normalize($cleanName);
 
-        if ($alias) {
-            return $alias->product_id;
+        // 1. Direct alias match (vendor-specific first)
+        if (!empty($normalized)) {
+            $alias = ProductAlias::where('normalized_alias', $normalized)
+                ->where(function ($q) use ($vendorId) {
+                    if ($vendorId) {
+                        $q->where('vendor_id', $vendorId)->orWhereNull('vendor_id');
+                    } else {
+                        $q->whereNull('vendor_id');
+                    }
+                })
+                ->first();
+
+            if ($alias) {
+                return $alias->product_id;
+            }
         }
 
         // 2. Direct canonical product name match
-        $product = Product::whereRaw('LOWER(canonical_name) = ?', [Str::lower(trim($description))])->first();
+        $product = Product::whereRaw('LOWER(canonical_name) = ?', [Str::lower($cleanName)])->first();
         if ($product) {
             return $product->id;
+        }
+
+        // 3. Match by SKU / Item Code if provided
+        if (!empty($itemCode)) {
+            $productBySku = Product::where('sku', $itemCode)->first();
+            if ($productBySku) {
+                return $productBySku->id;
+            }
+        }
+
+        // 4. Auto-create product if not existing in DB so it immediately appears in the dropdown!
+        try {
+            $sku = $itemCode;
+            if ($sku && Product::where('sku', $sku)->exists()) {
+                $sku = null; // Prevent unique constraint collision
+            }
+
+            $newProduct = Product::create([
+                'canonical_name' => $cleanName,
+                'sku' => $sku,
+                'unit_default' => $unit ?: 'pcs',
+                'default_price' => $unitPrice ?: null,
+                'is_huenics_owned' => true,
+                'is_active' => true,
+            ]);
+
+            if (!empty($normalized)) {
+                ProductAlias::create([
+                    'product_id' => $newProduct->id,
+                    'alias_text' => $cleanName,
+                    'normalized_alias' => $normalized,
+                    'vendor_id' => $vendorId,
+                ]);
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('lookup_products_list');
+
+            return $newProduct->id;
+        } catch (\Throwable $e) {
+            Log::warning("Auto-creating product for line item '{$cleanName}' notice: " . $e->getMessage());
         }
 
         return null;

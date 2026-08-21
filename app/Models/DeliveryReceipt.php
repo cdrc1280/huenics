@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DeliveryReceiptStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,9 @@ class DeliveryReceipt extends Model
 {
     use HasFactory;
 
-    public const STATUS_DRAFT = 'draft';
-    public const STATUS_DELIVERED = 'delivered';
-    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_DRAFT = DeliveryReceiptStatus::Draft->value;
+    public const STATUS_DELIVERED = DeliveryReceiptStatus::Delivered->value;
+    public const STATUS_CANCELLED = DeliveryReceiptStatus::Cancelled->value;
 
     protected $fillable = [
         'dr_number',

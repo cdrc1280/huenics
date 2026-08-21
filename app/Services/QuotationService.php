@@ -159,15 +159,17 @@ class QuotationService
             // Inherit line items from quotation
             foreach ($quotation->lineItems as $item) {
                 $po->lineItems()->create([
-                    'line_no'     => $item->line_no,
-                    'product_id'  => $item->product_id,
-                    'description' => $item->description,
-                    'qty'         => $item->qty,
-                    'unit'        => $item->unit,
-                    'unit_price'  => $item->unit_price,
-                    'base_cost'   => $item->base_cost,
-                    'line_total'  => $item->line_total,
-                    'line_cost'   => round((float) $item->qty * (float) $item->base_cost, 2),
+                    'line_no'          => $item->line_no,
+                    'item_code'        => $item->item_code ?? null,
+                    'product_id'       => $item->product_id,
+                    'description'      => $item->description,
+                    'qty'              => $item->qty,
+                    'unit'             => $item->unit,
+                    'unit_price'       => $item->unit_price,
+                    'discounted_price' => $item->discounted_price ?? null,
+                    'base_cost'        => $item->base_cost,
+                    'line_total'       => $item->line_total,
+                    'line_cost'        => round((float) $item->qty * (float) $item->base_cost, 2),
                 ]);
             }
 

@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\DeliveryStatus;
+use App\Enums\PurchaseOrderStatus;
+use App\Enums\WarrantyPeriod;
+use App\Enums\WarrantyStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,44 +16,42 @@ class PurchaseOrder extends Model
     use HasFactory;
 
     // Delivery statuses
-    public const DELIVERY_PENDING   = 'pending';
-    public const DELIVERY_TRANSIT   = 'in_transit';
-    public const DELIVERY_DELIVERED = 'delivered';
-    public const DELIVERY_OVERDUE   = 'overdue';
+    public const DELIVERY_PENDING   = DeliveryStatus::Pending->value;
+    public const DELIVERY_TRANSIT   = DeliveryStatus::InTransit->value;
+    public const DELIVERY_DELIVERED = DeliveryStatus::Delivered->value;
+    public const DELIVERY_OVERDUE   = DeliveryStatus::Overdue->value;
 
-    // Warranty periods
-    public const WARRANTY_6_MONTHS = '6_months';
-    public const WARRANTY_1_YEAR   = '1_year';
-    public const WARRANTY_2_YEARS  = '2_years';
+    // Warranty periods (Strictly 2 options: 1 Year, 2 Years & 6 Months)
+    public const WARRANTY_1_YEAR            = WarrantyPeriod::OneYear->value;
+    public const WARRANTY_2_YEARS_6_MONTHS  = WarrantyPeriod::TwoYearsSixMonths->value;
 
     // Warranty statuses
-    public const WARRANTY_ACTIVE       = 'active';
-    public const WARRANTY_EXPIRING     = 'expiring_soon';
-    public const WARRANTY_EXPIRED      = 'expired';
-    public const WARRANTY_NONE         = 'no_warranty';
+    public const WARRANTY_ACTIVE       = WarrantyStatus::Active->value;
+    public const WARRANTY_EXPIRING     = WarrantyStatus::ExpiringSoon->value;
+    public const WARRANTY_EXPIRED      = WarrantyStatus::Expired->value;
+    public const WARRANTY_NONE         = WarrantyStatus::NoWarranty->value;
 
     // PO statuses
-    public const STATUS_PENDING   = 'pending_delivery';
-    public const STATUS_DELIVERED = 'delivered';
-    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_PENDING   = PurchaseOrderStatus::PendingDelivery->value;
+    public const STATUS_DELIVERED = PurchaseOrderStatus::Delivered->value;
+    public const STATUS_CANCELLED = PurchaseOrderStatus::Cancelled->value;
+    public const STATUS_REJECTED  = PurchaseOrderStatus::Rejected->value;
 
     public static function getWarrantyPeriodOptions(): array
     {
         return [
-            self::WARRANTY_1_YEAR   => '1 Year (1yr)',
-            self::WARRANTY_2_YEARS  => '2 Years (2yrs)',
-            self::WARRANTY_6_MONTHS => '6 Months',
+            self::WARRANTY_1_YEAR           => '1 Year (1 yr)',
+            self::WARRANTY_2_YEARS_6_MONTHS => '2 Years & 6 Months (2yrs and 6 months)',
         ];
     }
-
 
     public static function getWarrantyPeriodMonths(string $period): int
     {
         return match ($period) {
-            self::WARRANTY_6_MONTHS => 6,
-            self::WARRANTY_1_YEAR   => 12,
-            self::WARRANTY_2_YEARS  => 24,
-            default                 => 12,
+            self::WARRANTY_1_YEAR                                       => 12,
+            self::WARRANTY_2_YEARS_6_MONTHS, '2_years', '2yrs_6months' => 30,
+            '6_months'                                                 => 6,
+            default                                                    => 12,
         };
     }
 

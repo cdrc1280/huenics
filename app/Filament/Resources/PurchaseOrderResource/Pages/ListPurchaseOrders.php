@@ -61,12 +61,10 @@ class ListPurchaseOrders extends ListRecords
                         );
 
                         Notification::make()
-                            ->title('Purchase Order Ingested & Extracted')
-                            ->body("Extracted line items and arithmetic checks completed.")
+                            ->title('Purchase Order Uploaded & Added to List')
+                            ->body("Purchase Order extracted and added with status 'For Review'. Click 'Review & Verify' to inspect.")
                             ->success()
                             ->send();
-
-                        $this->redirect(ReviewQueuePage::getUrl(['document_id' => $document->id]));
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Upload Notice')

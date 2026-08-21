@@ -48,4 +48,13 @@ class DocumentLineItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    protected static function booted(): void
+    {
+        static::saving(function ($item) {
+            if (empty($item->description) && !empty($item->product_id)) {
+                $item->description = $item->product?->canonical_name ?? Product::find($item->product_id)?->canonical_name ?? ('Product #' . $item->product_id);
+            }
+        });
+    }
 }

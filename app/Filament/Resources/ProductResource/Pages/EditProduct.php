@@ -14,9 +14,7 @@ class EditProduct extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
+        return [];
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model

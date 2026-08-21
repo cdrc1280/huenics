@@ -14,10 +14,13 @@ use Filament\Tables\Actions\Action;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Illuminate\Database\Eloquent\Builder;
 
-use Filament\Actions\ActionGroup;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Notifications\Notification;
 use Filament\Tables\Enums\RecordActionsPosition;
 use BackedEnum;
 use UnitEnum;
@@ -63,6 +66,21 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                     }),
                 TextColumn::make('delivery_receipt_no')
                     ->label('DR #'),
+                TextColumn::make('warranty_status')
+                    ->label('Warranty')
+                    ->badge()
+                    ->formatStateUsing(fn(?string $state, $record): string => match ($state) {
+                        PurchaseOrder::WARRANTY_ACTIVE   => 'Active (' . ($record->warranty_period === PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS || $record->warranty_period === '2_years' ? '2.5 yrs' : '1 yr') . ')',
+                        PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
+                        PurchaseOrder::WARRANTY_EXPIRED  => 'Expired',
+                        default                          => 'No Warranty',
+                    })
+                    ->color(fn(?string $state): string => match ($state) {
+                        PurchaseOrder::WARRANTY_ACTIVE   => 'success',
+                        PurchaseOrder::WARRANTY_EXPIRING => 'warning',
+                        PurchaseOrder::WARRANTY_EXPIRED  => 'danger',
+                        default                          => 'gray',
+                    }),
                 TextColumn::make('realized_profit')
                     ->money('PHP')
                     ->sortable(),
@@ -76,22 +94,40 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->label('Mark Delivered')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn ($record) => $record->delivery_status !== 'delivered')
+                        ->visible(fn ($record) => $record->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
                         ->form([
-                            TextInput::make('delivery_receipt_no')
-                                ->label('DR #')
-                                ->required(),
                             DatePicker::make('actual_delivery_date')
                                 ->label('Actual Delivery Date')
                                 ->default(now())
                                 ->required(),
+                            TextInput::make('delivery_receipt_no')
+                                ->label('DR # (Delivery Receipt No.)')
+                                ->nullable(),
+                            Toggle::make('has_warranty')
+                                ->label('Include Warranty')
+                                ->default(fn($record) => $record->has_warranty ?? true)
+                                ->live(),
+                            Select::make('warranty_period')
+                                ->label('Warranty Period')
+                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                                ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                                ->visible(fn($get) => (bool) $get('has_warranty')),
                         ])
                         ->action(function ($record, array $data) {
                             $record->update([
-                                'delivery_status' => 'delivered',
-                                'delivery_receipt_no' => $data['delivery_receipt_no'],
+                                'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+                                'status'               => PurchaseOrder::STATUS_DELIVERED,
+                                'delivery_receipt_no'  => $data['delivery_receipt_no'] ?? null,
                                 'actual_delivery_date' => $data['actual_delivery_date'],
+                                'has_warranty'         => $data['has_warranty'] ?? true,
+                                'warranty_period'      => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
                             ]);
+
+                            Notification::make()
+                                ->title('Delivery Confirmed')
+                                ->body("PO {$record->po_number} marked as delivered. Inventory deducted & warranty activated.")
+                                ->success()
+                                ->send();
                         }),
                     Action::make('create_dr')
                         ->label('Create DR')

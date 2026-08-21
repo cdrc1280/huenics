@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,16 +14,16 @@ class Document extends Model
 {
     use HasFactory;
 
-    public const TYPE_PURCHASE_ORDER = 'purchase_order';
-    public const TYPE_ORDER_SLIP = 'order_slip';
-    public const TYPE_VENDORS_AGREEMENT = 'vendors_agreement';
+    public const TYPE_PURCHASE_ORDER = DocumentType::PurchaseOrder->value;
+    public const TYPE_ORDER_SLIP = DocumentType::OrderSlip->value;
+    public const TYPE_VENDORS_AGREEMENT = DocumentType::VendorsAgreement->value;
 
-    public const STATUS_UPLOADED = 'uploaded';
-    public const STATUS_PROCESSING = 'processing';
-    public const STATUS_REQUIRES_REVIEW = 'requires_review';
-    public const STATUS_VERIFIED = 'verified';
-    public const STATUS_FAILED = 'failed';
-    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_UPLOADED = DocumentStatus::Uploaded->value;
+    public const STATUS_PROCESSING = DocumentStatus::Processing->value;
+    public const STATUS_REQUIRES_REVIEW = DocumentStatus::RequiresReview->value;
+    public const STATUS_VERIFIED = DocumentStatus::Verified->value;
+    public const STATUS_FAILED = DocumentStatus::Failed->value;
+    public const STATUS_REJECTED = DocumentStatus::Rejected->value;
 
     protected $fillable = [
         'vendor_id',

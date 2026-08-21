@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->sidebarFullyCollapsibleOnDesktop()
-            ->brandName('Huenics Ingestion')
+            ->brandName('Huenics')
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Slate,

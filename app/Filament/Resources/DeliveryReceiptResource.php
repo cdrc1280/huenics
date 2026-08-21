@@ -14,7 +14,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -25,6 +24,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -45,7 +45,7 @@ class DeliveryReceiptResource extends Resource
                     TextInput::make('dr_number')
                         ->label('DR #')
                         ->required()
-                        ->default(fn () => DeliveryReceipt::generateNumber())
+                        ->default(fn() => DeliveryReceipt::generateNumber())
                         ->dehydrated(),
 
                     Select::make('purchase_order_id')
@@ -85,12 +85,8 @@ class DeliveryReceiptResource extends Resource
                                 ->label('Product')
                                 ->options(Product::pluck('canonical_name', 'id'))
                                 ->searchable()
-                                ->columnSpan(3),
-
-                            TextInput::make('description')
-                                ->label('Description')
                                 ->required()
-                                ->columnSpan(4),
+                                ->columnSpan(7),
 
                             TextInput::make('qty_delivered')
                                 ->label('Qty Delivered')
@@ -140,7 +136,7 @@ class DeliveryReceiptResource extends Resource
 
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'draft' => 'gray',
                         'delivered' => 'success',
                         'cancelled' => 'danger',
@@ -153,7 +149,7 @@ class DeliveryReceiptResource extends Resource
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('gray')
-                        ->url(fn (DeliveryReceipt $record) => route('delivery-receipts.export-pdf', $record))
+                        ->url(fn(DeliveryReceipt $record) => route('delivery-receipts.export-pdf', $record))
                         ->openUrlInNewTab(),
 
                     ViewAction::make(),

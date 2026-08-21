@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,10 @@ use Illuminate\Support\Str;
 class Transaction extends Model
 {
     use HasFactory;
+
+    public const STATUS_PENDING   = TransactionStatus::PendingDelivery->value;
+    public const STATUS_DELIVERED = TransactionStatus::Delivered->value;
+    public const STATUS_CANCELLED = TransactionStatus::Cancelled->value;
 
     protected $fillable = [
         'transaction_code',

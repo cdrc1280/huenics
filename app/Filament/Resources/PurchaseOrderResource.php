@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Models\Product;
 use App\Models\Project;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -26,6 +26,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -60,7 +61,6 @@ class PurchaseOrderResource extends Resource
         return $schema->components([
             Section::make('Purchase Order Details')
                 ->icon('heroicon-o-shopping-cart')
-                ->columns(2)
                 ->schema([
                     TextInput::make('po_number')
                         ->label('PO #')
@@ -108,7 +108,19 @@ class PurchaseOrderResource extends Resource
                             PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
                         ])
                         ->default(PurchaseOrder::DELIVERY_PENDING)
-                        ->required(),
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set, $get) {
+                            if ($state === PurchaseOrder::DELIVERY_DELIVERED) {
+                                if (!$get('actual_delivery_date')) {
+                                    $set('actual_delivery_date', now()->toDateString());
+                                }
+                                $set('status', PurchaseOrder::STATUS_DELIVERED);
+                            } else {
+                                $set('actual_delivery_date', null);
+                                $set('status', PurchaseOrder::STATUS_PENDING);
+                            }
+                        }),
 
                     Select::make('status')
                         ->label('PO Status')
@@ -118,13 +130,90 @@ class PurchaseOrderResource extends Resource
                             PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
                         ])
                         ->default(PurchaseOrder::STATUS_PENDING)
-                        ->required(),
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set, $get) {
+                            if ($state === PurchaseOrder::STATUS_DELIVERED) {
+                                $set('delivery_status', PurchaseOrder::DELIVERY_DELIVERED);
+                                if (!$get('actual_delivery_date')) {
+                                    $set('actual_delivery_date', now()->toDateString());
+                                }
+                            } elseif ($state === PurchaseOrder::STATUS_PENDING) {
+                                if ($get('delivery_status') === PurchaseOrder::DELIVERY_DELIVERED) {
+                                    $set('delivery_status', PurchaseOrder::DELIVERY_PENDING);
+                                }
+                                $set('actual_delivery_date', null);
+                            }
+                        }),
 
                     Textarea::make('notes')
                         ->label('Notes')
                         ->nullable()
                         ->columnSpanFull(),
                 ]),
+
+
+            Section::make([
+                Section::make('Delivery & Warranty')
+                    ->icon('heroicon-o-truck')
+                    ->schema([
+                        DatePicker::make('actual_delivery_date')
+                            ->label('Actual Delivery Date')
+                            ->nullable()
+                            ->live()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                if (empty($state)) {
+                                    $set('delivery_status', PurchaseOrder::DELIVERY_PENDING);
+                                    $set('status', PurchaseOrder::STATUS_PENDING);
+                                } else {
+                                    $set('delivery_status', PurchaseOrder::DELIVERY_DELIVERED);
+                                    $set('status', PurchaseOrder::STATUS_DELIVERED);
+                                }
+                            }),
+
+                        TextInput::make('delivery_receipt_no')
+                            ->label('Delivery Receipt # (DR#)')
+                            ->nullable(),
+
+                        Toggle::make('has_warranty')
+                            ->label('Has Warranty')
+                            ->default(true)
+                            ->live(),
+
+                        Select::make('warranty_period')
+                            ->label('Warranty Period')
+                            ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                            ->default(PurchaseOrder::WARRANTY_1_YEAR)
+                            ->required()
+                            ->visible(fn($get) => $get('has_warranty')),
+                    ]),
+
+                Section::make('Financials')
+                    ->icon('heroicon-o-calculator')
+                    ->schema([
+                        TextInput::make('order_amount')
+                            ->label('Order Amount (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->default(0),
+
+                        TextInput::make('computed_vat')
+                            ->label('Computed 12% VAT (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->disabled()
+                            ->dehydrated(),
+
+                        TextInput::make('realized_profit')
+                            ->label('Realized Profit (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->disabled()
+                            ->dehydrated(),
+                    ]),
+            ]),
+
+
 
             Section::make('Line Items')
                 ->icon('heroicon-o-list-bullet')
@@ -139,36 +228,38 @@ class PurchaseOrderResource extends Resource
                                 ->default(1)
                                 ->columnSpan(1),
 
+                            TextInput::make('item_code')
+                                ->label('Item Code')
+                                ->nullable()
+                                ->columnSpan(2),
+
                             Select::make('product_id')
                                 ->label('Product')
                                 ->options(Product::active()->pluck('canonical_name', 'id'))
                                 ->searchable()
-                                ->nullable()
+                                ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, $set) {
                                     if ($state) {
                                         $product = Product::find($state);
                                         if ($product) {
                                             $set('description', $product->canonical_name);
+                                            $set('item_code', $product->sku ?? null);
                                             $set('unit_price', $product->selling_price ?? $product->default_price ?? 0);
                                             $set('base_cost', $product->base_cost_price ?? 0);
                                             $set('unit', $product->unit_default ?? 'pcs');
                                         }
                                     }
                                 })
-                                ->columnSpan(3),
-
-                            TextInput::make('description')
-                                ->label('Description')
-                                ->required()
-                                ->columnSpan(4),
+                                ->columnSpan(6),
 
                             TextInput::make('qty')
                                 ->label('Qty')
                                 ->numeric()
                                 ->default(1)
+                                ->minValue(0.0001)
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * (float) $get('unit_price'), 2)))
+                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
                                 ->columnSpan(1),
 
                             TextInput::make('unit')
@@ -181,79 +272,33 @@ class PurchaseOrderResource extends Resource
                                 ->numeric()
                                 ->prefix('₱')
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * (float) $state, 2)))
+                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $state), 2)))
                                 ->columnSpan(2),
 
-                            TextInput::make('base_cost')
-                                ->label('Base Cost (₱)')
+                            TextInput::make('discounted_price')
+                                ->label('Discounted Price (₱)')
                                 ->numeric()
                                 ->prefix('₱')
-                                ->default(0)
+                                ->nullable()
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $state > 0 ? (float) $state : (float) $get('unit_price')), 2)))
                                 ->columnSpan(2),
 
                             TextInput::make('line_total')
-                                ->label('Line Total (₱)')
+                                ->label('Total (₱)')
                                 ->numeric()
                                 ->prefix('₱')
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(2),
+                                ->columnSpan(3),
                         ])
-                        ->columns(16)
+                        ->columns(9)
                         ->reorderable('line_no')
                         ->addActionLabel('+ Add Line Item')
-                        ->defaultItems(1),
-                ]),
-
-            Section::make('Delivery & Warranty')
-                ->icon('heroicon-o-truck')
-                ->columns(2)
-                ->schema([
-                    DatePicker::make('actual_delivery_date')
-                        ->label('Actual Delivery Date')
-                        ->nullable(),
-
-                    TextInput::make('delivery_receipt_no')
-                        ->label('Delivery Receipt # (DR#)')
-                        ->nullable(),
-
-                    Toggle::make('has_warranty')
-                        ->label('Has Warranty')
-                        ->default(true)
-                        ->live(),
-
-                    Select::make('warranty_period')
-                        ->label('Warranty Period')
-                        ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                        ->default(PurchaseOrder::WARRANTY_1_YEAR)
-                        ->required()
-                        ->visible(fn($get) => $get('has_warranty')),
-                ]),
-
-            Section::make('Financials')
-                ->icon('heroicon-o-calculator')
-                ->columns(3)
-                ->schema([
-                    TextInput::make('order_amount')
-                        ->label('Order Amount (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->default(0),
-
-                    TextInput::make('computed_vat')
-                        ->label('Computed 12% VAT (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->disabled()
-                        ->dehydrated(),
-
-                    TextInput::make('realized_profit')
-                        ->label('Realized Profit (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->disabled()
-                        ->dehydrated(),
-                ]),
+                        ->defaultItems(1)
+                        ->cloneable(),
+                ])
+                ->columnSpanFull(),
         ]);
     }
 
@@ -298,6 +343,23 @@ class PurchaseOrderResource extends Resource
                     ->sortable()
                     ->color(fn($state) => $state > 0 ? 'success' : 'danger')
                     ->tooltip(fn(PurchaseOrder $record): string => "Realized net profit (Order Amount minus Total Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        PurchaseOrder::STATUS_PENDING => 'Pending Delivery',
+                        PurchaseOrder::STATUS_DELIVERED => 'Delivered',
+                        PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
+                        PurchaseOrder::STATUS_REJECTED => 'Rejected',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    })
+                    ->color(fn(string $state): string => match ($state) {
+                        PurchaseOrder::STATUS_PENDING => 'warning',
+                        PurchaseOrder::STATUS_DELIVERED => 'success',
+                        PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED => 'danger',
+                        default => 'gray',
+                    }),
 
                 TextColumn::make('delivery_status')
                     ->label('Delivery')
@@ -385,6 +447,25 @@ class PurchaseOrderResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('review')
+                        ->label('Review & Verify')
+                        ->icon('heroicon-m-clipboard-document-check')
+                        ->color('warning')
+                        ->tooltip('Review, verify math and reconcile purchase order line items')
+                        ->visible(fn(PurchaseOrder $r): bool => !empty($r->document_id) || $r->status === PurchaseOrder::STATUS_PENDING)
+                        ->url(function (PurchaseOrder $record) {
+                            if ($record->document_id) {
+                                return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
+                            }
+                            return null;
+                        })
+                        ->action(function (PurchaseOrder $record) {
+                            if ($record->document_id) {
+                                return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
+                            }
+                            Notification::make()->title('No attached document for review')->info()->send();
+                        }),
+
                     Action::make('mark_delivered')
                         ->label('Mark Delivered')
                         ->icon('heroicon-m-truck')
@@ -400,13 +481,26 @@ class PurchaseOrderResource extends Resource
                             TextInput::make('delivery_receipt_no')
                                 ->label('DR# (Delivery Receipt No.)')
                                 ->nullable(),
+
+                            Toggle::make('has_warranty')
+                                ->label('Include Warranty')
+                                ->default(fn(PurchaseOrder $r) => $r->has_warranty ?? true)
+                                ->live(),
+
+                            Select::make('warranty_period')
+                                ->label('Warranty Period')
+                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                                ->default(fn(PurchaseOrder $r) => $r->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                                ->visible(fn($get) => (bool) $get('has_warranty')),
                         ])
                         ->action(function (PurchaseOrder $record, array $data) {
                             $record->update([
-                                'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+                                'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
                                 'actual_delivery_date' => $data['actual_delivery_date'],
-                                'delivery_receipt_no' => $data['delivery_receipt_no'] ?? null,
-                                'status' => PurchaseOrder::STATUS_DELIVERED,
+                                'delivery_receipt_no'  => $data['delivery_receipt_no'] ?? null,
+                                'has_warranty'         => $data['has_warranty'] ?? true,
+                                'warranty_period'      => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
+                                'status'               => PurchaseOrder::STATUS_DELIVERED,
                             ]);
 
                             Notification::make()

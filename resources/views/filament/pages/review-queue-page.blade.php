@@ -17,7 +17,7 @@
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <x-filament::button type="button" wire:click="closeWorkspace" color="gray"
                             icon="heroicon-m-arrow-left" size="sm" outlined>
-                            Back to Queue
+                            Back to {{ $currentDocument->document_type === 'vendors_agreement' ? 'Quotations' : 'Purchase Orders' }}
                         </x-filament::button>
 
                         <div class="h-5 w-px bg-gray-200 dark:bg-gray-700"></div>
@@ -353,139 +353,165 @@
             {{-- BOTTOM STACK: EXTRACTED LINE ITEMS, RECONCILIATION, CROSS-REF, & ACTION BUTTONS --}}
             <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem;">
 
-                {{-- SECTION 2: EXTRACTED LINE ITEMS --}}
-                <x-filament::section>
+                {{-- SECTION 2: EXTRACTED LINE ITEMS (Outer Encapsulating Section) --}}
+                <x-filament::section icon="heroicon-o-list-bullet">
                     <x-slot name="heading">
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        <span class="text-sm font-semibold tracking-tight text-gray-950 dark:text-white">
                             Extracted Line Items ({{ count($editableItems) }})
                         </span>
                     </x-slot>
 
-                    @if (!$this->isReadOnly)
-                        <x-slot name="headerEnd">
-                            <x-filament::button type="button" wire:click="addLineItem" size="xs" color="primary"
-                                icon="heroicon-m-plus">
-                                Add Line
-                            </x-filament::button>
-                        </x-slot>
-                    @endif
-
-                    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-                        <table class="w-full min-w-[960px] border-collapse text-left text-xs">
-                            <thead>
-                                <tr
-                                    class="whitespace-nowrap border-b border-gray-200 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:border-gray-800 dark:bg-gray-900/60">
-                                    <th class="w-10 px-3 py-3 text-center">#</th>
-                                    <th class="w-36 px-2 py-3">Item Code</th>
-                                    <th class="min-w-[280px] px-2 py-3">Product Description</th>
-                                    <th class="w-20 px-2 py-3 text-right">Qty</th>
-                                    <th class="w-16 px-2 py-3 text-center">Unit</th>
-                                    <th class="w-28 px-2 py-3 text-right">Unit Price</th>
-                                    <th class="w-28 px-2 py-3 text-right">Disc Price</th>
-                                    <th class="w-32 px-2 py-3 text-right">Total</th>
-                                    @if (!$this->isReadOnly)
-                                        <th class="w-10 px-2 py-3 text-center"></th>
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        @forelse($editableItems as $index => $item)
+                            <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                <x-filament::section compact>
+                                    @if (!empty($item['total_mismatch']))
+                                        <x-slot name="heading">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-400 dark:border-red-800/60">
+                                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-3 w-3 text-red-500" />
+                                                Discrepancy Flagged
+                                            </span>
+                                        </x-slot>
                                     @endif
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
-                                @forelse($editableItems as $index => $item)
-                                    <tr
-                                        class="{{ !empty($item['total_mismatch']) ? 'bg-red-500/5 dark:bg-red-950/20' : '' }} align-middle transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
-                                        <td
-                                            class="px-3 py-3 text-center font-mono text-xs font-semibold text-gray-400">
-                                            {{ $item['line_no'] ?? $index + 1 }}
-                                        </td>
-                                        <td class="px-2 py-2.5">
+
+                                    <x-slot name="headerEnd">
+                                        @if (!$this->isReadOnly)
+                                            <x-filament::dropdown placement="bottom-end">
+                                                <x-slot name="trigger">
+                                                    <x-filament::icon-button icon="heroicon-m-ellipsis-vertical" color="gray" size="sm"
+                                                        tooltip="Item Actions" label="Actions" />
+                                                </x-slot>
+
+                                                <x-filament::dropdown.list>
+                                                    <x-filament::dropdown.list.item wire:click="cloneLineItem({{ $index }})"
+                                                        icon="heroicon-m-document-duplicate" color="info">
+                                                        Duplicate Item
+                                                    </x-filament::dropdown.list.item>
+
+                                                    <x-filament::dropdown.list.item wire:click="removeLineItem({{ $index }})"
+                                                        icon="heroicon-m-trash" color="danger">
+                                                        Delete Item
+                                                    </x-filament::dropdown.list.item>
+                                                </x-filament::dropdown.list>
+                                            </x-filament::dropdown>
+                                        @endif
+                                    </x-slot>
+
+                                    {{-- ROW 1: Product Identification (1:2:6 = 9fr total) --}}
+                                    <div style="display: grid; grid-template-columns: 1fr 2fr 6fr; gap: 0.875rem; align-items: start; margin-bottom: 0.75rem;">
+                                        <div>
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">#</label>
+                                            <x-filament::input.wrapper size="sm">
+                                                <x-filament::input type="number"
+                                                    wire:model.live="editableItems.{{ $index }}.line_no"
+                                                    :disabled="$this->isReadOnly"
+                                                    class="text-center font-mono text-xs font-semibold" />
+                                            </x-filament::input.wrapper>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Item Code</label>
                                             <x-filament::input.wrapper size="sm">
                                                 <x-filament::input type="text"
                                                     wire:model.live="editableItems.{{ $index }}.material_code"
                                                     :disabled="$this->isReadOnly"
-                                                    class="font-mono text-xs font-semibold" placeholder="Item Code" />
+                                                    class="font-mono text-xs font-semibold"
+                                                    placeholder="Item Code" />
                                             </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Product</label>
                                             <x-filament::input.wrapper size="sm">
-                                                <x-filament::input type="text"
-                                                    wire:model.live="editableItems.{{ $index }}.description"
+                                                <x-filament::input.select wire:model.live="editableItems.{{ $index }}.product_id"
+                                                    wire:change="onProductSelected({{ $index }}, $event.target.value)"
                                                     :disabled="$this->isReadOnly"
-                                                    class="text-xs" placeholder="Product Description" />
+                                                    class="text-xs">
+                                                    <option value="">Select a product</option>
+                                                    @foreach ($this->products as $pId => $pName)
+                                                        <option value="{{ $pId }}">{{ $pName }}</option>
+                                                    @endforeach
+                                                </x-filament::input.select>
                                             </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
-                                            <x-filament::input.wrapper size="sm">
-                                                <x-filament::input type="number" step="any"
-                                                    wire:model.live="editableItems.{{ $index }}.qty"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-right font-mono text-xs font-semibold" />
-                                            </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
-                                            <x-filament::input.wrapper size="sm">
-                                                <x-filament::input type="text"
-                                                    wire:model.live="editableItems.{{ $index }}.unit"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-center text-xs font-medium uppercase" />
-                                            </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
-                                            <x-filament::input.wrapper size="sm" prefix="₱">
-                                                <x-filament::input type="number" step="0.01"
-                                                    wire:model.live="editableItems.{{ $index }}.unit_price"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-right font-mono text-xs" />
-                                            </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
-                                            <x-filament::input.wrapper size="sm" prefix="₱">
-                                                <x-filament::input type="number" step="0.01"
-                                                    wire:model.live="editableItems.{{ $index }}.discounted_price"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-right font-mono text-xs font-semibold text-amber-600 dark:text-amber-400" />
-                                            </x-filament::input.wrapper>
-                                        </td>
-                                        <td class="px-2 py-2.5">
-                                            <x-filament::input.wrapper size="sm" prefix="₱"
-                                                :color="!empty($item['total_mismatch']) ? 'danger' : 'gray'">
-                                                <x-filament::input type="number" step="0.01"
-                                                    wire:model.live="editableItems.{{ $index }}.printed_total"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-right font-mono text-xs font-bold" />
-                                            </x-filament::input.wrapper>
-                                            @if (!empty($item['total_mismatch']))
-                                                <span
-                                                    class="mt-1 block text-right font-medium leading-tight text-[10px] text-red-500 dark:text-red-400">
-                                                    Computed: ₱{{ number_format($item['computed_total'], 2) }}
-                                                </span>
-                                            @endif
-                                        </td>
-                                        @if (!$this->isReadOnly)
-                                            <td class="px-2 py-2.5 text-center">
-                                                <button type="button" wire:click="removeLineItem({{ $index }})"
-                                                    class="rounded-md p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40"
-                                                    title="Remove Line">
-                                                    <x-filament::icon icon="heroicon-m-trash" class="h-4 w-4" />
-                                                </button>
-                                            </td>
+                                        </div>
+                                    </div>
+
+                                {{-- Visual Divider Between Header Info and Pricing --}}
+                                <div style="border-top: 1px dashed rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0.875rem 0;"></div>
+
+                                {{-- ROW 2: Pricing, Quantities & Line Totals (1:1:2:2:3) --}}
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 2fr 3fr; gap: 0.875rem; align-items: start;">
+                                    <div>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Qty</label>
+                                        <x-filament::input.wrapper size="sm">
+                                            <x-filament::input type="number" step="any" min="0.0001"
+                                                wire:model.live="editableItems.{{ $index }}.qty"
+                                                :disabled="$this->isReadOnly"
+                                                class="text-right font-mono text-xs font-semibold" />
+                                        </x-filament::input.wrapper>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Unit</label>
+                                        <x-filament::input.wrapper size="sm">
+                                            <x-filament::input type="text"
+                                                wire:model.live="editableItems.{{ $index }}.unit"
+                                                :disabled="$this->isReadOnly"
+                                                class="text-center text-xs font-medium uppercase"
+                                                placeholder="pcs" />
+                                        </x-filament::input.wrapper>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Unit Price (₱)</label>
+                                        <x-filament::input.wrapper size="sm" prefix="₱">
+                                            <x-filament::input type="number" step="0.01"
+                                                wire:model.live="editableItems.{{ $index }}.unit_price"
+                                                :disabled="$this->isReadOnly"
+                                                class="text-right font-mono text-xs font-semibold" />
+                                        </x-filament::input.wrapper>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 mb-1.5">Discounted Price (₱)</label>
+                                        <x-filament::input.wrapper size="sm" prefix="₱">
+                                            <x-filament::input type="number" step="0.01"
+                                                wire:model.live="editableItems.{{ $index }}.discounted_price"
+                                                :disabled="$this->isReadOnly"
+                                                class="text-right font-mono text-xs font-semibold text-amber-600 dark:text-amber-400" />
+                                        </x-filament::input.wrapper>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Total (₱)</label>
+                                        <x-filament::input.wrapper size="sm" prefix="₱"
+                                            :color="!empty($item['total_mismatch']) ? 'danger' : 'gray'">
+                                            <x-filament::input type="number" step="0.01"
+                                                wire:model.live="editableItems.{{ $index }}.printed_total"
+                                                :disabled="$this->isReadOnly"
+                                                class="text-right font-mono text-xs font-bold" />
+                                        </x-filament::input.wrapper>
+                                        @if (!empty($item['total_mismatch']))
+                                            <span class="mt-1 block text-right font-mono font-semibold leading-tight text-[11px] text-red-500 dark:text-red-400">
+                                                Computed: ₱{{ number_format($item['computed_total'], 2) }}
+                                            </span>
                                         @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ $this->isReadOnly ? '8' : '9' }}"
-                                            class="p-8 text-center text-xs italic text-gray-400">
-                                            No line items extracted.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+                            </x-filament::section>
+                        </div>
+                    @empty
+                            <div class="rounded-xl border border-dashed border-gray-200 p-8 text-center text-xs italic text-gray-400 dark:border-gray-800">
+                                No line items extracted.
+                            </div>
+                        @endforelse
                     </div>
 
-                    {{-- Repeater Add Button (Hidden in Read-Only Mode) --}}
+                    {{-- Centered Add Line Item Button at Bottom --}}
                     @if (!$this->isReadOnly)
-                        <div class="mt-4 flex justify-center">
-                            <x-filament::button type="button" wire:click="addLineItem" size="sm" color="gray"
-                                icon="heroicon-m-plus-circle" class="shadow-sm">
+                        <div style="display: flex; justify-content: center; align-items: center; margin-top: 1.5rem;">
+                            <x-filament::button type="button" wire:click="addLineItem" size="sm" color="primary"
+                                icon="heroicon-m-plus">
                                 Add Line Item
                             </x-filament::button>
                         </div>
@@ -609,12 +635,49 @@
                             @endif
 
                             @if (auth()->user()?->canVerifyDocuments())
-                                <x-filament::button type="button" wire:click="rejectDocument" color="danger"
-                                    icon="heroicon-m-x-circle" size="sm"
-                                    wire:confirm="Are you sure you want to mark this document as rejected?"
-                                    title="Reject this document and remove it from the active review queue">
-                                    Reject Document
-                                </x-filament::button>
+                                <x-filament::modal id="reject-document-modal" width="md" icon="heroicon-o-exclamation-triangle" icon-color="danger">
+                                    <x-slot name="trigger">
+                                        <x-filament::button type="button" color="danger"
+                                            icon="heroicon-m-x-circle" size="sm"
+                                            title="Reject this document and remove it from the active review queue">
+                                            Reject Document
+                                        </x-filament::button>
+                                    </x-slot>
+
+                                    <x-slot name="heading">
+                                        Reject Document Confirmation
+                                    </x-slot>
+
+                                    <x-slot name="description">
+                                        Are you sure you want to mark this document as rejected? This will remove the document from the active review queue.
+                                    </x-slot>
+
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                            Reason for Rejection (Optional)
+                                        </label>
+                                        <x-filament::input.wrapper size="sm">
+                                            <x-filament::input type="text"
+                                                wire:model="rejectionReason"
+                                                placeholder="e.g. Incomplete pricing, illegible scan, duplicate upload" />
+                                        </x-filament::input.wrapper>
+                                    </div>
+
+                                    <x-slot name="footer">
+                                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; width: 100%;">
+                                            <x-filament::button type="button" color="gray"
+                                                x-on:click="$dispatch('close-modal', { id: 'reject-document-modal' })">
+                                                Cancel
+                                            </x-filament::button>
+
+                                            <x-filament::button type="button" color="danger"
+                                                wire:click="rejectDocument"
+                                                icon="heroicon-m-x-circle">
+                                                Confirm Rejection
+                                            </x-filament::button>
+                                        </div>
+                                    </x-slot>
+                                </x-filament::modal>
                             @endif
                         </div>
 
@@ -636,7 +699,6 @@
                 </x-filament::section>
 
             </div>
-        </div>
         </div>
     @endif
 </x-filament-panels::page>

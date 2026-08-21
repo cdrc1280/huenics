@@ -14,11 +14,13 @@ class PurchaseOrderLineItem extends Model
     protected $fillable = [
         'purchase_order_id',
         'line_no',
+        'item_code',
         'product_id',
         'description',
         'qty',
         'unit',
         'unit_price',
+        'discounted_price',
         'base_cost',
         'line_total',
         'line_cost',
@@ -27,11 +29,12 @@ class PurchaseOrderLineItem extends Model
     protected function casts(): array
     {
         return [
-            'qty'        => 'decimal:4',
-            'unit_price' => 'decimal:2',
-            'base_cost'  => 'decimal:2',
-            'line_total' => 'decimal:2',
-            'line_cost'  => 'decimal:2',
+            'qty'              => 'decimal:4',
+            'unit_price'       => 'decimal:2',
+            'discounted_price' => 'decimal:2',
+            'base_cost'        => 'decimal:2',
+            'line_total'       => 'decimal:2',
+            'line_cost'        => 'decimal:2',
         ];
     }
 
@@ -48,6 +51,15 @@ class PurchaseOrderLineItem extends Model
     public function selectedComponents(): HasMany
     {
         return $this->hasMany(PoItemSelectedComponent::class, 'po_line_item_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function ($item) {
+            if (empty($item->description) && !empty($item->product_id)) {
+                $item->description = $item->product?->canonical_name ?? Product::find($item->product_id)?->canonical_name ?? ('Product #' . $item->product_id);
+            }
+        });
     }
 
     public function recompute(): void

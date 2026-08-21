@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
@@ -12,7 +14,11 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ProductResource extends Resource
 {
@@ -101,61 +107,61 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product_code')
+                TextColumn::make('product_code')
                     ->label('Code / SKU')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
                     ->default('—')
-                    ->tooltip(fn (Product $record): string => "Product Code: " . ($record->product_code ?: 'N/A')),
+                    ->tooltip(fn(Product $record): string => "Product Code: " . ($record->product_code ?: 'N/A')),
 
-                Tables\Columns\TextColumn::make('canonical_name')
+                TextColumn::make('canonical_name')
                     ->label('Product Name')
                     ->searchable()
                     ->sortable()
-                    ->tooltip(fn (Product $record): string => "Canonical Name: {$record->canonical_name}"),
+                    ->tooltip(fn(Product $record): string => "Canonical Name: {$record->canonical_name}"),
 
-                Tables\Columns\TextColumn::make('category')
+                TextColumn::make('category')
                     ->label('Category')
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->default('General')
-                    ->tooltip(fn (Product $record): string => "Product Category: " . ($record->category ?: 'General')),
+                    ->tooltip(fn(Product $record): string => "Product Category: " . ($record->category ?: 'General')),
 
-                Tables\Columns\IconColumn::make('is_huenics_owned')
+                IconColumn::make('is_huenics_owned')
                     ->label('Huenics Stock')
                     ->boolean()
                     ->trueIcon('heroicon-s-check-badge')
                     ->falseIcon('heroicon-o-cube-transparent')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->tooltip(fn (Product $record): string => $record->is_huenics_owned ? 'Huenics Proprietary Product: In-house inventory tracked' : 'Third-Party Product'),
+                    ->tooltip(fn(Product $record): string => $record->is_huenics_owned ? 'Huenics Proprietary Product: In-house inventory tracked' : 'Third-Party Product'),
 
-                Tables\Columns\IconColumn::make('is_composite')
+                IconColumn::make('is_composite')
                     ->label('Modular BOM')
                     ->boolean()
                     ->trueIcon('heroicon-s-puzzle-piece')
                     ->falseIcon('heroicon-o-minus')
                     ->trueColor('primary')
                     ->falseColor('gray')
-                    ->tooltip(fn (Product $record): string => $record->is_composite ? 'Modular BOM: Assembled from configurable sub-components' : 'Standard Unit Product'),
+                    ->tooltip(fn(Product $record): string => $record->is_composite ? 'Modular BOM: Assembled from configurable sub-components' : 'Standard Unit Product'),
 
-                Tables\Columns\TextColumn::make('base_cost_price')
+                TextColumn::make('base_cost_price')
                     ->label('Cost (₱)')
                     ->money('PHP')
                     ->sortable()
-                    ->tooltip(fn (Product $record): string => "Base acquisition/manufacturing cost: ₱" . number_format((float) $record->base_cost_price, 2)),
+                    ->tooltip(fn(Product $record): string => "Base acquisition/manufacturing cost: ₱" . number_format((float) $record->base_cost_price, 2)),
 
-                Tables\Columns\TextColumn::make('selling_price')
+                TextColumn::make('selling_price')
                     ->label('Selling Price (₱)')
                     ->money('PHP')
                     ->sortable()
                     ->weight('bold')
                     ->color('success')
-                    ->tooltip(fn (Product $record): string => "Standard catalogue selling price: ₱" . number_format((float) $record->selling_price, 2)),
+                    ->tooltip(fn(Product $record): string => "Standard catalogue selling price: ₱" . number_format((float) $record->selling_price, 2)),
 
-                Tables\Columns\TextColumn::make('unit_default')
+                TextColumn::make('unit_default')
                     ->label('Unit')
                     ->tooltip('Default unit of measure (e.g. pcs, sets, meters)'),
             ])
@@ -167,8 +173,11 @@ class ProductResource extends Resource
                     ->label('Modular BOM Only'),
             ])
             ->actions([
-                EditAction::make(),
-            ])
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

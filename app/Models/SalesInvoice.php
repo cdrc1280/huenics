@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SalesInvoiceStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,10 @@ class SalesInvoice extends Model
 {
     use HasFactory;
 
-    public const STATUS_UNPAID = 'unpaid';
-    public const STATUS_PARTIAL = 'partial';
-    public const STATUS_PAID = 'paid';
+    public const STATUS_UNPAID = SalesInvoiceStatus::Unpaid->value;
+    public const STATUS_PARTIAL = SalesInvoiceStatus::Partial->value;
+    public const STATUS_PAID = SalesInvoiceStatus::Paid->value;
+    public const STATUS_CANCELLED = SalesInvoiceStatus::Cancelled->value;
 
     protected $fillable = [
         'si_number',

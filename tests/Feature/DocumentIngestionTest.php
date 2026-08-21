@@ -202,6 +202,38 @@ class DocumentIngestionTest extends TestCase
         $this->assertNotNull($quotation);
         $this->assertEquals(Quotation::STATUS_APPROVED, $quotation->status);
     }
+
+    public function test_ingesting_document_with_new_product_auto_creates_product_in_database_and_links_it(): void
+    {
+        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+        $doc = Document::create([
+            'vendor_id' => $this->vendor->id,
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->user->id,
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => 'QT-AUTO-PRODUCT-99',
+            'original_filename' => 'AutoProduct.pdf',
+            'disk_path' => 'documents/uploads/autoproduct.pdf',
+            'file_hash' => 'hash_autoproduct_test_99',
+            'status' => Document::STATUS_UPLOADED,
+        ]);
+
+        $fullText = "VENDORS AGREEMENT\nCustomer: Test Client\nHISI-MTL-99W High Power LED Floodlight\n10 pcs 1500.00 15000.00\nTotal: 15000.00";
+        $lines = explode("\n", $fullText);
+
+        $reflection = new \ReflectionClass($parser);
+        $method = $reflection->getMethod('extractLineItems');
+        $method->setAccessible(true);
+        $lineItems = $method->invoke($parser, null, $fullText, $lines, $doc);
+
+        $this->assertNotEmpty($lineItems);
+        $this->assertNotNull($lineItems[0]['product_id']);
+
+        $createdProduct = Product::find($lineItems[0]['product_id']);
+        $this->assertNotNull($createdProduct);
+        $this->assertEquals(1500.00, (float) $createdProduct->default_price);
+        $this->assertEquals('pcs', $createdProduct->unit_default);
+    }
 }
 
 

@@ -9,15 +9,15 @@ use App\Models\Document;
 use App\Models\Product;
 use App\Models\ProductAlias;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
+use App\Models\Quotation;
 use App\Models\Transaction;
 use App\Models\Vendor;
 use App\Services\DocumentParsers\DynamicDocumentParser;
-use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -25,6 +25,7 @@ use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -34,10 +35,11 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     use InteractsWithTable;
     use InteractsWithForms;
 
+    protected static bool $shouldRegisterNavigation = false;
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Document Verification Queue';
-    protected static ?string $title = 'Document Verification & Review Queue';
+    protected static ?string $title = 'Document Verification & Review';
     protected string $view = 'filament.pages.review-queue-page';
     protected static ?int $navigationSort = 3;
 
@@ -88,6 +90,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     // Real-Time Synchronized Preview State
     public string $previewMode = 'live'; // 'live' or 'pdf'
     public array $originalState = [];
+    public ?string $rejectionReason = '';
 
     public function setPreviewMode(string $mode): void
     {
@@ -251,8 +254,8 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                     ->badge()
                     ->color(fn(string $state): string => $state === 'Clean Math' ? 'success' : 'danger')
                     ->icon(fn(string $state): string => $state === 'Clean Math' ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-triangle')
-                    ->tooltip(fn(Document $record): string => $record->hasMismatches() 
-                        ? 'Discrepancies detected: Click "Verify & Reconcile" to review line arithmetic (.85 error) and 12% PH VAT accuracy.' 
+                    ->tooltip(fn(Document $record): string => $record->hasMismatches()
+                        ? 'Discrepancies detected: Click "Verify & Reconcile" to review line arithmetic (.85 error) and 12% PH VAT accuracy.'
                         : 'All line calculations, arithmetic sums, and 12% Philippine VAT match perfectly.'),
 
                 Tables\Columns\TextColumn::make('status')
@@ -310,19 +313,19 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
                 Tables\Filters\SelectFilter::make('vendor_id')
                     ->label('Vendor')
-                    ->options(fn () => $this->vendors),
+                    ->options(fn() => $this->vendors),
 
                 Tables\Filters\SelectFilter::make('project_id')
                     ->label('Project')
-                    ->options(fn () => $this->projects),
+                    ->options(fn() => $this->projects),
             ])
             ->actions([
                 ActionGroup::make([
                     Action::make('verify_workspace')
-                        ->label(fn () => auth()->user()?->canVerifyDocuments() ? 'Verify & Reconcile' : 'View & Check Math')
-                        ->icon(fn () => auth()->user()?->canVerifyDocuments() ? 'heroicon-m-check-badge' : 'heroicon-m-eye')
-                        ->color(fn () => auth()->user()?->canVerifyDocuments() ? 'primary' : 'info')
-                        ->tooltip(fn () => auth()->user()?->canVerifyDocuments() ? 'Open the interactive split-screen PDF verification workspace' : 'View document extraction and arithmetic status (Viewing Mode)')
+                        ->label(fn() => auth()->user()?->canVerifyDocuments() ? 'Verify & Reconcile' : 'View & Check Math')
+                        ->icon(fn() => auth()->user()?->canVerifyDocuments() ? 'heroicon-m-check-badge' : 'heroicon-m-eye')
+                        ->color(fn() => auth()->user()?->canVerifyDocuments() ? 'primary' : 'info')
+                        ->tooltip(fn() => auth()->user()?->canVerifyDocuments() ? 'Open the interactive split-screen PDF verification workspace' : 'View document extraction and arithmetic status (Viewing Mode)')
                         ->action(fn(Document $record) => $this->loadDocument($record->id)),
 
                     Action::make('quick_approve')
@@ -488,8 +491,19 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function closeWorkspace(): void
     {
+        $docType = $this->currentDocument?->document_type;
         $this->selectedDocumentId = null;
         $this->currentDocument = null;
+
+        if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
+            $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
+            return;
+        } elseif (in_array($docType, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
+            $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
+            return;
+        }
+
+        $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
     }
 
     public function loadNextDocument(): void
@@ -669,11 +683,23 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function updating($property): void
     {
-        if (in_array($property, [
-            'documentNumber', 'documentDate', 'customerName', 'customerCompany',
-            'projectName', 'projectLocation', 'phoneNo', 'vendorId', 'projectId',
-            'printedSubtotal', 'printedVat', 'printedTotal', 'negotiatedAmount'
-        ]) || str_starts_with($property, 'editableItems')) {
+        if (
+            in_array($property, [
+                'documentNumber',
+                'documentDate',
+                'customerName',
+                'customerCompany',
+                'projectName',
+                'projectLocation',
+                'phoneNo',
+                'vendorId',
+                'projectId',
+                'printedSubtotal',
+                'printedVat',
+                'printedTotal',
+                'negotiatedAmount'
+            ]) || str_starts_with($property, 'editableItems')
+        ) {
             $this->pushStateToUndo();
         }
     }
@@ -713,6 +739,44 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         ];
     }
 
+    public function cloneLineItem(int $index): void
+    {
+        if (isset($this->editableItems[$index])) {
+            $this->pushStateToUndo();
+            $item = $this->editableItems[$index];
+            $item['id'] = null;
+
+            array_splice($this->editableItems, $index + 1, 0, [$item]);
+            $this->reindexLineNumbers();
+            $this->updatedEditableItems();
+        }
+    }
+
+    public function onProductSelected(int $index, $productId): void
+    {
+        if (isset($this->editableItems[$index]) && $productId) {
+            $product = Product::find($productId);
+            if ($product) {
+                $this->pushStateToUndo();
+                $this->editableItems[$index]['product_id'] = $product->id;
+                $this->editableItems[$index]['description'] = $product->canonical_name;
+                $this->editableItems[$index]['unit_price'] = (float) ($product->selling_price ?? $product->default_price ?? 0);
+                $this->editableItems[$index]['unit'] = $product->unit_default ?? 'pcs';
+                if (empty($this->editableItems[$index]['discounted_price'])) {
+                    $this->editableItems[$index]['discounted_price'] = (float) ($product->selling_price ?? $product->default_price ?? 0);
+                }
+                $this->updatedEditableItems();
+            }
+        }
+    }
+
+    public function reindexLineNumbers(): void
+    {
+        foreach ($this->editableItems as $idx => &$item) {
+            $item['line_no'] = $idx + 1;
+        }
+    }
+
     public function removeLineItem(int $index): void
     {
         if (isset($this->editableItems[$index])) {
@@ -724,6 +788,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             }
             unset($this->editableItems[$index]);
             $this->editableItems = array_values($this->editableItems);
+            $this->reindexLineNumbers();
         }
     }
 
@@ -758,11 +823,15 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
         // Sync line items
         foreach ($this->editableItems as $item) {
+            $desc = !empty($item['description']) 
+                ? $item['description'] 
+                : (!empty($item['product_id']) ? (Product::find($item['product_id'])?->canonical_name ?? '') : '');
+
             if (!empty($item['id'])) {
                 $this->currentDocument->lineItems()->where('id', $item['id'])->update([
                     'line_no' => $item['line_no'],
                     'material_code' => $item['material_code'],
-                    'description' => $item['description'],
+                    'description' => $desc,
                     'qty' => $item['qty'],
                     'unit' => $item['unit'],
                     'unit_price' => $item['unit_price'],
@@ -774,7 +843,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 $this->currentDocument->lineItems()->create([
                     'line_no' => $item['line_no'],
                     'material_code' => $item['material_code'],
-                    'description' => $item['description'],
+                    'description' => $desc,
                     'qty' => $item['qty'],
                     'unit' => $item['unit'],
                     'unit_price' => $item['unit_price'],
@@ -856,15 +925,33 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             return;
         }
 
+        $reason = !empty(trim($this->rejectionReason ?? ''))
+            ? trim($this->rejectionReason)
+            : 'Rejected by reviewer during verification.';
+
         $this->currentDocument->update([
             'status' => Document::STATUS_REJECTED,
-            'failure_reason' => 'Rejected by reviewer during verification.',
+            'failure_reason' => $reason,
         ]);
+
+        Quotation::where('document_id', $this->currentDocument->id)->update([
+            'status' => Quotation::STATUS_REJECTED,
+            'rejection_reason' => $reason,
+        ]);
+
+        PurchaseOrder::where('document_id', $this->currentDocument->id)->update([
+            'status' => PurchaseOrder::STATUS_REJECTED,
+        ]);
+
+        $this->rejectionReason = '';
 
         Notification::make()
             ->title('Document Marked as Rejected')
+            ->body('The document has been rejected and removed from the active review queue.')
             ->warning()
             ->send();
+
+        $this->dispatch('close-modal', id: 'reject-document-modal');
 
         $this->loadNextDocument();
     }
@@ -886,17 +973,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getVendorsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_vendors_list', 120, fn () => Vendor::pluck('name', 'id')->toArray());
+        return \Illuminate\Support\Facades\Cache::remember('lookup_vendors_list', 120, fn() => Vendor::pluck('name', 'id')->toArray());
     }
 
     public function getProjectsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_projects_list', 120, fn () => Project::pluck('name', 'id')->toArray());
+        return \Illuminate\Support\Facades\Cache::remember('lookup_projects_list', 120, fn() => Project::pluck('name', 'id')->toArray());
     }
 
     public function getProductsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_products_list', 120, fn () => Product::pluck('canonical_name', 'id')->toArray());
+        return \Illuminate\Support\Facades\Cache::remember('lookup_products_list', 120, fn() => Product::pluck('canonical_name', 'id')->toArray());
     }
 }
 

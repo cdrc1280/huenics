@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -13,10 +14,10 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
-    public const ROLE_ADMIN = 'admin';
-    public const ROLE_OPERATIONS_MANAGER = 'operations_manager';
-    public const ROLE_SALES_EXECUTIVE = 'sales_executive';
-    public const ROLE_CEO = 'ceo';
+    public const ROLE_ADMIN = UserRole::Admin->value;
+    public const ROLE_OPERATIONS_MANAGER = UserRole::OperationsManager->value;
+    public const ROLE_SALES_EXECUTIVE = UserRole::SalesExecutive->value;
+    public const ROLE_CEO = UserRole::Ceo->value;
 
     public static function getAvailableRoles(): array
     {

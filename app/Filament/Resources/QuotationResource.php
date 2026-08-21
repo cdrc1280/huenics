@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\QuotationResource\Pages;
 use App\Models\Product;
 use App\Models\Project;
@@ -16,7 +17,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -29,6 +29,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -163,7 +165,7 @@ class QuotationResource extends Resource
                         ->default(now())
                         ->visible(fn($get) => (bool) $get('is_official_po')),
                 ])
-                ->columns(3),
+                ->columnSpanFull(),
 
             Section::make('Line Items')
                 ->icon('heroicon-o-list-bullet')
@@ -187,25 +189,21 @@ class QuotationResource extends Resource
                                 ->label('Product')
                                 ->options(Product::active()->pluck('canonical_name', 'id'))
                                 ->searchable()
-                                ->nullable()
+                                ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, $set) {
                                     if ($state) {
                                         $product = Product::find($state);
                                         if ($product) {
                                             $set('description', $product->canonical_name);
+                                            $set('item_code', $product->sku ?? null);
                                             $set('unit_price', $product->selling_price ?? $product->default_price ?? 0);
                                             $set('base_cost', $product->base_cost_price ?? 0);
                                             $set('unit', $product->unit_default ?? 'pcs');
                                         }
                                     }
                                 })
-                                ->columnSpan(3),
-
-                            TextInput::make('description')
-                                ->label('Product Description')
-                                ->required()
-                                ->columnSpan(4),
+                                ->columnSpan(6),
 
                             TextInput::make('qty')
                                 ->label('Qty')
@@ -244,9 +242,9 @@ class QuotationResource extends Resource
                                 ->prefix('₱')
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(2),
+                                ->columnSpan(3),
                         ])
-                        ->columns(18)
+                        ->columns(9)
                         ->reorderable('line_no')
                         ->addActionLabel('+ Add Line Item')
                         ->defaultItems(1)
@@ -307,6 +305,9 @@ class QuotationResource extends Resource
                     ->label('Review & Approval')
                     ->badge()
                     ->state(function (Quotation $record): string {
+                        if ($record->isRejected()) {
+                            return 'Rejected';
+                        }
                         if ($record->is_official_po && !empty($record->customer_signature_name)) {
                             return 'Official PO (Signed)';
                         }
@@ -322,6 +323,9 @@ class QuotationResource extends Resource
                         return 'Draft / Pending';
                     })
                     ->color(function (Quotation $record): string {
+                        if ($record->isRejected()) {
+                            return 'danger';
+                        }
                         if ($record->is_official_po || $record->isReadyForConversion()) {
                             return 'success';
                         }
@@ -364,7 +368,7 @@ class QuotationResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->options([
                         Quotation::STATUS_PENDING => 'Pending',
                         Quotation::STATUS_APPROVED => 'Approved',
@@ -372,7 +376,7 @@ class QuotationResource extends Resource
                         Quotation::STATUS_CONVERTED => 'Converted to PO',
                     ]),
 
-                Tables\Filters\SelectFilter::make('sales_agent_id')
+                SelectFilter::make('sales_agent_id')
                     ->label('Sales Agent')
                     ->options(User::whereIn('role', [
                         User::ROLE_SALES_EXECUTIVE,
@@ -383,13 +387,21 @@ class QuotationResource extends Resource
             ->actions([
                 ActionGroup::make([
                     Action::make('review')
-                        ->label('Review')
+                        ->label('Review & Verify')
                         ->icon('heroicon-m-clipboard-document-check')
-                        ->color('info')
-                        ->tooltip('Review and verify quotation details')
+                        ->color('warning')
+                        ->tooltip('Review, verify math and reconcile quotation line items')
                         ->visible(fn(Quotation $r): bool => !$r->isReviewed() && $r->status !== Quotation::STATUS_CONVERTED && $r->status !== Quotation::STATUS_REJECTED)
-                        ->requiresConfirmation()
+                        ->url(function (Quotation $record) {
+                            if ($record->document_id) {
+                                return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
+                            }
+                            return null;
+                        })
                         ->action(function (Quotation $record) {
+                            if ($record->document_id) {
+                                return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
+                            }
                             app(QuotationService::class)->review($record);
                             Notification::make()->title('Quotation Marked as Reviewed')->success()->send();
                         }),

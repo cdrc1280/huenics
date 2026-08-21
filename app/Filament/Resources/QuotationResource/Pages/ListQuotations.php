@@ -52,12 +52,10 @@ class ListQuotations extends ListRecords
                         );
 
                         Notification::make()
-                            ->title('Quotation Ingested & Extracted')
-                            ->body("Extracted line items and arithmetic checks completed.")
+                            ->title('Quotation Uploaded & Added to List')
+                            ->body("Quotation extracted and added with status 'For Review'. Click 'Review & Verify' to inspect.")
                             ->success()
                             ->send();
-
-                        $this->redirect(ReviewQueuePage::getUrl(['document_id' => $document->id]));
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Upload Notice')

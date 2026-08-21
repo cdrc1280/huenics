@@ -17,12 +17,13 @@ class WarrantyService
 
     /**
      * Activate warranty clock anchored to actual_delivery_date.
-     * Computes warranty_end_date based on fixed period (6_months, 1_year, 2_years).
+     * Computes warranty_end_date based on fixed period.
+     * Clears warranty dates if not delivered or no warranty.
      */
     public function activateWarranty(PurchaseOrder $po): void
     {
-        if (!$po->has_warranty || !$po->actual_delivery_date) {
-            $po->update(['warranty_status' => PurchaseOrder::WARRANTY_NONE]);
+        if (!$po->has_warranty || !$po->actual_delivery_date || $po->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED) {
+            $this->deactivateWarranty($po);
             return;
         }
 
@@ -30,10 +31,22 @@ class WarrantyService
         $startDate      = $po->actual_delivery_date;
         $endDate        = $startDate->copy()->addMonths($months);
 
-        $po->update([
+        $po->updateQuietly([
             'warranty_start_date' => $startDate,
             'warranty_end_date'   => $endDate,
             'warranty_status'     => $this->resolveStatus($endDate),
+        ]);
+    }
+
+    /**
+     * Deactivate and clear warranty dates and status.
+     */
+    public function deactivateWarranty(PurchaseOrder $po): void
+    {
+        $po->updateQuietly([
+            'warranty_status'     => PurchaseOrder::WARRANTY_NONE,
+            'warranty_start_date' => null,
+            'warranty_end_date'   => null,
         ]);
     }
 
@@ -91,7 +104,7 @@ class WarrantyService
         if ($endDate->isPast()) {
             return PurchaseOrder::WARRANTY_EXPIRED;
         }
-        if ($endDate->diffInDays(now()) <= 30 && $endDate->isFuture()) {
+        if ($endDate->lte(now()->addDays(30))) {
             return PurchaseOrder::WARRANTY_EXPIRING;
         }
         return PurchaseOrder::WARRANTY_ACTIVE;

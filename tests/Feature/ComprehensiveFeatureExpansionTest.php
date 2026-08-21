@@ -352,4 +352,267 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         $this->assertCount(1, $agentQuotes);
         $this->assertEquals(30000.00, (float) $agentQuotes->first()->total_amount);
     }
+
+    public function test_quotation_and_purchase_order_line_items_field_alignment_and_conversion(): void
+    {
+        $quotation = Quotation::create([
+            'quotation_number' => Quotation::generateNumber(),
+            'sales_agent_id'   => $this->salesExec->id,
+            'customer_name'    => 'Contractor Megawide',
+            'project_id'       => $this->project->id,
+            'total_amount'     => 12000.00,
+            'total_cost'       => 8000.00,
+            'status'           => Quotation::STATUS_APPROVED,
+            'reviewed_by'      => $this->opsManager->id,
+            'reviewed_at'      => now(),
+            'approved_by'      => $this->admin->id,
+            'approved_at'      => now(),
+            'quotation_date'   => now()->toDateString(),
+        ]);
+
+        $lineItem = $quotation->lineItems()->create([
+            'line_no'          => 1,
+            'item_code'        => 'PIPE-PVC-001',
+            'product_id'       => $this->product->id,
+            'description'      => '1-1/4" PVC Pipe Sch 40 High Grade',
+            'qty'              => 10,
+            'unit'             => 'lengths',
+            'unit_price'       => 1500.00,
+            'discounted_price' => 1200.00,
+            'base_cost'        => 800.00,
+            'line_total'       => 12000.00,
+            'gross_profit'     => 4000.00,
+        ]);
+
+        $service = app(QuotationService::class);
+        $po = $service->convertToPO($quotation);
+
+        $this->assertEquals(Quotation::STATUS_CONVERTED, $quotation->fresh()->status);
+        $this->assertCount(1, $po->lineItems);
+
+        $poItem = $po->lineItems->first();
+        $this->assertEquals(1, $poItem->line_no);
+        $this->assertEquals('PIPE-PVC-001', $poItem->item_code);
+        $this->assertEquals($this->product->id, $poItem->product_id);
+        $this->assertEquals('1-1/4" PVC Pipe Sch 40 High Grade', $poItem->description);
+        $this->assertEquals(10, (float) $poItem->qty);
+        $this->assertEquals('lengths', $poItem->unit);
+        $this->assertEquals(1500.00, (float) $poItem->unit_price);
+        $this->assertEquals(1200.00, (float) $poItem->discounted_price);
+        $this->assertEquals(800.00, (float) $poItem->base_cost);
+        $this->assertEquals(12000.00, (float) $poItem->line_total);
+    }
+
+    public function test_clearing_actual_delivery_date_or_delivery_status_reverts_po_status_and_deactivates_warranty(): void
+    {
+        $po = PurchaseOrder::create([
+            'po_number'            => PurchaseOrder::generateNumber(),
+            'sales_agent_id'       => $this->salesExec->id,
+            'customer_name'        => 'Metro Construction Corp',
+            'order_date'           => now()->toDateString(),
+            'order_amount'         => 25000.00,
+            'status'               => PurchaseOrder::STATUS_DELIVERED,
+            'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+            'actual_delivery_date' => now()->toDateString(),
+            'delivery_receipt_no'  => 'DR-2026-999',
+            'has_warranty'         => true,
+            'warranty_period'      => PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS,
+        ]);
+
+        $po = $po->fresh();
+        $this->assertEquals(PurchaseOrder::STATUS_DELIVERED, $po->status);
+        $this->assertEquals(PurchaseOrder::DELIVERY_DELIVERED, $po->delivery_status);
+        $this->assertEquals(PurchaseOrder::WARRANTY_ACTIVE, $po->warranty_status);
+        $this->assertNotNull($po->warranty_start_date);
+        $this->assertNotNull($po->warranty_end_date);
+
+        // 1. User clears actual_delivery_date and sets delivery_status back to pending
+        $po->update([
+            'actual_delivery_date' => null,
+            'delivery_status'      => PurchaseOrder::DELIVERY_PENDING,
+            'delivery_receipt_no'  => null,
+        ]);
+
+        $po = $po->fresh();
+        $this->assertNull($po->actual_delivery_date);
+        $this->assertEquals(PurchaseOrder::DELIVERY_PENDING, $po->delivery_status);
+        $this->assertEquals(PurchaseOrder::STATUS_PENDING, $po->status);
+        $this->assertEquals(PurchaseOrder::WARRANTY_NONE, $po->warranty_status);
+        $this->assertNull($po->warranty_start_date);
+        $this->assertNull($po->warranty_end_date);
+
+        // 2. Re-deliver with 1 year warranty
+        $po->update([
+            'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+            'actual_delivery_date' => now()->toDateString(),
+            'warranty_period'      => PurchaseOrder::WARRANTY_1_YEAR,
+        ]);
+
+        $po = $po->fresh();
+        $this->assertEquals(PurchaseOrder::STATUS_DELIVERED, $po->status);
+        $this->assertEquals(PurchaseOrder::DELIVERY_DELIVERED, $po->delivery_status);
+        $this->assertEquals(PurchaseOrder::WARRANTY_ACTIVE, $po->warranty_status);
+
+        // 3. User toggles off has_warranty
+        $po->update(['has_warranty' => false]);
+        $po = $po->fresh();
+        $this->assertFalse((bool) $po->has_warranty);
+        $this->assertEquals(PurchaseOrder::WARRANTY_NONE, $po->warranty_status);
+        $this->assertNull($po->warranty_start_date);
+        $this->assertNull($po->warranty_end_date);
+    }
+
+    public function test_document_ingestion_creates_pending_quotation_and_purchase_order(): void
+    {
+        // 1. Ingest Quotation document
+        $quotationDoc = Document::create([
+            'disk_path' => 'documents/uploads/test_qt.pdf',
+            'original_filename' => 'test_qt.pdf',
+            'document_number' => 'QT-INGEST-001',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'customer_name' => 'Acme Corporation',
+            'customer_company' => 'Acme Builders',
+            'project_id' => $this->project->id,
+            'project_name' => 'Palanza Tower',
+            'uploaded_by' => $this->salesExec->id,
+            'file_hash' => 'hash_test_qt_001',
+        ]);
+
+        $quotationDoc->lineItems()->create([
+            'line_no' => 1,
+            'material_code' => 'MAT-001',
+            'description' => 'Industrial Steel Pipe 2"',
+            'qty' => 5,
+            'unit' => 'pcs',
+            'unit_price' => 2000.00,
+            'discounted_price' => 1800.00,
+            'printed_total' => 9000.00,
+            'computed_total' => 9000.00,
+        ]);
+
+        $ingestAction = app(\App\Actions\IngestDocumentAction::class);
+        $ingestAction->syncInitialResourceRecord($quotationDoc, $this->salesExec->id);
+
+        $quotation = Quotation::where('document_id', $quotationDoc->id)->first();
+        $this->assertNotNull($quotation);
+        $this->assertEquals(Quotation::STATUS_PENDING, $quotation->status);
+        $this->assertEquals('Acme Corporation', $quotation->customer_name);
+        $this->assertEquals(1, $quotation->lineItems()->count());
+        $this->assertEquals('MAT-001', $quotation->lineItems()->first()->item_code);
+
+        // 2. Ingest Purchase Order document
+        $poDoc = Document::create([
+            'disk_path' => 'documents/uploads/test_po.pdf',
+            'original_filename' => 'test_po.pdf',
+            'document_number' => 'PO-INGEST-001',
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'customer_name' => 'Apex Engineering Corp',
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->salesExec->id,
+            'file_hash' => 'hash_test_po_001',
+        ]);
+
+        $poDoc->lineItems()->create([
+            'line_no' => 1,
+            'material_code' => 'MAT-PO-001',
+            'description' => 'Heavy Duty Ball Valve 1"',
+            'qty' => 10,
+            'unit' => 'pcs',
+            'unit_price' => 750.00,
+            'discounted_price' => 750.00,
+            'printed_total' => 7500.00,
+            'computed_total' => 7500.00,
+        ]);
+
+        $ingestAction->syncInitialResourceRecord($poDoc, $this->salesExec->id);
+
+        $po = PurchaseOrder::where('document_id', $poDoc->id)->first();
+        $this->assertNotNull($po);
+        $this->assertEquals(PurchaseOrder::STATUS_PENDING, $po->status);
+        $this->assertEquals(PurchaseOrder::DELIVERY_PENDING, $po->delivery_status);
+        $this->assertEquals('Apex Engineering Corp', $po->customer_name);
+        $this->assertEquals(1, $po->lineItems()->count());
+        $this->assertEquals('MAT-PO-001', $po->lineItems()->first()->item_code);
+
+        // 3. Verify ReviewQueuePage is hidden from sidebar navigation
+        $reviewPageReflection = new \ReflectionClass(\App\Filament\Pages\ReviewQueuePage::class);
+        $shouldRegisterProp = $reviewPageReflection->getProperty('shouldRegisterNavigation');
+        $shouldRegisterProp->setAccessible(true);
+        $this->assertFalse($shouldRegisterProp->getValue());
+    }
+
+    public function test_rejecting_document_sets_designated_rejected_status_across_document_quotation_and_po(): void
+    {
+        $this->actingAs($this->opsManager);
+
+        $doc = Document::create([
+            'disk_path' => 'documents/uploads/reject_test.pdf',
+            'original_filename' => 'reject_test.pdf',
+            'document_number' => 'REJ-001',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'customer_name' => 'Reject Test Client',
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->salesExec->id,
+            'file_hash' => 'hash_reject_test_001',
+        ]);
+
+        $quotation = Quotation::create([
+            'quotation_number' => 'QT-REJ-001',
+            'document_id' => $doc->id,
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Reject Test Client',
+            'status' => Quotation::STATUS_PENDING,
+            'quotation_date' => now()->toDateString(),
+        ]);
+
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-REJ-001',
+            'document_id' => $doc->id,
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Reject Test Client',
+            'status' => PurchaseOrder::STATUS_PENDING,
+            'order_date' => now()->toDateString(),
+        ]);
+
+        // Trigger rejection on ReviewQueuePage
+        $page = new \App\Filament\Pages\ReviewQueuePage();
+        $page->currentDocument = $doc;
+        $page->rejectionReason = 'Pricing numbers do not match quote.';
+        $page->rejectDocument();
+
+        $this->assertEquals(\App\Enums\DocumentStatus::Rejected->value, $doc->fresh()->status);
+        $this->assertEquals('Pricing numbers do not match quote.', $doc->fresh()->failure_reason);
+
+        $this->assertEquals(\App\Enums\QuotationStatus::Rejected->value, $quotation->fresh()->status);
+        $this->assertEquals('Pricing numbers do not match quote.', $quotation->fresh()->rejection_reason);
+
+        $this->assertEquals(\App\Enums\PurchaseOrderStatus::Rejected->value, $po->fresh()->status);
+    }
+
+    public function test_project_wide_enums_implement_contracts_and_match_model_constants(): void
+    {
+        $this->assertEquals(\App\Enums\DocumentStatus::RequiresReview->value, Document::STATUS_REQUIRES_REVIEW);
+        $this->assertEquals(\App\Enums\DocumentStatus::Rejected->value, Document::STATUS_REJECTED);
+        $this->assertEquals(\App\Enums\QuotationStatus::Rejected->value, Quotation::STATUS_REJECTED);
+        $this->assertEquals(\App\Enums\PurchaseOrderStatus::Rejected->value, PurchaseOrder::STATUS_REJECTED);
+        $this->assertEquals(\App\Enums\DeliveryStatus::Delivered->value, PurchaseOrder::DELIVERY_DELIVERED);
+        $this->assertEquals(\App\Enums\WarrantyStatus::Active->value, PurchaseOrder::WARRANTY_ACTIVE);
+        $this->assertEquals(\App\Enums\WarrantyPeriod::OneYear->value, PurchaseOrder::WARRANTY_1_YEAR);
+        $this->assertEquals(\App\Enums\DeliveryReceiptStatus::Draft->value, DeliveryReceipt::STATUS_DRAFT);
+        $this->assertEquals(\App\Enums\SalesInvoiceStatus::Paid->value, SalesInvoice::STATUS_PAID);
+        $this->assertEquals(\App\Enums\UserRole::Admin->value, User::ROLE_ADMIN);
+
+        // Verify Enum contract methods
+        $docStatus = \App\Enums\DocumentStatus::Rejected;
+        $this->assertEquals('Rejected', $docStatus->getLabel());
+        $this->assertEquals('danger', $docStatus->getColor());
+        $this->assertEquals('heroicon-m-x-circle', $docStatus->getIcon());
+
+        $warrantyPeriod = \App\Enums\WarrantyPeriod::TwoYearsSixMonths;
+        $this->assertEquals('2 Years and 6 Months', $warrantyPeriod->getLabel());
+        $this->assertEquals(30, $warrantyPeriod->getMonths());
+    }
 }

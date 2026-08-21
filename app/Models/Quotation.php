@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\QuotationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,10 +13,10 @@ class Quotation extends Model
 {
     use HasFactory;
 
-    public const STATUS_PENDING      = 'pending';
-    public const STATUS_APPROVED     = 'approved';
-    public const STATUS_REJECTED     = 'rejected';
-    public const STATUS_CONVERTED    = 'converted_to_po';
+    public const STATUS_PENDING      = QuotationStatus::Pending->value;
+    public const STATUS_APPROVED     = QuotationStatus::Approved->value;
+    public const STATUS_REJECTED     = QuotationStatus::Rejected->value;
+    public const STATUS_CONVERTED    = QuotationStatus::ConvertedToPo->value;
 
     protected $fillable = [
         'quotation_number',
@@ -86,6 +87,11 @@ class Quotation extends Model
     public function isApproved(): bool
     {
         return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
     }
 
     public function isReadyForConversion(): bool
