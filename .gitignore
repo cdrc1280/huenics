@@ -31,9 +31,10 @@ Homestead.yaml
 /storage/logs/*
 !/storage/logs/.gitignore
 
-# Databases
+# Databases (allow base.sqlite — pre-built schema for Vercel deployment)
 database/*.sqlite
 database/*.sqlite-journal
+!database/base.sqlite
 *.sqlite
 *.sqlite3
 
