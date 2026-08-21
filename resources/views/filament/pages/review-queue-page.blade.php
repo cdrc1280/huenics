@@ -264,7 +264,7 @@
                         </x-slot>
 
                         <div class="grid grid-cols-1 gap-4 p-1 md:grid-cols-3">
-                            <x-filament-forms::field-wrapper id="documentNumber" label="Quotation / PO No.">
+                            <x-filament-forms::field-wrapper id="documentNumber" label="Quotation / PO No." :required="true">
                                 <x-filament::input.wrapper size="sm">
                                     <x-filament::input type="text" wire:model.lazy="documentNumber"
                                         :disabled="$this->isReadOnly"
@@ -272,7 +272,7 @@
                                 </x-filament::input.wrapper>
                             </x-filament-forms::field-wrapper>
 
-                            <x-filament-forms::field-wrapper id="documentDate" label="Document Date">
+                            <x-filament-forms::field-wrapper id="documentDate" label="Document Date" :required="true">
                                 <x-filament::input.wrapper size="sm">
                                     <x-filament::input type="date" wire:model.lazy="documentDate"
                                         :disabled="$this->isReadOnly"
@@ -280,7 +280,7 @@
                                 </x-filament::input.wrapper>
                             </x-filament-forms::field-wrapper>
 
-                            <x-filament-forms::field-wrapper id="customerName" label="Customer Name">
+                            <x-filament-forms::field-wrapper id="customerName" label="Customer Name" :required="true">
                                 <x-filament::input.wrapper size="sm">
                                     <x-filament::input type="text" wire:model.lazy="customerName"
                                         :disabled="$this->isReadOnly"
@@ -367,9 +367,9 @@
                                 <x-filament::section compact>
                                     @if (!empty($item['total_mismatch']))
                                         <x-slot name="heading">
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-400 dark:border-red-800/60">
-                                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-3 w-3 text-red-500" />
-                                                Discrepancy Flagged
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-danger-600 text-white shadow-sm dark:bg-danger-500" style="display: inline-flex; align-items: center; gap: 0.375rem; white-space: nowrap; vertical-align: middle;">
+                                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4 inline-block text-white shrink-0" />
+                                                <span style="display: inline; vertical-align: middle;">Discrepancy Flagged</span>
                                             </span>
                                         </x-slot>
                                     @endif
@@ -421,7 +421,9 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Product</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                                Product <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
+                                            </label>
                                             <x-filament::input.wrapper size="sm">
                                                 <x-filament::input.select wire:model.live="editableItems.{{ $index }}.product_id"
                                                     wire:change="onProductSelected({{ $index }}, $event.target.value)"
@@ -442,7 +444,9 @@
                                 {{-- ROW 2: Pricing, Quantities & Line Totals (1:1:2:2:3) --}}
                                 <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 2fr 3fr; gap: 0.875rem; align-items: start;">
                                     <div>
-                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Qty</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                            Qty <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
+                                        </label>
                                         <x-filament::input.wrapper size="sm">
                                             <x-filament::input type="number" step="any" min="0.0001"
                                                 wire:model.live="editableItems.{{ $index }}.qty"
@@ -452,7 +456,9 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Unit</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                            Unit <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
+                                        </label>
                                         <x-filament::input.wrapper size="sm">
                                             <x-filament::input type="text"
                                                 wire:model.live="editableItems.{{ $index }}.unit"
@@ -463,7 +469,9 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Unit Price (₱)</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                            Unit Price (₱) <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
+                                        </label>
                                         <x-filament::input.wrapper size="sm" prefix="₱">
                                             <x-filament::input type="number" step="0.01"
                                                 wire:model.live="editableItems.{{ $index }}.unit_price"
@@ -483,7 +491,9 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Total (₱)</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                            Total (₱) <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
+                                        </label>
                                         <x-filament::input.wrapper size="sm" prefix="₱"
                                             :color="!empty($item['total_mismatch']) ? 'danger' : 'gray'">
                                             <x-filament::input type="number" step="0.01"
@@ -492,7 +502,7 @@
                                                 class="text-right font-mono text-xs font-bold" />
                                         </x-filament::input.wrapper>
                                         @if (!empty($item['total_mismatch']))
-                                            <span class="mt-1 block text-right font-mono font-semibold leading-tight text-[11px] text-red-500 dark:text-red-400">
+                                            <span class="mt-1 block text-right font-mono font-semibold leading-tight text-[11px] text-danger-600 dark:text-danger-400">
                                                 Computed: ₱{{ number_format($item['computed_total'], 2) }}
                                             </span>
                                         @endif
