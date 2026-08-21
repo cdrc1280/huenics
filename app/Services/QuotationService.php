@@ -96,6 +96,8 @@ class QuotationService
             'status'      => Quotation::STATUS_APPROVED,
             'approved_by' => $approver?->id ?: 1,
             'approved_at' => now(),
+            'reviewed_by' => $quotation->reviewed_by ?: ($approver?->id ?: 1),
+            'reviewed_at' => $quotation->reviewed_at ?: now(),
         ]);
     }
 
@@ -113,22 +115,17 @@ class QuotationService
     /**
      * 1-click Quotation → Purchase Order conversion.
      * Validates 12% VAT, creates PO with inherited line items.
-     * Enforces that the quotation must be approved and reviewed first (or serve as official PO).
+     * Enforces that the quotation must be approved (or serve as official signed PO).
      */
     public function convertToPO(Quotation $quotation, array $options = []): PurchaseOrder
     {
-        if (!in_array($quotation->status, [Quotation::STATUS_APPROVED, Quotation::STATUS_PENDING])) {
+        if (!in_array($quotation->status, [Quotation::STATUS_APPROVED, Quotation::STATUS_PENDING]) && !$quotation->canServeAsOfficialPO()) {
             throw new \RuntimeException("Cannot convert a rejected or already converted quotation.");
         }
 
-        // Must be approved and reviewed, OR serve as an Official PO with customer signature
-        if (!$quotation->canServeAsOfficialPO() && !$quotation->isReadyForConversion()) {
-            if (!$quotation->isApproved()) {
-                throw new \RuntimeException("Quotation must be Approved before converting to PO.");
-            }
-            if (!$quotation->isReviewed()) {
-                throw new \RuntimeException("Quotation must be Reviewed before converting to PO.");
-            }
+        // Must be approved (or serve as an Official PO with customer signature)
+        if (!$quotation->isApproved() && !$quotation->canServeAsOfficialPO()) {
+            throw new \RuntimeException("Quotation must be Approved before converting to PO.");
         }
 
         return DB::transaction(function () use ($quotation, $options) {

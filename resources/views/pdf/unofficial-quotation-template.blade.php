@@ -279,20 +279,32 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 5%;" class="text-center">#</th>
-                <th style="width: 18%;">Item Code / SKU</th>
-                <th style="width: 40%;">Product Description</th>
-                <th style="width: 8%;" class="text-center">Qty</th>
+                <th style="width: 4%;" class="text-center">#</th>
+                <th style="width: 14%;">Item Code / SKU</th>
+                <th style="width: 10%;" class="text-center">Image</th>
+                <th style="width: 32%;">Product Description</th>
+                <th style="width: 7%;" class="text-center">Qty</th>
                 <th style="width: 7%;" class="text-center">Unit</th>
-                <th style="width: 11%;" class="text-right">Unit Price (₱)</th>
-                <th style="width: 11%;" class="text-right">Line Total (₱)</th>
+                <th style="width: 13%;" class="text-right">Unit Price (₱)</th>
+                <th style="width: 13%;" class="text-right">Line Total (₱)</th>
             </tr>
         </thead>
         <tbody>
             @forelse($quote['items'] ?? [] as $index => $item)
+            @php
+                $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
+                $prodImg = $prod?->base64_image;
+            @endphp
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td class="font-bold">{{ $item['item_code'] ?? ($item['sku'] ?? 'GEN-ITEM') }}</td>
+                <td class="text-center" style="vertical-align: middle; padding: 2px;">
+                    @if($prodImg)
+                        <img src="{{ $prodImg }}" style="max-height: 32px; max-width: 40px; object-fit: contain;">
+                    @else
+                        <span style="color: #94a3b8; font-size: 8px;">—</span>
+                    @endif
+                </td>
                 <td>{{ $item['description'] ?? ($item['canonical_name'] ?? 'Product Line Item') }}</td>
                 <td class="text-center font-bold">{{ number_format($item['quantity'] ?? $item['qty'] ?? 1, 0) }}</td>
                 <td class="text-center">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
@@ -301,7 +313,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center" style="padding: 15px; color: #64748b;">No line items added to this quotation estimate.</td>
+                <td colspan="8" class="text-center" style="padding: 15px; color: #64748b;">No line items added to this quotation estimate.</td>
             </tr>
             @endforelse
         </tbody>

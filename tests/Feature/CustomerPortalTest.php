@@ -13,6 +13,7 @@ class CustomerPortalTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
 
         Product::create([
             'sku' => 'TEST-PIPE-01',

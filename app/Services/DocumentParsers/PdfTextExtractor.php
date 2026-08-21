@@ -41,26 +41,33 @@ class PdfTextExtractor
         if ($isImage) {
             $companionPdf = $this->convertImageToPdf($filePath);
 
-            try {
-                // Try Python winocr first
-                $scriptPath = base_path('app/Services/DocumentParsers/ocr_runner.py');
-                $process = Process::run("python \"{$scriptPath}\" --image \"{$filePath}\"");
-                
-                if ($process->successful()) {
-                    $output = $process->output();
-                    $json = json_decode(trim($output), true);
-                    
-                    if ($json && isset($json['success']) && $json['success'] === true && !empty(trim($json['text']))) {
-                        return [
-                            'text' => $json['text'],
-                            'lines' => $json['lines'] ?? [],
-                            'engine' => 'winocr-native',
-                            'companion_pdf' => $companionPdf,
-                        ];
+            $scriptPath = base_path('app/Services/DocumentParsers/ocr_runner.py');
+            $pythonCandidates = [
+                'C:\\laragon\\bin\\python\\python-3.10\\python.exe',
+                'C:\\Python313\\python.exe',
+                'python',
+                'C:\\Python312\\python.exe',
+                'py',
+            ];
+
+            foreach ($pythonCandidates as $py) {
+                try {
+                    $process = Process::run("\"{$py}\" \"{$scriptPath}\" --image \"{$filePath}\"");
+                    if ($process->successful()) {
+                        $output = $process->output();
+                        $json = json_decode(trim($output), true);
+                        if ($json && isset($json['success']) && $json['success'] === true && !empty(trim($json['text']))) {
+                            return [
+                                'text' => $json['text'],
+                                'lines' => $json['lines'] ?? [],
+                                'engine' => 'winocr-native',
+                                'companion_pdf' => $companionPdf,
+                            ];
+                        }
                     }
+                } catch (Exception $e) {
+                    Log::warning("WinOCR attempt with {$py} failed: " . $e->getMessage());
                 }
-            } catch (Exception $e) {
-                Log::warning("WinOCR failed: " . $e->getMessage());
             }
 
             try {
@@ -100,7 +107,23 @@ class PdfTextExtractor
             ];
         }
 
-        // Try pdftotext CLI first
+        // Try high-fidelity in-order stream extraction via Smalot Parser first
+        try {
+            $phpText = $this->extractViaPhp($filePath);
+            if (!empty(trim($phpText))) {
+                $lines = preg_split('/\r\n|\r|\n/', $phpText);
+                return [
+                    'text' => $phpText,
+                    'lines' => $lines ?: [],
+                    'engine' => 'smalot-pdfparser',
+                    'companion_pdf' => null,
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::debug("Smalot parser pass failed: " . $e->getMessage());
+        }
+
+        // Fallback to pdftotext CLI
         $cliText = $this->extractViaCli($filePath);
         if ($cliText !== null && strlen(trim($cliText)) > 0) {
             $lines = preg_split('/\r\n|\r|\n/', $cliText);
@@ -112,14 +135,10 @@ class PdfTextExtractor
             ];
         }
 
-        // Fallback to pure PHP Smalot Parser
-        $phpText = $this->extractViaPhp($filePath);
-        $lines = preg_split('/\r\n|\r|\n/', $phpText);
-
         return [
-            'text' => $phpText,
-            'lines' => $lines ?: [],
-            'engine' => 'smalot-pdfparser',
+            'text' => '',
+            'lines' => [],
+            'engine' => 'empty',
             'companion_pdf' => null,
         ];
     }

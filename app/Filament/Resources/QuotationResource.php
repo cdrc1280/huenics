@@ -328,58 +328,55 @@ class QuotationResource extends Resource
                     ->color(fn($state) => $state > 0 ? 'success' : 'danger')
                     ->tooltip(fn(Quotation $record): string => "Estimated gross profit (Total ₱" . number_format((float) $record->total_amount, 2) . " minus Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
 
-                TextColumn::make('workflow_status')
-                    ->label('Review & Approval')
+                TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
-                    ->state(function (Quotation $record): string {
+                    ->formatStateUsing(function (string $state, Quotation $record): string {
                         if ($record->isRejected()) {
                             return 'Rejected';
                         }
                         if ($record->is_official_po && !empty($record->customer_signature_name)) {
                             return 'Official PO (Signed)';
                         }
-                        if ($record->isReadyForConversion()) {
+                        if ($state === Quotation::STATUS_CONVERTED) {
+                            return 'Converted to PO';
+                        }
+                        if ($record->isApproved() && $record->isReviewed()) {
                             return 'Approved & Reviewed';
                         }
                         if ($record->isApproved()) {
-                            return 'Approved (Pending Review)';
+                            return 'Approved';
                         }
                         if ($record->isReviewed()) {
-                            return 'Reviewed (Pending Approval)';
+                            return 'Reviewed';
                         }
-                        return 'Draft / Pending';
+                        return match ($state) {
+                            Quotation::STATUS_PENDING => 'Pending',
+                            Quotation::STATUS_APPROVED => 'Approved',
+                            Quotation::STATUS_REJECTED => 'Rejected',
+                            Quotation::STATUS_CONVERTED => 'Converted to PO',
+                            default => ucfirst($state),
+                        };
                     })
-                    ->color(function (Quotation $record): string {
+                    ->color(function (string $state, Quotation $record): string {
                         if ($record->isRejected()) {
                             return 'danger';
                         }
-                        if ($record->is_official_po || $record->isReadyForConversion()) {
+                        if ($record->is_official_po || $state === Quotation::STATUS_CONVERTED || ($record->isApproved() && $record->isReviewed())) {
                             return 'success';
                         }
                         if ($record->isApproved() || $record->isReviewed()) {
                             return 'info';
                         }
-                        return 'warning';
-                    }),
-
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        Quotation::STATUS_PENDING => 'Pending',
-                        Quotation::STATUS_APPROVED => 'Approved',
-                        Quotation::STATUS_REJECTED => 'Rejected / Lost',
-                        Quotation::STATUS_CONVERTED => 'Converted to PO',
-                        default => ucfirst($state),
+                        return match ($state) {
+                            Quotation::STATUS_PENDING => 'warning',
+                            Quotation::STATUS_APPROVED => 'info',
+                            Quotation::STATUS_REJECTED => 'danger',
+                            Quotation::STATUS_CONVERTED => 'success',
+                            default => 'gray',
+                        };
                     })
-                    ->color(fn(string $state): string => match ($state) {
-                        Quotation::STATUS_PENDING => 'warning',
-                        Quotation::STATUS_APPROVED => 'info',
-                        Quotation::STATUS_REJECTED => 'danger',
-                        Quotation::STATUS_CONVERTED => 'success',
-                        default => 'gray',
-                    })
-                    ->tooltip(fn(Quotation $record): string => "Lifecycle status: " . ucfirst($record->status)),
+                    ->tooltip(fn(Quotation $record): string => "Status: " . ucfirst($record->status)),
 
                 TextColumn::make('quotation_date')
                     ->label('Date')
@@ -466,8 +463,8 @@ class QuotationResource extends Resource
                         ->label('Convert to PO')
                         ->icon('heroicon-m-shopping-cart')
                         ->color('primary')
-                        ->tooltip('Convert this approved & reviewed quotation into an active Purchase Order')
-                        ->visible(fn(Quotation $r): bool => $r->status !== Quotation::STATUS_CONVERTED && $r->status !== Quotation::STATUS_REJECTED && ($r->canServeAsOfficialPO() || $r->isReadyForConversion()))
+                        ->tooltip('Convert this approved quotation into an active Purchase Order')
+                        ->visible(fn(Quotation $r): bool => $r->status === Quotation::STATUS_APPROVED || $r->canServeAsOfficialPO())
                         ->form([
                             DatePicker::make('order_date')
                                 ->label('Order Date')

@@ -15,6 +15,7 @@ class Product extends Model
         'product_code',
         'canonical_name',
         'description',
+        'image_path',
         'sku',
         'category',
         'unit_default',
@@ -101,6 +102,45 @@ class Product extends Model
             return 0.0;
         }
         return round((((float) $this->selling_price - (float) $this->base_cost_price) / (float) $this->selling_price) * 100, 1);
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://')) {
+            return $this->image_path;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image_path);
+    }
+
+    public function getBase64ImageAttribute(): ?string
+    {
+        if (!$this->image_path) {
+            return null;
+        }
+
+        $fullPath = null;
+        if (file_exists($this->image_path)) {
+            $fullPath = $this->image_path;
+        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->image_path)) {
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($this->image_path);
+        } elseif (file_exists(public_path('storage/' . $this->image_path))) {
+            $fullPath = public_path('storage/' . $this->image_path);
+        }
+
+        if ($fullPath && file_exists($fullPath)) {
+            $type = pathinfo($fullPath, PATHINFO_EXTENSION);
+            $data = @file_get_contents($fullPath);
+            if ($data !== false) {
+                return 'data:image/' . $type . ';base64,' . base64_encode($data);
+            }
+        }
+
+        return null;
     }
 
     public static function getSkuOptions(): array

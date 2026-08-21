@@ -171,14 +171,27 @@
                                 {{ $item['material_code'] ?: '—' }}
                             </span>
                         </td>
+                        @php
+                            $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
+                            $prodImg = $prod?->base64_image;
+                        @endphp
                         <td style="border-right: 1px solid #000; padding: 4px; vertical-align: top;">
                             <span class="{{ !empty($mod['items'][$idx]['description']) ? 'highlight' : '' }}">
                                 {{ $item['description'] }}
                             </span>
+                            @if(!$hasClientRef && $prodImg)
+                                <div style="margin-top: 3px;">
+                                    <img src="{{ $prodImg }}" style="max-height: 35px; max-width: 45px; object-fit: contain;">
+                                </div>
+                            @endif
                         </td>
                         @if($hasClientRef)
-                            <td style="border-right: 1px solid #000; padding: 4px; vertical-align: top; text-align: center; color: #64748b; font-style: italic;">
-                                —
+                            <td style="border-right: 1px solid #000; padding: 4px; vertical-align: middle; text-align: center;">
+                                @if($prodImg)
+                                    <img src="{{ $prodImg }}" style="max-height: 35px; max-width: 45px; object-fit: contain;">
+                                @else
+                                    <span style="color: #94a3b8; font-size: 8px;">—</span>
+                                @endif
                             </td>
                         @endif
                         <td style="border-right: 1px solid #000; padding: 4px; text-align: right; vertical-align: top;">

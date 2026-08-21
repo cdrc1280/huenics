@@ -138,13 +138,16 @@ class DynamicDocumentParser
             return '';
         }
 
-        // 1. Separate merged currency/price numbers: e.g. "3,250.002,925.0043,875.00" -> "3,250.00 2,925.00 43,875.00"
+        // 1. Separate digits and units e.g. "15pcs" -> "15 pcs", "500pcs" -> "500 pcs"
+        $text = preg_replace('/(\d+)(pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\b/i', '$1 $2', $text);
+
+        // 2. Separate merged currency/price numbers: e.g. "3,250.002,925.0043,875.00" -> "3,250.00 2,925.00 43,875.00"
         $text = preg_replace('/(\.\d{2})(?=\d)/', '$1 ', $text);
 
-        // 2. Separate merged price followed immediately by letters: e.g. "43,875.00Led" or "298,620.00HISI" -> "43,875.00 Led"
+        // 3. Separate merged price followed immediately by letters: e.g. "43,875.00Led" or "298,620.00HISI" -> "43,875.00 Led"
         $text = preg_replace('/(\.\d{2})([A-Za-z])/u', '$1 $2', $text);
 
-        // 3. Separate lowercase letter followed by capital item code if merged: e.g. "casingHISI" -> "casing HISI"
+        // 4. Separate lowercase letter followed by capital item code if merged: e.g. "casingHISI" -> "casing HISI"
         $text = preg_replace('/([a-z0-9])(HISI[\-\_])/u', '$1 $2', $text);
 
         return $text;
@@ -262,8 +265,11 @@ class DynamicDocumentParser
         }
 
         if (empty($data['document_number'])) {
-            if (preg_match('/(?:Quotation\s*(?:No\.?|\#)?|Quote\s*(?:No\.?|\#)?|PO\s*(?:No\.?|\#)?|P\.O\.\s*(?:No\.?|\#)?|Order\s*Slip\s*(?:No\.?|\#)?|S\.O\.\s*(?:No\.?|\#)?|Invoice\s*(?:No\.?|\#)?|SI\s*(?:No\.?|\#)?|DR\s*(?:No\.?|\#)?)\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_]+?)(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|\r|\n))/i', $fullText, $m)) {
-                $data['document_number'] = trim($m[1]);
+            if (preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/]+?)(?=(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\r|\n|$))/i', $fullText, $m)) {
+                $candidate = trim($m[1]);
+                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
+                    $data['document_number'] = $candidate;
+                }
             }
         }
 
@@ -306,7 +312,7 @@ class DynamicDocumentParser
         $tableText = $this->preprocessExtractedText($fullText);
 
         // Strip text up to table header columns
-        if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s+Price|Discounted\s+Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
+        if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
             $startPos = $matches[0][1] + strlen($matches[0][0]);
             $tableText = substr($tableText, $startPos);
         }
@@ -345,7 +351,7 @@ class DynamicDocumentParser
         $tableSection = substr($tableText, 0, $earliestStop);
 
         // 2. Global row regex scanning that decomposes concatenated rows & handles multiline descriptions
-        $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>[^\d]+(?:[^\d]+|\d+(?:\s*(?:w|k|meters?|m|v|amp|deg|°|\"|\'|\/|\-|yrs?|years?|mm|cm|x\s*\d+))|[^\d]*)*?)\s+(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+\.\d{2})\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+\.\d{2})\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+\.\d{2})/is';
+        $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>.*?\b)\s*(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+(?:\.\d{2})?)\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+(?:\.\d{2})?)\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+(?:\.\d{2})?)/is';
 
         preg_match_all($rowPattern, $tableSection, $matches, PREG_SET_ORDER);
 

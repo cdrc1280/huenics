@@ -96,7 +96,7 @@ class Quotation extends Model
 
     public function isReadyForConversion(): bool
     {
-        return $this->status === self::STATUS_APPROVED && $this->reviewed_by !== null;
+        return $this->status === self::STATUS_APPROVED || $this->canServeAsOfficialPO();
     }
 
     public function canServeAsOfficialPO(): bool

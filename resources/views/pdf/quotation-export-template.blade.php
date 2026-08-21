@@ -53,26 +53,42 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th>Item Code</th>
-                <th>Product Description</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Unit Price (₱)</th>
-                <th>Disc Price (₱)</th>
-                <th>Line Total (₱)</th>
+                <th style="width: 14%;">Item Code</th>
+                <th style="width: 12%;">Image</th>
+                <th style="width: 32%;">Product Description</th>
+                <th style="width: 6%;">Qty</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 10%;">Unit Price (₱)</th>
+                <th style="width: 10%;">Disc Price (₱)</th>
+                <th style="width: 10%;">Total (₱)</th>
             </tr>
         </thead>
         <tbody>
             @if($quotation->lineItems)
                 @foreach($quotation->lineItems as $item)
+                @php
+                    $prodImage = $item->product?->base64_image;
+                    $qty = $item->qty ?? ($item->quantity ?? 1);
+                    $unitPrice = (float)$item->unit_price;
+                    $discPrice = $item->discounted_price !== null ? (float)$item->discounted_price : ($item->discount_price !== null ? (float)$item->discount_price : 0);
+                    $effPrice = $discPrice > 0 ? $discPrice : $unitPrice;
+                    $lineTotal = (float)($item->line_total ?: ($qty * $effPrice));
+                @endphp
                 <tr>
-                    <td>{{ $item->item_code }}</td>
+                    <td><strong>{{ $item->item_code ?: '—' }}</strong></td>
+                    <td style="text-align: center; vertical-align: middle; padding: 2px;">
+                        @if($prodImage)
+                            <img src="{{ $prodImage }}" style="max-height: 38px; max-width: 45px; object-fit: contain;">
+                        @else
+                            <span style="color: #94a3b8; font-size: 8px;">—</span>
+                        @endif
+                    </td>
                     <td>{{ $item->description }}</td>
-                    <td style="text-align: center;">{{ $item->quantity }}</td>
+                    <td style="text-align: center;">{{ $qty }}</td>
                     <td style="text-align: center;">{{ $item->unit }}</td>
-                    <td style="text-align: right;">{{ number_format($item->unit_price, 2) }}</td>
-                    <td style="text-align: right;">{{ number_format($item->discount_price ?? 0, 2) }}</td>
-                    <td style="text-align: right;">{{ number_format($item->line_total, 2) }}</td>
+                    <td style="text-align: right;">{{ number_format($unitPrice, 2) }}</td>
+                    <td style="text-align: right;">{{ $discPrice > 0 ? number_format($discPrice, 2) : '—' }}</td>
+                    <td style="text-align: right; font-weight: bold;">{{ number_format($lineTotal, 2) }}</td>
                 </tr>
                 @endforeach
             @endif

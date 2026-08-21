@@ -615,4 +615,49 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         $this->assertEquals('2 Years and 6 Months', $warrantyPeriod->getLabel());
         $this->assertEquals(30, $warrantyPeriod->getMonths());
     }
+
+    public function test_product_image_field_and_pdf_export_with_image(): void
+    {
+        $product = Product::create([
+            'canonical_name' => 'Magnetic Tracklight 6W 3000K',
+            'product_code' => 'HISI-MTL-6W',
+            'sku' => 'HISI-MTL-6W-SKU',
+            'category' => 'Tracklights',
+            'unit_default' => 'pcs',
+            'selling_price' => 1890.00,
+            'image_path' => 'products/images/sample_tracklight.png',
+            'is_active' => true,
+        ]);
+
+        $this->assertEquals('products/images/sample_tracklight.png', $product->image_path);
+        $this->assertNotNull($product->image_url);
+
+        $quotation = Quotation::create([
+            'quotation_number' => Quotation::generateNumber(),
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Engr. Ronald Rey Sandoval',
+            'total_amount' => 1890.00,
+            'status' => Quotation::STATUS_APPROVED,
+            'quotation_date' => now()->toDateString(),
+        ]);
+
+        $line = QuotationLineItem::create([
+            'quotation_id' => $quotation->id,
+            'product_id' => $product->id,
+            'line_no' => 1,
+            'item_code' => 'HISI-MTL-6W',
+            'description' => 'Magnetic Tracklight 6W 3000K',
+            'qty' => 1,
+            'unit' => 'pcs',
+            'unit_price' => 1890.00,
+            'line_total' => 1890.00,
+        ]);
+
+        $this->assertEquals($product->id, $line->product->id);
+
+        $exporter = app(ExportQuotationPdf::class);
+        $pdfOutput = $exporter->generate($quotation);
+        $this->assertNotEmpty($pdfOutput);
+        $this->assertStringStartsWith('%PDF', $pdfOutput);
+    }
 }

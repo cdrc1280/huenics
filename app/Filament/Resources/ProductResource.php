@@ -50,6 +50,16 @@ class ProductResource extends Resource
             ->components([
                 Section::make('Canonical Product Details')
                     ->components([
+                        Forms\Components\FileUpload::make('image_path')
+                            ->label('Product Image')
+                            ->image()
+                            ->imageEditor()
+                            ->directory('products/images')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->helperText('Upload product photo or diagram to appear on quotations and PDF exports.')
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('canonical_name')
                             ->label('Canonical Product Name')
                             ->required()
@@ -108,6 +118,13 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('image_path')
+                    ->label('Image')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(url('/images/placeholder-product.png'))
+                    ->toggleable(isToggledHiddenByDefault: false),
+
                 TextColumn::make('product_code')
                     ->label('Code / SKU')
                     ->searchable()

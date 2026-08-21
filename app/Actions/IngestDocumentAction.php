@@ -171,14 +171,23 @@ class IngestDocumentAction
                 'quotation_date'   => $quotationDate,
             ]);
         } else {
-            $quotation->update([
+            $updates = [
                 'customer_name'    => $customerName,
                 'customer_company' => $customerCompany,
                 'project_name'     => $projectName,
+                'project_location' => $projectLocation,
+                'phone_no'         => $phoneNo,
                 'total_amount'     => $totalAmount,
                 'total_cost'       => round($totalAmount * 0.7, 2),
                 'estimated_profit' => round($totalAmount * 0.3, 2),
-            ]);
+            ];
+            if (!empty($document->document_number)) {
+                $updates['quotation_number'] = $document->document_number;
+            }
+            if (!empty($document->document_date)) {
+                $updates['quotation_date'] = $document->document_date;
+            }
+            $quotation->update($updates);
         }
 
         // Sync line items
@@ -238,12 +247,19 @@ class IngestDocumentAction
                 'status'           => PurchaseOrder::STATUS_PENDING,
             ]);
         } else {
-            $po->update([
+            $updates = [
                 'customer_name'    => $customerName,
                 'order_amount'     => $orderAmount,
                 'printed_vat'      => $document->totals?->printed_vat,
                 'computed_vat'     => $document->totals?->computed_vat,
-            ]);
+            ];
+            if (!empty($document->document_number)) {
+                $updates['po_number'] = $document->document_number;
+            }
+            if (!empty($document->document_date)) {
+                $updates['order_date'] = $document->document_date;
+            }
+            $po->update($updates);
         }
 
         // Sync line items
