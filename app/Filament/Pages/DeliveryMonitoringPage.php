@@ -30,7 +30,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
     protected static ?string $navigationLabel = 'Fleet & Delivery Tracker';
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected string $view = 'filament.pages.delivery-monitoring-page';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 6;
 
     public function table(Table $table): Table
     {

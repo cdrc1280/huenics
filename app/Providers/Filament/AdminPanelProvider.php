@@ -37,7 +37,6 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Analytics & Dashboards',
                 'Sales & Order Lifecycle',
-                'Document OCR & Ingestion',
                 'Catalog & Master Data',
                 'System & Security',
             ])

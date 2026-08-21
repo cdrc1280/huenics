@@ -37,7 +37,7 @@ class SalesInvoiceResource extends Resource
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-receipt-percent';
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Sales Invoices (SI)';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     public static function form(Schema $schema): Schema
     {

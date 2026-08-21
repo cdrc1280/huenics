@@ -35,7 +35,7 @@ class DeliveryReceiptResource extends Resource
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-truck';
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Delivery Receipts (DR)';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
     {

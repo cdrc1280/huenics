@@ -27,7 +27,7 @@ class TransactionResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-table-cells';
     protected static ?string $navigationLabel = 'Master Transactions Ledger';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     public static function canCreate(): bool
     {

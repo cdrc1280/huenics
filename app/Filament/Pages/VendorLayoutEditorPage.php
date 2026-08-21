@@ -11,11 +11,11 @@ use Filament\Pages\Page;
 class VendorLayoutEditorPage extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
-    protected static \UnitEnum|string|null $navigationGroup = 'Document OCR & Ingestion';
-    protected static ?string $navigationLabel = 'Vendor OCR Layout Mappings';
+    protected static \UnitEnum|string|null $navigationGroup = 'Catalog & Master Data';
+    protected static ?string $navigationLabel = 'Vendor Layout Mappings';
     protected static ?string $title = 'Dynamic Vendor Layout Configurator';
     protected string $view = 'filament.pages.vendor-layout-editor-page';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 5;
 
     public static function canAccess(): bool
     {

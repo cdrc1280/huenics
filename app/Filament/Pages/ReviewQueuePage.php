@@ -35,11 +35,11 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     use InteractsWithForms;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard-document-check';
-    protected static \UnitEnum|string|null $navigationGroup = 'Document OCR & Ingestion';
-    protected static ?string $navigationLabel = 'Discrepancy Review Queue';
+    protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+    protected static ?string $navigationLabel = 'Document Verification Queue';
     protected static ?string $title = 'Document Verification & Review Queue';
     protected string $view = 'filament.pages.review-queue-page';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {
