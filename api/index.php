@@ -1,70 +1,98 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
+// Catch ALL errors including fatal ones
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
-define('LARAVEL_START', microtime(true));
-
-// ─── Force HTTPS behind Vercel edge ──────────────────────────────────────────
-if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-    $_SERVER['HTTPS'] = 'on';
-    $_SERVER['SERVER_PORT'] = '443';
-}
-
-// ─── Writable storage dirs in /tmp ───────────────────────────────────────────
-foreach ([
-    '/tmp/storage/app/public',
-    '/tmp/storage/app/private',
-    '/tmp/storage/framework/cache/data',
-    '/tmp/storage/framework/sessions',
-    '/tmp/storage/framework/views',
-    '/tmp/storage/logs',
-] as $dir) {
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
+// Register a shutdown function to catch fatal errors
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json', true, 500);
+        }
+        echo json_encode([
+            'fatal_error' => $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line'],
+        ]);
     }
-}
+});
 
-// ─── Database: copy pre-built SQLite if no external DB ───────────────────────
-$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
+try {
+    // ─── Force HTTPS behind Vercel edge ──────────────────────────────────
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+        $_SERVER['HTTPS'] = 'on';
+        $_SERVER['SERVER_PORT'] = '443';
+    }
 
-if (empty($dbHost)) {
-    $dbTarget = '/tmp/database.sqlite';
-
-    // Copy the pre-built base database on cold start (first request per Lambda)
-    if (!file_exists($dbTarget)) {
-        $baseDb = dirname(__DIR__) . '/database/base.sqlite';
-        if (file_exists($baseDb)) {
-            copy($baseDb, $dbTarget);
-        } else {
-            touch($dbTarget);
+    // ─── Writable storage dirs ───────────────────────────────────────────
+    foreach ([
+        '/tmp/storage/app/public',
+        '/tmp/storage/app/private',
+        '/tmp/storage/framework/cache/data',
+        '/tmp/storage/framework/sessions',
+        '/tmp/storage/framework/views',
+        '/tmp/storage/logs',
+    ] as $dir) {
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
         }
     }
 
-    putenv('DB_CONNECTION=sqlite');
-    putenv("DB_DATABASE={$dbTarget}");
-    $_ENV['DB_CONNECTION']  = $_SERVER['DB_CONNECTION']  = 'sqlite';
-    $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbTarget;
+    // ─── Database: copy pre-built SQLite if no external DB ───────────────
+    $dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
+
+    if (empty($dbHost)) {
+        $dbTarget = '/tmp/database.sqlite';
+
+        if (!file_exists($dbTarget)) {
+            $baseDb = dirname(__DIR__) . '/database/base.sqlite';
+            if (file_exists($baseDb)) {
+                copy($baseDb, $dbTarget);
+            } else {
+                touch($dbTarget);
+            }
+        }
+
+        putenv('DB_CONNECTION=sqlite');
+        putenv("DB_DATABASE={$dbTarget}");
+        $_ENV['DB_CONNECTION']  = $_SERVER['DB_CONNECTION']  = 'sqlite';
+        $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbTarget;
+    }
+
+    // ─── Session: cookie ─────────────────────────────────────────────────
+    if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
+        putenv('SESSION_DRIVER=cookie');
+        $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'cookie';
+    }
+
+    // ─── APP_KEY ─────────────────────────────────────────────────────────
+    if (empty(getenv('APP_KEY')) && empty($_ENV['APP_KEY'])) {
+        $key = 'base64:OmixpRBaKmg+k4HjJgrTq+v3v5yWXMAR05omeeVOW2c=';
+        putenv("APP_KEY={$key}");
+        $_ENV['APP_KEY'] = $_SERVER['APP_KEY'] = $key;
+    }
+
+    // ─── Bootstrap Laravel ───────────────────────────────────────────────
+    define('LARAVEL_START', microtime(true));
+    require __DIR__ . '/../vendor/autoload.php';
+
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    $app->useStoragePath('/tmp/storage');
+
+    $app->handleRequest(
+        \Illuminate\Http\Request::capture()
+    );
+
+} catch (\Throwable $e) {
+    if (!headers_sent()) {
+        header('Content-Type: application/json', true, 500);
+    }
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'file'  => $e->getFile(),
+        'line'  => $e->getLine(),
+        'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 15),
+    ]);
 }
-
-// ─── Session: cookie — no DB table needed ────────────────────────────────────
-if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
-    putenv('SESSION_DRIVER=cookie');
-    $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'cookie';
-}
-
-// ─── APP_KEY fallback (set real key in Vercel Dashboard) ─────────────────────
-if (empty(getenv('APP_KEY')) && empty($_ENV['APP_KEY'])) {
-    $key = 'base64:OmixpRBaKmg+k4HjJgrTq+v3v5yWXMAR05omeeVOW2c=';
-    putenv("APP_KEY={$key}");
-    $_ENV['APP_KEY'] = $_SERVER['APP_KEY'] = $key;
-}
-
-// ─── Bootstrap Laravel and handle the HTTP request ───────────────────────────
-require __DIR__ . '/../vendor/autoload.php';
-
-/** @var Application $app */
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$app->useStoragePath('/tmp/storage');
-
-$app->handleRequest(Request::capture());
