@@ -11,7 +11,7 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
     $_SERVER['SERVER_PORT'] = '443';
 }
 
-// Ensure writable storage directories exist in /tmp for Vercel Serverless
+// Ensure writable storage directories exist in /tmp
 foreach ([
     '/tmp/storage/app/public',
     '/tmp/storage/app/private',
@@ -25,57 +25,54 @@ foreach ([
     }
 }
 
-// ─── Database: fallback to SQLite if no external DB is configured ─────────────
-$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
+// ─── SQLite fallback if no external DB ───────────────────────────────────────
+$dbHost  = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
+$freshDb = false;
+
 if (empty($dbHost)) {
-    $dbFile   = '/tmp/database.sqlite';
-    $freshDb  = !file_exists($dbFile);
+    $dbFile  = '/tmp/database.sqlite';
+    $freshDb = !file_exists($dbFile);
 
     if ($freshDb) {
         touch($dbFile);
     }
 
-    foreach (['DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => $dbFile] as $k => $v) {
-        putenv("{$k}={$v}");
-        $_ENV[$k] = $_SERVER[$k] = $v;
-    }
+    putenv('DB_CONNECTION=sqlite');
+    putenv("DB_DATABASE={$dbFile}");
+    $_ENV['DB_CONNECTION']  = $_SERVER['DB_CONNECTION']  = 'sqlite';
+    $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbFile;
 }
 
-// ─── Session: always cookie (no sessions table dependency) ───────────────────
-foreach (['SESSION_DRIVER' => 'cookie'] as $k => $v) {
-    if (empty(getenv($k)) && empty($_ENV[$k])) {
-        putenv("{$k}={$v}");
-        $_ENV[$k] = $_SERVER[$k] = $v;
-    }
+// ─── Always cookie sessions — no sessions table dependency ───────────────────
+if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
+    putenv('SESSION_DRIVER=cookie');
+    $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'cookie';
 }
 
-// ─── APP_KEY fallback (set real key in Vercel Dashboard → Environment Vars) ──
+// ─── APP_KEY (set a real one in Vercel Dashboard → Environment Variables) ────
 if (empty(getenv('APP_KEY')) && empty($_ENV['APP_KEY'])) {
     $key = 'base64:OmixpRBaKmg+k4HjJgrTq+v3v5yWXMAR05omeeVOW2c=';
     putenv("APP_KEY={$key}");
     $_ENV['APP_KEY'] = $_SERVER['APP_KEY'] = $key;
 }
 
-// ─── Bootstrap Laravel ────────────────────────────────────────────────────────
+// ─── Run migrations in a separate process (avoids Console/HTTP Kernel conflict)
+if (empty($dbHost)) {
+    $artisan = dirname(__DIR__) . '/artisan';
+    $php     = PHP_BINARY;
+
+    exec("{$php} {$artisan} migrate --force 2>/dev/null");
+
+    if ($freshDb) {
+        exec("{$php} {$artisan} db:seed --force 2>/dev/null");
+    }
+}
+
+// ─── Bootstrap and handle HTTP request ───────────────────────────────────────
 require __DIR__ . '/../vendor/autoload.php';
 
 /** @var Application $app */
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $app->useStoragePath('/tmp/storage');
-
-// ─── Run migrations inside a properly-booted kernel ──────────────────────────
-// We do this only for SQLite fallback; safe to run every request (idempotent).
-if (empty($dbHost)) {
-    try {
-        $artisan = $app->make(Illuminate\Contracts\Console\Kernel::class);
-        $artisan->call('migrate', ['--force' => true]);
-        if (!empty($freshDb)) {
-            $artisan->call('db:seed', ['--force' => true]);
-        }
-        $artisan->terminate();
-    } catch (\Throwable $e) {
-        // Continue — real errors will surface in the HTTP response
-    }
-}
 
 $app->handleRequest(Request::capture());
