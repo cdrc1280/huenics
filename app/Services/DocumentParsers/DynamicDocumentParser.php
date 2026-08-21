@@ -35,14 +35,14 @@ class DynamicDocumentParser
         $filePath = $document->getAbsolutePath();
         if ($filePath && file_exists($filePath)) {
             $extractionResult = $this->textExtractor->extract($filePath);
-            $fullText = $this->sanitizeUtf8($extractionResult['text']);
+            $fullText = $this->preprocessExtractedText($this->sanitizeUtf8($extractionResult['text']));
             $lines = array_map(fn($l) => $this->sanitizeUtf8($l), $extractionResult['lines']);
             $document->raw_extracted_text = $fullText;
             if (!empty($extractionResult['companion_pdf'])) {
                 $document->companion_pdf_path = $extractionResult['companion_pdf'];
             }
         } elseif (!empty($document->raw_extracted_text)) {
-            $fullText = $this->sanitizeUtf8($document->raw_extracted_text);
+            $fullText = $this->preprocessExtractedText($this->sanitizeUtf8($document->raw_extracted_text));
             $lines = array_map(fn($l) => $this->sanitizeUtf8($l), explode("\n", $fullText));
             $document->raw_extracted_text = $fullText;
         } else {
@@ -130,6 +130,27 @@ class DynamicDocumentParser
     }
 
     /**
+     * Preprocess extracted raw text to separate merged prices, quantities, and words from OCR/PDF streams.
+     */
+    public function preprocessExtractedText(?string $text): string
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        // 1. Separate merged currency/price numbers: e.g. "3,250.002,925.0043,875.00" -> "3,250.00 2,925.00 43,875.00"
+        $text = preg_replace('/(\.\d{2})(?=\d)/', '$1 ', $text);
+
+        // 2. Separate merged price followed immediately by letters: e.g. "43,875.00Led" or "298,620.00HISI" -> "43,875.00 Led"
+        $text = preg_replace('/(\.\d{2})([A-Za-z])/u', '$1 $2', $text);
+
+        // 3. Separate lowercase letter followed by capital item code if merged: e.g. "casingHISI" -> "casing HISI"
+        $text = preg_replace('/([a-z0-9])(HISI[\-\_])/u', '$1 $2', $text);
+
+        return $text;
+    }
+
+    /**
      * Auto-detect document type from header text.
      */
     public function detectDocumentType(string $text): ?string
@@ -139,68 +160,62 @@ class DynamicDocumentParser
         if (str_contains($upper, 'VENDORS AGREEMENT') || str_contains($upper, 'VENDOR\'S AGREEMENT') || str_contains($upper, 'QUOTATION')) {
             return Document::TYPE_VENDORS_AGREEMENT;
         }
-
-        if (str_contains($upper, 'PURCHASE ORDER') || str_contains($upper, 'PO NO.') || str_contains($upper, 'P.O. NO.') || str_contains($upper, 'ORDER SLIP') || str_contains($upper, 'S.O.')) {
+        if (str_contains($upper, 'PURCHASE ORDER') || str_contains($upper, 'ORDER SLIP') || str_contains($upper, 'P.O.') || str_contains($upper, 'S.O.')) {
             return Document::TYPE_PURCHASE_ORDER;
         }
+        if (str_contains($upper, 'DELIVERY RECEIPT') || str_contains($upper, 'D.R.')) {
+            return Document::TYPE_DELIVERY_RECEIPT;
+        }
+        if (str_contains($upper, 'SALES INVOICE') || str_contains($upper, 'S.I.')) {
+            return Document::TYPE_SALES_INVOICE;
+        }
 
-        return null;
+        return Document::TYPE_PURCHASE_ORDER;
     }
 
     /**
-     * Resolve vendor from content.
+     * Resolve vendor from full text.
      */
-    protected function detectVendorId(string $text): ?int
+    protected function detectVendorId(string $fullText): ?int
     {
-        $vendors = Vendor::where('is_active', true)->get();
+        $vendors = Vendor::all();
         foreach ($vendors as $vendor) {
-            if (stripos($text, $vendor->name) !== false || ($vendor->tin && str_contains($text, $vendor->tin))) {
+            if (stripos($fullText, $vendor->name) !== false) {
+                return $vendor->id;
+            }
+            if ($vendor->slug && stripos($fullText, $vendor->slug) !== false) {
                 return $vendor->id;
             }
         }
-
-        // Default to first vendor (e.g. Huenics) if exists
         return $vendors->first()?->id;
     }
 
     /**
-     * Resolve project from content.
+     * Resolve project from full text.
      */
-    protected function detectProjectId(string $text): ?int
+    protected function detectProjectId(string $fullText): ?int
     {
         $projects = Project::all();
         foreach ($projects as $project) {
-            if (stripos($text, $project->name) !== false || ($project->code && stripos($text, $project->code) !== false)) {
+            if (stripos($fullText, $project->name) !== false) {
+                return $project->id;
+            }
+            if ($project->code && stripos($fullText, $project->code) !== false) {
                 return $project->id;
             }
         }
-
-        // Look for project name patterns like "Project: Palanza Tower", "Job: ...", "Site: ..."
-        if (preg_match('/(?:project|project\s*name|job\s*site|site)\s*[:\-]?\s*([^\r\n\,]+)/i', $text, $matches)) {
-            $projectName = trim($matches[1]);
-            if (strlen($projectName) > 2) {
-                $project = Project::firstOrCreate(
-                    ['name' => $projectName],
-                    ['customer_name' => 'Auto-Detected']
-                );
-                return $project->id;
-            }
-        }
-
         return $projects->first()?->id;
     }
 
     /**
-     * Resolve layout configuration.
+     * Resolve layout configuration based on vendor, document type, or signature.
      */
-    protected function resolveLayout(?int $vendorId, string $documentType, string $fullText): ?VendorDocumentLayout
+    protected function resolveLayout(?int $vendorId, string $docType, string $fullText): ?VendorDocumentLayout
     {
         if ($vendorId) {
             $layout = VendorDocumentLayout::where('vendor_id', $vendorId)
-                ->where('document_type', $documentType)
+                ->where('document_type', $docType)
                 ->where('is_active', true)
-                ->with('fieldMappings')
-                ->latest('layout_version')
                 ->first();
 
             if ($layout) {
@@ -208,15 +223,21 @@ class DynamicDocumentParser
             }
         }
 
-        // Try to find any active layout matching document type
-        return VendorDocumentLayout::where('document_type', $documentType)
+        $activeLayouts = VendorDocumentLayout::where('document_type', $docType)
             ->where('is_active', true)
-            ->with('fieldMappings')
-            ->first();
+            ->get();
+
+        foreach ($activeLayouts as $layout) {
+            if ($layout->matchesSignature($fullText)) {
+                return $layout;
+            }
+        }
+
+        return null;
     }
 
     /**
-     * Extract header fields.
+     * Extract header metadata (Doc number, date, customer, project, etc.).
      */
     protected function extractHeaderMetadata(?VendorDocumentLayout $layout, string $fullText, array $lines, string $docType): array
     {
@@ -230,38 +251,18 @@ class DynamicDocumentParser
             'phone_no' => null,
         ];
 
-        // 1. Try DB layout field mappings if present
         if ($layout) {
-            $docNumMapping = $layout->fieldMappings->where('field_key', 'document_number')->first();
-            if ($docNumMapping) {
-                $val = $this->fieldExtractor->extractField($docNumMapping, $fullText, $lines);
-                if ($val && preg_match('/\d/', (string) $val) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', (string) $val)) {
-                    $data['document_number'] = $val;
+            $headerRules = $layout->header_rules ?? [];
+            foreach ($headerRules as $field => $rules) {
+                $rawVal = $this->fieldExtractor->extractByRules($fullText, $lines, $rules);
+                if ($rawVal !== null) {
+                    $data[$field] = $rawVal;
                 }
-            }
-
-            $dateMapping = $layout->fieldMappings->where('field_key', 'document_date')->first();
-            if ($dateMapping) {
-                $data['document_date'] = $this->fieldExtractor->extractField($dateMapping, $fullText, $lines);
             }
         }
 
-        // 2. Smart fallback regex if not extracted
         if (empty($data['document_number'])) {
-            if (preg_match('/(?:Quotation|Quote)\s*(?:No\.?|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\_\s]+?)(?=\s+(?:Date|Dated)|\r|\n|$)/i', $fullText, $m)) {
-                $candidate = trim($m[1]);
-                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
-                    $data['document_number'] = $candidate;
-                }
-            }
-            if (empty($data['document_number']) && preg_match('/(?:Purchase\s*Order|P\.?O\.?|Order\s*Slip|S\.?O\.?)\s*(?:No\.?|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\_\s]+?)(?=\s+(?:Date|Dated)|\r|\n|$)/i', $fullText, $m)) {
-                $candidate = trim($m[1]);
-                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
-                    $data['document_number'] = $candidate;
-                }
-            }
-            // Standalone document number patterns near top of document
-            if (empty($data['document_number']) && preg_match('/\b(26\d{4}\s*-\s*[A-Za-z0-9]+|\d{6,12}(?:-\w+)?|PO-\d+|SO-\d+)\b/i', $fullText, $m)) {
+            if (preg_match('/(?:Quotation\s*(?:No\.?|\#)?|Quote\s*(?:No\.?|\#)?|PO\s*(?:No\.?|\#)?|P\.O\.\s*(?:No\.?|\#)?|Order\s*Slip\s*(?:No\.?|\#)?|S\.O\.\s*(?:No\.?|\#)?|Invoice\s*(?:No\.?|\#)?|SI\s*(?:No\.?|\#)?|DR\s*(?:No\.?|\#)?)\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_]+?)(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|\r|\n))/i', $fullText, $m)) {
                 $data['document_number'] = trim($m[1]);
             }
         }
@@ -301,19 +302,19 @@ class DynamicDocumentParser
      */
     protected function extractLineItems(?VendorDocumentLayout $layout, string $fullText, array $lines, Document $document): array
     {
-        // 1. Isolate table section between header columns and footer notes/terms
-        $tableText = $fullText;
+        // 1. Preprocess and isolate table section between header columns and footer notes/terms
+        $tableText = $this->preprocessExtractedText($fullText);
 
         // Strip text up to table header columns
-        if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
+        if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s+Price|Discounted\s+Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
             $startPos = $matches[0][1] + strlen($matches[0][0]);
             $tableText = substr($tableText, $startPos);
         }
 
         // Truncate at end of table markers (notes, terms, totals)
         $stopPatterns = [
-            '/\bTotal\s*Amount\s*:/i',
-            '/\bNegotiated\s*Amount\s*:/i',
+            '/\bTotal\s*Amount(?:\s*[:\.]|\s+[\d\,\.]+)/i',
+            '/\bNegotiated\s*Amount\s*[:\.]?/i',
             '/\bPrices\s*are\s*subject\s*to\s*change/i',
             '/\bTerms\s*(?:and|&)\s*Conditions/i',
             '/\bStock\s*Availability/i',
@@ -344,7 +345,7 @@ class DynamicDocumentParser
         $tableSection = substr($tableText, 0, $earliestStop);
 
         // 2. Global row regex scanning that decomposes concatenated rows & handles multiline descriptions
-        $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>[^\d]+(?:[^\d]+|\d+(?:\s*(?:w|k|meters?|m|v|amp|deg|°|\"|\'|\/|\-))|[^\d]*)*?)\s+(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+\.\d{2})\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+\.\d{2})\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+\.\d{2})/is';
+        $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>[^\d]+(?:[^\d]+|\d+(?:\s*(?:w|k|meters?|m|v|amp|deg|°|\"|\'|\/|\-|yrs?|years?|mm|cm|x\s*\d+))|[^\d]*)*?)\s+(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+\.\d{2})\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+\.\d{2})\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+\.\d{2})/is';
 
         preg_match_all($rowPattern, $tableSection, $matches, PREG_SET_ORDER);
 

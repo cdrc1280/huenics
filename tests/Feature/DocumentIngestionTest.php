@@ -315,6 +315,100 @@ OCR;
             $this->assertStringNotContainsString('Warranty', $item['description']);
         }
     }
+
+    public function test_ingesting_merged_price_numbers_and_downlight_document(): void
+    {
+        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+
+        // Document with concatenated numbers without spaces: 3,250.002,925.0043,875.00Led Driver...
+        $doc1 = Document::create([
+            'vendor_id' => $this->vendor->id,
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->user->id,
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => 'DOC-MERGED-123',
+            'original_filename' => 'Merged.pdf',
+            'disk_path' => 'documents/uploads/merged.pdf',
+            'file_hash' => 'hash_merged_123',
+            'status' => Document::STATUS_UPLOADED,
+        ]);
+
+        $mergedText = <<<OCR
+Item Code Product Description Qty Unit Unit Price Discounted Price Total
+End Cap 8 pcs 300.00270.002,160.00HISI-LD-100W Led Driver for Magnetic Tracklight 100w 15 pcs 3,250.002,925.0043,875.00Led Driver for Magnetic Tracklight 200w
+(to be verified actual with client) 2 pcs 3,685.003,350.006,700.00
+Total Amount: 52,735.00 Negotiated Amount: 50,000.00
+OCR;
+
+        $reflection = new \ReflectionClass($parser);
+        $method = $reflection->getMethod('extractLineItems');
+        $method->setAccessible(true);
+        $items1 = $method->invoke($parser, null, $mergedText, explode("\n", $mergedText), $doc1);
+
+        $this->assertCount(3, $items1);
+        $this->assertEquals(8.0, $items1[0]['qty']);
+        $this->assertEquals(300.0, $items1[0]['unit_price']);
+        $this->assertEquals(2160.0, $items1[0]['printed_total']);
+
+        $this->assertEquals('HISI-LD-100W', $items1[1]['material_code']);
+        $this->assertEquals(15.0, $items1[1]['qty']);
+        $this->assertEquals(3250.0, $items1[1]['unit_price']);
+        $this->assertEquals(2925.0, $items1[1]['discounted_price']);
+        $this->assertEquals(43875.0, $items1[1]['printed_total']);
+
+        $this->assertNull($items1[2]['material_code']);
+        $this->assertEquals(2.0, $items1[2]['qty']);
+        $this->assertEquals(3685.0, $items1[2]['unit_price']);
+        $this->assertEquals(3350.0, $items1[2]['discounted_price']);
+        $this->assertEquals(6700.0, $items1[2]['printed_total']);
+
+        // Downlight document with sizes and warranties
+        $doc2 = Document::create([
+            'vendor_id' => $this->vendor->id,
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->user->id,
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => '261001- P',
+            'original_filename' => 'Downlight.pdf',
+            'disk_path' => 'documents/uploads/downlight.pdf',
+            'file_hash' => 'hash_downlight_123',
+            'status' => Document::STATUS_UPLOADED,
+        ]);
+
+        $downlightText = <<<OCR
+VENDORS AGREEMENT FORM
+Quotation No. 261001- P Date 01/05/26
+Customer Name Engr. Ronald Rey Sandoval
+Company MGS CONSTRUCTION, INC. Address
+2F Starmall Annex, Alabang-Zapote Road, corner Doña Manuela Avenue, Pamplona III, Las Pinas, For Project Palanza Tower Project Location Palanza St. corner Guirayan st., Dona Imelda, Q.C
+Phone No. 0906-144-2553
+Item Code Product Description Qty Unit Unit Price Discounted Price Total HISI-JF-2240-7w
+Led Downlight C.O.B Citizen Japan 3500k Warmwhite 7w
+Size:Ø110mm x 25mm, white casing
+Warranty: 2 yrs 500 pcs 1,950.00 1,755.00 877,500.00
+HISI-JF-2240-7w
+Led Downlight C.O.B Citizen Japan 3500k Warmwhite 7w
+Size:Ø110mm x 25mm, black casing
+Warranty: 2 yrs 112 pcs 1,950.00 1,755.00 196,560.00
+Total Amount 1,074,060.00
+Negotiated Amount: 1,050,000.00
+OCR;
+
+        $items2 = $method->invoke($parser, null, $downlightText, explode("\n", $downlightText), $doc2);
+        $this->assertCount(2, $items2);
+
+        $this->assertEquals('HISI-JF-2240-7w', $items2[0]['material_code']);
+        $this->assertEquals(500.0, $items2[0]['qty']);
+        $this->assertEquals(1950.00, $items2[0]['unit_price']);
+        $this->assertEquals(1755.00, $items2[0]['discounted_price']);
+        $this->assertEquals(877500.00, $items2[0]['printed_total']);
+
+        $this->assertEquals('HISI-JF-2240-7w', $items2[1]['material_code']);
+        $this->assertEquals(112.0, $items2[1]['qty']);
+        $this->assertEquals(1950.00, $items2[1]['unit_price']);
+        $this->assertEquals(1755.00, $items2[1]['discounted_price']);
+        $this->assertEquals(196560.00, $items2[1]['printed_total']);
+    }
 }
 
 
