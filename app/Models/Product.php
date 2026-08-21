@@ -102,4 +102,14 @@ class Product extends Model
         }
         return round((((float) $this->selling_price - (float) $this->base_cost_price) / (float) $this->selling_price) * 100, 1);
     }
+
+    public static function getSkuOptions(): array
+    {
+        return static::query()
+            ->whereNotNull('sku')
+            ->where('sku', '!=', '')
+            ->orderBy('sku')
+            ->pluck('sku', 'sku')
+            ->toArray();
+    }
 }

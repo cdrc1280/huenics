@@ -234,6 +234,87 @@ class DocumentIngestionTest extends TestCase
         $this->assertEquals(1500.00, (float) $createdProduct->default_price);
         $this->assertEquals('pcs', $createdProduct->unit_default);
     }
+
+    public function test_ingesting_vendors_agreement_with_variations_and_footer_filtering(): void
+    {
+        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+        $doc = Document::create([
+            'vendor_id' => $this->vendor->id,
+            'project_id' => $this->project->id,
+            'uploaded_by' => $this->user->id,
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => '25100163 - P rev.2',
+            'original_filename' => 'VendorsAgreement.pdf',
+            'disk_path' => 'documents/uploads/vendorsagreement.pdf',
+            'file_hash' => 'hash_vendors_agreement_test_full',
+            'status' => Document::STATUS_UPLOADED,
+        ]);
+
+        $ocrText = <<<OCR
+VENDORS AGREEMENT FORM
+Quotation No. 25100163 - P rev.2 Date 01/05/25 Customer Name Engr. Ronald Rey Sandoval Company MGS CONSTRUCTION, INC.
+Address 2F Starmall Annex, Alabang-Zapote Road, corner Doña Manuela Avenue, Pamplona III, Las Pinas, For Project Palanza Tower
+Project Location Palanza St. corner guirayan st., Dona Imelda, Q.C Phone No. 0906-144-2553
+Item Code Product Description References from Client Qty Unit Unit Price Discounted Price Total HISI - MTL- 6W Magnetic Tracklight 6w 3000k 158 pcs 2,100.00 1,890.00 298,620.00 HISI - MTL- 6W Magnetic Tracklight 6w 3000k Color White 5 pcs 2,100.00 1,890.00 9,450.00 HISI - MTL- 6W Magnetic Tracklight Movable 6w 3000k 4 pcs 2,200.00 1,980.00 7,920.00 HISI-S20-3M Magnetic Trackbar 3 meters 58 pcs 7,500.00 6,750.00 391,500.00 HISI-S20-3M Magnetic Trackbar 3 meters Color White 2 pcs 7,500.00 6,750.00 13,500.00 HISI-S20-2M Magnetic Trackbar 2 meters 14 pcs 4,800.00 4,320.00 60,480.00 HISI-S20-1M Magnetic Trackbar 1 meter 18 pcs 3,600.00 3,240.00 58,320.00
+90° L connector 56 pcs 1,100.00 990.00 55,440.00
+straight connector 34 pcs 700.00 630.00 21,420.00
+End Cap 8 pcs 300.00 270.00 2,160.00 HISI-LD-100W Led Driver for Magnetic Tracklight 100w 15 pcs 3,250.00 2,925.00 43,875.00
+Led Driver for Magnetic Tracklight 200w
+(to be verified actual with client) 2 pcs 3,685.00 3,350.00 6,700.00
+Total Amount: 969,385.00 Negotiated Amount: 950,000.00
+Prices are subject to change without prior notice. (VAT INC.) Terms and Conditions Validity 15 days Stock Availability ✔ Stock Non-Stock / Special Items Terms Of Delivery 4-7 days 10-15 days ✔ 30-45days Payment Terms 50% DP, BAL. COD PDC 30 Days PDC 30 Days Remarks Serve as an Official P.O. ✔ Non- Returnable/ Non- Cancealable NOTES: * Minimum amount of order should be Php 20,000 .00 above for Free Delivery within Metro Manila. Outside Metro Manila Shipment cost will be applied. * Return & Exchange of Items should be within 7 days upon delivery. * Gate fees or any other entrance fees not included. Additional charges shall be applied for deliveries before or after office hour. * Please inspect item before installation. Complaints will not be enetertained after items have been installed. * Special order, sale/phase out and non-regular items are not allowed for return. I/We hereby agree and accept the Terms and Conditions written above on this form. How To Claim The Warranty Customer's Name over Signature: ____________________ __1__Yr. Limited warranty w/o physical damage *7 days item change policy provided that it must be in good Condition w/ complete accessories, packaging.
+OCR;
+
+        $reflection = new \ReflectionClass($parser);
+        $method = $reflection->getMethod('extractLineItems');
+        $method->setAccessible(true);
+        $lineItems = $method->invoke($parser, null, $ocrText, explode("\n", $ocrText), $doc);
+
+        $this->assertCount(12, $lineItems);
+
+        // Check first 3 items share series code but have distinct product records & descriptions
+        $this->assertEquals('HISI - MTL- 6W', $lineItems[0]['material_code']);
+        $this->assertEquals('Magnetic Tracklight 6w 3000k', $lineItems[0]['description']);
+        $this->assertEquals(158.0, $lineItems[0]['qty']);
+
+        $this->assertEquals('HISI - MTL- 6W', $lineItems[1]['material_code']);
+        $this->assertEquals('Magnetic Tracklight 6w 3000k Color White', $lineItems[1]['description']);
+        $this->assertEquals(5.0, $lineItems[1]['qty']);
+
+        $this->assertEquals('HISI - MTL- 6W', $lineItems[2]['material_code']);
+        $this->assertEquals('Magnetic Tracklight Movable 6w 3000k', $lineItems[2]['description']);
+        $this->assertEquals(4.0, $lineItems[2]['qty']);
+
+        // Products created are distinct
+        $this->assertNotEquals($lineItems[0]['product_id'], $lineItems[1]['product_id']);
+        $this->assertNotEquals($lineItems[1]['product_id'], $lineItems[2]['product_id']);
+
+        // Check items without item code
+        $this->assertNull($lineItems[7]['material_code']);
+        $this->assertEquals('90° L connector', $lineItems[7]['description']);
+
+        $this->assertNull($lineItems[8]['material_code']);
+        $this->assertEquals('straight connector', $lineItems[8]['description']);
+
+        $this->assertNull($lineItems[9]['material_code']);
+        $this->assertEquals('End Cap', $lineItems[9]['description']);
+
+        // Check quantity self-healing on LED Driver (15 pcs @ 2925 = 43875)
+        $this->assertEquals('HISI-LD-100W', $lineItems[10]['material_code']);
+        $this->assertEquals(15.0, $lineItems[10]['qty']);
+        $this->assertEquals(3250.00, $lineItems[10]['unit_price']);
+        $this->assertEquals(2925.00, $lineItems[10]['discounted_price']);
+        $this->assertEquals(43875.00, $lineItems[10]['printed_total']);
+
+        // Ensure footer notes were NEVER captured as items
+        foreach ($lineItems as $item) {
+            $this->assertStringNotContainsString('Minimum amount', $item['description']);
+            $this->assertStringNotContainsString('Special order', $item['description']);
+            $this->assertStringNotContainsString('Return & Exchange', $item['description']);
+            $this->assertStringNotContainsString('Gate fees', $item['description']);
+            $this->assertStringNotContainsString('Warranty', $item['description']);
+        }
+    }
 }
 
 

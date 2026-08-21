@@ -143,8 +143,9 @@ class SalesInvoiceResource extends Resource
                                 ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * (float) $get('unit_price'), 2)))
                                 ->columnSpan(1),
 
-                            TextInput::make('unit')
+                            Select::make('unit')
                                 ->label('Unit')
+                                ->options(\App\Enums\UnitOfMeasure::class)
                                 ->default('pcs')
                                 ->required()
                                 ->columnSpan(1),

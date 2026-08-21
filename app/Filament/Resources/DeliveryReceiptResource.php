@@ -66,13 +66,9 @@ class DeliveryReceiptResource extends Resource
                         ->label('Received By'),
 
                     Select::make('status')
-                        ->options([
-                            'draft' => 'Draft',
-                            'delivered' => 'Delivered',
-                            'cancelled' => 'Cancelled',
-                        ])
+                        ->options(\App\Enums\DeliveryReceiptStatus::class)
                         ->required()
-                        ->default('draft'),
+                        ->default(\App\Enums\DeliveryReceiptStatus::Draft),
                 ])
                 ->columns(2),
 
@@ -94,8 +90,9 @@ class DeliveryReceiptResource extends Resource
                                 ->required()
                                 ->columnSpan(2),
 
-                            TextInput::make('unit')
+                            Select::make('unit')
                                 ->label('Unit')
+                                ->options(\App\Enums\UnitOfMeasure::class)
                                 ->default('pcs')
                                 ->required()
                                 ->columnSpan(1),

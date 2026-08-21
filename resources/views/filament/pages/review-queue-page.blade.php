@@ -403,20 +403,27 @@
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">#</label>
                                             <x-filament::input.wrapper size="sm">
                                                 <x-filament::input type="number"
-                                                    wire:model.live="editableItems.{{ $index }}.line_no"
-                                                    :disabled="$this->isReadOnly"
-                                                    class="text-center font-mono text-xs font-semibold" />
+                                                    wire:model="editableItems.{{ $index }}.line_no"
+                                                    disabled
+                                                    class="text-center font-mono text-xs font-semibold bg-gray-50 dark:bg-white/5 cursor-not-allowed opacity-80" />
                                             </x-filament::input.wrapper>
                                         </div>
 
                                         <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Item Code</label>
                                             <x-filament::input.wrapper size="sm">
-                                                <x-filament::input type="text"
-                                                    wire:model.live="editableItems.{{ $index }}.material_code"
+                                                <x-filament::input.select wire:model.live="editableItems.{{ $index }}.material_code"
+                                                    wire:change="onItemCodeSelected({{ $index }}, $event.target.value)"
                                                     :disabled="$this->isReadOnly"
-                                                    class="font-mono text-xs font-semibold"
-                                                    placeholder="Item Code" />
+                                                    class="font-mono text-xs font-semibold">
+                                                    <option value="">-- None / No Code --</option>
+                                                    @foreach ($this->skuOptions as $sku)
+                                                        <option value="{{ $sku }}">{{ $sku }}</option>
+                                                    @endforeach
+                                                    @if (!empty($item['material_code']) && !isset($this->skuOptions[$item['material_code']]))
+                                                        <option value="{{ $item['material_code'] }}">{{ $item['material_code'] }}</option>
+                                                    @endif
+                                                </x-filament::input.select>
                                             </x-filament::input.wrapper>
                                         </div>
 
@@ -460,11 +467,13 @@
                                             Unit <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                         </label>
                                         <x-filament::input.wrapper size="sm">
-                                            <x-filament::input type="text"
-                                                wire:model.live="editableItems.{{ $index }}.unit"
+                                            <x-filament::input.select wire:model.live="editableItems.{{ $index }}.unit"
                                                 :disabled="$this->isReadOnly"
-                                                class="text-center text-xs font-medium uppercase"
-                                                placeholder="pcs" />
+                                                class="text-center text-xs font-medium uppercase">
+                                                @foreach ($this->unitOptions as $uVal => $uLabel)
+                                                    <option value="{{ $uVal }}">{{ $uVal }}</option>
+                                                @endforeach
+                                            </x-filament::input.select>
                                         </x-filament::input.wrapper>
                                     </div>
 

@@ -752,6 +752,27 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
     }
 
+    public function onItemCodeSelected(int $index, ?string $sku): void
+    {
+        if (isset($this->editableItems[$index])) {
+            $this->pushStateToUndo();
+            $this->editableItems[$index]['material_code'] = $sku;
+            if (!empty($sku)) {
+                $product = Product::where('sku', $sku)->first();
+                if ($product) {
+                    $this->editableItems[$index]['product_id'] = $product->id;
+                    $this->editableItems[$index]['description'] = $product->canonical_name;
+                    $this->editableItems[$index]['unit_price'] = (float) ($product->selling_price ?? $product->default_price ?? 0);
+                    $this->editableItems[$index]['unit'] = $product->unit_default ?? 'pcs';
+                    if (empty($this->editableItems[$index]['discounted_price'])) {
+                        $this->editableItems[$index]['discounted_price'] = (float) ($product->selling_price ?? $product->default_price ?? 0);
+                    }
+                }
+            }
+            $this->updatedEditableItems();
+        }
+    }
+
     public function onProductSelected(int $index, $productId): void
     {
         if (isset($this->editableItems[$index]) && $productId) {
@@ -760,6 +781,9 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 $this->pushStateToUndo();
                 $this->editableItems[$index]['product_id'] = $product->id;
                 $this->editableItems[$index]['description'] = $product->canonical_name;
+                if ($product->sku) {
+                    $this->editableItems[$index]['material_code'] = $product->sku;
+                }
                 $this->editableItems[$index]['unit_price'] = (float) ($product->selling_price ?? $product->default_price ?? 0);
                 $this->editableItems[$index]['unit'] = $product->unit_default ?? 'pcs';
                 if (empty($this->editableItems[$index]['discounted_price'])) {
@@ -984,6 +1008,16 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public function getProductsProperty(): array
     {
         return \Illuminate\Support\Facades\Cache::remember('lookup_products_list', 120, fn() => Product::pluck('canonical_name', 'id')->toArray());
+    }
+
+    public function getSkuOptionsProperty(): array
+    {
+        return Product::getSkuOptions();
+    }
+
+    public function getUnitOptionsProperty(): array
+    {
+        return \App\Enums\UnitOfMeasure::options();
     }
 }
 

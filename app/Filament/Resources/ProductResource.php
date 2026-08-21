@@ -69,8 +69,9 @@ class ProductResource extends Resource
                             ->label('Category')
                             ->placeholder('e.g. LED Lighting, Drivers, Architectural'),
 
-                        Forms\Components\TextInput::make('unit_default')
+                        Forms\Components\Select::make('unit_default')
                             ->label('Default Unit')
+                            ->options(\App\Enums\UnitOfMeasure::class)
                             ->default('pcs')
                             ->required(),
 

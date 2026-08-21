@@ -7,10 +7,13 @@ use App\Models\ProductAlias;
 use App\Services\DocumentParsers\DynamicDocumentParser;
 use App\Services\DocumentParsers\FieldExtractor;
 use App\Services\DocumentParsers\PdfTextExtractor;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class DynamicParserTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected DynamicDocumentParser $parser;
 
     protected function setUp(): void
@@ -52,5 +55,43 @@ class DynamicParserTest extends TestCase
         $this->assertEquals(30, $extractor->postProcess("30 items", 'parse_int'));
         $this->assertEquals('2026-08-01', $extractor->postProcess("August 1, 2026", 'parse_date'));
         $this->assertEquals('HUENICS SUPPLY', $extractor->postProcess("  huenics supply  ", 'uppercase'));
+    }
+
+    public function test_unit_of_measure_enum_has_options_and_labels(): void
+    {
+        $options = \App\Enums\UnitOfMeasure::options();
+        $this->assertArrayHasKey('pcs', $options);
+        $this->assertArrayHasKey('set', $options);
+        $this->assertArrayHasKey('meter', $options);
+        $this->assertEquals('pcs', \App\Enums\UnitOfMeasure::Pcs->getLabel());
+    }
+
+    public function test_table_footer_stop_markers_prevent_terms_and_notes_from_being_items(): void
+    {
+        $ocrText = <<<OCR
+Item Code Product Description References from Client Qty Unit Unit Price Discounted Price Total
+HISI - MTL- 6W Magnetic Tracklight 6w 3000k 158 pcs 2,100.00 1,890.00 298,620.00
+90° L connector 56 pcs 1,100.00 990.00 55,440.00
+Total Amount: 354,060.00 Negotiated Amount: 350,000.00
+NOTES: * Minimum amount of order should be Php 20,000 .00 above for Free Delivery within Metro Manila.
+* Return & Exchange of Items should be within 7 days upon delivery.
+* Special order, sale/phase out and non-regular items are not allowed for return.
+OCR;
+
+        $doc = new Document();
+        $ref = new \ReflectionClass($this->parser);
+        $method = $ref->getMethod('extractLineItems');
+        $method->setAccessible(true);
+
+        $items = $method->invoke($this->parser, null, $ocrText, explode("\n", $ocrText), $doc);
+
+        $this->assertCount(2, $items);
+        $this->assertEquals('HISI - MTL- 6W', $items[0]['material_code']);
+        $this->assertEquals('Magnetic Tracklight 6w 3000k', $items[0]['description']);
+        $this->assertEquals(158.0, $items[0]['qty']);
+
+        $this->assertNull($items[1]['material_code']);
+        $this->assertEquals('90° L connector', $items[1]['description']);
+        $this->assertEquals(56.0, $items[1]['qty']);
     }
 }

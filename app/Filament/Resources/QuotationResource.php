@@ -178,11 +178,31 @@ class QuotationResource extends Resource
                                 ->label('#')
                                 ->numeric()
                                 ->default(1)
+                                ->disabled()
+                                ->dehydrated()
                                 ->columnSpan(1),
 
-                            TextInput::make('item_code')
+                            Select::make('item_code')
                                 ->label('Item Code')
+                                ->options(Product::getSkuOptions())
+                                ->searchable()
                                 ->nullable()
+                                ->live()
+                                ->afterStateUpdated(function ($state, $set, $get) {
+                                    if ($state) {
+                                        $product = Product::where('sku', $state)->first();
+                                        if ($product) {
+                                            $set('product_id', $product->id);
+                                            $set('description', $product->canonical_name);
+                                            $set('unit_price', $product->selling_price ?? $product->default_price ?? 0);
+                                            $set('base_cost', $product->base_cost_price ?? 0);
+                                            $set('unit', $product->unit_default ?? 'pcs');
+                                            $qty = (float) ($get('qty') ?: 1);
+                                            $disc = (float) ($get('discounted_price') ?: 0);
+                                            $set('line_total', round($qty * ($disc > 0 ? $disc : (float) $get('unit_price')), 2));
+                                        }
+                                    }
+                                })
                                 ->columnSpan(2),
 
                             Select::make('product_id')
@@ -191,15 +211,20 @@ class QuotationResource extends Resource
                                 ->searchable()
                                 ->required()
                                 ->live()
-                                ->afterStateUpdated(function ($state, $set) {
+                                ->afterStateUpdated(function ($state, $set, $get) {
                                     if ($state) {
                                         $product = Product::find($state);
                                         if ($product) {
                                             $set('description', $product->canonical_name);
-                                            $set('item_code', $product->sku ?? null);
+                                            if ($product->sku) {
+                                                $set('item_code', $product->sku);
+                                            }
                                             $set('unit_price', $product->selling_price ?? $product->default_price ?? 0);
                                             $set('base_cost', $product->base_cost_price ?? 0);
                                             $set('unit', $product->unit_default ?? 'pcs');
+                                            $qty = (float) ($get('qty') ?: 1);
+                                            $disc = (float) ($get('discounted_price') ?: 0);
+                                            $set('line_total', round($qty * ($disc > 0 ? $disc : (float) $get('unit_price')), 2));
                                         }
                                     }
                                 })
@@ -214,9 +239,11 @@ class QuotationResource extends Resource
                                 ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
                                 ->columnSpan(1),
 
-                            TextInput::make('unit')
+                            Select::make('unit')
                                 ->label('Unit')
+                                ->options(\App\Enums\UnitOfMeasure::class)
                                 ->default('pcs')
+                                ->required()
                                 ->columnSpan(1),
 
                             TextInput::make('unit_price')
