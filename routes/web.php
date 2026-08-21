@@ -1,13 +1,18 @@
 <?php
 
+use App\Http\Controllers\CustomerPortalController;
 use App\Models\Document;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
-Route::get('/', function () {
-    return redirect('/admin');
-});
+// ─── Public Customer Portal Routes ──────────────────────────────────────────
+Route::get('/', [CustomerPortalController::class, 'index'])->name('customer.home');
+Route::get('/about', [CustomerPortalController::class, 'about'])->name('customer.about');
+Route::get('/products', [CustomerPortalController::class, 'products'])->name('customer.products');
+Route::get('/quotation/builder', [CustomerPortalController::class, 'quotationBuilder'])->name('customer.quotation-builder');
+Route::post('/quotation/generate-unofficial', [CustomerPortalController::class, 'generateUnofficial'])->name('customer.quotation.generate');
+Route::get('/quotation/unofficial/download-pdf', [CustomerPortalController::class, 'downloadLastPdf'])->name('customer.quotation.download-pdf');
 
 Route::get('/login', function () {
     return redirect()->to('/admin/login');

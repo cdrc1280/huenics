@@ -36,13 +36,16 @@ try {
         }
     }
 
-    // ─── Database: copy pre-built SQLite if no external DB ───────────────
+    // ─── Database: copy pre-built SQLite if no remote external DB ────────
     $dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
-    if (empty($dbHost)) {
+    $dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? '');
+    $isLocalDb = empty($dbHost) || in_array($dbHost, ['127.0.0.1', 'localhost', '::1']) || $dbConn === 'sqlite';
+
+    if ($isLocalDb) {
         $dbTarget = '/tmp/database.sqlite';
-        if (!file_exists($dbTarget)) {
+        if (!file_exists($dbTarget) || filesize($dbTarget) === 0) {
             $baseDb = dirname(__DIR__) . '/database/base.sqlite';
-            if (file_exists($baseDb)) {
+            if (file_exists($baseDb) && filesize($baseDb) > 0) {
                 copy($baseDb, $dbTarget);
             } else {
                 touch($dbTarget);
