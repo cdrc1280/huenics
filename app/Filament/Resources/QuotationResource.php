@@ -433,18 +433,19 @@ class QuotationResource extends Resource
                     'approved'       => 'Approved',
                     'converted'      => 'Converted to PO',
                     'rejected'       => 'Rejected / Lost',
-                    'all'            => 'All Quotations',
                 ])
-                ->default('pending_review')
                 ->query(function (Builder $query, array $data) {
-                    $scope = $data['value'] ?? 'pending_review';
+                    $scope = $data['value'] ?? null;
+                    if (empty($scope)) {
+                        return $query;
+                    }
+
                     return match ($scope) {
                         'pending_review' => $query->whereIn('status', [Quotation::STATUS_PENDING, Quotation::STATUS_REVIEWED, 'pending', 'reviewed', 'for_review'])->where('is_official_po', false),
                         'approved'       => $query->where(fn(Builder $q) => $q->where('status', Quotation::STATUS_APPROVED)->orWhere('is_official_po', true)),
                         'converted'      => $query->where('status', Quotation::STATUS_CONVERTED),
                         'rejected'       => $query->where('status', Quotation::STATUS_REJECTED),
-                        'all'            => $query,
-                        default          => $query->whereIn('status', [Quotation::STATUS_PENDING, Quotation::STATUS_REVIEWED, 'pending', 'reviewed', 'for_review'])->where('is_official_po', false),
+                        default          => $query,
                     };
                 }),
 

@@ -33,3 +33,4 @@ class LowStockNotification extends Notification
         ];
     }
 }
+s
