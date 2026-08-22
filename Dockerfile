@@ -114,7 +114,6 @@ COPY . .
 
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
-COPY --from=vendor /app/public/vendor ./public/vendor
 
 COPY docker/nginx.conf /etc/nginx/sites-enabled/default
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -123,18 +122,30 @@ COPY docker/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
 
+# Ensure storage, cache, and public asset directories exist
 RUN mkdir -p \
-    storage/framework/cache \
+    storage/framework/cache/data \
     storage/framework/views \
     storage/framework/sessions \
     storage/app/public \
     storage/app/private \
     storage/app/documents \
+    storage/app/livewire-tmp \
     storage/logs \
-    bootstrap/cache
+    bootstrap/cache \
+    public/js \
+    public/css \
+    public/vendor \
+    public/fonts
+
+# Pre-publish Filament and Livewire assets during build
+RUN php artisan filament:assets --ansi || true
+RUN php artisan livewire:publish --assets --ansi || true
+RUN php artisan icons:cache || true
+RUN php artisan filament:cache-components || true
 
 RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache public
 
 EXPOSE 80
 

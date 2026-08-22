@@ -18,8 +18,8 @@ mkdir -p \
     public/vendor/filament \
     public/vendor/livewire
 
-chown -R www-data:www-data storage bootstrap/cache public/vendor
-chmod -R 775 storage bootstrap/cache public/vendor
+chown -R www-data:www-data storage bootstrap/cache public
+chmod -R 775 storage bootstrap/cache public
 
 # ─── 2. Bind Nginx to Cloud PaaS / Railway $PORT dynamically (defaults to 80) ─
 TARGET_PORT="${PORT:-80}"
