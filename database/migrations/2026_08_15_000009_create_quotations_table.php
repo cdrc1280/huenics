@@ -25,6 +25,7 @@ return new class extends Migration
             $table->date('valid_until')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['sales_agent_id', 'status']);
             $table->index('quotation_date');

@@ -27,6 +27,7 @@ return new class extends Migration
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('document_line_items', function (Blueprint $table) {

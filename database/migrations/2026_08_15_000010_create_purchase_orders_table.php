@@ -35,6 +35,7 @@ return new class extends Migration
             $table->string('status')->default('pending_delivery'); // pending_delivery, delivered, cancelled
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['sales_agent_id', 'status']);
             $table->index('delivery_status');

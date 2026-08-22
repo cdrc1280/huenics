@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('unit', 50)->default('pcs');
             $table->timestamp('last_counted_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('inventory_transactions', function (Blueprint $table) {

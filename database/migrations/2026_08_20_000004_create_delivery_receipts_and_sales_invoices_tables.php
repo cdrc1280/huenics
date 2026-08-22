@@ -22,6 +22,7 @@ return new class extends Migration
                 $table->text('remarks')->nullable();
                 $table->string('status')->default('draft');
                 $table->timestamps();
+                $table->softDeletes();
             });
         }
 
@@ -56,6 +57,7 @@ return new class extends Migration
                 $table->date('payment_date')->nullable();
                 $table->text('notes')->nullable();
                 $table->timestamps();
+                $table->softDeletes();
             });
         }
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->boolean('is_huenics_owned')->default(true);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('product_aliases', function (Blueprint $table) {
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->string('normalized_alias');
             $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['normalized_alias', 'vendor_id']);
         });
