@@ -37,8 +37,14 @@ class ActivityLogResource extends Resource
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-finger-print';
     protected static ?string $navigationLabel = 'Activity Logs & Audit Trail';
     protected static ?int $navigationSort = 2;
+    protected static ?string $slug = 'activity-logs';
 
     public static function canViewAny(): bool
+    {
+        return auth()->user()?->canViewActivityLogs() ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
     {
         return auth()->user()?->canViewActivityLogs() ?? false;
     }

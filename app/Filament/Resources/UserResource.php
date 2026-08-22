@@ -46,6 +46,11 @@ class UserResource extends Resource
         return auth()->user()?->canManageUsers() ?? false;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->canManageUsers() ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
