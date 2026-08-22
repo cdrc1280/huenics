@@ -58,10 +58,10 @@ try {
         $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbTarget;
     }
 
-    // ─── Session: cookie ─────────────────────────────────────────────────
+    // ─── Session: file ───────────────────────────────────────────────────
     if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
-        putenv('SESSION_DRIVER=cookie');
-        $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'cookie';
+        putenv('SESSION_DRIVER=file');
+        $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'file';
     }
 
     // ─── APP_KEY ─────────────────────────────────────────────────────────
