@@ -14,6 +14,7 @@ class Quotation extends Model
     use HasFactory;
 
     public const STATUS_PENDING      = QuotationStatus::Pending->value;
+    public const STATUS_REVIEWED     = QuotationStatus::Reviewed->value;
     public const STATUS_APPROVED     = QuotationStatus::Approved->value;
     public const STATUS_REJECTED     = QuotationStatus::Rejected->value;
     public const STATUS_CONVERTED    = QuotationStatus::ConvertedToPo->value;
@@ -169,6 +170,7 @@ class Quotation extends Model
     {
         return match ($this->status) {
             self::STATUS_PENDING   => 'Pending',
+            self::STATUS_REVIEWED  => 'Reviewed',
             self::STATUS_APPROVED  => 'Approved',
             self::STATUS_REJECTED  => 'Rejected / Lost',
             self::STATUS_CONVERTED => 'Converted to PO',
@@ -180,9 +182,10 @@ class Quotation extends Model
     {
         return match ($this->status) {
             self::STATUS_PENDING   => 'warning',
-            self::STATUS_APPROVED  => 'info',
+            self::STATUS_REVIEWED  => 'info',
+            self::STATUS_APPROVED  => 'success',
             self::STATUS_REJECTED  => 'danger',
-            self::STATUS_CONVERTED => 'success',
+            self::STATUS_CONVERTED => 'primary',
             default                => 'gray',
         };
     }
