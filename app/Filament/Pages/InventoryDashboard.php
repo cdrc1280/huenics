@@ -6,7 +6,7 @@ use App\Filament\Widgets\InventoryAlertsWidget;
 use App\Models\InventoryItem;
 use App\Models\User;
 use App\Services\InventoryService;
-use Filament\Actions\Action;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;

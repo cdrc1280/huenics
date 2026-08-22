@@ -17,6 +17,17 @@ abstract class TestCase extends BaseTestCase
 
         $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+
         return $app;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['database.default' => 'sqlite']);
+        config(['database.connections.sqlite.database' => ':memory:']);
     }
 }

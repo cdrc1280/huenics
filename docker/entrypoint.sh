@@ -45,7 +45,7 @@ php artisan storage:link --force || true
 
 # ─── 6. Run Database Migrations SAFELY ────────────────────────────────────────
 echo "📦 Running database migrations (safe incremental update only)..."
-php artisan migrate:fresh --seed --force
+php artisan migrate --force
 
 # ─── 7. First-run seeders — GUARDED to never overwrite existing production data ─
 IS_FIRST_RUN=$(php -r "
