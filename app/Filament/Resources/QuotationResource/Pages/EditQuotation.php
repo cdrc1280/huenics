@@ -43,27 +43,12 @@ class EditQuotation extends EditRecord
                 ->visible(fn(): bool => $this->record->isReadyForConversion() && !$this->record->isConverted())
                 ->form([
                     DatePicker::make('order_date')
-                        ->label('Order Date')
+                        ->label('Order Date / PO Date')
                         ->required()
                         ->default(now()),
 
-                    DatePicker::make('expected_delivery_date')
-                        ->label('Expected Delivery Date')
-                        ->nullable(),
-
-                    Toggle::make('has_warranty')
-                        ->label('Include Warranty')
-                        ->default(true)
-                        ->live(),
-
-                    Select::make('warranty_period')
-                        ->label('Warranty Period')
-                        ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                        ->default(PurchaseOrder::WARRANTY_1_YEAR)
-                        ->visible(fn($get) => $get('has_warranty')),
-
                     Textarea::make('notes')
-                        ->label('Notes')
+                        ->label('PO Notes / Instructions')
                         ->nullable(),
                 ])
                 ->action(function (array $data) {
