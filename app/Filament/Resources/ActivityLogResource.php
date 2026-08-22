@@ -180,11 +180,11 @@ class ActivityLogResource extends Resource
                     ->label('Inspect')
                     ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->modalHeading(fn(AuditLog $record): string => "Activity Audit Inspection: " . strtoupper(str_replace('_', ' ', $record->event)))
-                    ->modalDescription(fn(AuditLog $record): string => $record->subject_name)
+                    ->modalHeading(fn(AuditLog $record): string => "Audit Inspection — " . $record->subject_type_label)
+                    ->modalDescription(fn(AuditLog $record): string => $record->subject_identifier . ($record->description ? ' • ' . $record->description : ''))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close')
-                    ->modalWidth('4xl')
+                    ->modalWidth('3xl')
                     ->modalContent(fn(AuditLog $record): HtmlString => new HtmlString(
                         view('filament.modals.activity-log-diff', ['record' => $record])->render()
                     )),
