@@ -491,14 +491,14 @@ class QuotationResource extends Resource
                     ->color('primary')
                     ->tooltip('Convert this approved quotation into an active Purchase Order')
                     ->visible(fn(Quotation $r): bool => $r->isReadyForConversion() && !$r->isConverted())
+                    ->modalHeading('Convert Quotation to Purchase Order')
+                    ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
+                    ->modalSubmitActionLabel('Convert to PO')
                     ->form([
-                        DatePicker::make('order_date')
-                            ->label('Order Date / PO Date')
-                            ->required()
-                            ->default(now()),
-
                         Textarea::make('notes')
-                            ->label('PO Notes / Instructions')
+                            ->label('PO Notes / Instructions (Optional)')
+                            ->placeholder('Enter any instructions, remarks, or reference notes...')
+                            ->rows(3)
                             ->nullable(),
                     ])
                     ->action(function (Quotation $record, array $data) {

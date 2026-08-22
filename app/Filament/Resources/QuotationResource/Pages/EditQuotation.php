@@ -41,14 +41,14 @@ class EditQuotation extends EditRecord
                 ->color('primary')
                 ->tooltip('Convert this quotation into an active Purchase Order')
                 ->visible(fn(): bool => $this->record->isReadyForConversion() && !$this->record->isConverted())
+                ->modalHeading('Convert Quotation to Purchase Order')
+                ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
+                ->modalSubmitActionLabel('Convert to PO')
                 ->form([
-                    DatePicker::make('order_date')
-                        ->label('Order Date / PO Date')
-                        ->required()
-                        ->default(now()),
-
                     Textarea::make('notes')
-                        ->label('PO Notes / Instructions')
+                        ->label('PO Notes / Instructions (Optional)')
+                        ->placeholder('Enter any instructions, remarks, or reference notes...')
+                        ->rows(3)
                         ->nullable(),
                 ])
                 ->action(function (array $data) {
