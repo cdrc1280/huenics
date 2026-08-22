@@ -32,7 +32,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
     protected static ?string $navigationLabel = 'Delivery & Warranty Tracker';
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected string $view = 'filament.pages.delivery-monitoring-page';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 7;
 
     public function table(Table $table): Table
     {
@@ -89,11 +89,22 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('approve_po')
+                        ->label('Approve PO')
+                        ->icon('heroicon-o-check')
+                        ->color('info')
+                        ->visible(fn($record) => !$record->isApproved())
+                        ->requiresConfirmation()
+                        ->action(function (PurchaseOrder $record) {
+                            $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
+                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved for delivery.")->success()->send();
+                        }),
+
                     Action::make('mark_delivered')
                         ->label('Mark Delivered')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn($record) => $record->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
+                        ->visible(fn($record) => $record->isApproved() && $record->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
                         ->form([
                             DatePicker::make('actual_delivery_date')
                                 ->label('Actual Delivery Date')
@@ -112,7 +123,12 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                                 ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
                                 ->visible(fn($get) => (bool) $get('has_warranty')),
                         ])
-                        ->action(function ($record, array $data) {
+                        ->action(function (PurchaseOrder $record, array $data) {
+                            if (!$record->isApproved()) {
+                                Notification::make()->title('Action Blocked')->body('Purchase Order must be approved before delivery can be marked.')->danger()->send();
+                                return;
+                            }
+
                             $record->update([
                                 'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
                                 'status' => PurchaseOrder::STATUS_DELIVERED,
@@ -132,11 +148,13 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->label('Create DR')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
+                        ->visible(fn($record) => $record->isApproved())
                         ->url(fn($record) => url('/admin/delivery-receipts/create?purchase_order_id=' . $record->id)),
                     Action::make('create_si')
                         ->label('Create SI')
                         ->icon('heroicon-o-currency-dollar')
                         ->color('warning')
+                        ->visible(fn($record) => $record->isApproved())
                         ->url(fn($record) => url('/admin/sales-invoices/create?purchase_order_id=' . $record->id)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns);

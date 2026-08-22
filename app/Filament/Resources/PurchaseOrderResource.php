@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Pages\DeliveryMonitoringPage;
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Models\Product;
@@ -125,11 +126,14 @@ class PurchaseOrderResource extends Resource
                     Select::make('status')
                         ->label('PO Status')
                         ->options([
-                            PurchaseOrder::STATUS_PENDING => 'Pending Delivery',
-                            PurchaseOrder::STATUS_DELIVERED => 'Delivered',
-                            PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
+                            PurchaseOrder::STATUS_PENDING          => 'Pending Approval',
+                            PurchaseOrder::STATUS_APPROVED         => 'Approved (Ready to Deliver)',
+                            PurchaseOrder::STATUS_PENDING_DELIVERY => 'Pending Delivery',
+                            PurchaseOrder::STATUS_DELIVERED        => 'Delivered',
+                            PurchaseOrder::STATUS_CANCELLED        => 'Cancelled',
+                            PurchaseOrder::STATUS_REJECTED         => 'Rejected',
                         ])
-                        ->default(PurchaseOrder::STATUS_PENDING)
+                        ->default(PurchaseOrder::STATUS_APPROVED)
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, $set, $get) {
@@ -138,7 +142,7 @@ class PurchaseOrderResource extends Resource
                                 if (!$get('actual_delivery_date')) {
                                     $set('actual_delivery_date', now()->toDateString());
                                 }
-                            } elseif ($state === PurchaseOrder::STATUS_PENDING) {
+                            } elseif (in_array($state, [PurchaseOrder::STATUS_PENDING, PurchaseOrder::STATUS_APPROVED, PurchaseOrder::STATUS_PENDING_DELIVERY])) {
                                 if ($get('delivery_status') === PurchaseOrder::DELIVERY_DELIVERED) {
                                     $set('delivery_status', PurchaseOrder::DELIVERY_PENDING);
                                 }
@@ -474,12 +478,24 @@ class PurchaseOrderResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('approve_po')
+                        ->label('Approve PO')
+                        ->icon('heroicon-m-check-circle')
+                        ->color('success')
+                        ->tooltip('Approve purchase order to authorize fulfillment and delivery')
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                        ->requiresConfirmation()
+                        ->action(function (PurchaseOrder $record) {
+                            $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
+                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved for delivery.")->success()->send();
+                        }),
+
                     Action::make('review')
                         ->label('Review & Verify')
                         ->icon('heroicon-m-clipboard-document-check')
                         ->color('warning')
                         ->tooltip('Review, verify math and reconcile purchase order line items')
-                        ->visible(fn(PurchaseOrder $r): bool => !empty($r->document_id) || $r->status === PurchaseOrder::STATUS_PENDING)
+                        ->visible(fn(PurchaseOrder $r): bool => !empty($r->document_id) || !$r->isApproved())
                         ->url(function (PurchaseOrder $record) {
                             if ($record->document_id) {
                                 return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
@@ -493,55 +509,18 @@ class PurchaseOrderResource extends Resource
                             Notification::make()->title('No attached document for review')->info()->send();
                         }),
 
-                    Action::make('mark_delivered')
-                        ->label('Mark Delivered')
+                    Action::make('delivery_tracker')
+                        ->label('Delivery Tracker')
                         ->icon('heroicon-m-truck')
-                        ->color('success')
-                        ->tooltip('Confirm order delivery with DR#, auto-deduct BOM components & activate warranty clock')
-                        ->visible(fn(PurchaseOrder $r): bool => $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
-                        ->form([
-                            DatePicker::make('actual_delivery_date')
-                                ->label('Actual Delivery Date')
-                                ->required()
-                                ->default(now()),
-
-                            TextInput::make('delivery_receipt_no')
-                                ->label('DR# (Delivery Receipt No.)')
-                                ->nullable(),
-
-                            Toggle::make('has_warranty')
-                                ->label('Include Warranty')
-                                ->default(fn(PurchaseOrder $r) => $r->has_warranty ?? true)
-                                ->live(),
-
-                            Select::make('warranty_period')
-                                ->label('Warranty Period')
-                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                                ->default(fn(PurchaseOrder $r) => $r->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
-                                ->visible(fn($get) => (bool) $get('has_warranty')),
-                        ])
-                        ->action(function (PurchaseOrder $record, array $data) {
-                            $record->update([
-                                'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
-                                'actual_delivery_date' => $data['actual_delivery_date'],
-                                'delivery_receipt_no'  => $data['delivery_receipt_no'] ?? null,
-                                'has_warranty'         => $data['has_warranty'] ?? true,
-                                'warranty_period'      => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
-                                'status'               => PurchaseOrder::STATUS_DELIVERED,
-                            ]);
-
-                            Notification::make()
-                                ->title('Delivery Confirmed')
-                                ->body('Inventory deducted and warranty clock started.')
-                                ->success()
-                                ->send();
-                        }),
+                        ->color('info')
+                        ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
+                        ->url(fn() => DeliveryMonitoringPage::getUrl()),
 
                     Action::make('cancel_po')
                         ->label('Cancel PO')
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
-                        ->visible(fn(PurchaseOrder $r): bool => $r->status === PurchaseOrder::STATUS_PENDING)
+                        ->visible(fn(PurchaseOrder $r): bool => $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);

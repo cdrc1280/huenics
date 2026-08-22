@@ -447,7 +447,7 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
                         ->tooltip('Mark quotation as rejected / lost with reason notes')
-                        ->visible(fn(Quotation $r): bool => !$r->isConverted() && !$r->isRejected())
+                        ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
                         ->form([
                             Textarea::make('rejection_reason')
                                 ->label('Reason for Rejection')

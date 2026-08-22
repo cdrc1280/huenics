@@ -32,10 +32,12 @@ class PurchaseOrder extends Model
     public const WARRANTY_NONE         = WarrantyStatus::NoWarranty->value;
 
     // PO statuses
-    public const STATUS_PENDING   = PurchaseOrderStatus::PendingDelivery->value;
-    public const STATUS_DELIVERED = PurchaseOrderStatus::Delivered->value;
-    public const STATUS_CANCELLED = PurchaseOrderStatus::Cancelled->value;
-    public const STATUS_REJECTED  = PurchaseOrderStatus::Rejected->value;
+    public const STATUS_PENDING          = PurchaseOrderStatus::Pending->value;
+    public const STATUS_APPROVED         = PurchaseOrderStatus::Approved->value;
+    public const STATUS_PENDING_DELIVERY = PurchaseOrderStatus::PendingDelivery->value;
+    public const STATUS_DELIVERED        = PurchaseOrderStatus::Delivered->value;
+    public const STATUS_CANCELLED        = PurchaseOrderStatus::Cancelled->value;
+    public const STATUS_REJECTED         = PurchaseOrderStatus::Rejected->value;
 
     public static function getWarrantyPeriodOptions(): array
     {
@@ -177,6 +179,18 @@ class PurchaseOrder extends Model
             self::WARRANTY_NONE     => 'No Warranty',
             default                 => 'Unknown',
         };
+    }
+
+    public function isApproved(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_APPROVED,
+            self::STATUS_PENDING_DELIVERY,
+            self::STATUS_DELIVERED,
+            'approved',
+            'pending_delivery',
+            'delivered',
+        ], true);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────
