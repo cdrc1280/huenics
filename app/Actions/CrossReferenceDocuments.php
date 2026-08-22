@@ -10,13 +10,12 @@ use Illuminate\Database\Eloquent\Collection;
 class CrossReferenceDocuments
 {
     /**
-     * Find related companion documents (Quotation, PO, Order Slip) for the same transaction.
+     * Find related companion documents (Quotation, PO) for the same transaction.
      *
      * @param Document $document
      * @return array{
      *   quotation: ?Document,
      *   purchase_order: ?Document,
-     *   order_slip: ?Document,
      *   existing_transaction: ?Transaction,
      *   potential_matches: Collection
      * }

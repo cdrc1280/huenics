@@ -418,7 +418,7 @@ OCR;
             'sales_agent_id' => $this->user->id,
             'project_id' => $this->project->id,
             'total_amount' => 50000.00,
-            'status' => Quotation::STATUS_PENDING,
+            'status' => Quotation::STATUS_APPROVED,
             'quotation_date' => now()->toDateString(),
         ]);
 

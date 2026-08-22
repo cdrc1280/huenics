@@ -31,13 +31,11 @@ class RecentDocumentsWidget extends BaseWidget
                     ->badge()
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
-                        Document::TYPE_ORDER_SLIP => 'Order Slip',
                         Document::TYPE_VENDORS_AGREEMENT => 'Quotation',
                         default => $state,
                     })
                     ->color(fn(string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'primary',
-                        Document::TYPE_ORDER_SLIP => 'info',
                         Document::TYPE_VENDORS_AGREEMENT => 'warning',
                         default => 'gray',
                     }),

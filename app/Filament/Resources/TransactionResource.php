@@ -109,26 +109,20 @@ class TransactionResource extends Resource
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                Section::make('Associated Verification Documents (3-Way Match)')
+                Section::make('Associated Documents (Quotation & Purchase Order Match)')
                     ->components([
                         Forms\Components\Select::make('quotation_document_id')
-                            ->label('1. Vendors Agreement Form (Quotation)')
+                            ->label('1. Quotation Document')
                             ->options(Document::where('document_type', Document::TYPE_VENDORS_AGREEMENT)->pluck('document_number', 'id'))
                             ->searchable()
                             ->placeholder('No quotation linked'),
 
                         Forms\Components\Select::make('purchase_order_document_id')
-                            ->label('2. Purchase Order (Customer Order)')
+                            ->label('2. Purchase Order Document')
                             ->options(Document::where('document_type', Document::TYPE_PURCHASE_ORDER)->pluck('document_number', 'id'))
                             ->searchable()
                             ->placeholder('No PO linked'),
-
-                        Forms\Components\Select::make('order_slip_document_id')
-                            ->label('3. Order Slip (Internal Sales Order)')
-                            ->options(Document::where('document_type', Document::TYPE_ORDER_SLIP)->pluck('document_number', 'id'))
-                            ->searchable()
-                            ->placeholder('No Order Slip linked'),
-                    ])->columns(3),
+                    ])->columns(2),
             ]);
     }
 
@@ -174,15 +168,15 @@ class TransactionResource extends Resource
                         default => 'gray',
                     }),
 
-                Tables\Columns\IconColumn::make('3way_match')
-                    ->label('3-Way Match')
-                    ->state(fn(Transaction $record): bool => !empty($record->quotation_document_id) && !empty($record->purchase_order_document_id) && !empty($record->order_slip_document_id))
+                Tables\Columns\IconColumn::make('doc_match')
+                    ->label('Quotation & PO Match')
+                    ->state(fn(Transaction $record): bool => !empty($record->quotation_document_id) && !empty($record->purchase_order_document_id))
                     ->boolean()
                     ->trueIcon('heroicon-s-shield-check')
                     ->falseIcon('heroicon-o-link')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->tooltip(fn(Transaction $record): string => (!empty($record->quotation_document_id) && !empty($record->purchase_order_document_id) && !empty($record->order_slip_document_id)) ? 'Complete 3-Way Reconciled' : 'Partial Document Record'),
+                    ->tooltip(fn(Transaction $record): string => (!empty($record->quotation_document_id) && !empty($record->purchase_order_document_id)) ? 'Quotation & Purchase Order Linked' : 'Partial Document Record'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Verified On')

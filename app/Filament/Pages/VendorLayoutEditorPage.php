@@ -79,7 +79,6 @@ class VendorLayoutEditorPage extends Page implements HasForms
                             ->label('Document Type')
                             ->options([
                                 'purchase_order' => 'Purchase Order (PO)',
-                                'order_slip' => 'Order Slip (OS)',
                                 'vendors_agreement' => 'Vendors Agreement Form (Quotation / QT)',
                             ])
                             ->required()

@@ -307,7 +307,6 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                     ->label('Document Type')
                     ->options([
                         Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
-                        Document::TYPE_ORDER_SLIP => 'Order Slip',
                         Document::TYPE_VENDORS_AGREEMENT => 'Vendors Agreement Form',
                     ]),
 
@@ -350,7 +349,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
                             if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
                                 $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
-                            } elseif (in_array($docType, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
+                            } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
                                 $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
                             }
                         }),
@@ -498,7 +497,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
             $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
             return;
-        } elseif (in_array($docType, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
+        } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
             $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
             return;
         }
@@ -919,7 +918,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
                 $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
                 return;
-            } elseif (in_array($docType, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
+            } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
                 $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
                 return;
             }

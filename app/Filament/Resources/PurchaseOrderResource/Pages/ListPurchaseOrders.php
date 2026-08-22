@@ -27,9 +27,9 @@ class ListPurchaseOrders extends ListRecords
                 ->label('Upload Purchase Order')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('warning')
-                ->tooltip('Upload a customer Purchase Order or Order Slip PDF or image for dynamic template parsing and verification')
+                ->tooltip('Upload a customer Purchase Order PDF or image for dynamic template parsing and verification')
                 ->modalHeading('Upload & Ingest Purchase Order')
-                ->modalDescription('Upload a Purchase Order or Order Slip PDF or image (JPG, PNG, WEBP). You can optionally select an existing quotation to link this PO to.')
+                ->modalDescription('Upload a Purchase Order PDF or image (JPG, PNG, WEBP). You can optionally select an approved quotation to link this PO to.')
                 ->form([
                     FileUpload::make('disk_path')
                         ->label('Purchase Order File (PDF or Image)')
@@ -40,20 +40,11 @@ class ListPurchaseOrders extends ListRecords
                         ->preserveFilenames()
                         ->storeFileNamesIn('original_filename'),
 
-                    Select::make('document_type')
-                        ->label('PO Sub-type')
-                        ->options([
-                            Document::TYPE_PURCHASE_ORDER => 'Purchase Order (Customer PO)',
-                            Document::TYPE_ORDER_SLIP => 'Order Slip (Internal Order)',
-                        ])
-                        ->default(Document::TYPE_PURCHASE_ORDER)
-                        ->required(),
-
                     Select::make('quotation_id')
-                        ->label('Link to Existing Quotation (Optional)')
+                        ->label('Link to Approved Quotation (Optional)')
                         ->options(function () {
                             return Quotation::whereDoesntHave('purchaseOrders')
-                                ->where('status', '!=', Quotation::STATUS_CONVERTED)
+                                ->where('status', Quotation::STATUS_APPROVED)
                                 ->get()
                                 ->mapWithKeys(fn (Quotation $q) => [
                                     $q->id => "{$q->quotation_number} - {$q->customer_name} (" . ($q->project?->name ?? $q->project_name ?? 'No Project') . ") - ₱" . number_format((float) $q->total_amount, 2)
@@ -61,8 +52,8 @@ class ListPurchaseOrders extends ListRecords
                         })
                         ->searchable()
                         ->nullable()
-                        ->placeholder('Select an unconverted quotation to link, or leave blank')
-                        ->helperText('Only quotations without an existing Purchase Order can be selected.'),
+                        ->placeholder('Select an approved quotation to link, or leave blank')
+                        ->helperText('Only approved quotations without an existing Purchase Order can be selected.'),
 
                     Hidden::make('original_filename'),
                 ])
@@ -71,7 +62,7 @@ class ListPurchaseOrders extends ListRecords
                         $document = app(IngestDocumentAction::class)->execute(
                             diskPath: $data['disk_path'],
                             originalFilename: $data['original_filename'] ?? basename($data['disk_path']),
-                            documentType: $data['document_type'] ?? Document::TYPE_PURCHASE_ORDER,
+                            documentType: Document::TYPE_PURCHASE_ORDER,
                             vendorId: null,
                             projectId: null,
                             userId: auth()->id(),

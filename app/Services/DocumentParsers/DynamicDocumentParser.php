@@ -163,7 +163,7 @@ class DynamicDocumentParser
         if (str_contains($upper, 'VENDORS AGREEMENT') || str_contains($upper, 'VENDOR\'S AGREEMENT') || str_contains($upper, 'QUOTATION')) {
             return Document::TYPE_VENDORS_AGREEMENT;
         }
-        if (str_contains($upper, 'PURCHASE ORDER') || str_contains($upper, 'ORDER SLIP') || str_contains($upper, 'P.O.') || str_contains($upper, 'S.O.')) {
+        if (str_contains($upper, 'PURCHASE ORDER') || str_contains($upper, 'P.O.')) {
             return Document::TYPE_PURCHASE_ORDER;
         }
         if (str_contains($upper, 'DELIVERY RECEIPT') || str_contains($upper, 'D.R.')) {

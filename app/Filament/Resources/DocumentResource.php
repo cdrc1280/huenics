@@ -65,7 +65,7 @@ class DocumentResource extends Resource
             ->components([
                 Section::make('Upload Document')
                     ->description(
-                        'Upload Purchase Orders, Order Slips, or Quotations in PDF or Image format (JPG, PNG, WEBP).'
+                        'Upload Purchase Orders or Quotations in PDF or Image format (JPG, PNG, WEBP).'
                     )
                     ->components([
                         Forms\Components\FileUpload::make('disk_path')
@@ -101,10 +101,7 @@ class DocumentResource extends Resource
                                     ->label('Document Type')
                                     ->options([
                                         Document::TYPE_PURCHASE_ORDER =>
-                                            'Purchase Order (Customer)',
-
-                                        Document::TYPE_ORDER_SLIP =>
-                                            'Order Slip (Internal)',
+                                            'Purchase Order (Customer PO)',
 
                                         Document::TYPE_VENDORS_AGREEMENT =>
                                             'Vendors Agreement Form (Quotation)',
@@ -136,9 +133,6 @@ class DocumentResource extends Resource
                             Document::TYPE_PURCHASE_ORDER =>
                             'Purchase Order',
 
-                            Document::TYPE_ORDER_SLIP =>
-                            'Order Slip',
-
                             Document::TYPE_VENDORS_AGREEMENT =>
                             'Quotation / Agreement',
 
@@ -148,7 +142,6 @@ class DocumentResource extends Resource
                     ->color(
                         fn(string $state): string => match ($state) {
                             Document::TYPE_PURCHASE_ORDER => 'primary',
-                            Document::TYPE_ORDER_SLIP => 'info',
                             Document::TYPE_VENDORS_AGREEMENT => 'warning',
                             default => 'gray',
                         }
@@ -228,9 +221,6 @@ class DocumentResource extends Resource
                     ->options([
                         Document::TYPE_PURCHASE_ORDER =>
                             'Purchase Order',
-
-                        Document::TYPE_ORDER_SLIP =>
-                            'Order Slip',
 
                         Document::TYPE_VENDORS_AGREEMENT =>
                             'Quotation / Agreement',

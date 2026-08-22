@@ -16,7 +16,6 @@ class Document extends Model
     use HasFactory, SoftDeletes;
 
     public const TYPE_PURCHASE_ORDER = DocumentType::PurchaseOrder->value;
-    public const TYPE_ORDER_SLIP = DocumentType::OrderSlip->value;
     public const TYPE_VENDORS_AGREEMENT = DocumentType::VendorsAgreement->value;
 
     public const STATUS_UPLOADED = DocumentStatus::Uploaded->value;

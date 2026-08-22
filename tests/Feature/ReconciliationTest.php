@@ -89,7 +89,7 @@ class ReconciliationTest extends TestCase
             'vendor_id' => $this->vendor->id,
             'project_id' => $this->project->id,
             'uploaded_by' => $this->user->id,
-            'document_type' => Document::TYPE_ORDER_SLIP,
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
             'document_number' => 'SO-26005',
             'original_filename' => 'SO_26005.pdf',
             'disk_path' => 'documents/uploads/test_so.pdf',

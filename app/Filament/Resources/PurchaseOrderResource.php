@@ -94,17 +94,18 @@ class PurchaseOrderResource extends Resource
                         ->searchable(),
 
                     Select::make('quotation_id')
-                        ->label('Linked Quotation (Optional)')
+                        ->label('Linked Approved Quotation (Optional)')
                         ->options(function (?PurchaseOrder $record) {
                             $query = Quotation::query();
                             if ($record && $record->quotation_id) {
                                 $query->where(function ($q) use ($record) {
                                     $q->whereDoesntHave('purchaseOrders')
+                                      ->where('status', Quotation::STATUS_APPROVED)
                                       ->orWhere('id', $record->quotation_id);
                                 });
                             } else {
                                 $query->whereDoesntHave('purchaseOrders')
-                                      ->where('status', '!=', Quotation::STATUS_CONVERTED);
+                                      ->where('status', Quotation::STATUS_APPROVED);
                             }
 
                             return $query->get()->mapWithKeys(fn (Quotation $q) => [
@@ -113,8 +114,8 @@ class PurchaseOrderResource extends Resource
                         })
                         ->searchable()
                         ->nullable()
-                        ->placeholder('Select an unconverted quotation to link, or leave blank')
-                        ->helperText('Only quotations without an existing Purchase Order are selectable.')
+                        ->placeholder('Select an approved quotation to link, or leave blank')
+                        ->helperText('Only approved quotations without an existing Purchase Order are selectable.')
                         ->live()
                         ->afterStateUpdated(function ($state, $set, $get) {
                             if ($state && $quotation = Quotation::find($state)) {

@@ -133,7 +133,7 @@ class IngestDocumentAction
 
         if ($document->document_type === Document::TYPE_VENDORS_AGREEMENT) {
             $this->syncQuotation($document, $userId);
-        } elseif (in_array($document->document_type, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
+        } elseif ($document->document_type === Document::TYPE_PURCHASE_ORDER) {
             $this->syncPurchaseOrder($document, $userId, $quotationId);
         }
     }

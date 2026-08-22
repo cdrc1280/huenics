@@ -203,7 +203,6 @@ class DatabaseSeeder extends Seeder
         // 5. Vendor Layout Configurations
         $docTypes = [
             Document::TYPE_PURCHASE_ORDER,
-            Document::TYPE_ORDER_SLIP,
             Document::TYPE_VENDORS_AGREEMENT,
         ];
 
@@ -307,7 +306,7 @@ class DatabaseSeeder extends Seeder
     //             'vendor_id' => $huenics->id,
     //             'project_id' => $palanza->id,
     //             'uploaded_by' => $owner->id,
-    //             'document_type' => Document::TYPE_ORDER_SLIP,
+    //             'document_type' => Document::TYPE_PURCHASE_ORDER,
     //             'document_number' => 'SO-26005',
     //             'document_date' => '2026-08-02',
     //             'original_filename' => 'Order_Slip_26005_Palanza.pdf',

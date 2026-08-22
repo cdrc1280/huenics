@@ -29,7 +29,6 @@
 
                             <x-filament::badge :color="match ($currentDocument->document_type) {
                                 'purchase_order' => 'primary',
-                                'order_slip' => 'info',
                                 'vendors_agreement' => 'warning',
                                 default => 'gray',
                             }" size="sm">
