@@ -105,15 +105,15 @@ class PurchaseOrderResource extends Resource
                             if ($record && $record->quotation_id) {
                                 $query->where(function ($q) use ($record) {
                                     $q->whereDoesntHave('purchaseOrders')
-                                      ->where('status', Quotation::STATUS_APPROVED)
-                                      ->orWhere('id', $record->quotation_id);
+                                        ->where('status', Quotation::STATUS_APPROVED)
+                                        ->orWhere('id', $record->quotation_id);
                                 });
                             } else {
                                 $query->whereDoesntHave('purchaseOrders')
-                                      ->where('status', Quotation::STATUS_APPROVED);
+                                    ->where('status', Quotation::STATUS_APPROVED);
                             }
 
-                            return $query->get()->mapWithKeys(fn (Quotation $q) => [
+                            return $query->get()->mapWithKeys(fn(Quotation $q) => [
                                 $q->id => "{$q->quotation_number} - {$q->customer_name} (" . ($q->project?->name ?? $q->project_name ?? 'No Project') . ") - ₱" . number_format((float) $q->total_amount, 2)
                             ]);
                         })
@@ -181,12 +181,12 @@ class PurchaseOrderResource extends Resource
                     Select::make('status')
                         ->label('PO Status')
                         ->options([
-                            PurchaseOrder::STATUS_PENDING          => 'Pending Approval',
-                            PurchaseOrder::STATUS_APPROVED         => 'Approved (Ready to Deliver)',
+                            PurchaseOrder::STATUS_PENDING => 'Pending Approval',
+                            PurchaseOrder::STATUS_APPROVED => 'Approved (Ready to Deliver)',
                             PurchaseOrder::STATUS_PENDING_DELIVERY => 'Pending Delivery',
-                            PurchaseOrder::STATUS_DELIVERED        => 'Delivered',
-                            PurchaseOrder::STATUS_CANCELLED        => 'Cancelled',
-                            PurchaseOrder::STATUS_REJECTED         => 'Rejected',
+                            PurchaseOrder::STATUS_DELIVERED => 'Delivered',
+                            PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
+                            PurchaseOrder::STATUS_REJECTED => 'Rejected',
                         ])
                         ->default(PurchaseOrder::STATUS_APPROVED)
                         ->required()
@@ -379,7 +379,8 @@ class PurchaseOrderResource extends Resource
                                 ->columnSpan(3),
                         ])
                         ->columns(9)
-                        ->reorderable('line_no')
+                        ->orderColumn('line_no')
+                        ->reorderable()
                         ->addActionLabel('+ Add Line Item')
                         ->defaultItems(1)
                         ->cloneable(),
@@ -491,7 +492,7 @@ class PurchaseOrderResource extends Resource
                         PurchaseOrder::WARRANTY_NONE => 'gray',
                         default => 'gray',
                     })
-                    ->tooltip(fn(PurchaseOrder $record): string => "Warranty status: {$record->warranty_status}" . ($record->warranty_end_date ? " (Expires {$record->warranty_end_date->format('M d, Y')})" : '')),
+                    ->tooltip(fn(PurchaseOrder $record): string => "Warranty status: {$record->warranty_status}" . ($record->warranty_end_date ? " (Expires " . (is_string($record->warranty_end_date) ? \Carbon\Carbon::parse($record->warranty_end_date)->format('M d, Y') : $record->warranty_end_date->format('M d, Y')) . ")" : '')),
 
                 TextColumn::make('warranty_period')
                     ->label('Warranty Period')

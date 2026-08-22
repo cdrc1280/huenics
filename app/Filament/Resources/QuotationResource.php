@@ -283,7 +283,8 @@ class QuotationResource extends Resource
                                 ->columnSpan(3),
                         ])
                         ->columns(9)
-                        ->reorderable('line_no')
+                        ->orderColumn('line_no')
+                        ->reorderable()
                         ->addActionLabel('+ Add Line Item')
                         ->defaultItems(1)
                         ->cloneable(),

@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\SalesOverviewWidget;
+use App\Models\PurchaseOrder;
 use App\Models\User;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -16,23 +18,23 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use UnitEnum;
-use BackedEnum;
 
 class SalesDashboard extends Page implements HasTable, HasForms
 {
     use InteractsWithTable;
     use InteractsWithForms;
 
-    protected static BackedEnum|string|null $navigationIcon  = 'heroicon-o-chart-bar-square';
-    protected static UnitEnum|string|null   $navigationGroup = 'Reports & Analytics';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-chart-bar-square';
+    protected static UnitEnum|string|null $navigationGroup = 'Reports & Analytics';
     protected static ?string $navigationLabel = 'Sales Analytics & Leaderboard';
-    protected static ?string $title           = 'Sales & Performance Dashboard';
-    protected string $view                    = 'filament.pages.sales-dashboard';
-    protected static ?int $navigationSort     = 1;
+    protected static ?string $title = 'Sales & Performance Dashboard';
+    protected string $view = 'filament.pages.sales-dashboard';
+    protected static ?int $navigationSort = 1;
 
     public ?array $filterData = [];
 
@@ -48,12 +50,12 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
         $this->form->fill([
             'selectedAgentId' => $defaultAgentId,
-            'filterInhouse'   => false,
-            'periodType'      => 'month',
-            'selectedDate'    => now()->toDateString(),
-            'selectedWeek'    => (int) now()->weekOfYear,
-            'selectedMonth'   => (int) now()->month,
-            'selectedYear'    => (int) now()->year,
+            'filterInhouse' => false,
+            'periodType' => 'month',
+            'selectedDate' => now()->toDateString(),
+            'selectedWeek' => (int) now()->weekOfYear,
+            'selectedMonth' => (int) now()->month,
+            'selectedYear' => (int) now()->year,
         ]);
     }
 
@@ -73,105 +75,114 @@ class SalesDashboard extends Page implements HasTable, HasForms
                             'md' => 4,
                             'lg' => 12,
                         ])->schema([
-                            Select::make('selectedAgentId')
-                                ->label('Filter by S.E.')
-                                ->options(fn() => User::whereIn('role', [
-                                    User::ROLE_SALES_EXECUTIVE,
-                                    User::ROLE_ADMIN,
-                                    User::ROLE_OPERATIONS_MANAGER,
-                                ])->pluck('name', 'id'))
-                                ->placeholder('All Sales Executives')
-                                ->searchable()
-                                ->live()
-                                ->disabled(fn($get) => (bool) $get('filterInhouse'))
-                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
+                                    Select::make('selectedAgentId')
+                                        ->label('Filter by S.E.')
+                                        ->options(fn() => User::whereIn('role', [
+                                            User::ROLE_SALES_EXECUTIVE,
+                                            User::ROLE_ADMIN,
+                                            User::ROLE_OPERATIONS_MANAGER,
+                                        ])->pluck('name', 'id'))
+                                        ->placeholder('All Sales Executives')
+                                        ->searchable()
+                                        ->live()
+                                        ->disabled(fn($get) => (bool) $get('filterInhouse'))
+                                        ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
 
-                            Toggle::make('filterInhouse')
-                                ->label('Inhouse (Owner)')
-                                ->helperText('Filter by owner accounts')
-                                ->inline(false)
-                                ->live()
-                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 2]),
+                                    Toggle::make('filterInhouse')
+                                        ->label('Inhouse (Owner)')
+                                        ->helperText('Filter by owner accounts')
+                                        ->inline(false)
+                                        ->live()
+                                        ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 2]),
 
-                            ToggleButtons::make('periodType')
-                                ->label('Filter Granularity')
-                                ->options([
-                                    'days'  => 'Days',
-                                    'weeks' => 'Weeks',
-                                    'month' => 'Month',
-                                    'years' => 'Years',
-                                ])
-                                ->icons([
-                                    'days'  => 'heroicon-m-calendar',
-                                    'weeks' => 'heroicon-m-calendar-days',
-                                    'month' => 'heroicon-m-chart-bar',
-                                    'years' => 'heroicon-m-presentation-chart-line',
-                                ])
-                                ->colors([
-                                    'days'  => 'info',
-                                    'weeks' => 'warning',
-                                    'month' => 'primary',
-                                    'years' => 'success',
-                                ])
-                                ->default('month')
-                                ->grouped()
-                                ->live()
-                                ->extraAttributes([
-                                    'class' => '!flex-nowrap whitespace-nowrap overflow-x-auto',
-                                    'style' => 'white-space: nowrap !important;',
-                                ])
-                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 4, 'lg' => 4]),
+                                    ToggleButtons::make('periodType')
+                                        ->label('Filter Granularity')
+                                        ->options([
+                                            'days' => 'Days',
+                                            'weeks' => 'Weeks',
+                                            'month' => 'Month',
+                                            'years' => 'Years',
+                                        ])
+                                        ->icons([
+                                            'days' => 'heroicon-m-calendar',
+                                            'weeks' => 'heroicon-m-calendar-days',
+                                            'month' => 'heroicon-m-chart-bar',
+                                            'years' => 'heroicon-m-presentation-chart-line',
+                                        ])
+                                        ->colors([
+                                            'days' => 'info',
+                                            'weeks' => 'warning',
+                                            'month' => 'primary',
+                                            'years' => 'success',
+                                        ])
+                                        ->default('month')
+                                        ->grouped()
+                                        ->live()
+                                        ->extraAttributes([
+                                            'class' => '!flex-nowrap whitespace-nowrap overflow-x-auto',
+                                            'style' => 'white-space: nowrap !important;',
+                                        ])
+                                        ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 4, 'lg' => 4]),
 
-                            DatePicker::make('selectedDate')
-                                ->label('Select Day')
-                                ->default(now()->toDateString())
-                                ->visible(fn($get) => $get('periodType') === 'days')
-                                ->live()
-                                ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
+                                    DatePicker::make('selectedDate')
+                                        ->label('Select Day')
+                                        ->default(now()->toDateString())
+                                        ->visible(fn($get) => $get('periodType') === 'days')
+                                        ->live()
+                                        ->columnSpan(['default' => 1, 'sm' => 2, 'md' => 2, 'lg' => 3]),
 
-                            Select::make('selectedWeek')
-                                ->label('Select Week')
-                                ->options(function ($get) {
-                                    $year = (int) ($get('selectedYear') ?: now()->year);
-                                    $weeks = [];
-                                    for ($w = 1; $w <= 52; $w++) {
-                                        $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
-                                        $wEnd = $wStart->copy()->endOfWeek();
-                                        $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
-                                    }
-                                    return $weeks;
-                                })
-                                ->default((int) now()->weekOfYear)
-                                ->visible(fn($get) => $get('periodType') === 'weeks')
-                                ->live()
-                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
+                                    Select::make('selectedWeek')
+                                        ->label('Select Week')
+                                        ->options(function ($get) {
+                                            $year = (int) ($get('selectedYear') ?: now()->year);
+                                            $weeks = [];
+                                            for ($w = 1; $w <= 52; $w++) {
+                                                $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
+                                                $wEnd = $wStart->copy()->endOfWeek();
+                                                $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
+                                            }
+                                            return $weeks;
+                                        })
+                                        ->default((int) now()->weekOfYear)
+                                        ->visible(fn($get) => $get('periodType') === 'weeks')
+                                        ->live()
+                                        ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
 
-                            Select::make('selectedMonth')
-                                ->label('Month')
-                                ->options([
-                                    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-                                    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-                                    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
-                                ])
-                                ->default((int) now()->month)
-                                ->visible(fn($get) => $get('periodType') === 'month')
-                                ->live()
-                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
+                                    Select::make('selectedMonth')
+                                        ->label('Month')
+                                        ->options([
+                                            1 => 'January',
+                                            2 => 'February',
+                                            3 => 'March',
+                                            4 => 'April',
+                                            5 => 'May',
+                                            6 => 'June',
+                                            7 => 'July',
+                                            8 => 'August',
+                                            9 => 'September',
+                                            10 => 'October',
+                                            11 => 'November',
+                                            12 => 'December',
+                                        ])
+                                        ->default((int) now()->month)
+                                        ->visible(fn($get) => $get('periodType') === 'month')
+                                        ->live()
+                                        ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 2]),
 
-                            Select::make('selectedYear')
-                                ->label('Year')
-                                ->options(function () {
-                                    $years = [];
-                                    for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
-                                        $years[$y] = (string) $y;
-                                    }
-                                    return $years;
-                                })
-                                ->default((int) now()->year)
-                                ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
-                                ->live()
-                                ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 1]),
-                        ]),
+                                    Select::make('selectedYear')
+                                        ->label('Year')
+                                        ->options(function () {
+                                            $years = [];
+                                            for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
+                                                $years[$y] = (string) $y;
+                                            }
+                                            return $years;
+                                        })
+                                        ->default((int) now()->year)
+                                        ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
+                                        ->live()
+                                        ->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2, 'lg' => 1]),
+                                ]),
                     ]),
             ]);
     }
@@ -228,13 +239,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
     {
         return [
             SalesOverviewWidget::make([
-                'agentId'       => $this->filterData['selectedAgentId'] ?? null,
-                'isInhouse'     => (bool) ($this->filterData['filterInhouse'] ?? false),
-                'periodType'    => $this->filterData['periodType'] ?? 'month',
-                'selectedDate'  => $this->filterData['selectedDate'] ?? now()->toDateString(),
-                'selectedWeek'  => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
+                'agentId' => $this->filterData['selectedAgentId'] ?? null,
+                'isInhouse' => (bool) ($this->filterData['filterInhouse'] ?? false),
+                'periodType' => $this->filterData['periodType'] ?? 'month',
+                'selectedDate' => $this->filterData['selectedDate'] ?? now()->toDateString(),
+                'selectedWeek' => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
                 'selectedMonth' => (int) ($this->filterData['selectedMonth'] ?? now()->month),
-                'selectedYear'  => (int) ($this->filterData['selectedYear'] ?? now()->year),
+                'selectedYear' => (int) ($this->filterData['selectedYear'] ?? now()->year),
             ]),
         ];
     }
@@ -274,19 +285,19 @@ class SalesDashboard extends Page implements HasTable, HasForms
         return $table
             ->query($query->orderByDesc('period_achieved'))
             ->columns([
-                Tables\Columns\TextColumn::make('rank')
+                TextColumn::make('rank')
                     ->label('#')
                     ->state(fn($record, $rowLoop) => $rowLoop->iteration)
                     ->tooltip(fn($record, $rowLoop): string => "Rank #{$rowLoop->iteration} sales performer"),
 
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label('Sales Agent')
                     ->searchable()
                     ->weight('bold')
                     ->description(fn(User $record): string => $record->is_owner ? 'Inhouse (Owner)' : ucfirst(str_replace('_', ' ', $record->role)))
                     ->tooltip(fn(User $record): string => "Sales Executive: {$record->name} ({$record->email})"),
 
-                Tables\Columns\TextColumn::make('period_achieved')
+                TextColumn::make('period_achieved')
                     ->label('Sales Achieved')
                     ->money('PHP')
                     ->sortable()
@@ -295,7 +306,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                     ->weight('bold')
                     ->tooltip(fn(User $record): string => "Confirmed converted PO sales during {$periodLabel}: ₱" . number_format((float) ($record->period_achieved ?? 0), 2)),
 
-                Tables\Columns\TextColumn::make('period_profit')
+                TextColumn::make('period_profit')
                     ->label('Realized Profit')
                     ->money('PHP')
                     ->sortable()
@@ -303,19 +314,19 @@ class SalesDashboard extends Page implements HasTable, HasForms
                     ->color(fn($state) => (float) $state > 0 ? 'primary' : 'gray')
                     ->tooltip(fn(User $record): string => "Realized net gross profit during {$periodLabel}: ₱" . number_format((float) ($record->period_profit ?? 0), 2)),
 
-                Tables\Columns\TextColumn::make('period_quotations')
+                TextColumn::make('period_quotations')
                     ->label('Quotations')
                     ->sortable()
                     ->alignCenter()
                     ->tooltip(fn(User $record): string => "Total customer quotations created during {$periodLabel}"),
 
-                Tables\Columns\TextColumn::make('period_pos')
+                TextColumn::make('period_pos')
                     ->label('POs Won')
                     ->sortable()
                     ->alignCenter()
                     ->tooltip(fn(User $record): string => "Total quotations converted into Purchase Orders during {$periodLabel}"),
 
-                Tables\Columns\TextColumn::make('win_rate')
+                TextColumn::make('win_rate')
                     ->label('Win Rate')
                     ->state(function (User $record): string {
                         $quotes = (int) ($record->period_quotations ?? 0);
