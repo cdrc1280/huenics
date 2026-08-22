@@ -153,7 +153,17 @@ class ActivityLogTest extends TestCase
             'role' => User::ROLE_OPERATIONS_MANAGER,
         ]);
 
+        $ceo = User::create([
+            'name' => 'CEO Executive',
+            'email' => 'ceo@huenics.com',
+            'password' => bcrypt('password'),
+            'role' => User::ROLE_CEO,
+        ]);
+
         $this->actingAs($this->admin);
+        $this->assertTrue(ActivityLogResource::canViewAny());
+
+        $this->actingAs($ceo);
         $this->assertTrue(ActivityLogResource::canViewAny());
 
         $this->actingAs($opsManager);

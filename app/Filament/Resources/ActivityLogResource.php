@@ -40,7 +40,12 @@ class ActivityLogResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->canManageUsers() ?? false;
+        return auth()->user()?->canViewActivityLogs() ?? false;
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return auth()->user()?->canViewActivityLogs() ?? false;
     }
 
     public static function canCreate(): bool

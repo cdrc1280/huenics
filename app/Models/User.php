@@ -149,6 +149,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO, self::ROLE_OPERATIONS_MANAGER]);
     }
 
+    public function canViewActivityLogs(): bool
+    {
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO, self::ROLE_OPERATIONS_MANAGER]);
+    }
+
     /**
      * Get the URL for the user's e-signature image.
      */
