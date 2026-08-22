@@ -4,7 +4,7 @@ set -e
 
 echo "🚀 Starting Huenics ERP & Document Reconciliation Container..."
 
-# ─── 1. Ensure storage directories exist with correct permissions ─────────────
+# ─── 1. Ensure storage and asset directories exist with correct permissions ───
 mkdir -p \
     storage/framework/cache/data \
     storage/framework/sessions \
@@ -14,10 +14,12 @@ mkdir -p \
     storage/app/documents \
     storage/app/livewire-tmp \
     storage/logs \
-    bootstrap/cache
+    bootstrap/cache \
+    public/vendor/filament \
+    public/vendor/livewire
 
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache public/vendor
+chmod -R 775 storage bootstrap/cache public/vendor
 
 # ─── 2. Bind Nginx to Cloud PaaS / Railway $PORT dynamically (defaults to 80) ─
 TARGET_PORT="${PORT:-80}"
@@ -40,8 +42,11 @@ if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null && [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi
 
-# ─── 5. Connect public storage symlink safely ─────────────────────────────────
+# ─── 5. Connect public storage symlink and publish assets safely ─────────────
+echo "🔗 Linking storage and publishing assets..."
 php artisan storage:link --force || true
+php artisan filament:assets || true
+php artisan livewire:publish --assets || true
 
 # ─── 6. Run Database Migrations SAFELY ────────────────────────────────────────
 echo "📦 Running database migrations (safe incremental update only)..."
@@ -77,6 +82,7 @@ if [ "$APP_ENV" = "production" ]; then
     php artisan view:cache
     php artisan event:cache || true
     php artisan filament:cache-components || true
+    php artisan icons:cache || true
 else
     echo "🧹 Clearing caches for development environment..."
     php artisan config:clear || true
