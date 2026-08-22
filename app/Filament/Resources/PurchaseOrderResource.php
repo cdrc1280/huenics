@@ -522,12 +522,58 @@ class PurchaseOrderResource extends Resource
                             Notification::make()->title('No attached document for review')->info()->send();
                         }),
 
+                    Action::make('mark_delivered')
+                        ->label('Mark Delivered')
+                        ->icon('heroicon-m-check-badge')
+                        ->color('success')
+                        ->tooltip('Mark this purchase order as delivered')
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                        ->form([
+                            DatePicker::make('actual_delivery_date')
+                                ->label('Actual Delivery Date')
+                                ->default(now())
+                                ->required(),
+                            TextInput::make('delivery_receipt_no')
+                                ->label('DR # (Delivery Receipt No.)')
+                                ->nullable(),
+                            Toggle::make('has_warranty')
+                                ->label('Include Warranty')
+                                ->default(fn($record) => $record->has_warranty ?? true)
+                                ->live(),
+                            Select::make('warranty_period')
+                                ->label('Warranty Period')
+                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                                ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                                ->visible(fn($get) => (bool) $get('has_warranty')),
+                        ])
+                        ->action(function (PurchaseOrder $record, array $data) {
+                            if (!$record->isApproved()) {
+                                Notification::make()->title('Action Blocked')->body('Purchase Order must be approved before delivery can be marked.')->danger()->send();
+                                return;
+                            }
+
+                            $record->update([
+                                'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+                                'status' => PurchaseOrder::STATUS_DELIVERED,
+                                'delivery_receipt_no' => $data['delivery_receipt_no'] ?? null,
+                                'actual_delivery_date' => $data['actual_delivery_date'],
+                                'has_warranty' => $data['has_warranty'] ?? true,
+                                'warranty_period' => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
+                            ]);
+
+                            Notification::make()
+                                ->title('Delivery Confirmed')
+                                ->body("PO {$record->po_number} marked as delivered. Inventory deducted & warranty activated.")
+                                ->success()
+                                ->send();
+                        }),
+
                     Action::make('delivery_tracker')
                         ->label('Delivery Tracker')
                         ->icon('heroicon-m-truck')
                         ->color('info')
                         ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed())
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
                         ->url(fn() => DeliveryMonitoringPage::getUrl()),
 
                     Action::make('cancel_po')
