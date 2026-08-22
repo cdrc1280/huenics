@@ -63,7 +63,7 @@ class EditQuotation extends EditRecord
                             ->success()
                             ->send();
 
-                        return redirect(PurchaseOrderResource::getUrl('edit', ['record' => $po]));
+                        return redirect(PurchaseOrderResource::getUrl('index'));
                     } catch (\Throwable $e) {
                         Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
                     }

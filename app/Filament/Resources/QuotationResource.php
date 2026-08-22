@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Pages\ReviewQueuePage;
+use App\Filament\Resources\PurchaseOrderResource;
 use App\Filament\Resources\QuotationResource\Pages;
 use App\Models\Product;
 use App\Models\Project;
@@ -539,7 +540,7 @@ class QuotationResource extends Resource
                                 ->success()
                                 ->send();
 
-                            return redirect(PurchaseOrderResource::getUrl('edit', ['record' => $po]));
+                            return redirect(PurchaseOrderResource::getUrl('index'));
                         } catch (\Throwable $e) {
                             Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
                         }
