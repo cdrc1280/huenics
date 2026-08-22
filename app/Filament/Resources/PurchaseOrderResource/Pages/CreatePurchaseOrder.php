@@ -25,6 +25,10 @@ class CreatePurchaseOrder extends CreateRecord
 
     protected function afterCreate(): void
     {
+        if ($this->record->quotation_id && $quotation = \App\Models\Quotation::find($this->record->quotation_id)) {
+            $quotation->update(['status' => \App\Models\Quotation::STATUS_CONVERTED]);
+        }
+
         Notification::make()
             ->title('Purchase Order Created')
             ->body("PO #{$this->record->po_number} has been created.")

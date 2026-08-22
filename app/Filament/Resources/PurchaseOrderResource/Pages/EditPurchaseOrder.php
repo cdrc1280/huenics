@@ -101,6 +101,13 @@ class EditPurchaseOrder extends EditRecord
         ];
     }
 
+    protected function afterSave(): void
+    {
+        if ($this->record->quotation_id && $quotation = \App\Models\Quotation::find($this->record->quotation_id)) {
+            $quotation->update(['status' => \App\Models\Quotation::STATUS_CONVERTED]);
+        }
+    }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

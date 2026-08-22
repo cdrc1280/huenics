@@ -8,6 +8,7 @@ use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
+use App\Models\Quotation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -91,6 +92,43 @@ class PurchaseOrderResource extends Resource
                         ->default(fn() => auth()->id())
                         ->required()
                         ->searchable(),
+
+                    Select::make('quotation_id')
+                        ->label('Linked Quotation (Optional)')
+                        ->options(function (?PurchaseOrder $record) {
+                            $query = Quotation::query();
+                            if ($record && $record->quotation_id) {
+                                $query->where(function ($q) use ($record) {
+                                    $q->whereDoesntHave('purchaseOrders')
+                                      ->orWhere('id', $record->quotation_id);
+                                });
+                            } else {
+                                $query->whereDoesntHave('purchaseOrders')
+                                      ->where('status', '!=', Quotation::STATUS_CONVERTED);
+                            }
+
+                            return $query->get()->mapWithKeys(fn (Quotation $q) => [
+                                $q->id => "{$q->quotation_number} - {$q->customer_name} (" . ($q->project?->name ?? $q->project_name ?? 'No Project') . ") - ₱" . number_format((float) $q->total_amount, 2)
+                            ]);
+                        })
+                        ->searchable()
+                        ->nullable()
+                        ->placeholder('Select an unconverted quotation to link, or leave blank')
+                        ->helperText('Only quotations without an existing Purchase Order are selectable.')
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set, $get) {
+                            if ($state && $quotation = Quotation::find($state)) {
+                                if (!$get('customer_name') || $get('customer_name') === 'Valued Customer') {
+                                    $set('customer_name', $quotation->customer_name);
+                                }
+                                if (!$get('project_id') && $quotation->project_id) {
+                                    $set('project_id', $quotation->project_id);
+                                }
+                                if ($quotation->sales_agent_id) {
+                                    $set('sales_agent_id', $quotation->sales_agent_id);
+                                }
+                            }
+                        }),
 
                     TextInput::make('customer_name')
                         ->label('Customer / Client')
@@ -372,6 +410,14 @@ class PurchaseOrderResource extends Resource
                     ->sortable()
                     ->default('—')
                     ->tooltip(fn(PurchaseOrder $record): string => "Project Site: " . ($record->project?->name ?? 'General / None')),
+
+                TextColumn::make('quotation.quotation_number')
+                    ->label('Quotation #')
+                    ->sortable()
+                    ->searchable()
+                    ->default('—')
+                    ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Linked Quotation: {$record->quotation->quotation_number}" : 'No linked quotation')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('order_amount')
                     ->label('Order Amount')

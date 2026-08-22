@@ -409,6 +409,33 @@ OCR;
         $this->assertEquals(1755.00, $items2[1]['discounted_price']);
         $this->assertEquals(196560.00, $items2[1]['printed_total']);
     }
+
+    public function test_uploading_po_with_linked_quotation_links_and_converts_quotation(): void
+    {
+        $quotation = Quotation::create([
+            'quotation_number' => 'QUOT-TEST-LINK-001',
+            'customer_name' => 'Acme Corp',
+            'sales_agent_id' => $this->user->id,
+            'project_id' => $this->project->id,
+            'total_amount' => 50000.00,
+            'status' => Quotation::STATUS_PENDING,
+            'quotation_date' => now()->toDateString(),
+        ]);
+
+        $action = app(\App\Actions\IngestDocumentAction::class);
+        $doc = $action->execute(
+            diskPath: 'documents/uploads/test_po_upload.pdf',
+            originalFilename: 'test_po_upload.pdf',
+            documentType: Document::TYPE_PURCHASE_ORDER,
+            userId: $this->user->id,
+            quotationId: $quotation->id
+        );
+
+        $po = PurchaseOrder::where('document_id', $doc->id)->first();
+        $this->assertNotNull($po);
+        $this->assertEquals($quotation->id, $po->quotation_id);
+        $this->assertEquals(Quotation::STATUS_CONVERTED, $quotation->fresh()->status);
+    }
 }
 
 

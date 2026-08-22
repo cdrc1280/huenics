@@ -7,6 +7,7 @@ use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource;
 use App\Models\Document;
 use App\Models\Project;
+use App\Models\Quotation;
 use App\Models\Vendor;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
@@ -28,7 +29,7 @@ class ListPurchaseOrders extends ListRecords
                 ->color('warning')
                 ->tooltip('Upload a customer Purchase Order or Order Slip PDF or image for dynamic template parsing and verification')
                 ->modalHeading('Upload & Ingest Purchase Order')
-                ->modalDescription('Upload a Purchase Order or Order Slip PDF or image (JPG, PNG, WEBP). The system will use dynamic templates and OCR to extract line items, prices, VAT, and check for arithmetic discrepancies.')
+                ->modalDescription('Upload a Purchase Order or Order Slip PDF or image (JPG, PNG, WEBP). You can optionally select an existing quotation to link this PO to.')
                 ->form([
                     FileUpload::make('disk_path')
                         ->label('Purchase Order File (PDF or Image)')
@@ -48,6 +49,21 @@ class ListPurchaseOrders extends ListRecords
                         ->default(Document::TYPE_PURCHASE_ORDER)
                         ->required(),
 
+                    Select::make('quotation_id')
+                        ->label('Link to Existing Quotation (Optional)')
+                        ->options(function () {
+                            return Quotation::whereDoesntHave('purchaseOrders')
+                                ->where('status', '!=', Quotation::STATUS_CONVERTED)
+                                ->get()
+                                ->mapWithKeys(fn (Quotation $q) => [
+                                    $q->id => "{$q->quotation_number} - {$q->customer_name} (" . ($q->project?->name ?? $q->project_name ?? 'No Project') . ") - ₱" . number_format((float) $q->total_amount, 2)
+                                ]);
+                        })
+                        ->searchable()
+                        ->nullable()
+                        ->placeholder('Select an unconverted quotation to link, or leave blank')
+                        ->helperText('Only quotations without an existing Purchase Order can be selected.'),
+
                     Hidden::make('original_filename'),
                 ])
                 ->action(function (array $data) {
@@ -57,7 +73,9 @@ class ListPurchaseOrders extends ListRecords
                             originalFilename: $data['original_filename'] ?? basename($data['disk_path']),
                             documentType: $data['document_type'] ?? Document::TYPE_PURCHASE_ORDER,
                             vendorId: null,
-                            projectId: null
+                            projectId: null,
+                            userId: auth()->id(),
+                            quotationId: !empty($data['quotation_id']) ? (int) $data['quotation_id'] : null
                         );
 
                         Notification::make()

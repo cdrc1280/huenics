@@ -25,6 +25,7 @@ class IngestDocumentAction
      * @param int|null $vendorId
      * @param int|null $projectId
      * @param int|null $userId
+     * @param int|null $quotationId
      * @return Document
      * @throws Exception
      */
@@ -34,7 +35,8 @@ class IngestDocumentAction
         string $documentType,
         ?int $vendorId = null,
         ?int $projectId = null,
-        ?int $userId = null
+        ?int $userId = null,
+        ?int $quotationId = null
     ): Document {
         $candidates = [
             storage_path('app/private/' . $diskPath),
@@ -87,7 +89,7 @@ class IngestDocumentAction
             $this->reconciler->execute($existing);
 
             try {
-                $this->syncInitialResourceRecord($existing, $userId ?: (auth()->id() ?: 1));
+                $this->syncInitialResourceRecord($existing, $userId ?: (auth()->id() ?: 1), $quotationId);
             } catch (\Throwable $e) {
                 Log::warning("Initial resource record sync notice for existing Document #{$existing->id}: " . $e->getMessage());
             }
@@ -117,7 +119,7 @@ class IngestDocumentAction
 
         // Auto-create corresponding pending Quotation or PO record for immediate table display
         try {
-            $this->syncInitialResourceRecord($document, $userId ?: (auth()->id() ?: 1));
+            $this->syncInitialResourceRecord($document, $userId ?: (auth()->id() ?: 1), $quotationId);
         } catch (\Throwable $e) {
             Log::warning("Initial resource record sync notice for Document #{$document->id}: " . $e->getMessage());
         }
@@ -125,14 +127,14 @@ class IngestDocumentAction
         return $document;
     }
 
-    public function syncInitialResourceRecord(Document $document, int $userId): void
+    public function syncInitialResourceRecord(Document $document, int $userId, ?int $quotationId = null): void
     {
         $document->loadMissing(['lineItems', 'totals', 'vendor', 'project']);
 
         if ($document->document_type === Document::TYPE_VENDORS_AGREEMENT) {
             $this->syncQuotation($document, $userId);
         } elseif (in_array($document->document_type, [Document::TYPE_PURCHASE_ORDER, Document::TYPE_ORDER_SLIP])) {
-            $this->syncPurchaseOrder($document, $userId);
+            $this->syncPurchaseOrder($document, $userId, $quotationId);
         }
     }
 
@@ -214,7 +216,7 @@ class IngestDocumentAction
         }
     }
 
-    protected function syncPurchaseOrder(Document $document, int $userId): void
+    protected function syncPurchaseOrder(Document $document, int $userId, ?int $quotationId = null): void
     {
         $customerName = $document->customer_name
             ?: ($document->project?->customer_name ?: ($document->vendor?->name ?: 'MGS CONSTRUCTION, INC.'));
@@ -231,6 +233,7 @@ class IngestDocumentAction
             $po = PurchaseOrder::create([
                 'po_number'        => $poNumber,
                 'document_id'      => $document->id,
+                'quotation_id'     => $quotationId,
                 'sales_agent_id'   => $document->uploaded_by ?: $userId,
                 'customer_name'    => $customerName,
                 'project_id'       => $document->project_id,
@@ -253,6 +256,9 @@ class IngestDocumentAction
                 'printed_vat'      => $document->totals?->printed_vat,
                 'computed_vat'     => $document->totals?->computed_vat,
             ];
+            if ($quotationId && empty($po->quotation_id)) {
+                $updates['quotation_id'] = $quotationId;
+            }
             if (!empty($document->document_number)) {
                 $updates['po_number'] = $document->document_number;
             }
@@ -260,6 +266,24 @@ class IngestDocumentAction
                 $updates['order_date'] = $document->document_date;
             }
             $po->update($updates);
+        }
+
+        if ($quotationId && $quotation = Quotation::find($quotationId)) {
+            if (empty($po->project_id) && !empty($quotation->project_id)) {
+                $po->update(['project_id' => $quotation->project_id]);
+            }
+            if (!empty($quotation->sales_agent_id) && empty($po->sales_agent_id)) {
+                $po->update(['sales_agent_id' => $quotation->sales_agent_id]);
+            }
+            $quotation->update([
+                'status' => Quotation::STATUS_CONVERTED,
+            ]);
+            if ($quotation->document_id) {
+                $trx = \App\Models\Transaction::where('quotation_document_id', $quotation->document_id)->first();
+                if ($trx && empty($trx->purchase_order_document_id)) {
+                    $trx->update(['purchase_order_document_id' => $document->id]);
+                }
+            }
         }
 
         // Sync line items

@@ -133,9 +133,14 @@ class Quotation extends Model
         return $this->hasMany(QuotationLineItem::class)->orderBy('line_no');
     }
 
+    public function purchaseOrder(): HasOne
+    {
+        return $this->hasOne(PurchaseOrder::class, 'quotation_id');
+    }
+
     public function purchaseOrders(): HasMany
     {
-        return $this->hasMany(PurchaseOrder::class);
+        return $this->hasMany(PurchaseOrder::class, 'quotation_id');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────

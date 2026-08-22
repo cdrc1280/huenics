@@ -22,6 +22,7 @@ class ViewPurchaseOrder extends ViewRecord
                     TextEntry::make('po_number')->label('PO #')->weight('bold'),
                     TextEntry::make('customer_name')->label('Customer'),
                     TextEntry::make('salesAgent.name')->label('Sales Agent'),
+                    TextEntry::make('quotation.quotation_number')->label('Linked Quotation')->default('—'),
                     TextEntry::make('project.name')->label('Project')->default('—'),
                     TextEntry::make('order_date')->label('Order Date')->date('M j, Y'),
                     TextEntry::make('status')->label('Status')->badge()
