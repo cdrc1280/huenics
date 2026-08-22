@@ -53,6 +53,11 @@ class PurchaseOrderResource extends Resource
         return auth()->user()?->canManageQuotations() ?? false;
     }
 
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
@@ -657,7 +662,6 @@ class PurchaseOrderResource extends Resource
     {
         return [
             'index' => Pages\ListPurchaseOrders::route('/'),
-            'create' => Pages\CreatePurchaseOrder::route('/create'),
             'edit' => Pages\EditPurchaseOrder::route('/{record}/edit'),
             'view' => Pages\ViewPurchaseOrder::route('/{record}'),
         ];

@@ -41,7 +41,7 @@ class ListPurchaseOrders extends ListRecords
                         ->storeFileNamesIn('original_filename'),
 
                     Select::make('quotation_id')
-                        ->label('Link to Approved Quotation (Optional)')
+                        ->label('Link to Approved Quotation')
                         ->options(function () {
                             return Quotation::whereDoesntHave('purchaseOrders')
                                 ->where('status', Quotation::STATUS_APPROVED)
@@ -51,7 +51,7 @@ class ListPurchaseOrders extends ListRecords
                                 ]);
                         })
                         ->searchable()
-                        ->nullable()
+                        ->required()
                         ->placeholder('Select an approved quotation to link, or leave blank')
                         ->helperText('Only approved quotations without an existing Purchase Order can be selected.'),
 
@@ -85,8 +85,6 @@ class ListPurchaseOrders extends ListRecords
                             ->send();
                     }
                 }),
-
-            Actions\CreateAction::make()->label('New Purchase Order'),
         ];
     }
 }
