@@ -50,19 +50,22 @@ php artisan livewire:publish --assets || true
 
 # ─── 6. Run Database Migrations SAFELY ────────────────────────────────────────
 echo "📦 Running database migrations (safe incremental update only)..."
+if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_HOST" ]; then
+    mkdir -p database
+    [ -f database/database.sqlite ] || touch database/database.sqlite
+fi
 php artisan migrate --force
 
 # ─── 7. First-run seeders — GUARDED to never overwrite existing production data ─
 IS_FIRST_RUN=$(php -r "
+    require __DIR__ . '/vendor/autoload.php';
+    \$app = require_once __DIR__ . '/bootstrap/app.php';
+    \$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
+    \$kernel->bootstrap();
     try {
-        \$pdo = new PDO(
-            'mysql:host=' . getenv('DB_HOST') . ';port=' . (getenv('DB_PORT') ?: 3306) . ';dbname=' . getenv('DB_DATABASE'),
-            getenv('DB_USERNAME'),
-            getenv('DB_PASSWORD')
-        );
-        \$count = \$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
-        echo (\$count == 0) ? 'yes' : 'no';
-    } catch (Exception \$e) {
+        \$count = \App\Models\User::count();
+        echo (\$count === 0) ? 'yes' : 'no';
+    } catch (\Throwable \$e) {
         echo 'yes';
     }
 " 2>/dev/null || echo "no")

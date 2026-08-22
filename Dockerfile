@@ -145,7 +145,7 @@ RUN php artisan icons:cache || true
 RUN php artisan filament:cache-components || true
 
 RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 storage bootstrap/cache public
+RUN chmod -R 775 storage bootstrap/cache public database
 
 EXPOSE 80
 

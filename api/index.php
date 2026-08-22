@@ -43,13 +43,14 @@ try {
 
     if ($isLocalDb) {
         $dbTarget = '/tmp/database.sqlite';
-        if (!file_exists($dbTarget) || filesize($dbTarget) === 0) {
-            $baseDb = dirname(__DIR__) . '/database/base.sqlite';
-            if (file_exists($baseDb) && filesize($baseDb) > 0) {
+        $baseDb = dirname(__DIR__) . '/database/base.sqlite';
+        if (file_exists($baseDb) && filesize($baseDb) > 0) {
+            // If target doesn't exist or is smaller/older than baseDb, refresh from baseDb
+            if (!file_exists($dbTarget) || filesize($dbTarget) < filesize($baseDb) || filemtime($baseDb) > filemtime($dbTarget)) {
                 copy($baseDb, $dbTarget);
-            } else {
-                touch($dbTarget);
             }
+        } elseif (!file_exists($dbTarget) || filesize($dbTarget) === 0) {
+            touch($dbTarget);
         }
         putenv('DB_CONNECTION=sqlite');
         putenv("DB_DATABASE={$dbTarget}");
@@ -92,6 +93,19 @@ try {
 
     $app = require_once __DIR__ . '/../bootstrap/app.php';
     $app->useStoragePath('/tmp/storage');
+
+    if ($isLocalDb) {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::connection('sqlite')->hasColumn('products', 'deleted_at')) {
+                \Illuminate\Support\Facades\Artisan::call('migrate', [
+                    '--database' => 'sqlite',
+                    '--force' => true,
+                ]);
+            }
+        } catch (\Throwable $migE) {
+            // Continue
+        }
+    }
 
     $app->handleRequest(
         \Illuminate\Http\Request::capture()
