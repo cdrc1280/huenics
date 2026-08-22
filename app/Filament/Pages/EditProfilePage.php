@@ -64,11 +64,15 @@ class EditProfilePage extends Page implements HasForms
                         FileUpload::make('e_signature_path')
                             ->label('Digital E-Signature (PNG / JPEG with transparent background)')
                             ->image()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                            ->maxSize(2048)
+                            ->maxFiles(1)
+                            ->rules(['image', 'mimes:png,jpg,jpeg,webp,svg', 'max:2048'])
                             ->disk('local')
                             ->directory('signatures')
                             ->visibility('private')
                             ->preserveFilenames()
-                            ->helperText('This e-signature will be automatically attached to Quotations and approved Purchase Orders created or authorized by you.'),
+                            ->helperText('Upload digital signature (transparent PNG/SVG recommended). Maximum file size: 2 MB.'),
                     ])
                     ->columns(2),
             ])

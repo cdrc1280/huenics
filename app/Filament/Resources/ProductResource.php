@@ -69,10 +69,14 @@ class ProductResource extends Resource
                             ->label('Product Image')
                             ->image()
                             ->imageEditor()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxSize(5120)
+                            ->maxFiles(1)
+                            ->rules(['image', 'mimes:jpeg,png,webp', 'max:5120'])
                             ->directory('products/images')
                             ->disk('public')
                             ->visibility('public')
-                            ->helperText('Upload product photo or diagram to appear on quotations and PDF exports.')
+                            ->helperText('Upload product photo or diagram. Accepted formats: JPG, PNG, WEBP. Maximum file size: 5 MB.')
                             ->columnSpanFull(),
 
                         Forms\Components\TextInput::make('canonical_name')
