@@ -51,18 +51,18 @@
 <body class="flex min-h-full flex-col font-sans bg-slate-50">
 
     <!-- Top Banner -->
-    <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div class="flex items-center gap-4">
-                <span><i class="fa-solid fa-phone text-blue-400 mr-1.5"></i> +63 (2) 8123 4567</span>
-                <span class="hidden md:inline"><i class="fa-solid fa-envelope text-blue-400 mr-1.5"></i> sales@huenics.com</span>
-                <span class="hidden lg:inline"><i class="fa-solid fa-location-dot text-blue-400 mr-1.5"></i> Mandaluyong City, Metro Manila</span>
+    <div class="bg-slate-900 text-slate-300 text-xs py-2 px-3 sm:px-4 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs">
+                <span><i class="fa-solid fa-phone text-blue-400 mr-1"></i> +63 (2) 8123 4567</span>
+                <span class="hidden sm:inline"><i class="fa-solid fa-envelope text-blue-400 mr-1"></i> sales@huenics.com</span>
+                <span class="hidden lg:inline"><i class="fa-solid fa-location-dot text-blue-400 mr-1"></i> Mandaluyong City, Metro Manila</span>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-500/30">
+            <div class="flex items-center gap-3 ml-auto sm:ml-0 text-[11px] sm:text-xs">
+                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-medium border border-emerald-500/30 whitespace-nowrap">
                     <i class="fa-solid fa-check mr-1"></i> 12% VAT Compliant
                 </span>
-                <a href="{{ url('/admin/login') }}" class="text-slate-300 hover:text-white transition flex items-center gap-1 font-medium">
+                <a href="{{ url('/admin/login') }}" class="text-slate-300 hover:text-white transition flex items-center gap-1 font-medium whitespace-nowrap">
                     <i class="fa-solid fa-lock text-xs"></i> Employee Login
                 </a>
             </div>
@@ -71,19 +71,19 @@
 
     <!-- Main Navigation -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16 sm:h-20">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
                 <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('customer.home') }}" class="flex items-center gap-3 group">
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0">
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
                             <i class="fa-solid fa-cubes"></i>
                         </div>
-                        <div>
-                            <div class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none">
+                        <div class="min-w-0 truncate">
+                            <div class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none truncate">
                                 HUENICS <span class="text-blue-600 font-black">INDUSTRIAL</span>
                             </div>
-                            <div class="text-[10px] sm:text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5">
+                            <div class="text-[9px] sm:text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5 truncate">
                                 Supply & Engineering Distribution
                             </div>
                         </div>
@@ -91,55 +91,55 @@
                 </div>
 
                 <!-- Desktop Nav Links -->
-                <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
-                    <a href="{{ route('customer.home') }}" class="hover:text-blue-600 transition {{ request()->routeIs('customer.home') ? 'text-blue-600 font-semibold' : '' }}">
+                <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700">
+                    <a href="{{ route('customer.home') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-blue-600 font-semibold' : '' }}">
                         Home
                     </a>
-                    <a href="{{ route('customer.about') }}" class="hover:text-blue-600 transition {{ request()->routeIs('customer.about') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.about') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.about') ? 'text-blue-600 font-semibold' : '' }}">
                         About Us
                     </a>
-                    <a href="{{ route('customer.products') }}" class="hover:text-blue-600 transition {{ request()->routeIs('customer.products') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.products') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.products') ? 'text-blue-600 font-semibold' : '' }}">
                         Product Catalog
                     </a>
-                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-blue-600 transition {{ request()->routeIs('customer.quotation-builder') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.quotation-builder') ? 'text-blue-600 font-semibold' : '' }}">
                         Quotation Builder
                     </a>
                 </nav>
 
                 <!-- Action / Cart Button -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-sm hover:shadow transition">
+                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-sm hover:shadow transition">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
-                        <span>Quotation Estimate</span>
-                        <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-900 font-black text-xs px-1.5 py-0.2 rounded-full ml-1">
+                        <span class="hidden xs:inline sm:inline">Quotation Estimate</span>
+                        <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-900 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">
                             0
                         </span>
                     </a>
 
                     <!-- Mobile Menu Button -->
-                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none">
-                        <i class="fa-solid fa-bars text-xl"></i>
+                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none" aria-label="Toggle Navigation Menu">
+                        <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Nav Menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3">
-            <a href="{{ route('customer.home') }}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.home') ? 'bg-blue-50 text-blue-700' : '' }}">
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-2 shadow-lg">
+            <a href="{{ route('customer.home') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.home') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
                 <i class="fa-solid fa-house w-6 text-blue-600"></i> Home
             </a>
-            <a href="{{ route('customer.about') }}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.about') ? 'bg-blue-50 text-blue-700' : '' }}">
+            <a href="{{ route('customer.about') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.about') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
                 <i class="fa-solid fa-building w-6 text-blue-600"></i> About Us
             </a>
-            <a href="{{ route('customer.products') }}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.products') ? 'bg-blue-50 text-blue-700' : '' }}">
+            <a href="{{ route('customer.products') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.products') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
                 <i class="fa-solid fa-box-open w-6 text-blue-600"></i> Product Catalog
             </a>
-            <a href="{{ route('customer.quotation-builder') }}" class="block px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 text-blue-700' : '' }}">
+            <a href="{{ route('customer.quotation-builder') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
                 <i class="fa-solid fa-calculator w-6 text-blue-600"></i> Quotation Builder
             </a>
-            <a href="{{ url('/admin/login') }}" class="block px-3 py-2 rounded-md font-medium text-slate-500 hover:bg-slate-100">
+            <a href="{{ url('/admin/login') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-500 hover:bg-slate-100 border-t border-slate-100 mt-2 pt-2">
                 <i class="fa-solid fa-lock w-6 text-slate-400"></i> Employee Login
             </a>
         </div>
@@ -151,8 +151,8 @@
     </main>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 max-w-sm">
+    <div id="toast" class="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
             <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
                 <i class="fa-solid fa-check"></i>
             </div>
