@@ -623,9 +623,25 @@ class PurchaseOrderResource extends Resource
                                 ->send();
                         }),
 
+                    Action::make('create_dr')
+                        ->label('Create DR')
+                        ->icon('heroicon-m-truck')
+                        ->color('info')
+                        ->tooltip('Create a Delivery Receipt (DR) for this purchase order')
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
+                        ->url(fn(PurchaseOrder $r): string => url('/admin/delivery-receipts/create?purchase_order_id=' . $r->id)),
+
+                    Action::make('create_si')
+                        ->label('Create SI')
+                        ->icon('heroicon-m-receipt-percent')
+                        ->color('warning')
+                        ->tooltip('Create a Sales Invoice (SI) for this purchase order')
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
+                        ->url(fn(PurchaseOrder $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->id)),
+
                     Action::make('delivery_tracker')
                         ->label('Delivery Tracker')
-                        ->icon('heroicon-m-truck')
+                        ->icon('heroicon-m-clock')
                         ->color('info')
                         ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
                         ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))

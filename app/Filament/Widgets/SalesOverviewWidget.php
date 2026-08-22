@@ -74,8 +74,16 @@ class SalesOverviewWidget extends BaseWidget
         $startStr = $startDate->toDateString();
         $endStr = $endDate->toDateString();
 
-        $quotationQuery = Quotation::whereBetween('quotation_date', [$startStr, $endStr]);
-        $poQuery = PurchaseOrder::whereBetween('order_date', [$startStr, $endStr]);
+        $quotationQuery = Quotation::where(function ($q) use ($startStr, $endStr, $startDate, $endDate) {
+            $q->whereBetween('quotation_date', [$startStr, $endStr])
+              ->orWhere(fn($sub) => $sub->whereNull('quotation_date')->whereBetween('created_at', [$startDate, $endDate]));
+        });
+
+        $poQuery = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
+            ->where(function ($q) use ($startStr, $endStr, $startDate, $endDate) {
+                $q->whereBetween('order_date', [$startStr, $endStr])
+                  ->orWhere(fn($sub) => $sub->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]));
+            });
 
         if ($isInhouse) {
             $quotationQuery->whereHas('salesAgent', fn($q) => $q->where('is_owner', true));

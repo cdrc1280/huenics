@@ -56,6 +56,8 @@ class DeliveryReceiptResource extends Resource
     {
         return $schema->components([
             Section::make('Delivery Details')
+                ->description('Specify purchase order reference, delivery personnel, and schedule.')
+                ->icon('heroicon-o-truck')
                 ->schema([
                     TextInput::make('dr_number')
                         ->label('DR #')
@@ -67,7 +69,23 @@ class DeliveryReceiptResource extends Resource
                         ->label('Purchase Order')
                         ->relationship('purchaseOrder', 'po_number')
                         ->required()
-                        ->searchable(),
+                        ->searchable()
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set) {
+                            if ($state) {
+                                $po = PurchaseOrder::with('lineItems.product')->find($state);
+                                if ($po) {
+                                    $items = $po->lineItems->map(fn($line) => [
+                                        'product_id' => $line->product_id,
+                                        'description' => $line->description ?: ($line->product?->canonical_name ?? 'Line Item'),
+                                        'qty_delivered' => (float) $line->qty,
+                                        'unit' => $line->unit ?: 'pcs',
+                                        'remarks' => $line->description,
+                                    ])->toArray();
+                                    $set('items', $items);
+                                }
+                            }
+                        }),
 
                     DatePicker::make('delivery_date')
                         ->label('Delivery Date')
@@ -75,19 +93,27 @@ class DeliveryReceiptResource extends Resource
                         ->default(now()),
 
                     TextInput::make('delivered_by')
-                        ->label('Delivered By'),
+                        ->label('Delivered By')
+                        ->placeholder('Driver or Delivery Staff Name'),
 
                     TextInput::make('received_by')
-                        ->label('Received By'),
+                        ->label('Received By')
+                        ->placeholder('Client Authorized Representative'),
 
                     Select::make('status')
                         ->options(\App\Enums\DeliveryReceiptStatus::class)
                         ->required()
                         ->default(\App\Enums\DeliveryReceiptStatus::Draft),
+
+                    Textarea::make('remarks')
+                        ->label('Delivery Remarks / Site Notes')
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
 
             Section::make('Delivered Items')
+                ->description('List of products and quantities dispatched for this delivery receipt.')
+                ->icon('heroicon-o-cube')
                 ->schema([
                     Repeater::make('items')
                         ->relationship('items')
@@ -97,7 +123,7 @@ class DeliveryReceiptResource extends Resource
                                 ->options(Product::pluck('canonical_name', 'id'))
                                 ->searchable()
                                 ->required()
-                                ->columnSpan(7),
+                                ->columnSpan(6),
 
                             TextInput::make('qty_delivered')
                                 ->label('Qty Delivered')
@@ -113,11 +139,13 @@ class DeliveryReceiptResource extends Resource
                                 ->columnSpan(1),
 
                             TextInput::make('remarks')
-                                ->label('Remarks')
-                                ->columnSpan(2),
+                                ->label('Item Remarks')
+                                ->placeholder('Serial / Spec notes')
+                                ->columnSpan(3),
                         ])
                         ->columns(12)
-                        ->defaultItems(1),
+                        ->defaultItems(1)
+                        ->addActionLabel('+ Add Item'),
                 ]),
         ]);
     }
@@ -129,25 +157,49 @@ class DeliveryReceiptResource extends Resource
                 TextColumn::make('dr_number')
                     ->label('DR #')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->copyable()
+                    ->tooltip('Click to copy Delivery Receipt #'),
 
                 TextColumn::make('purchaseOrder.po_number')
-                    ->label('PO Number')
+                    ->label('PO #')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->color('primary')
+                    ->tooltip(fn(DeliveryReceipt $r): string => "Linked PO: " . ($r->purchaseOrder?->po_number ?? 'N/A')),
+
+                TextColumn::make('purchaseOrder.customer_name')
+                    ->label('Customer')
+                    ->searchable()
+                    ->sortable()
+                    ->tooltip(fn(DeliveryReceipt $r): string => "Customer: " . ($r->purchaseOrder?->customer_name ?? 'N/A')),
 
                 TextColumn::make('delivery_date')
+                    ->label('Delivery Date')
                     ->date('M d, Y')
                     ->sortable(),
 
                 TextColumn::make('delivered_by')
-                    ->searchable(),
+                    ->label('Delivered By')
+                    ->searchable()
+                    ->default('—'),
 
                 TextColumn::make('received_by')
-                    ->searchable(),
+                    ->label('Received By')
+                    ->searchable()
+                    ->default('—'),
 
                 TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'draft' => 'Draft',
+                        'in_transit', 'pending' => 'In Transit',
+                        'delivered' => 'Delivered',
+                        'cancelled', 'rejected' => 'Cancelled',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    })
                     ->color(fn(string $state): string => match ($state) {
                         'draft' => 'gray',
                         'in_transit', 'pending' => 'warning',
@@ -157,10 +209,38 @@ class DeliveryReceiptResource extends Resource
                     }),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(\App\Enums\DeliveryReceiptStatus::class),
                 TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('mark_delivered')
+                        ->label('Mark as Delivered')
+                        ->icon('heroicon-m-check-badge')
+                        ->color('success')
+                        ->visible(fn(DeliveryReceipt $r): bool => !$r->trashed() && $r->status !== 'delivered')
+                        ->requiresConfirmation()
+                        ->action(function (DeliveryReceipt $record) {
+                            $record->update(['status' => 'delivered']);
+                            if ($record->purchaseOrder) {
+                                $record->purchaseOrder->update([
+                                    'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+                                    'status' => PurchaseOrder::STATUS_DELIVERED,
+                                    'actual_delivery_date' => $record->delivery_date ?: now()->toDateString(),
+                                    'delivery_receipt_no' => $record->dr_number,
+                                ]);
+                            }
+                            Notification::make()->title('Delivery Confirmed')->body("DR {$record->dr_number} marked as Delivered.")->success()->send();
+                        }),
+
+                    Action::make('create_si')
+                        ->label('Generate Invoice (SI)')
+                        ->icon('heroicon-m-receipt-percent')
+                        ->color('warning')
+                        ->visible(fn(DeliveryReceipt $r): bool => !$r->trashed())
+                        ->url(fn(DeliveryReceipt $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->purchase_order_id . '&delivery_receipt_id=' . $r->id)),
+
                     Action::make('export_pdf')
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')

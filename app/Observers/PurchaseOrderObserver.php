@@ -17,7 +17,7 @@ class PurchaseOrderObserver
     ) {}
 
     /**
-     * When a PO is first created, record toward sales quota.
+     * When a PO is first created, record toward sales quota and auto-deduct stock.
      */
     public function created(PurchaseOrder $po): void
     {
@@ -25,6 +25,14 @@ class PurchaseOrderObserver
             $this->quota->recordConversion($po);
         } catch (\Throwable $e) {
             Log::error("SalesQuotaService::recordConversion failed: " . $e->getMessage());
+        }
+
+        try {
+            if ($po->status !== PurchaseOrder::STATUS_CANCELLED && $po->status !== PurchaseOrder::STATUS_REJECTED) {
+                $this->inventory->deductPurchaseOrderStock($po);
+            }
+        } catch (\Throwable $e) {
+            Log::error("InventoryService::deductPurchaseOrderStock failed on created: " . $e->getMessage());
         }
     }
 
@@ -86,20 +94,39 @@ class PurchaseOrderObserver
     }
 
     /**
-     * When delivery_status transitions:
-     * — Deduct inventory components on delivered
+     * When delivery_status or status transitions:
+     * — Deduct inventory components on delivered / confirmed
+     * — Restore inventory on cancelled / rejected
      * — Activate / deactivate warranty clock
      * — Check for overdue deliveries
      */
     public function updated(PurchaseOrder $po): void
     {
-        // Inventory + Warranty: trigger on delivery confirmation
+        // 1. If PO was cancelled or rejected, restore stock
+        if ($po->wasChanged('status')) {
+            if (in_array($po->status, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])) {
+                try {
+                    $this->inventory->restorePurchaseOrderStock($po);
+                } catch (\Throwable $e) {
+                    Log::error("Inventory restore failed for PO {$po->po_number}: " . $e->getMessage());
+                }
+            } elseif ($po->getOriginal('status') === PurchaseOrder::STATUS_CANCELLED || $po->getOriginal('status') === PurchaseOrder::STATUS_REJECTED) {
+                // Restored from cancelled -> deduct
+                try {
+                    $this->inventory->deductPurchaseOrderStock($po);
+                } catch (\Throwable $e) {
+                    Log::error("Inventory deduction failed for restored PO {$po->po_number}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // 2. Inventory + Warranty: trigger on delivery confirmation
         if ($po->wasChanged('delivery_status')) {
             if ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) {
                 try {
-                    $this->inventory->deductComponents($po);
+                    $this->inventory->deductPurchaseOrderStock($po);
                 } catch (\Throwable $e) {
-                    Log::error("InventoryService::deductComponents failed for PO {$po->po_number}: " . $e->getMessage());
+                    Log::error("InventoryService::deductPurchaseOrderStock failed for PO {$po->po_number}: " . $e->getMessage());
                 }
 
                 try {
@@ -125,7 +152,7 @@ class PurchaseOrderObserver
             }
         }
 
-        // Overdue check: flag if past expected delivery and still pending
+        // 3. Overdue check: flag if past expected delivery and still pending
         if ($po->wasChanged('expected_delivery_date') || $po->wasChanged('delivery_status')) {
             if (
                 $po->delivery_status === PurchaseOrder::DELIVERY_PENDING
@@ -145,6 +172,18 @@ class PurchaseOrderObserver
                     $user->notify(new \App\Notifications\DeliveryOverdueNotification($po));
                 }
             }
+        }
+    }
+
+    /**
+     * When a PO is deleted, restore deducted stock.
+     */
+    public function deleted(PurchaseOrder $po): void
+    {
+        try {
+            $this->inventory->restorePurchaseOrderStock($po);
+        } catch (\Throwable $e) {
+            Log::error("InventoryService::restorePurchaseOrderStock failed on deleted: " . $e->getMessage());
         }
     }
 }

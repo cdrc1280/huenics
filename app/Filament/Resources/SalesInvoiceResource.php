@@ -58,6 +58,8 @@ class SalesInvoiceResource extends Resource
     {
         return $schema->components([
             Section::make('Invoice Header Details')
+                ->description('Specify billing customer, purchase order, delivery receipt link, and payment status.')
+                ->icon('heroicon-o-receipt-percent')
                 ->schema([
                     TextInput::make('si_number')
                         ->label('SI #')
@@ -69,10 +71,39 @@ class SalesInvoiceResource extends Resource
                         ->label('Purchase Order')
                         ->relationship('purchaseOrder', 'po_number')
                         ->searchable()
-                        ->required(),
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set) {
+                            if ($state) {
+                                $po = PurchaseOrder::with('lineItems.product')->find($state);
+                                if ($po) {
+                                    $set('customer_name', $po->customer_name);
+                                    $subtotal = 0;
+                                    $items = $po->lineItems->map(function ($line) use (&$subtotal) {
+                                        $qty = (float) $line->qty;
+                                        $price = (float) ($line->discounted_price ?: $line->unit_price);
+                                        $lineTotal = (float) ($line->line_total ?: round($qty * $price, 2));
+                                        $subtotal += $lineTotal;
+                                        return [
+                                            'product_id' => $line->product_id,
+                                            'description' => $line->description ?: ($line->product?->canonical_name ?? 'Line Item'),
+                                            'qty' => $qty,
+                                            'unit' => $line->unit ?: 'pcs',
+                                            'unit_price' => $price,
+                                            'line_total' => $lineTotal,
+                                        ];
+                                    })->toArray();
+                                    $vat = round($subtotal * 0.12, 2);
+                                    $set('items', $items);
+                                    $set('subtotal', $subtotal);
+                                    $set('vat_amount', $vat);
+                                    $set('total_amount', $subtotal + $vat);
+                                }
+                            }
+                        }),
 
                     Select::make('delivery_receipt_id')
-                        ->label('Delivery Receipt')
+                        ->label('Delivery Receipt (DR)')
                         ->relationship('deliveryReceipt', 'dr_number')
                         ->searchable()
                         ->nullable(),
@@ -81,64 +112,49 @@ class SalesInvoiceResource extends Resource
                         ->label('Customer Name')
                         ->required(),
 
-                    Textarea::make('billing_address')
-                        ->label('Billing Address')
-                        ->columnSpan(2),
-
                     DatePicker::make('invoice_date')
                         ->label('Invoice Date')
                         ->required()
                         ->default(now()),
 
                     DatePicker::make('due_date')
-                        ->label('Due Date')
-                        ->nullable(),
+                        ->label('Payment Due Date')
+                        ->nullable()
+                        ->default(now()->addDays(30)),
 
                     Select::make('payment_status')
                         ->label('Payment Status')
                         ->options([
                             'unpaid' => 'Unpaid',
-                            'partial' => 'Partial',
-                            'paid' => 'Paid',
+                            'partial' => 'Partial Payment',
+                            'paid' => 'Fully Paid',
                         ])
                         ->default('unpaid')
-                        ->required(),
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set) {
+                            if ($state === 'paid') {
+                                $set('payment_date', now()->toDateString());
+                            }
+                        }),
 
                     DatePicker::make('payment_date')
                         ->label('Payment Date')
                         ->nullable(),
 
-                    TextInput::make('subtotal')
-                        ->label('Subtotal (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->disabled()
-                        ->dehydrated()
-                        ->default(0),
-
-                    TextInput::make('vat_amount')
-                        ->label('12% VAT (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->disabled()
-                        ->dehydrated()
-                        ->default(0),
-
-                    TextInput::make('total_amount')
-                        ->label('Total Amount (₱)')
-                        ->numeric()
-                        ->prefix('₱')
-                        ->disabled()
-                        ->dehydrated()
-                        ->default(0),
+                    Textarea::make('billing_address')
+                        ->label('Billing Address')
+                        ->columnSpanFull(),
 
                     Textarea::make('notes')
-                        ->label('Notes / Remarks')
+                        ->label('Notes / Payment Terms')
                         ->columnSpanFull(),
                 ])
                 ->columns(3),
 
             Section::make('Invoiced Line Items')
+                ->description('List of products and line items billed on this sales invoice.')
+                ->icon('heroicon-o-shopping-bag')
                 ->schema([
                     Repeater::make('items')
                         ->relationship('items')
@@ -148,15 +164,18 @@ class SalesInvoiceResource extends Resource
                                 ->options(Product::pluck('canonical_name', 'id'))
                                 ->searchable()
                                 ->required()
-                                ->columnSpan(7),
+                                ->columnSpan(6),
 
                             TextInput::make('qty')
                                 ->label('Qty')
                                 ->numeric()
                                 ->required()
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * (float) $get('unit_price'), 2)))
-                                ->columnSpan(1),
+                                ->afterStateUpdated(function ($state, $set, $get) {
+                                    $total = round((float) $state * (float) $get('unit_price'), 2);
+                                    $set('line_total', $total);
+                                })
+                                ->columnSpan(2),
 
                             Select::make('unit')
                                 ->label('Unit')
@@ -166,16 +185,19 @@ class SalesInvoiceResource extends Resource
                                 ->columnSpan(1),
 
                             TextInput::make('unit_price')
-                                ->label('Unit Price')
+                                ->label('Unit Price (₱)')
                                 ->numeric()
                                 ->prefix('₱')
                                 ->required()
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * (float) $state, 2)))
+                                ->afterStateUpdated(function ($state, $set, $get) {
+                                    $total = round((float) $get('qty') * (float) $state, 2);
+                                    $set('line_total', $total);
+                                })
                                 ->columnSpan(1),
 
                             TextInput::make('line_total')
-                                ->label('Total')
+                                ->label('Line Total (₱)')
                                 ->numeric()
                                 ->prefix('₱')
                                 ->disabled()
@@ -183,7 +205,34 @@ class SalesInvoiceResource extends Resource
                                 ->columnSpan(2),
                         ])
                         ->columns(12)
-                        ->defaultItems(1),
+                        ->defaultItems(1)
+                        ->addActionLabel('+ Add Item'),
+
+                    Grid::make(3)->schema([
+                        TextInput::make('subtotal')
+                            ->label('Subtotal (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(0),
+
+                        TextInput::make('vat_amount')
+                            ->label('12% VAT (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(0),
+
+                        TextInput::make('total_amount')
+                            ->label('Total Amount (₱)')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(0),
+                    ]),
                 ]),
         ]);
     }
@@ -195,17 +244,23 @@ class SalesInvoiceResource extends Resource
                 TextColumn::make('si_number')
                     ->label('SI #')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->copyable()
+                    ->tooltip('Click to copy Sales Invoice #'),
 
                 TextColumn::make('purchaseOrder.po_number')
                     ->label('PO #')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->color('primary')
+                    ->tooltip(fn(SalesInvoice $r): string => "Linked PO: " . ($r->purchaseOrder?->po_number ?? 'N/A')),
 
                 TextColumn::make('customer_name')
                     ->label('Customer')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->tooltip(fn(SalesInvoice $r): string => "Billed Customer: {$r->customer_name}"),
 
                 TextColumn::make('invoice_date')
                     ->label('Date')
@@ -215,11 +270,20 @@ class SalesInvoiceResource extends Resource
                 TextColumn::make('total_amount')
                     ->label('Total Amount')
                     ->money('PHP')
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->color('primary'),
 
                 TextColumn::make('payment_status')
                     ->label('Payment')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'unpaid' => 'Unpaid',
+                        'partial' => 'Partial',
+                        'paid' => 'Paid',
+                        'cancelled' => 'Cancelled',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'unpaid', 'cancelled' => 'danger',
                         'partial' => 'warning',
@@ -233,10 +297,30 @@ class SalesInvoiceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->options([
+                        'unpaid' => 'Unpaid',
+                        'partial' => 'Partial',
+                        'paid' => 'Paid',
+                    ]),
                 TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('mark_paid')
+                        ->label('Record Full Payment')
+                        ->icon('heroicon-m-banknotes')
+                        ->color('success')
+                        ->visible(fn(SalesInvoice $r): bool => !$r->trashed() && $r->payment_status !== 'paid')
+                        ->requiresConfirmation()
+                        ->action(function (SalesInvoice $record) {
+                            $record->update([
+                                'payment_status' => 'paid',
+                                'payment_date' => now()->toDateString(),
+                            ]);
+                            Notification::make()->title('Payment Recorded')->body("Invoice {$record->si_number} marked as Paid.")->success()->send();
+                        }),
+
                     Action::make('export_pdf')
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')

@@ -81,6 +81,7 @@ class PurchaseOrder extends Model
         'warranty_end_date',
         'warranty_status',
         'status',
+        'is_inventory_deducted',
         'notes',
     ];
 
@@ -93,6 +94,7 @@ class PurchaseOrder extends Model
             'warranty_start_date'    => 'date',
             'warranty_end_date'      => 'date',
             'has_warranty'           => 'boolean',
+            'is_inventory_deducted'  => 'boolean',
             'order_amount'           => 'decimal:2',
             'total_cost'             => 'decimal:2',
             'realized_profit'        => 'decimal:2',
