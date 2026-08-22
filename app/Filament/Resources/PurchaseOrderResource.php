@@ -500,7 +500,10 @@ class PurchaseOrderResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
-                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved for delivery.")->success()->send();
+                            if ($record->document) {
+                                $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                            }
+                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
                         }),
 
                     Action::make('review')
@@ -508,7 +511,7 @@ class PurchaseOrderResource extends Resource
                         ->icon('heroicon-m-clipboard-document-check')
                         ->color('warning')
                         ->tooltip('Review, verify math and reconcile purchase order line items')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && (!empty($r->document_id) || !$r->isApproved()))
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
                         ->url(function (PurchaseOrder $record) {
                             if ($record->document_id) {
                                 return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);

@@ -32,8 +32,11 @@ class EditPurchaseOrder extends EditRecord
                 ->requiresConfirmation()
                 ->action(function () {
                     $this->record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
+                    if ($this->record->document) {
+                        $this->record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                    }
                     $this->refreshFormData(['status']);
-                    Notification::make()->title('Purchase Order Approved')->body("PO {$this->record->po_number} is now approved for delivery.")->success()->send();
+                    Notification::make()->title('Purchase Order Approved')->body("PO {$this->record->po_number} is now approved and verified for delivery.")->success()->send();
                 }),
 
             Action::make('mark_delivered')

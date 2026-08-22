@@ -182,6 +182,19 @@ class PurchaseOrder extends Model
         };
     }
 
+    public function isReviewed(): bool
+    {
+        return $this->isApproved()
+            || in_array($this->status, [
+                self::STATUS_APPROVED,
+                self::STATUS_PENDING_DELIVERY,
+                self::STATUS_DELIVERED,
+                'reviewed',
+                'approved',
+                'delivered',
+            ], true);
+    }
+
     public function isApproved(): bool
     {
         return in_array($this->status, [

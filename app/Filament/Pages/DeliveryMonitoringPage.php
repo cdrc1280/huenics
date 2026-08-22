@@ -97,7 +97,10 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
-                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved for delivery.")->success()->send();
+                            if ($record->document) {
+                                $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                            }
+                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
                         }),
 
                     Action::make('mark_delivered')
