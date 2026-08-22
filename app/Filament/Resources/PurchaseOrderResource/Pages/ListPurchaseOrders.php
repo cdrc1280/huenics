@@ -51,9 +51,9 @@ class ListPurchaseOrders extends ListRecords
                                 ]);
                         })
                         ->searchable()
-                        ->required()
+                        ->nullable()
                         ->placeholder('Select an approved quotation to link, or leave blank')
-                        ->helperText('Only approved quotations without an existing Purchase Order can be selected.'),
+                        ->helperText('Optional: Select an approved quotation without an existing PO to automatically link and convert.'),
 
                     Hidden::make('original_filename'),
                 ])

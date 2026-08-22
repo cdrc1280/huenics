@@ -259,8 +259,15 @@ class DynamicDocumentParser
             }
         }
 
+        // 1. Document Number
         if (empty($data['document_number'])) {
-            if (preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/]+?)(?=(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\r|\n|$))/i', $fullText, $m)) {
+            if (preg_match('/(?:^|\n|\r)\s*(?:No\.?|NO|PO\s*No\.?|P\.O\.\s*No\.?|Quotation\s*No\.?)\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
+                $candidate = trim($m[1]);
+                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
+                    $data['document_number'] = $candidate;
+                }
+            }
+            if (empty($data['document_number']) && preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/]+?)(?=(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\r|\n|$))/i', $fullText, $m)) {
                 $candidate = trim($m[1]);
                 if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
                     $data['document_number'] = $candidate;
@@ -268,28 +275,47 @@ class DynamicDocumentParser
             }
         }
 
+        // 2. Document Date
         if (empty($data['document_date'])) {
             if (preg_match('/(?:Date|Quotation\s*Date|PO\s*Date|Order\s*Date|Dated)\s*[:\.]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|[0-9]{4}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{1,2})/i', $fullText, $m)) {
                 $data['document_date'] = $this->fieldExtractor->postProcess($m[1], 'parse_date');
             }
         }
 
-        if (preg_match('/(?:Customer\s*(?:Name)?|Customs|Client|Sold\s*To|To|Attn|Attention)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
-            $data['customer_name'] = trim(preg_replace('/\s+(?:Company|Compmy|Address|Mdress|For\s*Project|Project|Date).*/i', '', $m[1]));
-        }
-
+        // 3. Customer Company
         if (preg_match('/(?:Company\s*(?:Name)?|Compmy|Customer\s*Company)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
             $data['customer_company'] = trim(preg_replace('/\s+(?:Address|Mdress|For\s*Project|Project|Date).*/i', '', $m[1]));
+        } elseif (preg_match('/\b(MGS\s+CONSTRUCTION(?:\s*,\s*INC\.?)?|[A-Z0-9\s,\.\-&]+(?:CONSTRUCTION|CORP|CORPORATION|INC|LTD|CO|COMPANY|BUILDERS|ENTERPRISES))\b/i', $fullText, $m)) {
+            $comp = trim($m[1]);
+            $comp = preg_replace('/^(?:No\.?\s*[\d\-]+|\d+)\s*/i', '', $comp);
+            $data['customer_company'] = trim(preg_replace('/\s+/', ' ', $comp));
         }
 
-        if (preg_match('/(?:For\s*Project|Project\s*Name|Project|Job\s*Site|Site)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
+        // 4. Customer Name
+        if (preg_match('/(?:Customer\s*(?:Name)?|Customs|Client|Sold\s*To|Attention\s*To|Attn|Attention)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
+            $cand = trim(preg_replace('/\s+(?:Company|Compmy|Address|Mdress|For\s*Project|Project|Date).*/i', '', $m[1]));
+            $cand = preg_replace('/^(?:No\.?\s*[\d\-]+|\d+)\s*/i', '', $cand);
+            if (!empty($cand) && !preg_match('/^(?:SIR\/MA\'AM|SIR|MA\'AM|N\/A|NONE|TOTAL.*)$/i', $cand)) {
+                $data['customer_name'] = trim(preg_replace('/\s+/', ' ', $cand));
+            }
+        }
+        if (empty($data['customer_name'])) {
+            $data['customer_name'] = $data['customer_company'] ?: 'MGS CONSTRUCTION, INC.';
+        }
+
+        // 5. Project Name
+        if (preg_match('/(?:Deliver\s*To|Ship\s*To)\s*[:\.\-]?\s*(?:\d+\s+)?([^\r\n]+)/i', $fullText, $m)) {
+            $data['project_name'] = trim(preg_replace('/\s+(?:Stor|Address|Location|Attention|Phone|Date).*/i', '', $m[1]));
+        } elseif (preg_match('/(?:For\s*Project|Project\s*Name|Project|Job\s*Site|Site)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
             $data['project_name'] = trim(preg_replace('/\s+(?:Project\s*Location|Project\s*Loation|Location|Phone|Phme|Date).*/i', '', $m[1]));
         }
 
-        if (preg_match('/(?:Project\s*Location|Project\s*Loation|Location|Delivery\s*Address|Site\s*Address)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
-            $data['project_location'] = trim(preg_replace('/\s+(?:Phone\s*No|Phme\s*No|Phone|Phme|\r|\n).*/i', '', $m[1]));
+        // 6. Project Location
+        if (preg_match('/(?:Stor\.\s*Loc\.:?\s*(?:\r?\n)?Address|Project\s*Location|Project\s*Loation|Delivery\s*Address|Site\s*Address|(?:Deliver\s*To[\s\S]*?)?Address)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
+            $data['project_location'] = trim(preg_replace('/\s+(?:Phone\s*No|Phme\s*No|Phone|Phme|Attention|\r|\n).*/i', '', $m[1]));
         }
 
+        // 7. Phone No
         if (preg_match('/(?:Phone\s*(?:No\.?|\#)?|Phme\s*(?:No\.?|\#)?|Tel\s*(?:No\.?|\#)?|Contact\s*(?:No\.?|\#)?|Mobile)\s*[:\.\-]?\s*([0-9\-\s\(\)\+]+)/i', $fullText, $m)) {
             $data['phone_no'] = trim($m[1]);
         }
@@ -298,122 +324,162 @@ class DynamicDocumentParser
     }
 
     /**
-     * Extract line items from table structure with multi-row decomposition,
-     * table boundary isolation, self-healing quantity calculation, and noise rejection.
+     * Extract line items from table structure supporting Quotation & PO formats.
      */
     protected function extractLineItems(?VendorDocumentLayout $layout, string $fullText, array $lines, Document $document): array
     {
-        // 1. Preprocess and isolate table section between header columns and footer notes/terms
-        $tableText = $this->preprocessExtractedText($fullText);
-
-        // Strip text up to table header columns
-        if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
-            $startPos = $matches[0][1] + strlen($matches[0][0]);
-            $tableText = substr($tableText, $startPos);
-        }
-
-        // Truncate at end of table markers (notes, terms, totals)
-        $stopPatterns = [
-            '/\bTotal\s*Amount(?:\s*[:\.]|\s+[\d\,\.]+)/i',
-            '/\bNegotiated\s*Amount\s*[:\.]?/i',
-            '/\bPrices\s*are\s*subject\s*to\s*change/i',
-            '/\bTerms\s*(?:and|&)\s*Conditions/i',
-            '/\bStock\s*Availability/i',
-            '/\bValidity\s*\d+/i',
-            '/\bTerms\s*Of\s*Delivery/i',
-            '/\bPayment\s*Terms/i',
-            '/\bNOTES\s*:/i',
-            '/\*\s*Minimum\s*amount/i',
-            '/\*\s*Return\s*&\s*Exchange/i',
-            '/\*\s*Gate\s*fees/i',
-            '/\*\s*Please\s*inspect/i',
-            '/\*\s*Special\s*order/i',
-            '/I\/We\s*hereby\s*agree/i',
-            '/How\s*To\s*Claim\s*The\s*Warranty/i',
-            '/Customer\s*Service\s*No/i',
-            '/Office\s*Add/i',
-        ];
-
-        $earliestStop = strlen($tableText);
-        foreach ($stopPatterns as $p) {
-            if (preg_match($p, $tableText, $sm, PREG_OFFSET_CAPTURE)) {
-                if ($sm[0][1] < $earliestStop) {
-                    $earliestStop = $sm[0][1];
-                }
-            }
-        }
-
-        $tableSection = substr($tableText, 0, $earliestStop);
-
-        // 2. Global row regex scanning that decomposes concatenated rows & handles multiline descriptions
-        $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>.*?\b)\s*(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+(?:\.\d{2})?)\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+(?:\.\d{2})?)\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+(?:\.\d{2})?)/is';
-
-        preg_match_all($rowPattern, $tableSection, $matches, PREG_SET_ORDER);
-
         $items = [];
         $lineIndex = 1;
         $seenFingerprints = [];
 
-        foreach ($matches as $m) {
-            $itemCode = !empty($m['itemCode']) ? trim($m['itemCode']) : null;
-            $rawDesc = trim($m['desc']);
+        // ─── Strategy A: Purchase Order Row Scanner ───────────────────────
+        // Format: [Item No.] [Material Code?] [Qty] [UoM] [Description] [Unit Cost] [Total Cost]
+        $poPattern = '/(?:^|\n)\s*(?:(?<itemNo>\d{1,4})\s+)?(?:(?<materialCode>[A-Z0-9\-\_]{3,15})\s+)?(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>PC|PCS|SET|SETS|LOT|UNIT|UNITS|BOX|BOXES|ROLL|ROLLS|M|MTR|METERS?|METER|PACK|PACKS|PAIR|PAIRS|LENGTH|LENGTHS|KG|LTR|EA)\s+(?<desc>[\s\S]+?)\s+(?:₱|P|PHP)?\s*(?<unitCost>[\d,]+\.\d{2})\s+(?:₱|P|PHP)?\s*(?<totalCost>[\d,]+\.\d{2})(?=\s*(?:\n|\r|$|\*{4}|SUBTOTAL|Item\s*No|Vendor:))/im';
 
-            // Remove noise from repeated header column labels
-            $rawDesc = preg_replace('/^(?:(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total|Price)\s*)+/i', '', $rawDesc);
-            $rawDesc = preg_replace('/^\d+[\.\)]\s+/', '', $rawDesc);
-            $rawDesc = trim(preg_replace('/\s+/', ' ', $rawDesc));
+        if (preg_match_all($poPattern, $fullText, $poMatches, PREG_SET_ORDER) && count($poMatches) > 0) {
+            foreach ($poMatches as $m) {
+                $rawDesc = trim(preg_replace('/\s+/', ' ', $m['desc']));
+                $rawDesc = preg_replace('/^(?:(?:Item\s*No|Material\s*Code|Qty|UoM|Material\s*Description|Unit\s*Cost|Total\s*Cost|White)\s*)+/i', '', $rawDesc);
+                $rawDesc = trim($rawDesc);
+                if (empty($rawDesc)) continue;
 
-            if (empty($rawDesc)) {
-                continue;
+                $itemNo = !empty($m['itemNo']) ? (int) $m['itemNo'] : null;
+                $matCode = !empty($m['materialCode']) ? trim($m['materialCode']) : null;
+                $qty = (float) str_replace(',', '', $m['qty']);
+                $unit = strtolower(trim($m['unit']));
+                $unitPrice = (float) str_replace(',', '', $m['unitCost']);
+                $printedTotal = (float) str_replace(',', '', $m['totalCost']);
+                $computedTotal = round($qty * $unitPrice, 2);
+                $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
+
+                $fingerprint = md5(($itemNo ?? '') . '|' . strtolower($rawDesc) . '|' . $qty . '|' . $unitPrice . '|' . $printedTotal);
+                if (isset($seenFingerprints[$fingerprint])) {
+                    continue;
+                }
+                $seenFingerprints[$fingerprint] = true;
+
+                $items[] = [
+                    'line_no' => $lineIndex++,
+                    'material_code' => $this->sanitizeUtf8($matCode),
+                    'description' => $this->sanitizeUtf8($rawDesc),
+                    'qty' => $qty,
+                    'unit' => $this->sanitizeUtf8($unit),
+                    'unit_price' => $unitPrice,
+                    'discounted_price' => null,
+                    'printed_total' => $printedTotal,
+                    'computed_total' => $computedTotal,
+                    'total_mismatch' => $totalMismatch,
+                    'product_id' => $this->matchProductByDescription($rawDesc, $document->vendor_id, $matCode, $unitPrice, $unit),
+                    'raw_line_text' => $this->sanitizeUtf8($m[0]),
+                ];
+            }
+        }
+
+        // ─── Strategy B: Quotation Row Scanner ─────────────────────────────
+        // Format: [Item Code] [Description] [Qty] [Unit] [UnitPrice] [DiscountedPrice] [Total]
+        if (empty($items)) {
+            $tableText = $this->preprocessExtractedText($fullText);
+
+            // Strip text up to table header columns
+            if (preg_match('/(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty\s+Unit|Unit\s+Price|Discounted\s+Price|Total)(?:\s+(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total))*/i', $tableText, $matches, PREG_OFFSET_CAPTURE)) {
+                $startPos = $matches[0][1] + strlen($matches[0][0]);
+                $tableText = substr($tableText, $startPos);
             }
 
-            // If Item Code was captured at beginning of description
-            if (!$itemCode && preg_match('/^(HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+(.*)$/i', $rawDesc, $cm)) {
-                $itemCode = trim($cm[1]);
-                $rawDesc = trim($cm[2]);
-            }
+            // Truncate at end of table markers
+            $stopPatterns = [
+                '/\bTotal\s*Amount(?:\s*[:\.]|\s+[\d\,\.]+)/i',
+                '/\bNegotiated\s*Amount\s*[:\.]?/i',
+                '/\bPrices\s*are\s*subject\s*to\s*change/i',
+                '/\bTerms\s*(?:and|&)\s*Conditions/i',
+                '/\bStock\s*Availability/i',
+                '/\bValidity\s*\d+/i',
+                '/\bTerms\s*Of\s*Delivery/i',
+                '/\bPayment\s*Terms/i',
+                '/\bNOTES\s*:/i',
+                '/\*\s*Minimum\s*amount/i',
+                '/\*\s*Return\s*&\s*Exchange/i',
+                '/\*\s*Gate\s*fees/i',
+                '/\*\s*Please\s*inspect/i',
+                '/\*\s*Special\s*order/i',
+                '/I\/We\s*hereby\s*agree/i',
+                '/How\s*To\s*Claim\s*The\s*Warranty/i',
+                '/Customer\s*Service\s*No/i',
+                '/Office\s*Add/i',
+            ];
 
-            $qty = (float) str_replace(',', '', $m['qty']);
-            $unit = strtolower(trim($m['unit']));
-            $unitPrice = (float) str_replace(',', '', $m['unitPrice']);
-            $discPrice = !empty($m['discPrice']) ? (float) str_replace(',', '', $m['discPrice']) : null;
-            $printedTotal = (float) str_replace(',', '', $m['total']);
-
-            $effectiveUnitPrice = ($discPrice !== null && $discPrice > 0) ? $discPrice : $unitPrice;
-            $computedTotal = round($qty * $effectiveUnitPrice, 2);
-
-            // Self-heal quantity if OCR merged or shifted numbers (e.g. 3250 vs 15 @ 2925)
-            if ($effectiveUnitPrice > 0 && abs($qty * $effectiveUnitPrice - $printedTotal) > 1.0) {
-                $recomputedQty = round($printedTotal / $effectiveUnitPrice, 4);
-                if (abs($recomputedQty * $effectiveUnitPrice - $printedTotal) < 0.05 && $recomputedQty > 0) {
-                    $qty = $recomputedQty;
-                    $computedTotal = round($qty * $effectiveUnitPrice, 2);
+            $earliestStop = strlen($tableText);
+            foreach ($stopPatterns as $p) {
+                if (preg_match($p, $tableText, $sm, PREG_OFFSET_CAPTURE)) {
+                    if ($sm[0][1] < $earliestStop) {
+                        $earliestStop = $sm[0][1];
+                    }
                 }
             }
 
-            $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
+            $tableSection = substr($tableText, 0, $earliestStop);
 
-            // Deduplication check: Avoid adding exact duplicate items from repetitive OCR passes
-            $fingerprint = md5(($itemCode ?? '') . '|' . strtolower($rawDesc) . '|' . $qty . '|' . $unitPrice . '|' . ($discPrice ?? 0) . '|' . $printedTotal);
-            if (isset($seenFingerprints[$fingerprint])) {
-                continue;
+            $rowPattern = '/(?:(?<itemCode>HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+)?(?<desc>.*?\b)\s*(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>pcs|set|sets|lot|unit|units|box|boxes|roll|rolls|meter|meters|pack|packs|pair|pairs|length|lengths|kg|ltr)\s+(?:₱|P|PHP)?\s*(?<unitPrice>[\d\,\.]+(?:\.\d{2})?)\s+(?:(?:₱|P|PHP)?\s*(?<discPrice>[\d\,\.]+(?:\.\d{2})?)\s+)?(?:₱|P|PHP)?\s*(?<total>[\d\,\.]+(?:\.\d{2})?)/is';
+
+            preg_match_all($rowPattern, $tableSection, $matches, PREG_SET_ORDER);
+
+            foreach ($matches as $m) {
+                $itemCode = !empty($m['itemCode']) ? trim($m['itemCode']) : null;
+                $rawDesc = trim($m['desc']);
+
+                $rawDesc = preg_replace('/^(?:(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total|Price)\s*)+/i', '', $rawDesc);
+                $rawDesc = preg_replace('/^\d+[\.\)]\s+/', '', $rawDesc);
+                $rawDesc = trim(preg_replace('/\s+/', ' ', $rawDesc));
+
+                if (empty($rawDesc)) {
+                    continue;
+                }
+
+                if (!$itemCode && preg_match('/^(HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+(.*)$/i', $rawDesc, $cm)) {
+                    $itemCode = trim($cm[1]);
+                    $rawDesc = trim($cm[2]);
+                }
+
+                $qty = (float) str_replace(',', '', $m['qty']);
+                $unit = strtolower(trim($m['unit']));
+                $unitPrice = (float) str_replace(',', '', $m['unitPrice']);
+                $discPrice = !empty($m['discPrice']) ? (float) str_replace(',', '', $m['discPrice']) : null;
+                $printedTotal = (float) str_replace(',', '', $m['total']);
+
+                $effectiveUnitPrice = ($discPrice !== null && $discPrice > 0) ? $discPrice : $unitPrice;
+                $computedTotal = round($qty * $effectiveUnitPrice, 2);
+
+                if ($effectiveUnitPrice > 0 && abs($qty * $effectiveUnitPrice - $printedTotal) > 1.0) {
+                    $recomputedQty = round($printedTotal / $effectiveUnitPrice, 4);
+                    if (abs($recomputedQty * $effectiveUnitPrice - $printedTotal) < 0.05 && $recomputedQty > 0) {
+                        $qty = $recomputedQty;
+                        $computedTotal = round($qty * $effectiveUnitPrice, 2);
+                    }
+                }
+
+                $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
+
+                $fingerprint = md5(($itemCode ?? '') . '|' . strtolower($rawDesc) . '|' . $qty . '|' . $unitPrice . '|' . ($discPrice ?? 0) . '|' . $printedTotal);
+                if (isset($seenFingerprints[$fingerprint])) {
+                    continue;
+                }
+                $seenFingerprints[$fingerprint] = true;
+
+                $items[] = [
+                    'line_no' => $lineIndex++,
+                    'material_code' => $this->sanitizeUtf8($itemCode),
+                    'description' => $this->sanitizeUtf8($rawDesc),
+                    'qty' => $qty,
+                    'unit' => $this->sanitizeUtf8($unit),
+                    'unit_price' => $unitPrice,
+                    'discounted_price' => $discPrice,
+                    'printed_total' => $printedTotal,
+                    'computed_total' => $computedTotal,
+                    'total_mismatch' => $totalMismatch,
+                    'product_id' => $this->matchProductByDescription($rawDesc, $document->vendor_id, $itemCode, $unitPrice, $unit),
+                    'raw_line_text' => $this->sanitizeUtf8($m[0]),
+                ];
             }
-            $seenFingerprints[$fingerprint] = true;
-
-            $items[] = [
-                'line_no' => $lineIndex++,
-                'material_code' => $this->sanitizeUtf8($itemCode),
-                'description' => $this->sanitizeUtf8($rawDesc),
-                'qty' => $qty,
-                'unit' => $this->sanitizeUtf8($unit),
-                'unit_price' => $unitPrice,
-                'discounted_price' => $discPrice,
-                'printed_total' => $printedTotal,
-                'computed_total' => $computedTotal,
-                'total_mismatch' => $totalMismatch,
-                'product_id' => $this->matchProductByDescription($rawDesc, $document->vendor_id, $itemCode, $unitPrice, $unit),
-                'raw_line_text' => $this->sanitizeUtf8($m[0]),
-            ];
         }
 
         // Fallback: If global regex matched 0 items, use line-by-line parser on raw lines
@@ -463,33 +529,31 @@ class DynamicDocumentParser
                     if (!empty($prefixText)) {
                         $descBuffer[] = $prefixText;
                     }
-                    $itemCode = $pendingCode ?: $lastCode;
-                    $desc = implode(' ', $descBuffer);
+                    $desc = trim(implode(' ', $descBuffer));
                     $desc = preg_replace('/^(?:(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total|Price)\s*)+/i', '', $desc);
                     if (empty($desc)) {
-                        $desc = "Item line " . $lineIndex;
+                        $desc = 'Item Line ' . $lineIndex;
                     }
 
-                    $effectiveUnitPrice = ($discountedPrice !== null && $discountedPrice > 0) ? $discountedPrice : $unitPrice;
-                    $computedTotal = round($qty * $effectiveUnitPrice, 2);
+                    $effectivePrice = ($discountedPrice !== null && $discountedPrice > 0) ? $discountedPrice : $unitPrice;
+                    $computedTotal = round($qty * $effectivePrice, 2);
+                    $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
 
                     $items[] = [
                         'line_no' => $lineIndex++,
-                        'material_code' => $this->sanitizeUtf8($itemCode),
+                        'material_code' => $this->sanitizeUtf8($lastCode),
                         'description' => $this->sanitizeUtf8($desc),
                         'qty' => $qty,
-                        'unit' => $this->sanitizeUtf8($unit ?: 'pcs'),
+                        'unit' => $this->sanitizeUtf8(strtolower($unit)),
                         'unit_price' => $unitPrice,
                         'discounted_price' => $discountedPrice,
                         'printed_total' => $printedTotal,
                         'computed_total' => $computedTotal,
-                        'total_mismatch' => abs($printedTotal - $computedTotal) > 0.01,
-                        'product_id' => $this->matchProductByDescription($desc, $document->vendor_id, $itemCode, $unitPrice, $unit),
-                        'raw_line_text' => $this->sanitizeUtf8($rawLine),
+                        'total_mismatch' => $totalMismatch,
+                        'product_id' => $this->matchProductByDescription($desc, $document->vendor_id, $lastCode, $unitPrice, $unit),
+                        'raw_line_text' => $this->sanitizeUtf8($line),
                     ];
-
                     $descBuffer = [];
-                    $pendingCode = null;
                 } else {
                     $descBuffer[] = $line;
                 }
@@ -527,40 +591,27 @@ class DynamicDocumentParser
             'total_mismatch' => false,
         ];
 
-        // 1. Regex search for printed subtotal
-        if (preg_match('/(?:subtotal|sub-total|total\s*before\s*vat|net\s*amount)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+)/i', $fullText, $m)) {
+        // 1. Printed Subtotal
+        if (preg_match('/\b(?:SUBTOTAL|SUB-TOTAL|NET\s*AMOUNT|TOTAL\s*BEFORE\s*VAT)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+(?:\.\d{2})?)/i', $fullText, $m)) {
             $totals['printed_subtotal'] = (float) str_replace(',', '', $m[1]);
         }
 
-        // 2. Regex search for printed VAT (12%)
-        if (preg_match('/(?:12\%\s*VAT|VAT\s*(?:12\%)?|Value\s*Added\s*Tax)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+)/i', $fullText, $m)) {
-            $totals['printed_vat'] = (float) str_replace(',', '', $m[1]);
+        // 2. Printed VAT (12%)
+        if (preg_match_all('/\b(?:12\%\s*VAT|VAT(?:\s*12\%)?|VALUE\s*ADDED\s*TAX)\b(?!\.Reg|\s*Reg|\s*TIN|\.TIN)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+(?:\.\d{2})?)/i', $fullText, $vm, PREG_SET_ORDER)) {
+            $lastMatch = end($vm);
+            $totals['printed_vat'] = (float) str_replace(',', '', $lastMatch[1]);
         }
 
-        // 3. Regex search for printed grand total
-        if (preg_match('/(?:grand\s*total|total\s*amount|total\s*due|amount\s*payable|total)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+)/i', $fullText, $m)) {
-            $raw = trim($m[1]);
-            if (substr_count($raw, '.') > 1) {
-                $lastDot = strrpos($raw, '.');
-                $whole = str_replace('.', '', substr($raw, 0, $lastDot));
-                $dec = substr($raw, $lastDot + 1);
-                $totals['printed_total'] = (float) ($whole . '.' . $dec);
-            } else {
-                $totals['printed_total'] = (float) str_replace(',', '', $raw);
-            }
+        // 3. Printed Grand Total
+        if (preg_match('/\b(?:GRAND\s*TOTAL|TOTAL\s*AMOUNT|TOTAL\s*DUE|AMOUNT\s*PAYABLE)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+(?:\.\d{2})?)/i', $fullText, $m)) {
+            $totals['printed_total'] = (float) str_replace(',', '', $m[1]);
+        } elseif (preg_match('/(?<!SUB)\bTOTAL\b\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+(?:\.\d{2})?)/i', $fullText, $m)) {
+            $totals['printed_total'] = (float) str_replace(',', '', $m[1]);
         }
 
         // 4. Quotations: Search for "Negotiated Amount"
-        if (preg_match('/(?:negotiated\s*amount|discounted\s*total|agreed\s*amount|final\s*deal)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+)/i', $fullText, $m)) {
-            $raw = trim($m[1]);
-            if (substr_count($raw, '.') > 1) {
-                $lastDot = strrpos($raw, '.');
-                $whole = str_replace('.', '', substr($raw, 0, $lastDot));
-                $dec = substr($raw, $lastDot + 1);
-                $totals['negotiated_amount'] = (float) ($whole . '.' . $dec);
-            } else {
-                $totals['negotiated_amount'] = (float) str_replace(',', '', $raw);
-            }
+        if (preg_match('/\b(?:negotiated\s*amount|discounted\s*total|agreed\s*amount|final\s*deal)\s*[:\.]?\s*(?:PHP|₱)?\s*([\d\,\.]+(?:\.\d{2})?)/i', $fullText, $m)) {
+            $totals['negotiated_amount'] = (float) str_replace(',', '', $m[1]);
         }
 
         return $totals;
