@@ -61,7 +61,7 @@ class AuditLog extends Model
         ?array $properties = null,
         ?User $user = null,
         ?string $action = null
-    ): self {
+    ): ?self {
         $ip = '127.0.0.1';
         $userAgent = null;
 
@@ -74,26 +74,45 @@ class AuditLog extends Model
             // CLI or background context
         }
 
-        return self::create([
-            'user_id' => $user?->id ?? auth()->id(),
-            'action' => $action ?: $event,
-            'event' => $event,
-            'description' => $description,
-            'auditable_type' => $auditable ? get_class($auditable) : null,
-            'auditable_id' => $auditable?->getKey(),
-            'old_value' => $oldValue,
-            'new_value' => $newValue,
-            'properties' => $properties,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'created_at' => now(),
-        ]);
+        try {
+            return self::create([
+                'user_id' => $user?->id ?? auth()->id(),
+                'action' => $action ?: $event,
+                'event' => $event,
+                'description' => $description,
+                'auditable_type' => $auditable ? get_class($auditable) : null,
+                'auditable_id' => $auditable?->getKey(),
+                'old_value' => $oldValue,
+                'new_value' => $newValue,
+                'properties' => $properties,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Fallback for legacy / unmigrated schemas
+            try {
+                return self::create([
+                    'user_id' => $user?->id ?? auth()->id(),
+                    'action' => $action ?: $event,
+                    'auditable_type' => $auditable ? get_class($auditable) : null,
+                    'auditable_id' => $auditable?->getKey(),
+                    'old_value' => $oldValue,
+                    'new_value' => $newValue,
+                    'ip_address' => $ip,
+                    'created_at' => now(),
+                ]);
+            } catch (\Throwable $ex) {
+                \Illuminate\Support\Facades\Log::warning('AuditLog creation failed: ' . $ex->getMessage());
+                return null;
+            }
+        }
     }
 
     /**
      * Backward-compatible logging helper.
      */
-    public static function log(string $action, Model $auditable, ?array $oldValue = null, ?array $newValue = null, ?User $user = null): self
+    public static function log(string $action, Model $auditable, ?array $oldValue = null, ?array $newValue = null, ?User $user = null): ?self
     {
         $description = ucwords(str_replace('_', ' ', $action)) . ' on ' . class_basename($auditable) . ' #' . $auditable->getKey();
 
