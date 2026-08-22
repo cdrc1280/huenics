@@ -5,7 +5,9 @@ namespace App\Actions;
 use App\Models\Document;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
+use App\Services\DocumentParsers\DocumentTypeValidator;
 use App\Services\DocumentParsers\DynamicDocumentParser;
+use App\Services\DocumentParsers\PdfTextExtractor;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +15,9 @@ class IngestDocumentAction
 {
     public function __construct(
         protected DynamicDocumentParser $parser,
-        protected ReconcileDocumentTotals $reconciler
+        protected ReconcileDocumentTotals $reconciler,
+        protected DocumentTypeValidator $validator,
+        protected PdfTextExtractor $textExtractor
     ) {}
 
     /**
@@ -55,6 +59,13 @@ class IngestDocumentAction
 
         if (!$filePath && file_exists($diskPath)) {
             $filePath = $diskPath;
+        }
+
+        // Validate physical document content matches expected document type before database persistence
+        if ($filePath && file_exists($filePath)) {
+            $extracted = $this->textExtractor->extract($filePath);
+            $extractedText = $extracted['text'] ?? '';
+            $this->validator->validate($extractedText, $documentType);
         }
 
         $fileHash = null;

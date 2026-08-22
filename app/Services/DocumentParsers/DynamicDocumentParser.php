@@ -153,19 +153,14 @@ class DynamicDocumentParser
         return $text;
     }
 
-    /**
-     * Auto-detect document type from header text.
-     */
     public function detectDocumentType(string $text): ?string
     {
-        $upper = mb_strtoupper($text);
+        $detected = app(DocumentTypeValidator::class)->detectType($text);
+        if ($detected) {
+            return $detected;
+        }
 
-        if (str_contains($upper, 'VENDORS AGREEMENT') || str_contains($upper, 'VENDOR\'S AGREEMENT') || str_contains($upper, 'QUOTATION')) {
-            return Document::TYPE_VENDORS_AGREEMENT;
-        }
-        if (str_contains($upper, 'PURCHASE ORDER') || str_contains($upper, 'P.O.')) {
-            return Document::TYPE_PURCHASE_ORDER;
-        }
+        $upper = mb_strtoupper($text);
         if (str_contains($upper, 'DELIVERY RECEIPT') || str_contains($upper, 'D.R.')) {
             return Document::TYPE_DELIVERY_RECEIPT;
         }

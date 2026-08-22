@@ -75,10 +75,13 @@ class ListPurchaseOrders extends ListRecords
                             ->success()
                             ->send();
                     } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Storage::disk('local')->delete($data['disk_path']);
+
                         Notification::make()
-                            ->title('Upload Notice')
+                            ->title('Upload Rejected')
                             ->body($e->getMessage())
                             ->danger()
+                            ->duration(10000)
                             ->send();
                     }
                 }),
