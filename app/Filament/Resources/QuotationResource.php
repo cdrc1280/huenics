@@ -17,6 +17,10 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -31,8 +35,10 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
 class QuotationResource extends Resource
@@ -51,7 +57,11 @@ class QuotationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['salesAgent', 'project', 'lineItems']);
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+            ->with(['salesAgent', 'project', 'lineItems']);
         $user = auth()->user();
 
         if ($user && $user->isSalesExecutive()) {
@@ -291,7 +301,9 @@ class QuotationResource extends Resource
             ->actions(static::getTableActions(), position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }
@@ -443,6 +455,8 @@ class QuotationResource extends Resource
                     User::ROLE_ADMIN,
                     User::ROLE_OPERATIONS_MANAGER,
                 ])->pluck('name', 'id')),
+
+            TrashedFilter::make(),
         ];
     }
 
@@ -455,7 +469,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-clipboard-document-check')
                     ->color('warning')
                     ->tooltip('Review, verify math and reconcile quotation line items')
-                    ->visible(fn(Quotation $r): bool => !$r->isReviewed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
                     ->url(function (Quotation $record) {
                         if ($record->document_id) {
                             return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
@@ -475,7 +489,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
                     ->tooltip('Approve quotation estimate')
-                    ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
                     ->requiresConfirmation()
                     ->action(function (Quotation $record) {
                         app(QuotationService::class)->approve($record);
@@ -487,7 +501,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-x-circle')
                     ->color('danger')
                     ->tooltip('Mark quotation as rejected / lost with reason notes')
-                    ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
                     ->form([
                         Textarea::make('rejection_reason')
                             ->label('Reason for Rejection')
@@ -504,7 +518,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-shopping-cart')
                     ->color('primary')
                     ->tooltip('Convert this approved quotation into an active Purchase Order')
-                    ->visible(fn(Quotation $r): bool => $r->isReadyForConversion() && !$r->isConverted())
+                    ->visible(fn(Quotation $r): bool => !$r->trashed() && $r->isReadyForConversion() && !$r->isConverted())
                     ->modalHeading('Convert Quotation to Purchase Order')
                     ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
                     ->modalSubmitActionLabel('Convert to PO')
@@ -535,6 +549,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
                     ->tooltip('Download Quotation PDF with e-signatures')
+                    ->visible(fn(Quotation $r): bool => !$r->trashed())
                     ->url(fn(Quotation $r) => route('quotations.export-pdf', $r))
                     ->openUrlInNewTab(),
 
@@ -543,11 +558,14 @@ class QuotationResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->color('gray')
                     ->tooltip('Preview Quotation PDF in browser')
+                    ->visible(fn(Quotation $r): bool => !$r->trashed())
                     ->url(fn(Quotation $r) => route('quotations.preview-pdf', $r))
                     ->openUrlInNewTab(),
 
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()->requiresConfirmation(),
+                RestoreAction::make()->requiresConfirmation()->visible(fn(Quotation $record): bool => $record->trashed()),
+                ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Quotation $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
             ]),
         ];
     }

@@ -11,12 +11,19 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductAliasResource extends Resource
 {
@@ -26,6 +33,14 @@ class ProductAliasResource extends Resource
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-arrows-right-left';
     protected static ?string $navigationLabel = 'Product Aliases & Matching';
     protected static ?int $navigationSort = 2;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
 
     public static function canCreate(): bool
     {
@@ -98,15 +113,22 @@ class ProductAliasResource extends Resource
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->actions([
                 ActionGroup::make([
                     EditAction::make(),
-                    DeleteAction::make(),
+                    DeleteAction::make()->requiresConfirmation(),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn(ProductAlias $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(ProductAlias $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
                 ])
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }

@@ -13,8 +13,14 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -24,6 +30,8 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use UnitEnum;
 
@@ -32,6 +40,14 @@ class DocumentResource extends Resource
     protected static ?string $model = Document::class;
 
     protected static bool $shouldRegisterNavigation = false;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
 
     public static function canCreate(): bool
     {
@@ -238,6 +254,8 @@ class DocumentResource extends Resource
 
                 Tables\Filters\SelectFilter::make('vendor_id')
                     ->relationship('vendor', 'name'),
+
+                TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
@@ -253,6 +271,7 @@ class DocumentResource extends Resource
                         )
                         ->visible(
                             fn(Document $record): bool =>
+                            !$record->trashed() &&
                             in_array(
                                 $record->status,
                                 [
@@ -269,6 +288,7 @@ class DocumentResource extends Resource
                         ->label('Re-Parse')
                         ->icon('heroicon-o-arrow-path')
                         ->color('gray')
+                        ->visible(fn(Document $record): bool => !$record->trashed())
                         ->requiresConfirmation()
                         ->action(
                             function (Document $record, DynamicDocumentParser $parser, ReconcileDocumentTotals $reconciler): void {
@@ -293,11 +313,17 @@ class DocumentResource extends Resource
                                 }
                             }
                         ),
+
+                    DeleteAction::make()->requiresConfirmation(),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn(Document $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Document $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }

@@ -6,6 +6,8 @@ use App\Filament\Resources\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
@@ -21,7 +23,7 @@ class EditPurchaseOrder extends EditRecord
                 ->icon('heroicon-m-check-circle')
                 ->color('success')
                 ->tooltip('Approve purchase order to authorize fulfillment and delivery')
-                ->visible(fn(): bool => !$this->record->isApproved() && $this->record->status !== PurchaseOrder::STATUS_CANCELLED && $this->record->status !== PurchaseOrder::STATUS_REJECTED)
+                ->visible(fn(): bool => !$this->record->trashed() && !$this->record->isApproved() && $this->record->status !== PurchaseOrder::STATUS_CANCELLED && $this->record->status !== PurchaseOrder::STATUS_REJECTED)
                 ->requiresConfirmation()
                 ->action(function () {
                     $this->record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
@@ -29,7 +31,9 @@ class EditPurchaseOrder extends EditRecord
                     Notification::make()->title('Purchase Order Approved')->body("PO {$this->record->po_number} is now approved for delivery.")->success()->send();
                 }),
 
-            DeleteAction::make(),
+            DeleteAction::make()->requiresConfirmation(),
+            RestoreAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed()),
+            ForceDeleteAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed() && (auth()->user()?->isAdmin() ?? false)),
         ];
     }
 

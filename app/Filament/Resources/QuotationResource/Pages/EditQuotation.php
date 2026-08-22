@@ -9,6 +9,8 @@ use App\Models\Quotation;
 use App\Services\QuotationService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -28,7 +30,7 @@ class EditQuotation extends EditRecord
                 ->icon('heroicon-m-check-circle')
                 ->color('success')
                 ->tooltip('Approve quotation estimate')
-                ->visible(fn(): bool => !$this->record->isApproved() && !$this->record->isConverted() && !$this->record->isRejected())
+                ->visible(fn(): bool => !$this->record->trashed() && !$this->record->isApproved() && !$this->record->isConverted() && !$this->record->isRejected())
                 ->requiresConfirmation()
                 ->action(function () {
                     app(QuotationService::class)->approve($this->record);
@@ -41,7 +43,7 @@ class EditQuotation extends EditRecord
                 ->icon('heroicon-m-shopping-cart')
                 ->color('primary')
                 ->tooltip('Convert this quotation into an active Purchase Order')
-                ->visible(fn(): bool => $this->record->isReadyForConversion() && !$this->record->isConverted())
+                ->visible(fn(): bool => !$this->record->trashed() && $this->record->isReadyForConversion() && !$this->record->isConverted())
                 ->modalHeading('Convert Quotation to Purchase Order')
                 ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
                 ->modalSubmitActionLabel('Convert to PO')
@@ -71,10 +73,13 @@ class EditQuotation extends EditRecord
                 ->label('Export PDF')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
+                ->visible(fn(): bool => !$this->record->trashed())
                 ->url(fn() => route('quotations.export-pdf', $this->record))
                 ->openUrlInNewTab(),
 
-            DeleteAction::make(),
+            DeleteAction::make()->requiresConfirmation(),
+            RestoreAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed()),
+            ForceDeleteAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed() && (auth()->user()?->isAdmin() ?? false)),
         ];
     }
 

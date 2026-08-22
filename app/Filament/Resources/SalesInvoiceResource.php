@@ -14,8 +14,13 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -28,6 +33,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
 class SalesInvoiceResource extends Resource
@@ -38,6 +45,14 @@ class SalesInvoiceResource extends Resource
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
     protected static ?string $navigationLabel = 'Sales Invoices (SI)';
     protected static ?int $navigationSort = 6;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -217,23 +232,31 @@ class SalesInvoiceResource extends Resource
                     ->date('M d, Y')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->actions([
                 ActionGroup::make([
                     Action::make('export_pdf')
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('gray')
+                        ->visible(fn(SalesInvoice $record): bool => !$record->trashed())
                         ->url(fn (SalesInvoice $record) => route('sales-invoices.export-pdf', $record))
                         ->openUrlInNewTab(),
 
                     ViewAction::make(),
                     EditAction::make(),
-                    DeleteAction::make(),
+                    DeleteAction::make()->requiresConfirmation(),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn(SalesInvoice $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(SalesInvoice $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }

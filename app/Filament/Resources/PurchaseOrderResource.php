@@ -12,8 +12,13 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -28,8 +33,10 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PurchaseOrderResource extends Resource
 {
@@ -47,7 +54,11 @@ class PurchaseOrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['salesAgent', 'project', 'quotation']);
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+            ->with(['salesAgent', 'project', 'quotation']);
         $user = auth()->user();
 
         if ($user && $user->isSalesExecutive()) {
@@ -475,6 +486,8 @@ class PurchaseOrderResource extends Resource
                         User::ROLE_ADMIN,
                         User::ROLE_OPERATIONS_MANAGER,
                     ])->pluck('name', 'id')),
+
+                TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
@@ -483,7 +496,7 @@ class PurchaseOrderResource extends Resource
                         ->icon('heroicon-m-check-circle')
                         ->color('success')
                         ->tooltip('Approve purchase order to authorize fulfillment and delivery')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
@@ -495,7 +508,7 @@ class PurchaseOrderResource extends Resource
                         ->icon('heroicon-m-clipboard-document-check')
                         ->color('warning')
                         ->tooltip('Review, verify math and reconcile purchase order line items')
-                        ->visible(fn(PurchaseOrder $r): bool => !empty($r->document_id) || !$r->isApproved())
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && (!empty($r->document_id) || !$r->isApproved()))
                         ->url(function (PurchaseOrder $record) {
                             if ($record->document_id) {
                                 return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
@@ -514,13 +527,14 @@ class PurchaseOrderResource extends Resource
                         ->icon('heroicon-m-truck')
                         ->color('info')
                         ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed())
                         ->url(fn() => DeliveryMonitoringPage::getUrl()),
 
                     Action::make('cancel_po')
                         ->label('Cancel PO')
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
-                        ->visible(fn(PurchaseOrder $r): bool => $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
@@ -529,11 +543,16 @@ class PurchaseOrderResource extends Resource
 
                     EditAction::make(),
                     ViewAction::make(),
+                    DeleteAction::make()->requiresConfirmation(),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }

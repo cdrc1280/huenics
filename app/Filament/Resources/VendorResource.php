@@ -6,15 +6,24 @@ use App\Filament\Pages\VendorLayoutEditorPage;
 use App\Filament\Resources\VendorResource\Pages;
 use App\Models\Vendor;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VendorResource extends Resource
 {
@@ -24,6 +33,14 @@ class VendorResource extends Resource
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationLabel = 'Vendors & Suppliers';
     protected static ?int $navigationSort = 4;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
 
     public static function canCreate(): bool
     {
@@ -124,17 +141,28 @@ class VendorResource extends Resource
                     ->label('Active')
                     ->boolean(),
             ])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->actions([
-                Action::make('configure_layout')
-                    ->label('Layout Config')
-                    ->icon('heroicon-o-adjustments-horizontal')
-                    ->color('info')
-                    ->url(fn(Vendor $record): string => VendorLayoutEditorPage::getUrl()),
-                EditAction::make(),
+                ActionGroup::make([
+                    Action::make('configure_layout')
+                        ->label('Layout Config')
+                        ->icon('heroicon-o-adjustments-horizontal')
+                        ->color('info')
+                        ->visible(fn(Vendor $record): bool => !$record->trashed())
+                        ->url(fn(Vendor $record): string => VendorLayoutEditorPage::getUrl()),
+                    EditAction::make(),
+                    DeleteAction::make()->requiresConfirmation(),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn(Vendor $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Vendor $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
+                ]),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                    RestoreBulkAction::make()->requiresConfirmation(),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
                 ]),
             ]);
     }
