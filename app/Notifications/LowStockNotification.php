@@ -23,7 +23,7 @@ class LowStockNotification extends Notification
 
         return [
             'title'       => '⚠️ Low Stock Alert',
-            'body'        => ""{$product->canonical_name}" is running low. Current stock: {$this->item->quantity_on_hand} {$this->item->unit} (Reorder at: {$this->item->reorder_point})",
+            'body'        => "\"{$product->canonical_name}\" is running low. Current stock: {$this->item->quantity_on_hand} {$this->item->unit} (Reorder at: {$this->item->reorder_point})",
             'action_url'  => '/admin/inventory-dashboard',
             'action_text' => 'View Inventory',
             'type'        => 'low_stock',

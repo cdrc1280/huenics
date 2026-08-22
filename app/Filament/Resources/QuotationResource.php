@@ -285,249 +285,270 @@ class QuotationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                TextColumn::make('quotation_number')
-                    ->label('Quotation #')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->copyable()
-                    ->tooltip('Click to copy Quotation #'),
-
-                TextColumn::make('customer_name')
-                    ->label('Customer Name')
-                    ->searchable()
-                    ->sortable()
-                    ->description(fn(Quotation $record): string => $record->customer_company ?: '')
-                    ->tooltip(fn(Quotation $record): string => "Customer: {$record->customer_name}" . ($record->customer_company ? " ({$record->customer_company})" : '')),
-
-                TextColumn::make('project_name')
-                    ->label('Project Name')
-                    ->searchable()
-                    ->sortable()
-                    ->default(fn(Quotation $record) => $record->project?->name ?? 'Palanza Tower')
-                    ->description(fn(Quotation $record): string => $record->project_location ?: '')
-                    ->tooltip(fn(Quotation $record): string => "Project: " . ($record->project_name ?? $record->project?->name ?? 'Palanza Tower')),
-
-                TextColumn::make('phone_no')
-                    ->label('Phone No.')
-                    ->searchable()
-                    ->default('—')
-                    ->toggleable(isToggledHiddenByDefault: false),
-
-                TextColumn::make('total_amount')
-                    ->label('Total Amount')
-                    ->money('PHP')
-                    ->sortable()
-                    ->tooltip(fn(Quotation $record): string => "Quotation total sum: ₱" . number_format((float) $record->total_amount, 2)),
-
-                TextColumn::make('estimated_profit')
-                    ->label('Est. Profit')
-                    ->money('PHP')
-                    ->sortable()
-                    ->color(fn($state) => $state > 0 ? 'success' : 'danger')
-                    ->tooltip(fn(Quotation $record): string => "Estimated gross profit (Total ₱" . number_format((float) $record->total_amount, 2) . " minus Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
-
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(function (string $state, Quotation $record): string {
-                        if ($record->isRejected()) {
-                            return 'Rejected';
-                        }
-                        if ($record->is_official_po && !empty($record->customer_signature_name)) {
-                            return 'Official PO (Signed)';
-                        }
-                        if ($state === Quotation::STATUS_CONVERTED) {
-                            return 'Converted to PO';
-                        }
-                        if ($record->isApproved() && $record->isReviewed()) {
-                            return 'Approved & Reviewed';
-                        }
-                        if ($record->isApproved()) {
-                            return 'Approved';
-                        }
-                        if ($record->isReviewed()) {
-                            return 'Reviewed';
-                        }
-                        return match ($state) {
-                            Quotation::STATUS_PENDING => 'Pending',
-                            Quotation::STATUS_APPROVED => 'Approved',
-                            Quotation::STATUS_REJECTED => 'Rejected',
-                            Quotation::STATUS_CONVERTED => 'Converted to PO',
-                            default => ucfirst($state),
-                        };
-                    })
-                    ->color(function (string $state, Quotation $record): string {
-                        if ($record->isRejected()) {
-                            return 'danger';
-                        }
-                        if ($record->is_official_po || $state === Quotation::STATUS_CONVERTED || ($record->isApproved() && $record->isReviewed())) {
-                            return 'success';
-                        }
-                        if ($record->isApproved() || $record->isReviewed()) {
-                            return 'info';
-                        }
-                        return match ($state) {
-                            Quotation::STATUS_PENDING => 'warning',
-                            Quotation::STATUS_APPROVED => 'info',
-                            Quotation::STATUS_REJECTED => 'danger',
-                            Quotation::STATUS_CONVERTED => 'success',
-                            default => 'gray',
-                        };
-                    })
-                    ->tooltip(fn(Quotation $record): string => "Status: " . ucfirst($record->status)),
-
-                TextColumn::make('quotation_date')
-                    ->label('Date')
-                    ->date('M j, Y')
-                    ->sortable(),
-
-                TextColumn::make('valid_until')
-                    ->label('Valid Until')
-                    ->date('M j, Y')
-                    ->sortable()
-                    ->color(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'danger' : null)
-                    ->tooltip(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
-            ])
+            ->columns(static::getTableColumns())
             ->defaultSort('created_at', 'desc')
-            ->filters([
-                SelectFilter::make('status')
-                    ->options([
-                        Quotation::STATUS_PENDING => 'Pending',
-                        Quotation::STATUS_APPROVED => 'Approved',
-                        Quotation::STATUS_REJECTED => 'Rejected / Lost',
-                        Quotation::STATUS_CONVERTED => 'Converted to PO',
-                    ]),
-
-                SelectFilter::make('sales_agent_id')
-                    ->label('Sales Agent')
-                    ->options(User::whereIn('role', [
-                        User::ROLE_SALES_EXECUTIVE,
-                        User::ROLE_ADMIN,
-                        User::ROLE_OPERATIONS_MANAGER,
-                    ])->pluck('name', 'id')),
-            ])
-            ->actions([
-                ActionGroup::make([
-                    Action::make('review')
-                        ->label('Review & Verify')
-                        ->icon('heroicon-m-clipboard-document-check')
-                        ->color('warning')
-                        ->tooltip('Review, verify math and reconcile quotation line items')
-                        ->visible(fn(Quotation $r): bool => !$r->isReviewed() && !$r->isConverted() && !$r->isRejected())
-                        ->url(function (Quotation $record) {
-                            if ($record->document_id) {
-                                return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
-                            }
-                            return null;
-                        })
-                        ->action(function (Quotation $record) {
-                            if ($record->document_id) {
-                                return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
-                            }
-                            app(QuotationService::class)->review($record);
-                            Notification::make()->title('Quotation Marked as Reviewed')->success()->send();
-                        }),
-
-                    Action::make('approve')
-                        ->label('Approve')
-                        ->icon('heroicon-m-check-circle')
-                        ->color('success')
-                        ->tooltip('Approve quotation estimate')
-                        ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
-                        ->requiresConfirmation()
-                        ->action(function (Quotation $record) {
-                            app(QuotationService::class)->approve($record);
-                            Notification::make()->title('Quotation Approved')->success()->send();
-                        }),
-
-                    Action::make('reject')
-                        ->label('Reject')
-                        ->icon('heroicon-m-x-circle')
-                        ->color('danger')
-                        ->tooltip('Mark quotation as rejected / lost with reason notes')
-                        ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
-                        ->form([
-                            Textarea::make('rejection_reason')
-                                ->label('Reason for Rejection')
-                                ->required()
-                                ->rows(3),
-                        ])
-                        ->action(function (Quotation $record, array $data) {
-                            app(QuotationService::class)->reject($record, $data['rejection_reason']);
-                            Notification::make()->title('Quotation Rejected')->warning()->send();
-                        }),
-
-                    Action::make('convert_to_po')
-                        ->label('Convert to PO')
-                        ->icon('heroicon-m-shopping-cart')
-                        ->color('primary')
-                        ->tooltip('Convert this approved quotation into an active Purchase Order')
-                        ->visible(fn(Quotation $r): bool => $r->isReadyForConversion() && !$r->isConverted())
-                        ->form([
-                            DatePicker::make('order_date')
-                                ->label('Order Date')
-                                ->required()
-                                ->default(now()),
-
-                            DatePicker::make('expected_delivery_date')
-                                ->label('Expected Delivery Date')
-                                ->nullable(),
-
-                            Toggle::make('has_warranty')
-                                ->label('Include Warranty')
-                                ->default(true)
-                                ->live(),
-
-                            Select::make('warranty_period')
-                                ->label('Warranty Period')
-                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                                ->default(PurchaseOrder::WARRANTY_1_YEAR)
-                                ->visible(fn($get) => $get('has_warranty')),
-
-                            Textarea::make('notes')
-                                ->label('Notes')
-                                ->nullable(),
-                        ])
-                        ->action(function (Quotation $record, array $data) {
-                            try {
-                                $po = app(QuotationService::class)->convertToPO($record, $data);
-                                Notification::make()
-                                    ->title('Converted to Purchase Order')
-                                    ->body("PO {$po->po_number} created successfully.")
-                                    ->success()
-                                    ->send();
-                            } catch (\Throwable $e) {
-                                Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
-                            }
-                        }),
-
-                    Action::make('export_pdf')
-                        ->label('Export PDF')
-                        ->icon('heroicon-o-arrow-down-tray')
-                        ->color('gray')
-                        ->tooltip('Download Quotation PDF with e-signatures')
-                        ->url(fn(Quotation $r) => route('quotations.export-pdf', $r))
-                        ->openUrlInNewTab(),
-
-                    Action::make('preview_pdf')
-                        ->label('Preview PDF')
-                        ->icon('heroicon-o-eye')
-                        ->color('gray')
-                        ->tooltip('Preview Quotation PDF in browser')
-                        ->url(fn(Quotation $r) => route('quotations.preview-pdf', $r))
-                        ->openUrlInNewTab(),
-
-                    EditAction::make(),
-                    DeleteAction::make(),
-                ]),
-            ], position: RecordActionsPosition::BeforeColumns)
+            ->filters(static::getTableFilters())
+            ->actions(static::getTableActions(), position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    protected static function getStatusBadgeLabel(string $state, Quotation $record): string
+    {
+        if ($record->isRejected()) {
+            return 'Rejected';
+        }
+        if ($record->is_official_po && !empty($record->customer_signature_name)) {
+            return 'Official PO (Signed)';
+        }
+        if ($state === Quotation::STATUS_CONVERTED) {
+            return 'Converted to PO';
+        }
+        if ($record->isApproved() && $record->isReviewed()) {
+            return 'Approved & Reviewed';
+        }
+        if ($record->isApproved()) {
+            return 'Approved';
+        }
+        if ($record->isReviewed()) {
+            return 'Reviewed';
+        }
+        return match ($state) {
+            Quotation::STATUS_PENDING => 'Pending',
+            Quotation::STATUS_APPROVED => 'Approved',
+            Quotation::STATUS_REJECTED => 'Rejected',
+            Quotation::STATUS_CONVERTED => 'Converted to PO',
+            default => ucfirst($state),
+        };
+    }
+
+    protected static function getStatusBadgeColor(string $state, Quotation $record): string
+    {
+        if ($record->isRejected()) {
+            return 'danger';
+        }
+        if ($record->is_official_po || $state === Quotation::STATUS_CONVERTED || ($record->isApproved() && $record->isReviewed())) {
+            return 'success';
+        }
+        if ($record->isApproved() || $record->isReviewed()) {
+            return 'info';
+        }
+        return match ($state) {
+            Quotation::STATUS_PENDING => 'warning',
+            Quotation::STATUS_APPROVED => 'info',
+            Quotation::STATUS_REJECTED => 'danger',
+            Quotation::STATUS_CONVERTED => 'success',
+            default => 'gray',
+        };
+    }
+
+    protected static function getTableColumns(): array
+    {
+        return [
+            TextColumn::make('quotation_number')
+                ->label('Quotation #')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->copyable()
+                ->tooltip('Click to copy Quotation #'),
+
+            TextColumn::make('customer_name')
+                ->label('Customer Name')
+                ->searchable()
+                ->sortable()
+                ->description(fn(Quotation $record): string => $record->customer_company ?: '')
+                ->tooltip(fn(Quotation $record): string => "Customer: {$record->customer_name}" . ($record->customer_company ? " ({$record->customer_company})" : '')),
+
+            TextColumn::make('project_name')
+                ->label('Project Name')
+                ->searchable()
+                ->sortable()
+                ->default(fn(Quotation $record) => $record->project?->name ?? 'Palanza Tower')
+                ->description(fn(Quotation $record): string => $record->project_location ?: '')
+                ->tooltip(fn(Quotation $record): string => "Project: " . ($record->project_name ?? $record->project?->name ?? 'Palanza Tower')),
+
+            TextColumn::make('phone_no')
+                ->label('Phone No.')
+                ->searchable()
+                ->default('—')
+                ->toggleable(isToggledHiddenByDefault: false),
+
+            TextColumn::make('total_amount')
+                ->label('Total Amount')
+                ->money('PHP')
+                ->sortable()
+                ->tooltip(fn(Quotation $record): string => "Quotation total sum: ₱" . number_format((float) $record->total_amount, 2)),
+
+            TextColumn::make('estimated_profit')
+                ->label('Est. Profit')
+                ->money('PHP')
+                ->sortable()
+                ->color(fn($state) => $state > 0 ? 'success' : 'danger')
+                ->tooltip(fn(Quotation $record): string => "Estimated gross profit (Total ₱" . number_format((float) $record->total_amount, 2) . " minus Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+
+            TextColumn::make('status')
+                ->label('Status')
+                ->badge()
+                ->formatStateUsing(fn(string $state, Quotation $record): string => static::getStatusBadgeLabel($state, $record))
+                ->color(fn(string $state, Quotation $record): string => static::getStatusBadgeColor($state, $record))
+                ->tooltip(fn(Quotation $record): string => "Status: " . ucfirst($record->status)),
+
+            TextColumn::make('quotation_date')
+                ->label('Date')
+                ->date('M j, Y')
+                ->sortable(),
+
+            TextColumn::make('valid_until')
+                ->label('Valid Until')
+                ->date('M j, Y')
+                ->sortable()
+                ->color(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'danger' : null)
+                ->tooltip(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
+        ];
+    }
+
+    protected static function getTableFilters(): array
+    {
+        return [
+            SelectFilter::make('status')
+                ->options([
+                    Quotation::STATUS_PENDING => 'Pending',
+                    Quotation::STATUS_APPROVED => 'Approved',
+                    Quotation::STATUS_REJECTED => 'Rejected / Lost',
+                    Quotation::STATUS_CONVERTED => 'Converted to PO',
+                ]),
+
+            SelectFilter::make('sales_agent_id')
+                ->label('Sales Agent')
+                ->options(User::whereIn('role', [
+                    User::ROLE_SALES_EXECUTIVE,
+                    User::ROLE_ADMIN,
+                    User::ROLE_OPERATIONS_MANAGER,
+                ])->pluck('name', 'id')),
+        ];
+    }
+
+    protected static function getTableActions(): array
+    {
+        return [
+            ActionGroup::make([
+                Action::make('review')
+                    ->label('Review & Verify')
+                    ->icon('heroicon-m-clipboard-document-check')
+                    ->color('warning')
+                    ->tooltip('Review, verify math and reconcile quotation line items')
+                    ->visible(fn(Quotation $r): bool => !$r->isReviewed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->url(function (Quotation $record) {
+                        if ($record->document_id) {
+                            return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
+                        }
+                        return null;
+                    })
+                    ->action(function (Quotation $record) {
+                        if ($record->document_id) {
+                            return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
+                        }
+                        app(QuotationService::class)->review($record);
+                        Notification::make()->title('Quotation Marked as Reviewed')->success()->send();
+                    }),
+
+                Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-m-check-circle')
+                    ->color('success')
+                    ->tooltip('Approve quotation estimate')
+                    ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->requiresConfirmation()
+                    ->action(function (Quotation $record) {
+                        app(QuotationService::class)->approve($record);
+                        Notification::make()->title('Quotation Approved')->success()->send();
+                    }),
+
+                Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
+                    ->tooltip('Mark quotation as rejected / lost with reason notes')
+                    ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->form([
+                        Textarea::make('rejection_reason')
+                            ->label('Reason for Rejection')
+                            ->required()
+                            ->rows(3),
+                    ])
+                    ->action(function (Quotation $record, array $data) {
+                        app(QuotationService::class)->reject($record, $data['rejection_reason']);
+                        Notification::make()->title('Quotation Rejected')->warning()->send();
+                    }),
+
+                Action::make('convert_to_po')
+                    ->label('Convert to PO')
+                    ->icon('heroicon-m-shopping-cart')
+                    ->color('primary')
+                    ->tooltip('Convert this approved quotation into an active Purchase Order')
+                    ->visible(fn(Quotation $r): bool => $r->isReadyForConversion() && !$r->isConverted())
+                    ->form([
+                        DatePicker::make('order_date')
+                            ->label('Order Date')
+                            ->required()
+                            ->default(now()),
+
+                        DatePicker::make('expected_delivery_date')
+                            ->label('Expected Delivery Date')
+                            ->nullable(),
+
+                        Toggle::make('has_warranty')
+                            ->label('Include Warranty')
+                            ->default(true)
+                            ->live(),
+
+                        Select::make('warranty_period')
+                            ->label('Warranty Period')
+                            ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                            ->default(PurchaseOrder::WARRANTY_1_YEAR)
+                            ->visible(fn($get) => $get('has_warranty')),
+
+                        Textarea::make('notes')
+                            ->label('Notes')
+                            ->nullable(),
+                    ])
+                    ->action(function (Quotation $record, array $data) {
+                        try {
+                            $po = app(QuotationService::class)->convertToPO($record, $data);
+                            Notification::make()
+                                ->title('Converted to Purchase Order')
+                                ->body("PO {$po->po_number} created successfully.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
+                        }
+                    }),
+
+                Action::make('export_pdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->tooltip('Download Quotation PDF with e-signatures')
+                    ->url(fn(Quotation $r) => route('quotations.export-pdf', $r))
+                    ->openUrlInNewTab(),
+
+                Action::make('preview_pdf')
+                    ->label('Preview PDF')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->tooltip('Preview Quotation PDF in browser')
+                    ->url(fn(Quotation $r) => route('quotations.preview-pdf', $r))
+                    ->openUrlInNewTab(),
+
+                EditAction::make(),
+                DeleteAction::make(),
+            ]),
+        ];
     }
 
     public static function getPages(): array

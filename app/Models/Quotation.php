@@ -82,7 +82,9 @@ class Quotation extends Model
 
     public function isReviewed(): bool
     {
-        return $this->reviewed_by !== null || in_array($this->status, [self::STATUS_REVIEWED, 'reviewed'], true);
+        return $this->reviewed_by !== null
+            || in_array($this->status, [self::STATUS_REVIEWED, 'reviewed', self::STATUS_APPROVED, 'approved', self::STATUS_CONVERTED, 'converted_to_po'], true)
+            || !empty($this->approved_by);
     }
 
     public function isApproved(): bool
