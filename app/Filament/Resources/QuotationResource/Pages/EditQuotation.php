@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuotationResource\Pages;
 
+use App\Filament\Resources\PurchaseOrderResource;
 use App\Filament\Resources\QuotationResource;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
@@ -60,7 +61,7 @@ class EditQuotation extends EditRecord
                             ->success()
                             ->send();
 
-                        return redirect(QuotationResource::getUrl('index'));
+                        return redirect(PurchaseOrderResource::getUrl('edit', ['record' => $po]));
                     } catch (\Throwable $e) {
                         Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
                     }

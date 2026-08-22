@@ -414,13 +414,27 @@ class QuotationResource extends Resource
     protected static function getTableFilters(): array
     {
         return [
-            SelectFilter::make('status')
+            SelectFilter::make('status_scope')
+                ->label('Status Filter')
                 ->options([
-                    Quotation::STATUS_PENDING => 'Pending',
-                    Quotation::STATUS_APPROVED => 'Approved',
-                    Quotation::STATUS_REJECTED => 'Rejected / Lost',
-                    Quotation::STATUS_CONVERTED => 'Converted to PO',
-                ]),
+                    'pending_review' => 'Pending & For Review',
+                    'approved'       => 'Approved',
+                    'converted'      => 'Converted to PO',
+                    'rejected'       => 'Rejected / Lost',
+                    'all'            => 'All Quotations',
+                ])
+                ->default('pending_review')
+                ->query(function (Builder $query, array $data) {
+                    $scope = $data['value'] ?? 'pending_review';
+                    return match ($scope) {
+                        'pending_review' => $query->whereIn('status', [Quotation::STATUS_PENDING, Quotation::STATUS_REVIEWED, 'pending', 'reviewed', 'for_review'])->where('is_official_po', false),
+                        'approved'       => $query->where(fn(Builder $q) => $q->where('status', Quotation::STATUS_APPROVED)->orWhere('is_official_po', true)),
+                        'converted'      => $query->where('status', Quotation::STATUS_CONVERTED),
+                        'rejected'       => $query->where('status', Quotation::STATUS_REJECTED),
+                        'all'            => $query,
+                        default          => $query->whereIn('status', [Quotation::STATUS_PENDING, Quotation::STATUS_REVIEWED, 'pending', 'reviewed', 'for_review'])->where('is_official_po', false),
+                    };
+                }),
 
             SelectFilter::make('sales_agent_id')
                 ->label('Sales Agent')
@@ -509,6 +523,8 @@ class QuotationResource extends Resource
                                 ->body("PO {$po->po_number} created successfully.")
                                 ->success()
                                 ->send();
+
+                            return redirect(PurchaseOrderResource::getUrl('edit', ['record' => $po]));
                         } catch (\Throwable $e) {
                             Notification::make()->title('Conversion Failed')->body($e->getMessage())->danger()->send();
                         }
