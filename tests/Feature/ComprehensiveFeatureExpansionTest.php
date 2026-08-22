@@ -91,7 +91,7 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         $this->assertTrue($this->admin->canEditQuotationDocument());
         $this->assertTrue($this->opsManager->canEditQuotationDocument());
         $this->assertTrue($this->salesExec->canEditQuotationDocument());
-        $this->assertFalse($this->ceo->canEditQuotationDocument());
+        $this->assertTrue($this->ceo->canEditQuotationDocument());
 
         // 2. E-signature URL and path accessors
         $this->assertEquals('signatures/sales_exec.png', $this->salesExec->e_signature_path);

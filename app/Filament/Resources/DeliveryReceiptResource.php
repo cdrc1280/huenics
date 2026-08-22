@@ -252,14 +252,14 @@ class DeliveryReceiptResource extends Resource
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
                     RestoreAction::make()->requiresConfirmation()->visible(fn(DeliveryReceipt $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(DeliveryReceipt $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(DeliveryReceipt $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

@@ -84,45 +84,45 @@ class User extends Authenticatable implements FilamentUser
         return in_array($this->role, $roles, true);
     }
 
-    // Permission capabilities
+    // Permission capabilities (CEO has full Admin-level authority across all operations)
     public function canManageUsers(): bool
     {
-        return $this->isAdmin();
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO]);
     }
 
     public function canVerifyDocuments(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_CEO]);
     }
 
     public function canConfigureLayouts(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_CEO]);
     }
 
     public function canManageCatalog(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_CEO]);
     }
 
     public function canCreateDocuments(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE, self::ROLE_CEO]);
     }
 
     public function canEditTransactions(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_CEO]);
     }
 
     public function canManageQuotations(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE, self::ROLE_CEO]);
     }
 
     public function canConvertToPO(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE, self::ROLE_CEO]);
     }
 
     public function canViewSalesReports(): bool
@@ -132,16 +132,21 @@ class User extends Authenticatable implements FilamentUser
 
     public function canManageInventory(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_CEO]);
     }
 
     /**
-     * Only Admin, Operations Manager, and Sales Executive can edit quotation documents.
-     * CEO gets view-only access. PO documents are always read-only regardless.
+     * Admin, CEO, Operations Manager, and Sales Executive can edit quotation documents.
+     * PO documents are always read-only regardless.
      */
     public function canEditQuotationDocument(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_OPERATIONS_MANAGER, self::ROLE_SALES_EXECUTIVE, self::ROLE_CEO]);
+    }
+
+    public function canDeleteRecords(): bool
+    {
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO]);
     }
 
     /**

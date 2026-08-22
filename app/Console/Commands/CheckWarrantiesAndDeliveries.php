@@ -33,6 +33,7 @@ class CheckWarrantiesAndDeliveries extends Command
                 User::ROLE_ADMIN,
                 User::ROLE_OPERATIONS_MANAGER,
                 User::ROLE_SALES_EXECUTIVE,
+                User::ROLE_CEO,
             ])->get();
 
             foreach ($recipients as $user) {

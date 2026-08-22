@@ -97,7 +97,7 @@ class EditPurchaseOrder extends EditRecord
 
             DeleteAction::make()->requiresConfirmation(),
             RestoreAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed()),
-            ForceDeleteAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed() && (auth()->user()?->isAdmin() ?? false)),
+            ForceDeleteAction::make()->requiresConfirmation()->visible(fn(): bool => $this->record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
         ];
     }
 

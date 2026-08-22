@@ -56,7 +56,7 @@ class ProductResource extends Resource
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? true;
+        return auth()->user()?->canDeleteRecords() ?? true;
     }
 
     public static function form(Schema $schema): Schema
@@ -215,14 +215,14 @@ class ProductResource extends Resource
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
                     RestoreAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed() && (auth()->user()?->isAdmin() ?? false)),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->isAdmin() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

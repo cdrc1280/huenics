@@ -118,15 +118,18 @@ class RoleBasedAccessControlTest extends TestCase
         $this->actingAs($this->ceo);
 
         $this->assertTrue($this->ceo->isCeo());
-        $this->assertFalse($this->ceo->canManageUsers());
-        $this->assertFalse($this->ceo->canVerifyDocuments());
-        $this->assertFalse($this->ceo->canConfigureLayouts());
-        $this->assertFalse($this->ceo->canManageCatalog());
-        $this->assertFalse($this->ceo->canManageQuotations());
-        $this->assertFalse($this->ceo->canConvertToPO());
+        $this->assertTrue($this->ceo->canManageUsers());
+        $this->assertTrue($this->ceo->canVerifyDocuments());
+        $this->assertTrue($this->ceo->canConfigureLayouts());
+        $this->assertTrue($this->ceo->canManageCatalog());
+        $this->assertTrue($this->ceo->canCreateDocuments());
+        $this->assertTrue($this->ceo->canManageQuotations());
+        $this->assertTrue($this->ceo->canConvertToPO());
         $this->assertTrue($this->ceo->canViewSalesReports());
-        $this->assertFalse($this->ceo->canManageInventory());
-        $this->assertFalse(UserResource::canViewAny());
-        $this->assertFalse(ReviewQueuePage::canAccess());
+        $this->assertTrue($this->ceo->canManageInventory());
+        $this->assertTrue($this->ceo->canEditQuotationDocument());
+        $this->assertTrue($this->ceo->canDeleteRecords());
+        $this->assertTrue(UserResource::canViewAny());
+        $this->assertTrue(ReviewQueuePage::canAccess());
     }
 }
