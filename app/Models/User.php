@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, \App\Traits\LogsActivity;
 
     public const ROLE_ADMIN = UserRole::Admin->value;
     public const ROLE_OPERATIONS_MANAGER = UserRole::OperationsManager->value;
@@ -84,10 +84,10 @@ class User extends Authenticatable implements FilamentUser
         return in_array($this->role, $roles, true);
     }
 
-    // Permission capabilities (CEO has full Admin-level authority across all operations)
+    // Permission capabilities (Admin, CEO, and Operations Manager have full executive administrative authority)
     public function canManageUsers(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO, self::ROLE_OPERATIONS_MANAGER]);
     }
 
     public function canVerifyDocuments(): bool
@@ -146,7 +146,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canDeleteRecords(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO]);
+        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_CEO, self::ROLE_OPERATIONS_MANAGER]);
     }
 
     /**

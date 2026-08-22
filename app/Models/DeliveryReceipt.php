@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DeliveryReceipt extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     public const STATUS_DRAFT = DeliveryReceiptStatus::Draft->value;
     public const STATUS_DELIVERED = DeliveryReceiptStatus::Delivered->value;

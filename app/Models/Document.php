@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     public const TYPE_PURCHASE_ORDER = DocumentType::PurchaseOrder->value;
     public const TYPE_VENDORS_AGREEMENT = DocumentType::VendorsAgreement->value;

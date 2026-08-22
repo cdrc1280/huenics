@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Quotation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     public const STATUS_PENDING      = QuotationStatus::Pending->value;
     public const STATUS_REVIEWED     = QuotationStatus::Reviewed->value;

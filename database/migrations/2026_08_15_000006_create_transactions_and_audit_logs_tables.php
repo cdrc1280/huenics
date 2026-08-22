@@ -29,15 +29,21 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('action'); // document_verified, line_item_edited, alias_created, document_rejected, layout_updated
-            $table->string('auditable_type');
-            $table->unsignedBigInteger('auditable_id');
+            $table->string('action'); // created, updated, deleted, verified, login, etc.
+            $table->string('event', 50)->default('custom');
+            $table->text('description')->nullable();
+            $table->string('auditable_type')->nullable();
+            $table->unsignedBigInteger('auditable_id')->nullable();
             $table->json('old_value')->nullable();
             $table->json('new_value')->nullable();
+            $table->json('properties')->nullable();
             $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
             $table->index(['auditable_type', 'auditable_id']);
+            $table->index('event');
+            $table->index('created_at');
         });
     }
 

@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class ProductAlias extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'product_id',

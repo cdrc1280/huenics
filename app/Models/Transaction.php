@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
 
     public const STATUS_PENDING   = TransactionStatus::PendingDelivery->value;
     public const STATUS_DELIVERED = TransactionStatus::Delivered->value;

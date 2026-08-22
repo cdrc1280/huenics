@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\ReviewQueuePage;
+use App\Filament\Resources\ActivityLogResource;
 use App\Filament\Resources\DocumentResource;
 use App\Filament\Resources\ProductResource;
 use App\Filament\Resources\QuotationResource;
@@ -72,7 +73,9 @@ class RoleBasedAccessControlTest extends TestCase
         $this->assertTrue($this->admin->canConvertToPO());
         $this->assertTrue($this->admin->canViewSalesReports());
         $this->assertTrue($this->admin->canManageInventory());
+        $this->assertTrue($this->admin->canDeleteRecords());
         $this->assertTrue(UserResource::canViewAny());
+        $this->assertTrue(ActivityLogResource::canViewAny());
         $this->assertTrue(ReviewQueuePage::canAccess());
     }
 
@@ -81,7 +84,7 @@ class RoleBasedAccessControlTest extends TestCase
         $this->actingAs($this->opsManager);
 
         $this->assertTrue($this->opsManager->isOperationsManager());
-        $this->assertFalse($this->opsManager->canManageUsers());
+        $this->assertTrue($this->opsManager->canManageUsers());
         $this->assertTrue($this->opsManager->canVerifyDocuments());
         $this->assertTrue($this->opsManager->canConfigureLayouts());
         $this->assertTrue($this->opsManager->canManageCatalog());
@@ -90,7 +93,9 @@ class RoleBasedAccessControlTest extends TestCase
         $this->assertTrue($this->opsManager->canConvertToPO());
         $this->assertTrue($this->opsManager->canViewSalesReports());
         $this->assertTrue($this->opsManager->canManageInventory());
-        $this->assertFalse(UserResource::canViewAny());
+        $this->assertTrue($this->opsManager->canDeleteRecords());
+        $this->assertTrue(UserResource::canViewAny());
+        $this->assertTrue(ActivityLogResource::canViewAny());
         $this->assertTrue(ReviewQueuePage::canAccess());
     }
 
@@ -108,10 +113,11 @@ class RoleBasedAccessControlTest extends TestCase
         $this->assertTrue($this->salesExec->canConvertToPO());
         $this->assertFalse($this->salesExec->canViewSalesReports());
         $this->assertFalse($this->salesExec->canManageInventory());
+        $this->assertFalse($this->salesExec->canDeleteRecords());
         $this->assertFalse(UserResource::canViewAny());
+        $this->assertFalse(ActivityLogResource::canViewAny());
         $this->assertTrue(ReviewQueuePage::canAccess()); // Sales Executive can view queue in Viewing Mode
     }
-
 
     public function test_ceo_permissions(): void
     {
@@ -130,6 +136,7 @@ class RoleBasedAccessControlTest extends TestCase
         $this->assertTrue($this->ceo->canEditQuotationDocument());
         $this->assertTrue($this->ceo->canDeleteRecords());
         $this->assertTrue(UserResource::canViewAny());
+        $this->assertTrue(ActivityLogResource::canViewAny());
         $this->assertTrue(ReviewQueuePage::canAccess());
     }
 }
