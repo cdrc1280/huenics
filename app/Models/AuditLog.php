@@ -138,45 +138,80 @@ class AuditLog extends Model
     }
 
     /**
-     * Get a clean, human-readable name of the subject.
+     * Get clean module name label (e.g. 'Quotation', 'Product', 'Security').
+     */
+    public function getSubjectTypeLabelAttribute(): string
+    {
+        if (!$this->auditable_type) {
+            return 'Authentication';
+        }
+
+        $base = class_basename($this->auditable_type);
+        return match ($base) {
+            'PurchaseOrder' => 'Purchase Order',
+            'ProductAlias' => 'Product Alias',
+            'DeliveryReceipt' => 'Delivery Receipt',
+            'SalesInvoice' => 'Sales Invoice',
+            'Transaction' => 'Ledger',
+            default => $base,
+        };
+    }
+
+    /**
+     * Get clean identifier of the target subject.
+     */
+    public function getSubjectIdentifierAttribute(): string
+    {
+        if (!$this->auditable_type) {
+            return $this->user ? $this->user->name : 'System';
+        }
+
+        if ($this->auditable) {
+            $r = $this->auditable;
+            if (isset($r->quotation_number)) return "#{$r->quotation_number}";
+            if (isset($r->po_number)) return "#{$r->po_number}";
+            if (isset($r->dr_number)) return "#{$r->dr_number}";
+            if (isset($r->invoice_number)) return "#{$r->invoice_number}";
+            if (isset($r->document_number)) return "#{$r->document_number}";
+            if (isset($r->canonical_name)) return $r->canonical_name;
+            if (isset($r->name)) return $r->name;
+            if (isset($r->transaction_code)) return "#{$r->transaction_code}";
+        }
+
+        return "#{$this->auditable_id}";
+    }
+
+    /**
+     * Get clean, human-readable name of the subject.
      */
     public function getSubjectNameAttribute(): string
     {
-        if (!$this->auditable_type) {
-            return 'System / Auth';
+        return "{$this->subject_type_label}: {$this->subject_identifier}";
+    }
+
+    /**
+     * Simple device / browser parser.
+     */
+    public function getDeviceSummaryAttribute(): string
+    {
+        if (!$this->user_agent) {
+            return 'API / System';
         }
 
-        $baseType = class_basename($this->auditable_type);
-        $id = $this->auditable_id;
+        $ua = $this->user_agent;
+        $platform = 'Unknown OS';
+        if (str_contains($ua, 'Windows')) $platform = 'Windows';
+        elseif (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) $platform = 'macOS';
+        elseif (str_contains($ua, 'Linux')) $platform = 'Linux';
+        elseif (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad')) $platform = 'iOS';
+        elseif (str_contains($ua, 'Android')) $platform = 'Android';
 
-        if ($this->auditable) {
-            $record = $this->auditable;
-            if (isset($record->name)) {
-                return "{$baseType}: {$record->name}";
-            }
-            if (isset($record->canonical_name)) {
-                return "{$baseType}: {$record->canonical_name}";
-            }
-            if (isset($record->quotation_number)) {
-                return "{$baseType}: {$record->quotation_number}";
-            }
-            if (isset($record->po_number)) {
-                return "{$baseType}: {$record->po_number}";
-            }
-            if (isset($record->document_number)) {
-                return "{$baseType}: {$record->document_number}";
-            }
-            if (isset($record->dr_number)) {
-                return "{$baseType}: {$record->dr_number}";
-            }
-            if (isset($record->invoice_number)) {
-                return "{$baseType}: {$record->invoice_number}";
-            }
-            if (isset($record->transaction_code)) {
-                return "{$baseType}: {$record->transaction_code}";
-            }
-        }
+        $browser = 'Browser';
+        if (str_contains($ua, 'Edg/')) $browser = 'Edge';
+        elseif (str_contains($ua, 'Chrome/')) $browser = 'Chrome';
+        elseif (str_contains($ua, 'Safari/') && !str_contains($ua, 'Chrome')) $browser = 'Safari';
+        elseif (str_contains($ua, 'Firefox/')) $browser = 'Firefox';
 
-        return "{$baseType} #{$id}";
+        return "{$browser} on {$platform}";
     }
 }

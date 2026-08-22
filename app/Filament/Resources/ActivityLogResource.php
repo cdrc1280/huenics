@@ -17,10 +17,8 @@ use App\Models\Vendor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
@@ -78,11 +76,23 @@ class ActivityLogResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->poll('30s')
             ->columns([
                 TextColumn::make('event')
-                    ->label('Event')
+                    ->label('Activity')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => strtoupper(str_replace('_', ' ', $state)))
+                    ->formatStateUsing(fn(string $state): string => match (strtolower($state)) {
+                        'created' => 'Created',
+                        'updated', 'line_item_adjusted' => 'Updated',
+                        'deleted' => 'Deleted',
+                        'force_deleted' => 'Purged',
+                        'restored' => 'Restored',
+                        'login' => 'Sign In',
+                        'logout' => 'Sign Out',
+                        'verified' => 'Verified',
+                        'converted' => 'Converted',
+                        default => ucwords(str_replace('_', ' ', $state)),
+                    })
                     ->colors([
                         'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored']),
                         'info' => fn($state) => in_array($state, ['updated', 'line_item_adjusted']),
@@ -94,58 +104,58 @@ class ActivityLogResource extends Resource
                     ->sortable()
                     ->searchable(),
 
+                TextColumn::make('subject_name')
+                    ->label('Subject / Entity')
+                    ->weight('semibold')
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->where('auditable_type', 'like', "%{$search}%")
+                            ->orWhere('auditable_id', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%");
+                    }),
+
                 TextColumn::make('description')
                     ->label('Action Summary')
                     ->wrap()
                     ->searchable()
-                    ->weight('medium')
+                    ->color('gray')
                     ->tooltip(fn(AuditLog $record): string => $record->description ?: $record->action),
 
                 TextColumn::make('user.name')
                     ->label('Actor')
-                    ->description(fn(AuditLog $record): string => $record->user?->email ?? 'System')
+                    ->description(fn(AuditLog $record): string => $record->user ? ucwords(str_replace('_', ' ', $record->user->role)) : 'Automated Trigger')
                     ->searchable()
                     ->sortable()
-                    ->default('System / Auto'),
+                    ->default('System'),
 
-                TextColumn::make('subject_name')
-                    ->label('Subject')
-                    ->badge()
-                    ->color('gray')
-                    ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query->where('auditable_type', 'like', "%{$search}%")
-                            ->orWhere('auditable_id', 'like', "%{$search}%");
-                    }),
+                TextColumn::make('created_at')
+                    ->label('Time')
+                    ->since()
+                    ->tooltip(fn(AuditLog $record): string => $record->created_at?->format('F d, Y h:i:s A') ?? '')
+                    ->sortable(),
 
                 TextColumn::make('ip_address')
                     ->label('IP Address')
                     ->fontFamily('mono')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
-
-                TextColumn::make('created_at')
-                    ->label('Timestamp')
-                    ->dateTime('M d, Y h:i:s A')
-                    ->description(fn(AuditLog $record): string => $record->created_at?->diffForHumans() ?? '')
-                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('event')
-                    ->label('Event Type')
+                    ->label('Filter by Activity')
                     ->options([
                         AuditLog::EVENT_CREATED => 'Created',
                         AuditLog::EVENT_UPDATED => 'Updated',
                         AuditLog::EVENT_DELETED => 'Deleted',
                         AuditLog::EVENT_RESTORED => 'Restored',
-                        AuditLog::EVENT_FORCE_DELETED => 'Force Deleted',
-                        AuditLog::EVENT_LOGIN => 'User Login',
-                        AuditLog::EVENT_LOGOUT => 'User Logout',
+                        AuditLog::EVENT_FORCE_DELETED => 'Permanently Purged',
+                        AuditLog::EVENT_LOGIN => 'User Sign-In',
+                        AuditLog::EVENT_LOGOUT => 'User Sign-Out',
                         AuditLog::EVENT_VERIFIED => 'Document Verified',
                         AuditLog::EVENT_CONVERTED => 'Quotation Converted',
                     ]),
 
                 SelectFilter::make('auditable_type')
-                    ->label('Target Module')
+                    ->label('Filter by Module')
                     ->options([
                         User::class => 'User Accounts',
                         Quotation::class => 'Quotations',
@@ -160,7 +170,7 @@ class ActivityLogResource extends Resource
                     ]),
 
                 SelectFilter::make('user_id')
-                    ->label('Actor')
+                    ->label('Filter by Actor')
                     ->relationship('user', 'name')
                     ->searchable()
                     ->preload(),
@@ -170,8 +180,8 @@ class ActivityLogResource extends Resource
                     ->label('Inspect')
                     ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->modalHeading(fn(AuditLog $record): string => "Activity Audit Inspection: " . strtoupper($record->event))
-                    ->modalDescription(fn(AuditLog $record): string => $record->description ?: $record->action)
+                    ->modalHeading(fn(AuditLog $record): string => "Activity Audit Inspection: " . strtoupper(str_replace('_', ' ', $record->event)))
+                    ->modalDescription(fn(AuditLog $record): string => $record->subject_name)
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close')
                     ->modalWidth('4xl')

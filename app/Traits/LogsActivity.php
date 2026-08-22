@@ -11,13 +11,15 @@ trait LogsActivity
     {
         static::created(function (Model $model) {
             if (static::shouldLogActivity('created')) {
-                $description = 'Created ' . class_basename($model) . ' ' . static::getActivitySubjectIdentifier($model);
+                $description = static::buildCreatedSummary($model);
+                $cleanAttributes = static::extractMeaningfulAttributes($model);
+
                 AuditLog::logActivity(
                     description: $description,
                     auditable: $model,
                     event: AuditLog::EVENT_CREATED,
                     oldValue: null,
-                    newValue: static::sanitizeAuditAttributes($model->getAttributes()),
+                    newValue: $cleanAttributes,
                     action: 'created'
                 );
             }
@@ -26,20 +28,31 @@ trait LogsActivity
         static::updated(function (Model $model) {
             if (static::shouldLogActivity('updated')) {
                 $dirty = $model->getDirty();
-                // Filter out timestamps and ignored attributes
-                $ignored = array_merge($model->getHidden(), ['updated_at', 'remember_token']);
+                $ignored = array_merge($model->getHidden(), [
+                    'id', 'created_at', 'updated_at', 'deleted_at', 'remember_token', 'password'
+                ]);
                 $filteredDirty = array_diff_key($dirty, array_flip($ignored));
 
-                if (!empty($filteredDirty)) {
-                    $original = array_intersect_key($model->getOriginal(), $filteredDirty);
-                    $description = 'Updated ' . class_basename($model) . ' ' . static::getActivitySubjectIdentifier($model) . ' (' . implode(', ', array_keys($filteredDirty)) . ')';
-                    
+                // Only log if actual values changed
+                $changes = [];
+                $original = [];
+                foreach ($filteredDirty as $key => $newVal) {
+                    $oldVal = $model->getOriginal($key);
+                    if ($oldVal != $newVal) {
+                        $original[$key] = $oldVal;
+                        $changes[$key] = $newVal;
+                    }
+                }
+
+                if (!empty($changes)) {
+                    $description = static::buildUpdatedSummary($model, $original, $changes);
+
                     AuditLog::logActivity(
                         description: $description,
                         auditable: $model,
                         event: AuditLog::EVENT_UPDATED,
                         oldValue: static::sanitizeAuditAttributes($original),
-                        newValue: static::sanitizeAuditAttributes($filteredDirty),
+                        newValue: static::sanitizeAuditAttributes($changes),
                         action: 'updated'
                     );
                 }
@@ -48,18 +61,16 @@ trait LogsActivity
 
         static::deleted(function (Model $model) {
             if (static::shouldLogActivity('deleted')) {
-                $event = method_exists($model, 'isForceDeleting') && $model->isForceDeleting()
-                    ? AuditLog::EVENT_FORCE_DELETED
-                    : AuditLog::EVENT_DELETED;
-
-                $prefix = $event === AuditLog::EVENT_FORCE_DELETED ? 'Permanently deleted ' : 'Deleted ';
-                $description = $prefix . class_basename($model) . ' ' . static::getActivitySubjectIdentifier($model);
+                $isForce = method_exists($model, 'isForceDeleting') && $model->isForceDeleting();
+                $event = $isForce ? AuditLog::EVENT_FORCE_DELETED : AuditLog::EVENT_DELETED;
+                $actionName = $isForce ? 'Permanently deleted' : 'Deleted';
+                $description = "{$actionName} " . class_basename($model) . ' ' . static::getActivitySubjectIdentifier($model);
 
                 AuditLog::logActivity(
                     description: $description,
                     auditable: $model,
                     event: $event,
-                    oldValue: static::sanitizeAuditAttributes($model->getOriginal() ?: $model->getAttributes()),
+                    oldValue: static::extractMeaningfulAttributes($model),
                     newValue: null,
                     action: $event
                 );
@@ -75,7 +86,7 @@ trait LogsActivity
                         auditable: $model,
                         event: AuditLog::EVENT_RESTORED,
                         oldValue: null,
-                        newValue: static::sanitizeAuditAttributes($model->getAttributes()),
+                        newValue: static::extractMeaningfulAttributes($model),
                         action: 'restored'
                     );
                 }
@@ -116,6 +127,82 @@ trait LogsActivity
         }
 
         return "#{$model->getKey()}";
+    }
+
+    protected static function buildCreatedSummary(Model $model): string
+    {
+        $base = class_basename($model);
+        $ident = static::getActivitySubjectIdentifier($model);
+
+        if (isset($model->total_amount)) {
+            $formatted = number_format((float)$model->total_amount, 2);
+            return "Created {$base} {$ident} (Total: ₱{$formatted})";
+        }
+        if (isset($model->default_price)) {
+            $formatted = number_format((float)$model->default_price, 2);
+            return "Created {$base} {$ident} at ₱{$formatted}";
+        }
+        if (isset($model->role)) {
+            return "Created user account {$ident} as {$model->role}";
+        }
+
+        return "Created {$base} {$ident}";
+    }
+
+    protected static function buildUpdatedSummary(Model $model, array $old, array $new): string
+    {
+        $base = class_basename($model);
+        $ident = static::getActivitySubjectIdentifier($model);
+        $fieldCount = count($new);
+
+        // Highlight common high-impact business field changes
+        $highlights = [];
+        if (isset($new['status'])) {
+            $oldSt = ucwords(str_replace('_', ' ', (string)($old['status'] ?? 'None')));
+            $newSt = ucwords(str_replace('_', ' ', (string)$new['status']));
+            $highlights[] = "Status: {$oldSt} → {$newSt}";
+        }
+        if (isset($new['delivery_status'])) {
+            $oldSt = ucwords(str_replace('_', ' ', (string)($old['delivery_status'] ?? 'None')));
+            $newSt = ucwords(str_replace('_', ' ', (string)$new['delivery_status']));
+            $highlights[] = "Delivery: {$oldSt} → {$newSt}";
+        }
+        if (isset($new['total_amount'])) {
+            $oldVal = number_format((float)($old['total_amount'] ?? 0), 2);
+            $newVal = number_format((float)$new['total_amount'], 2);
+            $highlights[] = "Amount: ₱{$oldVal} → ₱{$newVal}";
+        }
+        if (isset($new['default_price'])) {
+            $oldVal = number_format((float)($old['default_price'] ?? 0), 2);
+            $newVal = number_format((float)$new['default_price'], 2);
+            $highlights[] = "Price: ₱{$oldVal} → ₱{$newVal}";
+        }
+        if (isset($new['role'])) {
+            $highlights[] = "Role: " . ($old['role'] ?? 'None') . " → {$new['role']}";
+        }
+
+        if (!empty($highlights)) {
+            $extra = ($fieldCount > count($highlights)) ? ' (+' . ($fieldCount - count($highlights)) . ' other fields)' : '';
+            return "Updated {$base} {$ident} — " . implode(', ', $highlights) . $extra;
+        }
+
+        $fieldNames = implode(', ', array_map(fn($f) => ucwords(str_replace('_', ' ', $f)), array_keys($new)));
+        return "Updated {$base} {$ident} ({$fieldNames})";
+    }
+
+    protected static function extractMeaningfulAttributes(Model $model): array
+    {
+        $raw = $model->getAttributes();
+        $ignored = array_merge($model->getHidden(), [
+            'id', 'created_at', 'updated_at', 'deleted_at', 'remember_token', 'password'
+        ]);
+
+        $filtered = array_diff_key($raw, array_flip($ignored));
+
+        // Strip null or empty string values for cleaner storage
+        $meaningful = array_filter($filtered, fn($v) => $v !== null && $v !== '');
+
+        return static::sanitizeAuditAttributes($meaningful);
     }
 
     protected static function sanitizeAuditAttributes(array $attributes): array
