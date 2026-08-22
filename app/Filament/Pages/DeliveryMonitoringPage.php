@@ -57,10 +57,10 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                 TextColumn::make('delivery_status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'in_transit' => 'warning',
-                        'delivered' => 'success',
-                        'overdue' => 'danger',
+                        PurchaseOrder::DELIVERY_PENDING, 'pending' => 'warning',
+                        PurchaseOrder::DELIVERY_TRANSIT, 'in_transit' => 'info',
+                        PurchaseOrder::DELIVERY_DELIVERED, 'delivered' => 'success',
+                        PurchaseOrder::DELIVERY_OVERDUE, 'overdue' => 'danger',
                         default => 'gray',
                     }),
                 TextColumn::make('delivery_receipt_no')

@@ -221,7 +221,7 @@ class SalesInvoiceResource extends Resource
                     ->label('Payment')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'unpaid' => 'danger',
+                        'unpaid', 'cancelled' => 'danger',
                         'partial' => 'warning',
                         'paid' => 'success',
                         default => 'gray',

@@ -150,8 +150,9 @@ class DeliveryReceiptResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'draft' => 'gray',
+                        'in_transit', 'pending' => 'warning',
                         'delivered' => 'success',
-                        'cancelled' => 'danger',
+                        'cancelled', 'rejected' => 'danger',
                         default => 'gray',
                     }),
             ])

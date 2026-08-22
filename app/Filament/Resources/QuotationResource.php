@@ -343,15 +343,16 @@ class QuotationResource extends Resource
         if ($record->isRejected()) {
             return 'danger';
         }
-        if ($record->is_official_po || $state === Quotation::STATUS_CONVERTED || ($record->isApproved() && $record->isReviewed())) {
+        if ($record->is_official_po || $state === Quotation::STATUS_CONVERTED || $record->isApproved()) {
             return 'success';
         }
-        if ($record->isApproved() || $record->isReviewed()) {
+        if ($record->isReviewed()) {
             return 'info';
         }
         return match ($state) {
             Quotation::STATUS_PENDING => 'warning',
-            Quotation::STATUS_APPROVED => 'info',
+            Quotation::STATUS_REVIEWED => 'info',
+            Quotation::STATUS_APPROVED => 'success',
             Quotation::STATUS_REJECTED => 'danger',
             Quotation::STATUS_CONVERTED => 'success',
             default => 'gray',

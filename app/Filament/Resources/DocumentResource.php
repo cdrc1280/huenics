@@ -178,8 +178,7 @@ class DocumentResource extends Resource
                             Document::STATUS_PROCESSING => 'info',
                             Document::STATUS_REQUIRES_REVIEW => 'warning',
                             Document::STATUS_VERIFIED => 'success',
-                            Document::STATUS_FAILED => 'danger',
-                            Document::STATUS_REJECTED => 'gray',
+                            Document::STATUS_FAILED, Document::STATUS_REJECTED => 'danger',
                             default => 'gray',
                         }
                     )
