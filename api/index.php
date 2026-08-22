@@ -94,19 +94,6 @@ try {
     $app = require_once __DIR__ . '/../bootstrap/app.php';
     $app->useStoragePath('/tmp/storage');
 
-    if ($isLocalDb) {
-        try {
-            if (!\Illuminate\Support\Facades\Schema::connection('sqlite')->hasColumn('products', 'deleted_at')) {
-                \Illuminate\Support\Facades\Artisan::call('migrate', [
-                    '--database' => 'sqlite',
-                    '--force' => true,
-                ]);
-            }
-        } catch (\Throwable $migE) {
-            // Continue
-        }
-    }
-
     $app->handleRequest(
         \Illuminate\Http\Request::capture()
     );
