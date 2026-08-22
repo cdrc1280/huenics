@@ -392,287 +392,333 @@ class PurchaseOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                TextColumn::make('po_number')
-                    ->label('PO #')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->copyable()
-                    ->tooltip('Click to copy Purchase Order #'),
+            ->columns(static::getTableColumns())
+            ->defaultSort('created_at', 'desc')
+            ->filters(static::getTableFilters())
+            ->actions(static::getTableActions(), position: RecordActionsPosition::BeforeColumns)
+            ->bulkActions(static::getTableBulkActions());
+    }
 
-                TextColumn::make('customer_name')
-                    ->label('Customer')
-                    ->searchable()
-                    ->sortable()
-                    ->tooltip(fn(PurchaseOrder $record): string => "Customer: {$record->customer_name}"),
+    protected static function getTableColumns(): array
+    {
+        return [
+            TextColumn::make('po_number')
+                ->label('PO #')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->copyable()
+                ->tooltip('Click to copy Purchase Order #'),
 
-                TextColumn::make('salesAgent.name')
-                    ->label('Agent')
-                    ->sortable()
-                    ->tooltip(fn(PurchaseOrder $record): string => "Sales executive credited: " . ($record->salesAgent?->name ?? 'Unassigned')),
+            TextColumn::make('customer_name')
+                ->label('Customer')
+                ->searchable()
+                ->sortable()
+                ->tooltip(fn(PurchaseOrder $record): string => "Customer: {$record->customer_name}"),
 
-                TextColumn::make('project.name')
-                    ->label('Project')
-                    ->sortable()
-                    ->default('—')
-                    ->tooltip(fn(PurchaseOrder $record): string => "Project Site: " . ($record->project?->name ?? 'General / None')),
+            TextColumn::make('salesAgent.name')
+                ->label('Agent')
+                ->sortable()
+                ->tooltip(fn(PurchaseOrder $record): string => "Sales executive credited: " . ($record->salesAgent?->name ?? 'Unassigned')),
 
-                TextColumn::make('quotation.quotation_number')
-                    ->label('Quotation #')
-                    ->sortable()
-                    ->searchable()
-                    ->default('—')
-                    ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Linked Quotation: {$record->quotation->quotation_number}" : 'No linked quotation')
-                    ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('project.name')
+                ->label('Project')
+                ->sortable()
+                ->default('—')
+                ->tooltip(fn(PurchaseOrder $record): string => "Project Site: " . ($record->project?->name ?? 'General / None')),
 
-                TextColumn::make('order_amount')
-                    ->label('Order Amount')
-                    ->money('PHP')
-                    ->sortable()
-                    ->tooltip(fn(PurchaseOrder $record): string => "Gross order amount (includes 12% VAT): ₱" . number_format((float) $record->order_amount, 2)),
+            TextColumn::make('quotation.quotation_number')
+                ->label('Quotation #')
+                ->sortable()
+                ->searchable()
+                ->default('—')
+                ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Linked Quotation: {$record->quotation->quotation_number}" : 'No linked quotation')
+                ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('realized_profit')
-                    ->label('Profit')
-                    ->money('PHP')
-                    ->sortable()
-                    ->color(fn($state) => $state > 0 ? 'success' : 'danger')
-                    ->tooltip(fn(PurchaseOrder $record): string => "Realized net profit (Order Amount minus Total Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+            TextColumn::make('order_amount')
+                ->label('Order Amount')
+                ->money('PHP')
+                ->sortable()
+                ->tooltip(fn(PurchaseOrder $record): string => "Gross order amount (includes 12% VAT): ₱" . number_format((float) $record->order_amount, 2)),
 
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        PurchaseOrder::STATUS_PENDING => 'Pending Delivery',
-                        PurchaseOrder::STATUS_DELIVERED => 'Delivered',
-                        PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
-                        PurchaseOrder::STATUS_REJECTED => 'Rejected',
-                        default => ucfirst(str_replace('_', ' ', $state)),
-                    })
-                    ->color(fn(string $state): string => match ($state) {
-                        PurchaseOrder::STATUS_PENDING => 'warning',
-                        PurchaseOrder::STATUS_DELIVERED => 'success',
-                        PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED => 'danger',
-                        default => 'gray',
+            TextColumn::make('realized_profit')
+                ->label('Profit')
+                ->money('PHP')
+                ->sortable()
+                ->color(fn($state) => $state > 0 ? 'success' : 'danger')
+                ->tooltip(fn(PurchaseOrder $record): string => "Realized net profit (Order Amount minus Total Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+
+            TextColumn::make('status')
+                ->label('Status')
+                ->badge()
+                ->formatStateUsing(fn(string $state): string => match ($state) {
+                    PurchaseOrder::STATUS_PENDING => 'Pending Delivery',
+                    PurchaseOrder::STATUS_DELIVERED => 'Delivered',
+                    PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
+                    PurchaseOrder::STATUS_REJECTED => 'Rejected',
+                    default => ucfirst(str_replace('_', ' ', $state)),
+                })
+                ->colors([
+                    'warning' => PurchaseOrder::STATUS_PENDING,
+                    'success' => PurchaseOrder::STATUS_DELIVERED,
+                    'danger' => fn($state) => in_array($state, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED]),
+                ]),
+
+            TextColumn::make('delivery_status')
+                ->label('Delivery')
+                ->badge()
+                ->formatStateUsing(fn(string $state): string => match ($state) {
+                    PurchaseOrder::DELIVERY_PENDING => 'Pending',
+                    PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
+                    PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
+                    PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
+                    default => $state,
+                })
+                ->color(fn(string $state): string => match ($state) {
+                    PurchaseOrder::DELIVERY_PENDING => 'warning',
+                    PurchaseOrder::DELIVERY_TRANSIT => 'info',
+                    PurchaseOrder::DELIVERY_DELIVERED => 'success',
+                    PurchaseOrder::DELIVERY_OVERDUE => 'danger',
+                    default => 'gray',
+                }),
+
+            TextColumn::make('expected_delivery_date')
+                ->label('Est. Delivery')
+                ->date('M j, Y')
+                ->sortable()
+                ->color(fn(PurchaseOrder $record): ?string => $record->is_overdue ? 'danger' : null)
+                ->tooltip(fn(PurchaseOrder $record): string => $record->is_overdue ? 'Delivery is past the estimated arrival date' : 'Expected delivery schedule'),
+
+            TextColumn::make('actual_delivery_date')
+                ->label('Delivered On')
+                ->date('M j, Y')
+                ->placeholder('—')
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            TextColumn::make('delivery_receipt_no')
+                ->label('DR #')
+                ->searchable()
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            TextColumn::make('warranty_status')
+                ->label('Warranty')
+                ->badge()
+                ->formatStateUsing(fn(string $state): string => match ($state) {
+                    PurchaseOrder::WARRANTY_ACTIVE => 'Active',
+                    PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
+                    PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
+                    PurchaseOrder::WARRANTY_NONE => 'No Warranty',
+                    default => $state,
+                })
+                ->color(fn(string $state): string => match ($state) {
+                    PurchaseOrder::WARRANTY_ACTIVE => 'success',
+                    PurchaseOrder::WARRANTY_EXPIRING => 'warning',
+                    PurchaseOrder::WARRANTY_EXPIRED => 'danger',
+                    PurchaseOrder::WARRANTY_NONE => 'gray',
+                    default => 'gray',
+                })
+                ->tooltip(function (PurchaseOrder $record): string {
+                    $status = $record->warranty_status;
+                    if ($record->warranty_end_date) {
+                        $formatted = \Carbon\Carbon::parse($record->warranty_end_date)->format('M d, Y');
+                        return "Warranty status: {$status} (Expires {$formatted})";
+                    }
+                    return "Warranty status: {$status}";
+                }),
+
+            TextColumn::make('warranty_period')
+                ->label('Warranty Period')
+                ->formatStateUsing(fn(string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state)
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->tooltip('Chosen warranty coverage duration'),
+
+            TextColumn::make('order_date')
+                ->label('Order Date')
+                ->date('M j, Y')
+                ->sortable(),
+
+            TextColumn::make('warranty_end_date')
+                ->label('Warranty Expiry')
+                ->date('M j, Y')
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->tooltip('Exact expiration date of product warranty coverage'),
+        ];
+    }
+
+    protected static function getTableFilters(): array
+    {
+        return [
+            Tables\Filters\SelectFilter::make('delivery_status')
+                ->label('Delivery Status')
+                ->options([
+                    PurchaseOrder::DELIVERY_PENDING => 'Pending',
+                    PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
+                    PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
+                    PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
+                ]),
+
+            Tables\Filters\SelectFilter::make('warranty_status')
+                ->label('Warranty Status')
+                ->options([
+                    PurchaseOrder::WARRANTY_ACTIVE => 'Active',
+                    PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
+                    PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
+                    PurchaseOrder::WARRANTY_NONE => 'No Warranty',
+                ]),
+
+            Tables\Filters\SelectFilter::make('sales_agent_id')
+                ->label('Sales Agent')
+                ->options(User::whereIn('role', [
+                    User::ROLE_SALES_EXECUTIVE,
+                    User::ROLE_ADMIN,
+                    User::ROLE_OPERATIONS_MANAGER,
+                    User::ROLE_CEO,
+                ])->pluck('name', 'id')),
+
+            TrashedFilter::make(),
+        ];
+    }
+
+    protected static function getTableActions(): array
+    {
+        return [
+            ActionGroup::make([
+                Action::make('approve_po')
+                    ->label('Approve PO')
+                    ->icon('heroicon-m-check-circle')
+                    ->color('success')
+                    ->tooltip('Approve purchase order to authorize fulfillment and delivery')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                    ->requiresConfirmation()
+                    ->action(function (PurchaseOrder $record) {
+                        $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
+                        if ($record->document) {
+                            $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                        }
+                        Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
                     }),
 
-                TextColumn::make('delivery_status')
-                    ->label('Delivery')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        PurchaseOrder::DELIVERY_PENDING => 'Pending',
-                        PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
-                        PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
-                        PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
-                        default => $state,
+                Action::make('review')
+                    ->label('Review & Verify')
+                    ->icon('heroicon-m-clipboard-document-check')
+                    ->color('warning')
+                    ->tooltip('Review, verify math and reconcile purchase order line items')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                    ->url(function (PurchaseOrder $record) {
+                        if ($record->document_id) {
+                            return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
+                        }
+                        return null;
                     })
-                    ->color(fn(string $state): string => match ($state) {
-                        PurchaseOrder::DELIVERY_PENDING => 'warning',
-                        PurchaseOrder::DELIVERY_TRANSIT => 'info',
-                        PurchaseOrder::DELIVERY_DELIVERED => 'success',
-                        PurchaseOrder::DELIVERY_OVERDUE => 'danger',
-                        default => 'gray',
-                    })
-                    ->tooltip(fn(PurchaseOrder $record): string => "Delivery status: {$record->delivery_status}" . ($record->delivery_receipt_no ? " (DR# {$record->delivery_receipt_no})" : '')),
+                    ->action(function (PurchaseOrder $record) {
+                        if ($record->document_id) {
+                            return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
+                        }
+                        Notification::make()->title('No attached document for review')->info()->send();
+                    }),
 
-                TextColumn::make('warranty_status')
-                    ->label('Warranty')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        PurchaseOrder::WARRANTY_ACTIVE => 'Active',
-                        PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
-                        PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
-                        PurchaseOrder::WARRANTY_NONE => 'No Warranty',
-                        default => $state,
-                    })
-                    ->color(fn(string $state): string => match ($state) {
-                        PurchaseOrder::WARRANTY_ACTIVE => 'success',
-                        PurchaseOrder::WARRANTY_EXPIRING => 'warning',
-                        PurchaseOrder::WARRANTY_EXPIRED => 'danger',
-                        PurchaseOrder::WARRANTY_NONE => 'gray',
-                        default => 'gray',
-                    })
-                    ->tooltip(fn(PurchaseOrder $record): string => "Warranty status: {$record->warranty_status}" . ($record->warranty_end_date ? " (Expires " . (is_string($record->warranty_end_date) ? \Carbon\Carbon::parse($record->warranty_end_date)->format('M d, Y') : $record->warranty_end_date->format('M d, Y')) . ")" : '')),
+                Action::make('mark_delivered')
+                    ->label('Mark Delivered')
+                    ->icon('heroicon-m-check-badge')
+                    ->color('success')
+                    ->tooltip('Mark this purchase order as delivered')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                    ->form([
+                        DatePicker::make('actual_delivery_date')
+                            ->label('Actual Delivery Date')
+                            ->default(now())
+                            ->required(),
+                        TextInput::make('delivery_receipt_no')
+                            ->label('DR # (Delivery Receipt No.)')
+                            ->nullable(),
+                        Toggle::make('has_warranty')
+                            ->label('Include Warranty')
+                            ->default(fn($record) => $record->has_warranty ?? true)
+                            ->live(),
+                        Select::make('warranty_period')
+                            ->label('Warranty Period')
+                            ->options(PurchaseOrder::getWarrantyPeriodOptions())
+                            ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                            ->visible(fn($get) => (bool) $get('has_warranty')),
+                    ])
+                    ->action(function (PurchaseOrder $record, array $data) {
+                        if (!$record->isApproved()) {
+                            Notification::make()->title('Action Blocked')->body('Purchase Order must be approved before delivery can be marked.')->danger()->send();
+                            return;
+                        }
 
-                TextColumn::make('warranty_period')
-                    ->label('Warranty Period')
-                    ->formatStateUsing(fn(string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state)
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->tooltip('Chosen warranty coverage duration'),
+                        $record->update([
+                            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+                            'status' => PurchaseOrder::STATUS_DELIVERED,
+                            'delivery_receipt_no' => $data['delivery_receipt_no'] ?? null,
+                            'actual_delivery_date' => $data['actual_delivery_date'],
+                            'has_warranty' => $data['has_warranty'] ?? true,
+                            'warranty_period' => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
+                        ]);
 
-                TextColumn::make('order_date')
-                    ->label('Order Date')
-                    ->date('M j, Y')
-                    ->sortable(),
+                        Notification::make()
+                            ->title('Delivery Confirmed')
+                            ->body("PO {$record->po_number} marked as delivered. Inventory deducted & warranty activated.")
+                            ->success()
+                            ->send();
+                    }),
 
-                TextColumn::make('warranty_end_date')
-                    ->label('Warranty Expiry')
-                    ->date('M j, Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->tooltip('Exact expiration date of product warranty coverage'),
-            ])
-            ->defaultSort('created_at', 'desc')
-            ->filters([
-                Tables\Filters\SelectFilter::make('delivery_status')
-                    ->label('Delivery Status')
-                    ->options([
-                        PurchaseOrder::DELIVERY_PENDING => 'Pending',
-                        PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
-                        PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
-                        PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
-                    ]),
+                Action::make('create_dr')
+                    ->label('Create DR')
+                    ->icon('heroicon-m-truck')
+                    ->color('info')
+                    ->tooltip('Create a Delivery Receipt (DR) for this purchase order')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
+                    ->url(fn(PurchaseOrder $r): string => url('/admin/delivery-receipts/create?purchase_order_id=' . $r->id)),
 
-                Tables\Filters\SelectFilter::make('warranty_status')
-                    ->label('Warranty Status')
-                    ->options([
-                        PurchaseOrder::WARRANTY_ACTIVE => 'Active',
-                        PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
-                        PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
-                        PurchaseOrder::WARRANTY_NONE => 'No Warranty',
-                    ]),
+                Action::make('create_si')
+                    ->label('Create SI')
+                    ->icon('heroicon-m-receipt-percent')
+                    ->color('warning')
+                    ->tooltip('Create a Sales Invoice (SI) for this purchase order')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
+                    ->url(fn(PurchaseOrder $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->id)),
 
-                Tables\Filters\SelectFilter::make('sales_agent_id')
-                    ->label('Sales Agent')
-                    ->options(User::whereIn('role', [
-                        User::ROLE_SALES_EXECUTIVE,
-                        User::ROLE_ADMIN,
-                        User::ROLE_OPERATIONS_MANAGER,
-                    ])->pluck('name', 'id')),
+                Action::make('delivery_tracker')
+                    ->label('Delivery Tracker')
+                    ->icon('heroicon-m-clock')
+                    ->color('info')
+                    ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
+                    ->url(fn() => DeliveryMonitoringPage::getUrl()),
 
-                TrashedFilter::make(),
-            ])
-            ->actions([
-                ActionGroup::make([
-                    Action::make('approve_po')
-                        ->label('Approve PO')
-                        ->icon('heroicon-m-check-circle')
-                        ->color('success')
-                        ->tooltip('Approve purchase order to authorize fulfillment and delivery')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
-                        ->requiresConfirmation()
-                        ->action(function (PurchaseOrder $record) {
-                            $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
-                            if ($record->document) {
-                                $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
-                            }
-                            Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
-                        }),
+                Action::make('cancel_po')
+                    ->label('Cancel PO')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                    ->requiresConfirmation()
+                    ->action(function (PurchaseOrder $record) {
+                        $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
+                        Notification::make()->title('PO Cancelled')->warning()->send();
+                    }),
 
-                    Action::make('review')
-                        ->label('Review & Verify')
-                        ->icon('heroicon-m-clipboard-document-check')
-                        ->color('warning')
-                        ->tooltip('Review, verify math and reconcile purchase order line items')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
-                        ->url(function (PurchaseOrder $record) {
-                            if ($record->document_id) {
-                                return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
-                            }
-                            return null;
-                        })
-                        ->action(function (PurchaseOrder $record) {
-                            if ($record->document_id) {
-                                return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
-                            }
-                            Notification::make()->title('No attached document for review')->info()->send();
-                        }),
+                EditAction::make(),
+                ViewAction::make(),
+                DeleteAction::make()->requiresConfirmation(),
+                RestoreAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed()),
+                ForceDeleteAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+            ]),
+        ];
+    }
 
-                    Action::make('mark_delivered')
-                        ->label('Mark Delivered')
-                        ->icon('heroicon-m-check-badge')
-                        ->color('success')
-                        ->tooltip('Mark this purchase order as delivered')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
-                        ->form([
-                            DatePicker::make('actual_delivery_date')
-                                ->label('Actual Delivery Date')
-                                ->default(now())
-                                ->required(),
-                            TextInput::make('delivery_receipt_no')
-                                ->label('DR # (Delivery Receipt No.)')
-                                ->nullable(),
-                            Toggle::make('has_warranty')
-                                ->label('Include Warranty')
-                                ->default(fn($record) => $record->has_warranty ?? true)
-                                ->live(),
-                            Select::make('warranty_period')
-                                ->label('Warranty Period')
-                                ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                                ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
-                                ->visible(fn($get) => (bool) $get('has_warranty')),
-                        ])
-                        ->action(function (PurchaseOrder $record, array $data) {
-                            if (!$record->isApproved()) {
-                                Notification::make()->title('Action Blocked')->body('Purchase Order must be approved before delivery can be marked.')->danger()->send();
-                                return;
-                            }
-
-                            $record->update([
-                                'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
-                                'status' => PurchaseOrder::STATUS_DELIVERED,
-                                'delivery_receipt_no' => $data['delivery_receipt_no'] ?? null,
-                                'actual_delivery_date' => $data['actual_delivery_date'],
-                                'has_warranty' => $data['has_warranty'] ?? true,
-                                'warranty_period' => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
-                            ]);
-
-                            Notification::make()
-                                ->title('Delivery Confirmed')
-                                ->body("PO {$record->po_number} marked as delivered. Inventory deducted & warranty activated.")
-                                ->success()
-                                ->send();
-                        }),
-
-                    Action::make('create_dr')
-                        ->label('Create DR')
-                        ->icon('heroicon-m-truck')
-                        ->color('info')
-                        ->tooltip('Create a Delivery Receipt (DR) for this purchase order')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
-                        ->url(fn(PurchaseOrder $r): string => url('/admin/delivery-receipts/create?purchase_order_id=' . $r->id)),
-
-                    Action::make('create_si')
-                        ->label('Create SI')
-                        ->icon('heroicon-m-receipt-percent')
-                        ->color('warning')
-                        ->tooltip('Create a Sales Invoice (SI) for this purchase order')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
-                        ->url(fn(PurchaseOrder $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->id)),
-
-                    Action::make('delivery_tracker')
-                        ->label('Delivery Tracker')
-                        ->icon('heroicon-m-clock')
-                        ->color('info')
-                        ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
-                        ->url(fn() => DeliveryMonitoringPage::getUrl()),
-
-                    Action::make('cancel_po')
-                        ->label('Cancel PO')
-                        ->icon('heroicon-m-x-circle')
-                        ->color('danger')
-                        ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
-                        ->requiresConfirmation()
-                        ->action(function (PurchaseOrder $record) {
-                            $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
-                            Notification::make()->title('PO Cancelled')->warning()->send();
-                        }),
-
-                    EditAction::make(),
-                    ViewAction::make(),
-                    DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
-                ]),
-            ], position: RecordActionsPosition::BeforeColumns)
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make()->requiresConfirmation(),
-                    RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
-                ]),
-            ]);
+    protected static function getTableBulkActions(): array
+    {
+        return [
+            BulkActionGroup::make([
+                DeleteBulkAction::make()->requiresConfirmation(),
+                RestoreBulkAction::make()->requiresConfirmation(),
+                ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+            ]),
+        ];
     }
 
     public static function getPages(): array

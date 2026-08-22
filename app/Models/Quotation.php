@@ -9,7 +9,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+/**
+ * @property int $id
+ * @property string $quotation_number
+ * @property int|null $document_id
+ * @property int|null $sales_agent_id
+ * @property string|null $customer_name
+ * @property string|null $customer_company
+ * @property int|null $project_id
+ * @property string|null $project_name
+ * @property float $total_amount
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $quotation_date
+ * @property \Illuminate\Support\Carbon|null $valid_until
+ * @property bool $is_official_po
+ * @property string|null $official_po_number
+ * @property string|null $customer_signature_name
+ * @property \Illuminate\Support\Carbon|null $signed_at
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Quotation extends Model
 {
     use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
@@ -171,7 +192,7 @@ class Quotation extends Model
 
     public function getIsExpiredAttribute(): bool
     {
-        return $this->valid_until && $this->valid_until->isPast();
+        return $this->valid_until && \Carbon\Carbon::parse($this->valid_until)->isPast();
     }
 
     public function getStatusLabelAttribute(): string

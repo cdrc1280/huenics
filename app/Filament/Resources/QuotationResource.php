@@ -421,8 +421,8 @@ class QuotationResource extends Resource
                 ->label('Valid Until')
                 ->date('M j, Y')
                 ->sortable()
-                ->color(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'danger' : null)
-                ->tooltip(fn($record) => $record->valid_until && $record->valid_until->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
+                ->color(fn(Quotation $record): ?string => $record->valid_until && \Carbon\Carbon::parse($record->valid_until)->isPast() ? 'danger' : null)
+                ->tooltip(fn(Quotation $record): string => $record->valid_until && \Carbon\Carbon::parse($record->valid_until)->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
         ];
     }
 

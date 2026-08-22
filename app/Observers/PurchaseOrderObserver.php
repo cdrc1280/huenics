@@ -44,7 +44,7 @@ class PurchaseOrderObserver
         // 1. If actual_delivery_date is cleared/empty
         if (empty($po->actual_delivery_date)) {
             if ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) {
-                $po->delivery_status = ($po->expected_delivery_date && $po->expected_delivery_date->isPast())
+                $po->delivery_status = ($po->expected_delivery_date && \Carbon\Carbon::parse($po->expected_delivery_date)->isPast())
                     ? PurchaseOrder::DELIVERY_OVERDUE
                     : PurchaseOrder::DELIVERY_PENDING;
             }
@@ -157,7 +157,7 @@ class PurchaseOrderObserver
             if (
                 $po->delivery_status === PurchaseOrder::DELIVERY_PENDING
                 && $po->expected_delivery_date
-                && $po->expected_delivery_date->isPast()
+                && \Carbon\Carbon::parse($po->expected_delivery_date)->isPast()
             ) {
                 $po->updateQuietly(['delivery_status' => PurchaseOrder::DELIVERY_OVERDUE]);
 
@@ -166,6 +166,7 @@ class PurchaseOrderObserver
                     \App\Models\User::ROLE_ADMIN,
                     \App\Models\User::ROLE_OPERATIONS_MANAGER,
                     \App\Models\User::ROLE_SALES_EXECUTIVE,
+                    \App\Models\User::ROLE_CEO,
                 ])->get();
 
                 foreach ($recipients as $user) {
