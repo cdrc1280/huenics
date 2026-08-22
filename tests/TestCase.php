@@ -6,11 +6,17 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    protected function setUp(): void
+    public function createApplication()
     {
-        parent::setUp();
+        putenv('DB_CONNECTION=sqlite');
+        putenv('DB_DATABASE=:memory:');
+        $_ENV['DB_CONNECTION'] = 'sqlite';
+        $_ENV['DB_DATABASE'] = ':memory:';
 
-        config(['database.default' => 'sqlite']);
-        config(['database.connections.sqlite.database' => ':memory:']);
+        $app = require __DIR__ . '/../bootstrap/app.php';
+
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+        return $app;
     }
 }
