@@ -24,15 +24,14 @@ class DocumentStatsOverview extends BaseWidget
 
         // Mismatch rate calculation
         $allDocs = Document::with('totals', 'lineItems')->get();
-        $mismatchDocsCount = $allDocs->filter(fn ($doc) => $doc->hasMismatches())->count();
+        $mismatchDocsCount = $allDocs->filter(fn($doc) => $doc->hasMismatches())->count();
         $mismatchRate = $totalDocs > 0 ? round(($mismatchDocsCount / $totalDocs) * 100, 1) : 0.0;
 
         return [
             Stat::make('Pending Verification', $pendingCount)
                 ->description($pendingCount > 0 ? 'Requires attention in Review Queue' : 'Queue is all clear')
                 ->descriptionIcon('heroicon-m-clock')
-                ->color($pendingCount > 0 ? 'warning' : 'success')
-                ->url(ReviewQueuePage::getUrl()),
+                ->color($pendingCount > 0 ? 'warning' : 'success'),
 
             Stat::make('Verified Transaction Volume', '₱' . number_format($monthlyVerifiedAmount, 2))
                 ->description('This month\'s confirmed transactions')

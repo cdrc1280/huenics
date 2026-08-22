@@ -81,22 +81,32 @@ class Quotation extends Model
 
     public function isReviewed(): bool
     {
-        return $this->reviewed_by !== null;
+        return $this->reviewed_by !== null || in_array($this->status, [self::STATUS_REVIEWED, 'reviewed'], true);
     }
 
     public function isApproved(): bool
     {
-        return $this->status === self::STATUS_APPROVED;
+        return in_array($this->status, [self::STATUS_APPROVED, 'approved'], true)
+            || !empty($this->approved_by);
     }
 
     public function isRejected(): bool
     {
-        return $this->status === self::STATUS_REJECTED;
+        return in_array($this->status, [self::STATUS_REJECTED, 'rejected'], true);
+    }
+
+    public function isConverted(): bool
+    {
+        return in_array($this->status, [self::STATUS_CONVERTED, 'converted_to_po'], true);
     }
 
     public function isReadyForConversion(): bool
     {
-        return $this->status === self::STATUS_APPROVED || $this->canServeAsOfficialPO();
+        if ($this->isConverted() || $this->isRejected()) {
+            return false;
+        }
+
+        return $this->isApproved() || $this->canServeAsOfficialPO();
     }
 
     public function canServeAsOfficialPO(): bool
@@ -182,11 +192,24 @@ class Quotation extends Model
     public static function generateNumber(): string
     {
         $prefix = 'QT-' . date('Y') . '-';
-        $last   = static::where('quotation_number', 'like', $prefix . '%')
-            ->latest()->value('quotation_number');
+        $numbers = static::where('quotation_number', 'like', $prefix . '%')->pluck('quotation_number');
 
-        $seq = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+        $maxSeq = 0;
+        foreach ($numbers as $num) {
+            $val = (int) substr($num, strlen($prefix));
+            if ($val > $maxSeq) {
+                $maxSeq = $val;
+            }
+        }
 
-        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+        $nextSeq = $maxSeq + 1;
+        $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+        while (static::where('quotation_number', $candidate)->exists()) {
+            $nextSeq++;
+            $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+        }
+
+        return $candidate;
     }
 }

@@ -415,7 +415,7 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-clipboard-document-check')
                         ->color('warning')
                         ->tooltip('Review, verify math and reconcile quotation line items')
-                        ->visible(fn(Quotation $r): bool => !$r->isReviewed() && $r->status !== Quotation::STATUS_CONVERTED && $r->status !== Quotation::STATUS_REJECTED)
+                        ->visible(fn(Quotation $r): bool => !$r->isReviewed() && !$r->isConverted() && !$r->isRejected())
                         ->url(function (Quotation $record) {
                             if ($record->document_id) {
                                 return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
@@ -435,7 +435,7 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-check-circle')
                         ->color('success')
                         ->tooltip('Approve quotation estimate')
-                        ->visible(fn(Quotation $r): bool => $r->status === Quotation::STATUS_PENDING)
+                        ->visible(fn(Quotation $r): bool => !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
                         ->requiresConfirmation()
                         ->action(function (Quotation $record) {
                             app(QuotationService::class)->approve($record);
@@ -447,7 +447,7 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
                         ->tooltip('Mark quotation as rejected / lost with reason notes')
-                        ->visible(fn(Quotation $r): bool => $r->status === Quotation::STATUS_PENDING)
+                        ->visible(fn(Quotation $r): bool => !$r->isConverted() && !$r->isRejected())
                         ->form([
                             Textarea::make('rejection_reason')
                                 ->label('Reason for Rejection')
@@ -464,7 +464,7 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-shopping-cart')
                         ->color('primary')
                         ->tooltip('Convert this approved quotation into an active Purchase Order')
-                        ->visible(fn(Quotation $r): bool => $r->status === Quotation::STATUS_APPROVED || $r->canServeAsOfficialPO())
+                        ->visible(fn(Quotation $r): bool => $r->isReadyForConversion() && !$r->isConverted())
                         ->form([
                             DatePicker::make('order_date')
                                 ->label('Order Date')

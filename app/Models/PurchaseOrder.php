@@ -184,11 +184,24 @@ class PurchaseOrder extends Model
     public static function generateNumber(): string
     {
         $prefix = 'PO-' . date('Y') . '-';
-        $last   = static::where('po_number', 'like', $prefix . '%')
-            ->latest()->value('po_number');
+        $numbers = static::where('po_number', 'like', $prefix . '%')->pluck('po_number');
 
-        $seq = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+        $maxSeq = 0;
+        foreach ($numbers as $num) {
+            $val = (int) substr($num, strlen($prefix));
+            if ($val > $maxSeq) {
+                $maxSeq = $val;
+            }
+        }
 
-        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+        $nextSeq = $maxSeq + 1;
+        $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+        while (static::where('po_number', $candidate)->exists()) {
+            $nextSeq++;
+            $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+        }
+
+        return $candidate;
     }
 }
