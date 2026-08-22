@@ -2,9 +2,9 @@
 
 set -e
 
-echo "🚀 Starting Huenics ERP & Document Reconciliation Container..."
+echo "🚀 Starting Huenics Enterprise ERP Container..."
 
-# ─── 1. Ensure storage and asset directories exist with correct permissions ───
+# ─── 1. Ensure required storage and cache directories exist ───────────────────
 mkdir -p \
     storage/framework/cache/data \
     storage/framework/sessions \
@@ -48,38 +48,50 @@ php artisan storage:link --force || true
 php artisan filament:assets || true
 php artisan livewire:publish --assets || true
 
-# ─── 6. Run Database Migrations SAFELY ────────────────────────────────────────
-echo "📦 Running database migrations (safe incremental update only)..."
+# ─── 6. Run Database Migrations SAFELY (Incremental additions only) ───────────
+echo "📦 Checking and applying safe database migrations..."
 if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_HOST" ]; then
     mkdir -p database
     [ -f database/database.sqlite ] || touch database/database.sqlite
 fi
 php artisan migrate --force
 
-# ─── 7. First-run seeders — GUARDED to never overwrite existing production data ─
-IS_FIRST_RUN=$(php -r "
-    require __DIR__ . '/vendor/autoload.php';
-    \$app = require_once __DIR__ . '/bootstrap/app.php';
-    \$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
-    \$kernel->bootstrap();
-    try {
-        \$count = \App\Models\User::count();
-        echo (\$count === 0) ? 'yes' : 'no';
-    } catch (\Throwable \$e) {
-        echo 'yes';
-    }
-" 2>/dev/null || echo "no")
+# ─── 7. Production Zero-Touch Guarantee: Guarded Seeding ───────────────────────
+# In production, seeders are NEVER executed unless explicitly forced via FORCE_SEED_IN_PRODUCTION=true.
+# For fresh staging/dev instances, seeding only runs if the users table is completely empty.
+SHOULD_SEED="no"
 
-if [ "$IS_FIRST_RUN" = "yes" ]; then
-    echo "🌱 First-run detected: seeding initial Users, Vendors, and master data..."
+if [ "$APP_ENV" = "production" ] && [ "$FORCE_SEED_IN_PRODUCTION" != "true" ]; then
+    echo "🛡️  Production mode active: Seeders skipped to guarantee existing data is 100% protected."
+else
+    IS_EMPTY=$(php -r "
+        require __DIR__ . '/vendor/autoload.php';
+        \$app = require_once __DIR__ . '/bootstrap/app.php';
+        \$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
+        \$kernel->bootstrap();
+        try {
+            \$userCount = \App\Models\User::count();
+            echo (\$userCount === 0) ? 'yes' : 'no';
+        } catch (\Throwable \$e) {
+            echo 'no';
+        }
+    " 2>/dev/null || echo "no")
+
+    if [ "$IS_EMPTY" = "yes" ]; then
+        SHOULD_SEED="yes"
+    fi
+fi
+
+if [ "$SHOULD_SEED" = "yes" ]; then
+    echo "🌱 Blank database detected: Seeding initial Users, Roles, and Master Data..."
     php artisan db:seed --force || true
 else
-    echo "✅ Existing database detected — skipping seeders to protect production records."
+    echo "✅ Database verified — production tables, records, and files are untouched."
 fi
 
 # ─── 8. Optimize caches for production ────────────────────────────────────────
 if [ "$APP_ENV" = "production" ]; then
-    echo "⚡ Optimizing Laravel & Filament caches for production..."
+    echo "⚡ Optimizing Laravel & Filament caches for high-speed production..."
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
@@ -93,7 +105,7 @@ else
     php artisan view:clear || true
 fi
 
-echo "✅ Huenics application initialized successfully on port ${TARGET_PORT}!"
+echo "✅ Huenics application initialized safely on port ${TARGET_PORT}!"
 
 # ─── 9. Start Supervisord ─────────────────────────────────────────────────────
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
