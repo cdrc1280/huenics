@@ -413,6 +413,7 @@ class ComprehensiveFeatureExpansionTest extends TestCase
             'order_amount'         => 25000.00,
             'status'               => PurchaseOrder::STATUS_DELIVERED,
             'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+            'is_completed'         => true,
             'actual_delivery_date' => now()->toDateString(),
             'delivery_receipt_no'  => 'DR-2026-999',
             'has_warranty'         => true,

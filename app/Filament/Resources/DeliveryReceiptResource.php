@@ -21,12 +21,14 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
@@ -40,9 +42,18 @@ class DeliveryReceiptResource extends Resource
     protected static ?string $model = DeliveryReceipt::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-truck';
-    protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
-    protected static ?string $navigationLabel = 'Delivery Receipts (DR)';
-    protected static ?int $navigationSort = 5;
+    protected static bool $shouldRegisterNavigation = false;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canCreate(): bool
+    {
+        // DRs are strictly uploaded from physical hard copies via the unified Upload DR & SI workflow
+        return false;
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -56,7 +67,7 @@ class DeliveryReceiptResource extends Resource
     {
         return $schema->components([
             Section::make('Delivery Details')
-                ->description('Specify purchase order reference, delivery personnel, and schedule.')
+                ->description('Attached physical delivery receipt reference, personnel, and schedule.')
                 ->icon('heroicon-o-truck')
                 ->schema([
                     TextInput::make('dr_number')
@@ -103,7 +114,7 @@ class DeliveryReceiptResource extends Resource
                     Select::make('status')
                         ->options(\App\Enums\DeliveryReceiptStatus::class)
                         ->required()
-                        ->default(\App\Enums\DeliveryReceiptStatus::Draft),
+                        ->default(\App\Enums\DeliveryReceiptStatus::Delivered),
 
                     Textarea::make('remarks')
                         ->label('Delivery Remarks / Site Notes')
@@ -175,6 +186,16 @@ class DeliveryReceiptResource extends Resource
                     ->sortable()
                     ->tooltip(fn(DeliveryReceipt $r): string => "Customer: " . ($r->purchaseOrder?->customer_name ?? 'N/A')),
 
+                IconColumn::make('has_document')
+                    ->label('Attached Copy')
+                    ->state(fn(DeliveryReceipt $r): bool => !empty($r->document_id))
+                    ->boolean()
+                    ->trueIcon('heroicon-s-document-check')
+                    ->falseIcon('heroicon-o-document')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn(DeliveryReceipt $r): string => $r->document ? "Hard copy attached: {$r->document->original_filename}" : 'Physical copy linked'),
+
                 TextColumn::make('delivery_date')
                     ->label('Delivery Date')
                     ->date('M d, Y')
@@ -215,32 +236,6 @@ class DeliveryReceiptResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
-                    Action::make('mark_delivered')
-                        ->label('Mark as Delivered')
-                        ->icon('heroicon-m-check-badge')
-                        ->color('success')
-                        ->visible(fn(DeliveryReceipt $r): bool => !$r->trashed() && $r->status !== 'delivered')
-                        ->requiresConfirmation()
-                        ->action(function (DeliveryReceipt $record) {
-                            $record->update(['status' => 'delivered']);
-                            if ($record->purchaseOrder) {
-                                $record->purchaseOrder->update([
-                                    'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
-                                    'status' => PurchaseOrder::STATUS_DELIVERED,
-                                    'actual_delivery_date' => $record->delivery_date ?: now()->toDateString(),
-                                    'delivery_receipt_no' => $record->dr_number,
-                                ]);
-                            }
-                            Notification::make()->title('Delivery Confirmed')->body("DR {$record->dr_number} marked as Delivered.")->success()->send();
-                        }),
-
-                    Action::make('create_si')
-                        ->label('Generate Invoice (SI)')
-                        ->icon('heroicon-m-receipt-percent')
-                        ->color('warning')
-                        ->visible(fn(DeliveryReceipt $r): bool => !$r->trashed())
-                        ->url(fn(DeliveryReceipt $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->purchase_order_id . '&delivery_receipt_id=' . $r->id)),
-
                     Action::make('export_pdf')
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')
@@ -268,7 +263,6 @@ class DeliveryReceiptResource extends Resource
     {
         return [
             'index' => Pages\ListDeliveryReceipts::route('/'),
-            'create' => Pages\CreateDeliveryReceipt::route('/create'),
             'edit' => Pages\EditDeliveryReceipt::route('/{record}/edit'),
         ];
     }

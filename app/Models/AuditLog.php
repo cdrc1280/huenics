@@ -22,6 +22,11 @@ class AuditLog extends Model
     public const EVENT_LOGOUT = 'logout';
     public const EVENT_VERIFIED = 'verified';
     public const EVENT_CONVERTED = 'converted';
+    public const EVENT_DELIVERED = 'delivered';
+    public const EVENT_FULFILLED = 'fulfilled';
+    public const EVENT_DOCUMENTS_ATTACHED = 'documents_attached';
+    public const EVENT_STOCK_DEDUCTED = 'stock_deducted';
+    public const EVENT_STOCK_RESTORED = 'stock_restored';
     public const EVENT_CUSTOM = 'custom';
 
     protected $fillable = [

@@ -14,13 +14,19 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,12 +55,12 @@ class ProductResource extends Resource
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -65,7 +71,7 @@ class ProductResource extends Resource
             ->components([
                 Section::make('Canonical Product Details')
                     ->components([
-                        Forms\Components\FileUpload::make('image_path')
+                        FileUpload::make('image_path')
                             ->label('Product Image')
                             ->image()
                             ->imageEditor()
@@ -79,57 +85,57 @@ class ProductResource extends Resource
                             ->helperText('Upload product photo or diagram. Accepted formats: JPG, PNG, WEBP. Maximum file size: 5 MB.')
                             ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('canonical_name')
+                        TextInput::make('canonical_name')
                             ->label('Canonical Product Name')
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('product_code')
+                        TextInput::make('product_code')
                             ->label('Product Code / Model #')
                             ->maxLength(100)
                             ->unique(ignoreRecord: true),
 
-                        Forms\Components\TextInput::make('sku')
+                        TextInput::make('sku')
                             ->label('SKU')
                             ->maxLength(100)
                             ->unique(ignoreRecord: true),
 
-                        Forms\Components\TextInput::make('category')
+                        TextInput::make('category')
                             ->label('Category')
                             ->placeholder('e.g. LED Lighting, Drivers, Architectural'),
 
-                        Forms\Components\Select::make('unit_default')
+                        Select::make('unit_default')
                             ->label('Default Unit')
                             ->options(\App\Enums\UnitOfMeasure::class)
                             ->default('pcs')
                             ->required(),
 
-                        Forms\Components\TextInput::make('base_cost_price')
+                        TextInput::make('base_cost_price')
                             ->label('Base Cost (₱)')
                             ->numeric()
                             ->prefix('₱')
                             ->default(0.00),
 
-                        Forms\Components\TextInput::make('selling_price')
+                        TextInput::make('selling_price')
                             ->label('Selling Price (₱)')
                             ->numeric()
                             ->prefix('₱')
                             ->default(0.00),
 
-                        Forms\Components\Toggle::make('is_huenics_owned')
+                        Toggle::make('is_huenics_owned')
                             ->label('Huenics Proprietary Product')
                             ->helperText('Only Huenics-owned products track inventory stock-on-hand.')
                             ->default(true),
 
-                        Forms\Components\Toggle::make('is_composite')
+                        Toggle::make('is_composite')
                             ->label('Composite Modular BOM Product')
                             ->helperText('Enable for modular products assembled from sub-components (e.g. LED Tracklight with COB/Driver).')
                             ->default(false),
 
-                        Forms\Components\Toggle::make('is_active')
+                        Toggle::make('is_active')
                             ->label('Active in Catalog')
                             ->default(true),
-                    ])->columns(2),
+                    ])->columnSpanFull(),
             ]);
     }
 
@@ -137,7 +143,7 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_path')
+                ImageColumn::make('image_path')
                     ->label('Image')
                     ->disk('public')
                     ->circular()
@@ -204,9 +210,9 @@ class ProductResource extends Resource
             ])
 
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_huenics_owned')
+                TernaryFilter::make('is_huenics_owned')
                     ->label('Huenics Proprietary Only'),
-                Tables\Filters\TernaryFilter::make('is_composite')
+                TernaryFilter::make('is_composite')
                     ->label('Modular BOM Only'),
                 TrashedFilter::make(),
             ])

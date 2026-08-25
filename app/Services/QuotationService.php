@@ -220,9 +220,6 @@ class QuotationService
                 'reviewed_at' => $quotation->reviewed_at ?: now(),
             ]);
 
-            // Auto-deduct inventory stock for all products used in the converted PO
-            app(InventoryService::class)->deductPurchaseOrderStock($po);
-
             return $po;
         });
     }

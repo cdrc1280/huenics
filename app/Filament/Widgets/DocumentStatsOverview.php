@@ -18,7 +18,8 @@ class DocumentStatsOverview extends BaseWidget
         $verifiedCount = Document::where('status', Document::STATUS_VERIFIED)->count();
         $totalDocs = Document::count();
 
-        $monthlyVerifiedAmount = Transaction::whereMonth('created_at', now()->month)
+        $monthlyVerifiedAmount = Transaction::where('is_completed', true)
+            ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('final_amount');
 

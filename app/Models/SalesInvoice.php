@@ -9,6 +9,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $si_number
+ * @property int $purchase_order_id
+ * @property int|null $delivery_receipt_id
+ * @property int|null $document_id
+ * @property string $customer_name
+ * @property string|null $billing_address
+ * @property \Illuminate\Support\Carbon $invoice_date
+ * @property \Illuminate\Support\Carbon|null $due_date
+ * @property float $subtotal
+ * @property float $vat_amount
+ * @property float $total_amount
+ * @property string $payment_status
+ * @property \Illuminate\Support\Carbon|null $payment_date
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class SalesInvoice extends Model
 {
     use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
@@ -22,6 +42,7 @@ class SalesInvoice extends Model
         'si_number',
         'purchase_order_id',
         'delivery_receipt_id',
+        'document_id',
         'customer_name',
         'billing_address',
         'invoice_date',
@@ -54,6 +75,11 @@ class SalesInvoice extends Model
     public function deliveryReceipt(): BelongsTo
     {
         return $this->belongsTo(DeliveryReceipt::class);
+    }
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class);
     }
 
     public function items(): HasMany

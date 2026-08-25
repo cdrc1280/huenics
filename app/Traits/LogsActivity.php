@@ -110,6 +110,9 @@ trait LogsActivity
         if (isset($model->dr_number)) {
             return "#{$model->dr_number}";
         }
+        if (isset($model->si_number)) {
+            return "#{$model->si_number}";
+        }
         if (isset($model->invoice_number)) {
             return "#{$model->invoice_number}";
         }
@@ -125,6 +128,10 @@ trait LogsActivity
         if (isset($model->transaction_code)) {
             return "#{$model->transaction_code}";
         }
+        if ($model instanceof \App\Models\InventoryTransaction) {
+            $prodName = $model->inventoryItem?->product?->canonical_name ?? "Item #{$model->inventory_item_id}";
+            return "({$model->transaction_type}: {$model->quantity} {$prodName})";
+        }
 
         return "#{$model->getKey()}";
     }
@@ -137,6 +144,14 @@ trait LogsActivity
         if (isset($model->total_amount)) {
             $formatted = number_format((float)$model->total_amount, 2);
             return "Created {$base} {$ident} (Total: ₱{$formatted})";
+        }
+        if (isset($model->order_amount)) {
+            $formatted = number_format((float)$model->order_amount, 2);
+            return "Created {$base} {$ident} (Amount: ₱{$formatted})";
+        }
+        if (isset($model->final_amount)) {
+            $formatted = number_format((float)$model->final_amount, 2);
+            return "Created {$base} {$ident} (Final: ₱{$formatted})";
         }
         if (isset($model->default_price)) {
             $formatted = number_format((float)$model->default_price, 2);
@@ -157,6 +172,12 @@ trait LogsActivity
 
         // Highlight common high-impact business field changes
         $highlights = [];
+        if (isset($new['is_completed']) && (bool)$new['is_completed'] !== (bool)($old['is_completed'] ?? false)) {
+            $highlights[] = ((bool)$new['is_completed']) ? "Fulfilled & Completed" : "Reopened";
+        }
+        if (isset($new['is_inventory_deducted']) && (bool)$new['is_inventory_deducted'] !== (bool)($old['is_inventory_deducted'] ?? false)) {
+            $highlights[] = ((bool)$new['is_inventory_deducted']) ? "Stock Deducted" : "Stock Restored";
+        }
         if (isset($new['status'])) {
             $oldSt = ucwords(str_replace('_', ' ', (string)($old['status'] ?? 'None')));
             $newSt = ucwords(str_replace('_', ' ', (string)$new['status']));
@@ -166,6 +187,21 @@ trait LogsActivity
             $oldSt = ucwords(str_replace('_', ' ', (string)($old['delivery_status'] ?? 'None')));
             $newSt = ucwords(str_replace('_', ' ', (string)$new['delivery_status']));
             $highlights[] = "Delivery: {$oldSt} → {$newSt}";
+        }
+        if (isset($new['payment_status'])) {
+            $oldSt = ucwords(str_replace('_', ' ', (string)($old['payment_status'] ?? 'None')));
+            $newSt = ucwords(str_replace('_', ' ', (string)$new['payment_status']));
+            $highlights[] = "Payment: {$oldSt} → {$newSt}";
+        }
+        if (isset($new['order_amount'])) {
+            $oldVal = number_format((float)($old['order_amount'] ?? 0), 2);
+            $newVal = number_format((float)$new['order_amount'], 2);
+            $highlights[] = "PO Amount: ₱{$oldVal} → ₱{$newVal}";
+        }
+        if (isset($new['final_amount'])) {
+            $oldVal = number_format((float)($old['final_amount'] ?? 0), 2);
+            $newVal = number_format((float)$new['final_amount'], 2);
+            $highlights[] = "Final Amount: ₱{$oldVal} → ₱{$newVal}";
         }
         if (isset($new['total_amount'])) {
             $oldVal = number_format((float)($old['total_amount'] ?? 0), 2);

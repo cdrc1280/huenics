@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 /**
  * @property int $id
  * @property string $po_number
@@ -36,6 +37,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $warranty_status
  * @property string $status
  * @property bool $is_inventory_deducted
+ * @property bool $is_completed
+ * @property \Illuminate\Support\Carbon|null $completed_at
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -111,6 +114,8 @@ class PurchaseOrder extends Model
         'warranty_status',
         'status',
         'is_inventory_deducted',
+        'is_completed',
+        'completed_at',
         'notes',
     ];
 
@@ -124,6 +129,8 @@ class PurchaseOrder extends Model
             'warranty_end_date' => 'date',
             'has_warranty' => 'boolean',
             'is_inventory_deducted' => 'boolean',
+            'is_completed' => 'boolean',
+            'completed_at' => 'datetime',
             'order_amount' => 'decimal:2',
             'total_cost' => 'decimal:2',
             'realized_profit' => 'decimal:2',
@@ -169,7 +176,49 @@ class PurchaseOrder extends Model
         return $this->hasMany(SalesInvoice::class);
     }
 
-    // ─── Computed Attributes ──────────────────────────────────────────
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    // ─── Computed Attributes & Helpers ────────────────────────────────
+
+    public function hasDeliveryReceipt(): bool
+    {
+        return $this->deliveryReceipts()->exists();
+    }
+
+    public function hasSalesInvoice(): bool
+    {
+        return $this->salesInvoices()->exists();
+    }
+
+    public function hasBothDrAndSi(): bool
+    {
+        return $this->hasDeliveryReceipt() && $this->hasSalesInvoice();
+    }
+
+    public function isCompleted(): bool
+    {
+        return (bool) $this->is_completed || $this->hasBothDrAndSi();
+    }
+
+    public function getFulfillmentStatusLabelAttribute(): string
+    {
+        if ($this->isCompleted()) {
+            return 'Completed & Realized';
+        }
+
+        if ($this->delivery_status === self::DELIVERY_DELIVERED) {
+            return 'Delivered (Awaiting DR & SI)';
+        }
+
+        if ($this->isApproved()) {
+            return 'Approved (Pending Delivery)';
+        }
+
+        return 'Pending Review';
+    }
 
     public function getWarrantyPeriodLabelAttribute(): string
     {

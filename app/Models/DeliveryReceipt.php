@@ -9,6 +9,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $dr_number
+ * @property int $purchase_order_id
+ * @property int|null $document_id
+ * @property string|null $delivered_by
+ * @property string|null $received_by
+ * @property \Illuminate\Support\Carbon $delivery_date
+ * @property string|null $remarks
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class DeliveryReceipt extends Model
 {
     use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
@@ -20,6 +34,7 @@ class DeliveryReceipt extends Model
     protected $fillable = [
         'dr_number',
         'purchase_order_id',
+        'document_id',
         'delivered_by',
         'received_by',
         'delivery_date',
@@ -37,6 +52,11 @@ class DeliveryReceipt extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class);
     }
 
     public function items(): HasMany

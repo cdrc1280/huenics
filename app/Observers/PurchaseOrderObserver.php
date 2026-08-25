@@ -17,7 +17,8 @@ class PurchaseOrderObserver
     ) {}
 
     /**
-     * When a PO is first created, record toward sales quota and auto-deduct stock.
+     * When a PO is first created, record toward sales quota.
+     * Note: Stock deduction and sales realization are deferred until DR + SI upload.
      */
     public function created(PurchaseOrder $po): void
     {
@@ -26,14 +27,6 @@ class PurchaseOrderObserver
         } catch (\Throwable $e) {
             Log::error("SalesQuotaService::recordConversion failed: " . $e->getMessage());
         }
-
-        try {
-            if ($po->status !== PurchaseOrder::STATUS_CANCELLED && $po->status !== PurchaseOrder::STATUS_REJECTED) {
-                $this->inventory->deductPurchaseOrderStock($po);
-            }
-        } catch (\Throwable $e) {
-            Log::error("InventoryService::deductPurchaseOrderStock failed on created: " . $e->getMessage());
-        }
     }
 
     /**
@@ -41,6 +34,19 @@ class PurchaseOrderObserver
      */
     public function saving(PurchaseOrder $po): void
     {
+        // 0. Strict Rule: The PO will ONLY mark as delivered if DR and SI are attached (is_completed || hasBothDrAndSi).
+        if ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $po->status === PurchaseOrder::STATUS_DELIVERED) {
+            if (!$po->is_completed && !$po->hasBothDrAndSi()) {
+                $po->delivery_status = ($po->expected_delivery_date && \Carbon\Carbon::parse($po->expected_delivery_date)->isPast())
+                    ? PurchaseOrder::DELIVERY_OVERDUE
+                    : PurchaseOrder::DELIVERY_PENDING;
+
+                if ($po->status === PurchaseOrder::STATUS_DELIVERED) {
+                    $po->status = $po->isApproved() ? PurchaseOrder::STATUS_APPROVED : PurchaseOrder::STATUS_PENDING;
+                }
+            }
+        }
+
         // 1. If actual_delivery_date is cleared/empty
         if (empty($po->actual_delivery_date)) {
             if ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) {
@@ -73,8 +79,8 @@ class PurchaseOrderObserver
             $po->warranty_end_date = null;
         }
 
-        // 4. If delivered and has actual_delivery_date
-        if (!empty($po->actual_delivery_date) && $po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) {
+        // 4. If delivered, has actual_delivery_date, and has DR+SI attached
+        if (!empty($po->actual_delivery_date) && $po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED && ($po->is_completed || $po->hasBothDrAndSi())) {
             $po->status = PurchaseOrder::STATUS_DELIVERED;
             if ($po->has_warranty) {
                 $months = PurchaseOrder::getWarrantyPeriodMonths($po->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR);
@@ -102,33 +108,31 @@ class PurchaseOrderObserver
      */
     public function updated(PurchaseOrder $po): void
     {
-        // 1. If PO was cancelled or rejected, restore stock
+        // 1. If PO was cancelled or rejected, restore stock if deducted
         if ($po->wasChanged('status')) {
             if (in_array($po->status, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])) {
-                try {
-                    $this->inventory->restorePurchaseOrderStock($po);
-                } catch (\Throwable $e) {
-                    Log::error("Inventory restore failed for PO {$po->po_number}: " . $e->getMessage());
+                if ($po->is_inventory_deducted) {
+                    try {
+                        $this->inventory->restorePurchaseOrderStock($po);
+                    } catch (\Throwable $e) {
+                        Log::error("Inventory restore failed for PO {$po->po_number}: " . $e->getMessage());
+                    }
                 }
             } elseif ($po->getOriginal('status') === PurchaseOrder::STATUS_CANCELLED || $po->getOriginal('status') === PurchaseOrder::STATUS_REJECTED) {
-                // Restored from cancelled -> deduct
-                try {
-                    $this->inventory->deductPurchaseOrderStock($po);
-                } catch (\Throwable $e) {
-                    Log::error("Inventory deduction failed for restored PO {$po->po_number}: " . $e->getMessage());
+                // Restored from cancelled -> deduct only if completed
+                if ($po->isCompleted() && !$po->is_inventory_deducted) {
+                    try {
+                        $this->inventory->deductPurchaseOrderStock($po);
+                    } catch (\Throwable $e) {
+                        Log::error("Inventory deduction failed for restored PO {$po->po_number}: " . $e->getMessage());
+                    }
                 }
             }
         }
 
-        // 2. Inventory + Warranty: trigger on delivery confirmation
+        // 2. Warranty & Status: trigger on delivery confirmation (Stock deduction is deferred until DR + SI upload)
         if ($po->wasChanged('delivery_status')) {
             if ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) {
-                try {
-                    $this->inventory->deductPurchaseOrderStock($po);
-                } catch (\Throwable $e) {
-                    Log::error("InventoryService::deductPurchaseOrderStock failed for PO {$po->po_number}: " . $e->getMessage());
-                }
-
                 try {
                     $this->warranty->activateWarranty($po);
                 } catch (\Throwable $e) {

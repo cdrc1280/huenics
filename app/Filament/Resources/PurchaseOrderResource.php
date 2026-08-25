@@ -5,11 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Pages\DeliveryMonitoringPage;
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
+use App\Models\DeliveryReceipt;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
+use App\Models\SalesInvoice;
 use App\Models\User;
+use App\Services\OrderFulfillmentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -22,6 +25,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -29,6 +33,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -157,53 +162,39 @@ class PurchaseOrderResource extends Resource
 
                     Select::make('delivery_status')
                         ->label('Delivery Status')
-                        ->options([
-                            PurchaseOrder::DELIVERY_PENDING => 'Pending',
-                            PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
-                            PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
-                            PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
-                        ])
+                        ->options(function (?PurchaseOrder $record): array {
+                            $opts = [
+                                PurchaseOrder::DELIVERY_PENDING => 'Pending',
+                                PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
+                                PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
+                            ];
+                            if ($record && ($record->is_completed || $record->hasBothDrAndSi())) {
+                                $opts[PurchaseOrder::DELIVERY_DELIVERED] = 'Delivered (DR & SI Attached)';
+                            }
+                            return $opts;
+                        })
                         ->default(PurchaseOrder::DELIVERY_PENDING)
                         ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, $set, $get) {
-                            if ($state === PurchaseOrder::DELIVERY_DELIVERED) {
-                                if (!$get('actual_delivery_date')) {
-                                    $set('actual_delivery_date', now()->toDateString());
-                                }
-                                $set('status', PurchaseOrder::STATUS_DELIVERED);
-                            } else {
-                                $set('actual_delivery_date', null);
-                                $set('status', PurchaseOrder::STATUS_PENDING);
-                            }
-                        }),
+                        ->helperText('PO is automatically marked Delivered upon attaching DR & SI hard copies.'),
 
                     Select::make('status')
                         ->label('PO Status')
-                        ->options([
-                            PurchaseOrder::STATUS_PENDING => 'Pending Approval',
-                            PurchaseOrder::STATUS_APPROVED => 'Approved (Ready to Deliver)',
-                            PurchaseOrder::STATUS_PENDING_DELIVERY => 'Pending Delivery',
-                            PurchaseOrder::STATUS_DELIVERED => 'Delivered',
-                            PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
-                            PurchaseOrder::STATUS_REJECTED => 'Rejected',
-                        ])
+                        ->options(function (?PurchaseOrder $record): array {
+                            $opts = [
+                                PurchaseOrder::STATUS_PENDING => 'Pending Approval',
+                                PurchaseOrder::STATUS_APPROVED => 'Approved (Ready to Deliver)',
+                                PurchaseOrder::STATUS_PENDING_DELIVERY => 'Pending Delivery',
+                                PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
+                                PurchaseOrder::STATUS_REJECTED => 'Rejected',
+                            ];
+                            if ($record && ($record->is_completed || $record->hasBothDrAndSi())) {
+                                $opts[PurchaseOrder::STATUS_DELIVERED] = 'Delivered (DR & SI Attached)';
+                            }
+                            return $opts;
+                        })
                         ->default(PurchaseOrder::STATUS_APPROVED)
                         ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, $set, $get) {
-                            if ($state === PurchaseOrder::STATUS_DELIVERED) {
-                                $set('delivery_status', PurchaseOrder::DELIVERY_DELIVERED);
-                                if (!$get('actual_delivery_date')) {
-                                    $set('actual_delivery_date', now()->toDateString());
-                                }
-                            } elseif (in_array($state, [PurchaseOrder::STATUS_PENDING, PurchaseOrder::STATUS_APPROVED, PurchaseOrder::STATUS_PENDING_DELIVERY])) {
-                                if ($get('delivery_status') === PurchaseOrder::DELIVERY_DELIVERED) {
-                                    $set('delivery_status', PurchaseOrder::DELIVERY_PENDING);
-                                }
-                                $set('actual_delivery_date', null);
-                            }
-                        }),
+                        ->helperText('PO transitions to Delivered only after DR & SI hard copies are attached.'),
 
                     Textarea::make('notes')
                         ->label('Notes')
@@ -219,16 +210,7 @@ class PurchaseOrderResource extends Resource
                         DatePicker::make('actual_delivery_date')
                             ->label('Actual Delivery Date')
                             ->nullable()
-                            ->live()
-                            ->afterStateUpdated(function ($state, $set, $get) {
-                                if (empty($state)) {
-                                    $set('delivery_status', PurchaseOrder::DELIVERY_PENDING);
-                                    $set('status', PurchaseOrder::STATUS_PENDING);
-                                } else {
-                                    $set('delivery_status', PurchaseOrder::DELIVERY_DELIVERED);
-                                    $set('status', PurchaseOrder::STATUS_DELIVERED);
-                                }
-                            }),
+                            ->helperText('Set automatically upon DR & SI fulfillment.'),
 
                         TextInput::make('delivery_receipt_no')
                             ->label('Delivery Receipt # (DR#)')
@@ -482,6 +464,27 @@ class PurchaseOrderResource extends Resource
                     default => 'gray',
                 }),
 
+            TextColumn::make('fulfillment_status')
+                ->label('Fulfillment')
+                ->badge()
+                ->state(fn(PurchaseOrder $record): string => match (true) {
+                    $record->isCompleted() => 'Completed & Realized',
+                    $record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED => 'Delivered (Awaiting DR & SI)',
+                    $record->isApproved() => 'Approved (Pending Delivery)',
+                    default => 'Pending Review',
+                })
+                ->color(fn(string $state): string => match ($state) {
+                    'Completed & Realized' => 'success',
+                    'Delivered (Awaiting DR & SI)' => 'warning',
+                    'Approved (Pending Delivery)' => 'info',
+                    default => 'gray',
+                })
+                ->tooltip(fn(PurchaseOrder $record): string => match (true) {
+                    $record->isCompleted() => 'DR & SI verified. Stocks deducted and sales realized in analytics.',
+                    $record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED => 'Delivered physically. Upload DR & SI to deduct stock and reflect sales.',
+                    default => 'Pending order fulfillment lifecycle',
+                }),
+
             TextColumn::make('expected_delivery_date')
                 ->label('Est. Delivery')
                 ->date('M j, Y')
@@ -621,19 +624,18 @@ class PurchaseOrderResource extends Resource
                     }),
 
                 Action::make('mark_delivered')
-                    ->label('Mark Delivered')
+                    ->label('Mark as Delivered')
                     ->icon('heroicon-m-check-badge')
                     ->color('success')
-                    ->tooltip('Mark this purchase order as delivered')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                    ->tooltip('DR & SI are verified and attached. Mark this purchase order as delivered to deduct inventory and realize sales.')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->hasBothDrAndSi() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
+                    ->modalHeading(fn(PurchaseOrder $record): string => "Mark as Delivered: PO #{$record->po_number}")
+                    ->modalDescription('Both Delivery Receipt (DR) and Sales Invoice (SI) are verified and attached. Confirming delivery will finalize this order, deduct stock from the product catalog/BOM, and record sales in the dashboard.')
                     ->form([
                         DatePicker::make('actual_delivery_date')
                             ->label('Actual Delivery Date')
                             ->default(now())
                             ->required(),
-                        TextInput::make('delivery_receipt_no')
-                            ->label('DR # (Delivery Receipt No.)')
-                            ->nullable(),
                         Toggle::make('has_warranty')
                             ->label('Include Warranty')
                             ->default(fn($record) => $record->has_warranty ?? true)
@@ -645,42 +647,149 @@ class PurchaseOrderResource extends Resource
                             ->visible(fn($get) => (bool) $get('has_warranty')),
                     ])
                     ->action(function (PurchaseOrder $record, array $data) {
-                        if (!$record->isApproved()) {
-                            Notification::make()->title('Action Blocked')->body('Purchase Order must be approved before delivery can be marked.')->danger()->send();
-                            return;
+                        try {
+                            app(OrderFulfillmentService::class)->completeDelivery($record, $data);
+                            Notification::make()
+                                ->title('PO Marked as Delivered')
+                                ->body("PO {$record->po_number} marked as Delivered. Stocks deducted from catalog and sales realized.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Delivery Confirmation Failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-
-                        $record->update([
-                            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
-                            'status' => PurchaseOrder::STATUS_DELIVERED,
-                            'delivery_receipt_no' => $data['delivery_receipt_no'] ?? null,
-                            'actual_delivery_date' => $data['actual_delivery_date'],
-                            'has_warranty' => $data['has_warranty'] ?? true,
-                            'warranty_period' => $data['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
-                        ]);
-
-                        Notification::make()
-                            ->title('Delivery Confirmed')
-                            ->body("PO {$record->po_number} marked as delivered. Inventory deducted & warranty activated.")
-                            ->success()
-                            ->send();
                     }),
 
-                Action::make('create_dr')
-                    ->label('Create DR')
-                    ->icon('heroicon-m-truck')
-                    ->color('info')
-                    ->tooltip('Create a Delivery Receipt (DR) for this purchase order')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
-                    ->url(fn(PurchaseOrder $r): string => url('/admin/delivery-receipts/create?purchase_order_id=' . $r->id)),
+                Action::make('upload_dr_si')
+                    ->label('Upload DR & SI')
+                    ->icon('heroicon-m-arrow-up-tray')
+                    ->color('primary')
+                    ->tooltip('Upload physical Delivery Receipt (DR) and Sales Invoice (SI) hard copies (Images/PDF)')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && !$r->isCompleted())
+                    ->modalHeading(fn(PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
+                    ->modalDescription('Upload physical hard copies of both Delivery Receipt (DR) and Sales Invoice (SI) in PDF or Image format.')
+                    ->modalWidth('4xl')
+                    ->form([
+                        Section::make('Delivery Receipt (DR) Details & Upload')
+                            ->description('Attach physical/scanned delivery receipt (PDF, JPG, PNG, WEBP)')
+                            ->icon('heroicon-o-truck')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    FileUpload::make('dr_file')
+                                        ->label('Delivery Receipt File (PDF / Image)')
+                                        ->required()
+                                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                                        ->maxSize(25600)
+                                        ->disk('local')
+                                        ->directory('documents/dr')
+                                        ->preserveFilenames()
+                                        ->helperText('Supported formats: PDF, JPG, PNG, WEBP (Max 25MB)')
+                                        ->columnSpan(2),
 
-                Action::make('create_si')
-                    ->label('Create SI')
-                    ->icon('heroicon-m-receipt-percent')
-                    ->color('warning')
-                    ->tooltip('Create a Sales Invoice (SI) for this purchase order')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
-                    ->url(fn(PurchaseOrder $r): string => url('/admin/sales-invoices/create?purchase_order_id=' . $r->id)),
+                                    TextInput::make('dr_number')
+                                        ->label('DR Number')
+                                        ->default(fn() => DeliveryReceipt::generateNumber())
+                                        ->required(),
+
+                                    DatePicker::make('delivery_date')
+                                        ->label('Delivery Date')
+                                        ->default(fn(PurchaseOrder $record) => $record->actual_delivery_date ?? now())
+                                        ->required(),
+
+                                    TextInput::make('delivered_by')
+                                        ->label('Delivered By')
+                                        ->placeholder('Driver or logistics personnel'),
+
+                                    TextInput::make('received_by')
+                                        ->label('Received By')
+                                        ->placeholder('Customer site receiver name'),
+                                ]),
+                            ]),
+
+                        Section::make('Sales Invoice (SI) Details & Upload')
+                            ->description('Attach physical/scanned sales invoice (PDF, JPG, PNG, WEBP)')
+                            ->icon('heroicon-o-receipt-percent')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    FileUpload::make('si_file')
+                                        ->label('Sales Invoice File (PDF / Image)')
+                                        ->required()
+                                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                                        ->maxSize(25600)
+                                        ->disk('local')
+                                        ->directory('documents/si')
+                                        ->preserveFilenames()
+                                        ->helperText('Supported formats: PDF, JPG, PNG, WEBP (Max 25MB)')
+                                        ->columnSpan(2),
+
+                                    TextInput::make('si_number')
+                                        ->label('SI Number')
+                                        ->default(fn() => SalesInvoice::generateNumber())
+                                        ->required(),
+
+                                    DatePicker::make('invoice_date')
+                                        ->label('Invoice Date')
+                                        ->default(now())
+                                        ->required(),
+
+                                    Select::make('payment_status')
+                                        ->label('Payment Status')
+                                        ->options([
+                                            SalesInvoice::STATUS_PAID => 'Paid',
+                                            SalesInvoice::STATUS_UNPAID => 'Unpaid',
+                                            SalesInvoice::STATUS_PARTIAL => 'Partial',
+                                        ])
+                                        ->default(SalesInvoice::STATUS_PAID)
+                                        ->required(),
+
+                                    TextInput::make('total_amount')
+                                        ->label('Invoice Total (₱)')
+                                        ->numeric()
+                                        ->prefix('₱')
+                                        ->default(fn(PurchaseOrder $record) => (float) $record->order_amount)
+                                        ->required(),
+                                ]),
+                            ]),
+
+                        Toggle::make('auto_mark_delivered')
+                            ->label('Mark order as Delivered immediately upon upload')
+                            ->helperText('If enabled, will immediately deduct stock and realize sales. If disabled, DR & SI will be attached and verified, unlocking the "Mark as Delivered" action button.')
+                            ->default(true),
+                    ])
+                    ->action(function (PurchaseOrder $record, array $data) {
+                        try {
+                            if (!empty($data['auto_mark_delivered'])) {
+                                $result = app(OrderFulfillmentService::class)->fulfillOrder($record, $data);
+                                $drNo = $result['delivery_receipt']->dr_number;
+                                $siNo = $result['sales_invoice']->si_number;
+
+                                Notification::make()
+                                    ->title('Order Delivered & Completed')
+                                    ->body("PO {$record->po_number} fulfilled with DR #{$drNo} and SI #{$siNo}. Stocks deducted from catalog and sales reflected across dashboards.")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                $result = app(OrderFulfillmentService::class)->attachFulfillmentDocuments($record, $data);
+                                $drNo = $result['delivery_receipt']->dr_number;
+                                $siNo = $result['sales_invoice']->si_number;
+
+                                Notification::make()
+                                    ->title('DR & SI Uploaded and Verified')
+                                    ->body("DR #{$drNo} and SI #{$siNo} attached. 'Mark as Delivered' is now available to finalize the order.")
+                                    ->success()
+                                    ->send();
+                            }
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Fulfillment Failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
                 Action::make('delivery_tracker')
                     ->label('Delivery Tracker')

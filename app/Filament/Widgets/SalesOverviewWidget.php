@@ -79,7 +79,8 @@ class SalesOverviewWidget extends BaseWidget
               ->orWhere(fn($sub) => $sub->whereNull('quotation_date')->whereBetween('created_at', [$startDate, $endDate]));
         });
 
-        $poQuery = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
+        $poQuery = PurchaseOrder::where('is_completed', true)
+            ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where(function ($q) use ($startStr, $endStr, $startDate, $endDate) {
                 $q->whereBetween('order_date', [$startStr, $endStr])
                   ->orWhere(fn($sub) => $sub->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]));

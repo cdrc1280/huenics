@@ -265,13 +265,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
             ])
             ->withCount([
                 'quotations as period_quotations' => fn($q) => $q->where(fn($sub) => $sub->whereBetween('quotation_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('quotation_date')->whereBetween('created_at', [$startDate, $endDate]))),
-                'purchaseOrders as period_pos' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'purchaseOrders as period_pos' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
             ])
             ->withSum([
-                'purchaseOrders as period_achieved' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'purchaseOrders as period_achieved' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
             ], 'order_amount')
             ->withSum([
-                'purchaseOrders as period_profit' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'purchaseOrders as period_profit' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
             ], 'realized_profit');
 
         if ($filterInhouse) {

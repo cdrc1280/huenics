@@ -91,15 +91,20 @@ class ActivityLogResource extends Resource
                         'logout' => 'Sign Out',
                         'verified' => 'Verified',
                         'converted' => 'Converted',
+                        'delivered', 'order_marked_delivered' => 'Delivered & Realized',
+                        'fulfilled' => 'Fulfilled',
+                        'documents_attached' => 'DR & SI Attached',
+                        'stock_deducted', 'inventory_deducted' => 'Stock Deducted',
+                        'stock_restored', 'inventory_restored' => 'Stock Restored',
                         default => ucwords(str_replace('_', ' ', $state)),
                     })
                     ->colors([
-                        'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored']),
-                        'info' => fn($state) => in_array($state, ['updated', 'line_item_adjusted']),
+                        'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored', 'delivered', 'order_marked_delivered', 'fulfilled', 'documents_attached']),
+                        'info' => fn($state) => in_array($state, ['updated', 'line_item_adjusted', 'stock_deducted', 'inventory_deducted']),
                         'danger' => fn($state) => in_array($state, ['deleted', 'force_deleted', 'document_rejected']),
                         'primary' => fn($state) => in_array($state, ['login']),
                         'gray' => fn($state) => in_array($state, ['logout', 'custom']),
-                        'warning' => fn($state) => in_array($state, ['transaction_updated', 'status_changed']),
+                        'warning' => fn($state) => in_array($state, ['transaction_updated', 'status_changed', 'stock_restored', 'inventory_restored']),
                     ])
                     ->sortable()
                     ->searchable(),
@@ -145,13 +150,17 @@ class ActivityLogResource extends Resource
                     ->options([
                         AuditLog::EVENT_CREATED => 'Created',
                         AuditLog::EVENT_UPDATED => 'Updated',
+                        AuditLog::EVENT_DELIVERED => 'Order Marked Delivered',
+                        AuditLog::EVENT_DOCUMENTS_ATTACHED => 'DR & SI Attached',
+                        AuditLog::EVENT_STOCK_DEDUCTED => 'Stock Deducted',
+                        AuditLog::EVENT_STOCK_RESTORED => 'Stock Restored',
+                        AuditLog::EVENT_CONVERTED => 'Quotation Converted',
+                        AuditLog::EVENT_VERIFIED => 'Document Verified',
                         AuditLog::EVENT_DELETED => 'Deleted',
                         AuditLog::EVENT_RESTORED => 'Restored',
                         AuditLog::EVENT_FORCE_DELETED => 'Permanently Purged',
                         AuditLog::EVENT_LOGIN => 'User Sign-In',
                         AuditLog::EVENT_LOGOUT => 'User Sign-Out',
-                        AuditLog::EVENT_VERIFIED => 'Document Verified',
-                        AuditLog::EVENT_CONVERTED => 'Quotation Converted',
                     ]),
 
                 SelectFilter::make('auditable_type')
@@ -165,6 +174,8 @@ class ActivityLogResource extends Resource
                         DeliveryReceipt::class => 'Delivery Receipts',
                         SalesInvoice::class => 'Sales Invoices',
                         Transaction::class => 'Transactions Ledger',
+                        \App\Models\InventoryTransaction::class => 'Inventory Movements / Deductions',
+                        \App\Models\InventoryItem::class => 'Inventory Stocks',
                         Project::class => 'Projects',
                         Vendor::class => 'Vendors',
                     ]),

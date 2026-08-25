@@ -154,13 +154,21 @@ class PoInventoryAndSalesIntegrationTest extends TestCase
         $this->assertEquals(Quotation::STATUS_CONVERTED, $quotation->fresh()->status);
         $this->assertEquals(1, $po->lineItems()->count());
 
-        // Inventory is deducted
+        // Inventory is not deducted yet (waiting for DR & SI fulfillment)
+        $this->inventoryItem->refresh();
+        $this->assertEquals(1000, (float) $this->inventoryItem->quantity_on_hand);
+
+        // Fulfill with DR & SI
+        app(\App\Services\OrderFulfillmentService::class)->fulfillOrder($po, [
+            'dr_number' => 'DR-TEST-001',
+            'si_number' => 'SI-TEST-001',
+            'delivery_date' => now()->toDateString(),
+        ], $this->agent);
+
+        // Now inventory is deducted
         $this->inventoryItem->refresh();
         $this->assertEquals(900, (float) $this->inventoryItem->quantity_on_hand);
-
-        // Sales reflect in user's PO sum
-        $agentPoSum = PurchaseOrder::where('sales_agent_id', $this->agent->id)->sum('order_amount');
-        $this->assertGreaterThan(0, $agentPoSum);
+        $this->assertTrue($po->fresh()->isCompleted());
     }
 
     public function test_delivery_receipt_and_sales_invoice_generation(): void

@@ -60,14 +60,6 @@ class PurchaseOrderLineItem extends Model
                 $item->description = $item->product?->canonical_name ?? Product::find($item->product_id)?->canonical_name ?? ('Product #' . $item->product_id);
             }
         });
-
-        static::created(function ($item) {
-            if ($item->purchaseOrder && !in_array($item->purchaseOrder->status, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])) {
-                if (!$item->purchaseOrder->is_inventory_deducted) {
-                    app(\App\Services\InventoryService::class)->deductPurchaseOrderStock($item->purchaseOrder);
-                }
-            }
-        });
     }
 
     public function recompute(): void
