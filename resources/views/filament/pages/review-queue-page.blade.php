@@ -12,9 +12,9 @@
             {{-- Top Navigation & Document Header Bar --}}
             <div class="fi-section rounded-xl bg-white ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 shadow-xs" style="margin-bottom: 1.5rem; overflow: hidden;">
                 {{-- Tier 1: Main Header (Back, Document Title, Status Badges & Document Navigation) --}}
-                <div class="border-b border-gray-100 dark:border-white/10 flex flex-wrap justify-between items-center gap-3 p-3 sm:px-4">
+                <div class="border-b border-gray-100 dark:border-white/10" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; gap: 1rem; flex-wrap: wrap;">
                     {{-- Left: Back & Document Identity --}}
-                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                         <x-filament::button type="button" wire:click="closeWorkspace" color="gray"
                             icon="heroicon-m-arrow-left" size="sm" outlined>
                             Back to {{ $currentDocument->document_type === 'vendors_agreement' ? 'Quotations' : 'Purchase Orders' }}
@@ -22,8 +22,8 @@
 
                         <div class="hidden sm:block h-5 w-px bg-gray-200 dark:bg-gray-700"></div>
 
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="font-bold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span class="font-bold text-base tracking-tight text-gray-900 dark:text-white" style="white-space: nowrap;">
                                 {{ $currentDocument->document_number ?: 'Document #' . $currentDocument->id }}
                             </span>
 
@@ -58,7 +58,7 @@
                     </div>
 
                     {{-- Right: Previous / Next Document Switcher --}}
-                    <div class="flex items-center gap-2 ml-auto">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
                         <x-filament::button type="button" wire:click="loadPreviousDocument" color="gray"
                             icon="heroicon-m-chevron-left" size="sm" title="Previous Document" outlined>
                             Previous
@@ -72,15 +72,15 @@
 
                 {{-- Tier 2: Workspace Tools Toolbar --}}
                 @if (!$this->isReadOnly)
-                    <div class="bg-gray-50/75 dark:bg-white/5 flex flex-wrap justify-between items-center gap-2 p-2 sm:px-4">
+                    <div class="bg-gray-50/75 dark:bg-white/5" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; gap: 1rem; flex-wrap: wrap;">
                         {{-- Left Tools: Re-Extract, Undo, Redo, Reset --}}
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                             <x-filament::button type="button" wire:click="reExtractCurrentDocument" color="primary"
                                 icon="heroicon-m-sparkles" size="xs">
                                 Re-Extract (AI/OCR)
                             </x-filament::button>
 
-                            <div class="hidden sm:block h-4 w-px bg-gray-200 dark:bg-gray-700"></div>
+                            <div class="h-4 w-px bg-gray-200 dark:bg-gray-700"></div>
 
                             <x-filament::button type="button" wire:click="undo" color="gray"
                                 icon="heroicon-m-arrow-uturn-left" size="xs" :disabled="empty($undoStack)"
@@ -112,11 +112,11 @@
                         </div>
 
                         {{-- Right Tools: Keyboard Shortcut hints --}}
-                        <div class="hidden md:flex text-gray-500 dark:text-gray-400 items-center gap-3 text-xs">
-                            <span class="inline-flex items-center gap-1">
+                        <div class="text-gray-500 dark:text-gray-400" style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; margin-left: auto;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                 <kbd class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 shadow-2xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">Ctrl</kbd>+<kbd class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 shadow-2xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">Z</kbd> Undo
                             </span>
-                            <span class="inline-flex items-center gap-1">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                 <kbd class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 shadow-2xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">Ctrl</kbd>+<kbd class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 shadow-2xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">Y</kbd> Redo
                             </span>
                         </div>
@@ -396,9 +396,9 @@
                                         @endif
                                     </x-slot>
 
-                                    {{-- ROW 1: Product Identification (Responsive 12-col grid) --}}
-                                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start mb-3">
-                                        <div class="sm:col-span-2 md:col-span-1">
+                                    {{-- ROW 1: Product Identification (1:3:8 proportion) --}}
+                                    <div style="display: grid; grid-template-columns: 60px 180px 1fr; gap: 0.875rem; align-items: start; margin-bottom: 0.75rem;">
+                                        <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">#</label>
                                             <x-filament::input.wrapper size="sm">
                                                 <x-filament::input type="number"
@@ -408,7 +408,7 @@
                                             </x-filament::input.wrapper>
                                         </div>
 
-                                        <div class="sm:col-span-4 md:col-span-3">
+                                        <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Item Code</label>
                                             <x-filament::input.wrapper size="sm">
                                                 <x-filament::input.select wire:model.live="editableItems.{{ $index }}.material_code"
@@ -426,7 +426,7 @@
                                             </x-filament::input.wrapper>
                                         </div>
 
-                                        <div class="sm:col-span-6 md:col-span-8">
+                                        <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                                 Product <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                             </label>
@@ -445,11 +445,11 @@
                                     </div>
 
                                 {{-- Visual Divider Between Header Info and Pricing --}}
-                                <div class="border-t border-dashed border-gray-200 dark:border-gray-800 my-3"></div>
+                                <div style="border-top: 1px dashed rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0.875rem 0;"></div>
 
-                                {{-- ROW 2: Pricing, Quantities & Line Totals (Responsive Grid) --}}
-                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-12 gap-3 items-start">
-                                    <div class="col-span-1 sm:col-span-1 md:col-span-2">
+                                {{-- ROW 2: Pricing, Quantities & Line Totals (1:1:2:2:3) --}}
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 2fr 3fr; gap: 0.875rem; align-items: start;">
+                                    <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                             Qty <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                         </label>
@@ -461,7 +461,7 @@
                                         </x-filament::input.wrapper>
                                     </div>
 
-                                    <div class="col-span-1 sm:col-span-1 md:col-span-2">
+                                    <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                             Unit <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                         </label>
@@ -476,7 +476,7 @@
                                         </x-filament::input.wrapper>
                                     </div>
 
-                                    <div class="col-span-1 sm:col-span-1 md:col-span-2">
+                                    <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                             Unit Price (₱) <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                         </label>
@@ -488,7 +488,7 @@
                                         </x-filament::input.wrapper>
                                     </div>
 
-                                    <div class="col-span-1 sm:col-span-1 md:col-span-3">
+                                    <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 mb-1.5">Discounted (₱)</label>
                                         <x-filament::input.wrapper size="sm" prefix="₱">
                                             <x-filament::input type="number" step="0.01"
@@ -498,7 +498,7 @@
                                         </x-filament::input.wrapper>
                                     </div>
 
-                                    <div class="col-span-2 sm:col-span-2 md:col-span-3">
+                                    <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                             Total (₱) <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
                                         </label>
@@ -637,14 +637,13 @@
 
                 {{-- SECTION 5: ACTIONS BAR --}}
                 <x-filament::section>
-                    <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
 
                         {{-- Left Action Buttons --}}
-                        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                             @if (!$this->isReadOnly)
                                 <x-filament::button type="button" wire:click="saveDraft" color="gray"
                                     icon="heroicon-m-arrow-path" size="sm"
-                                    class="w-full sm:w-auto"
                                     title="Save updated line items and re-calculate line sums, totals, and 12% Philippine VAT">
                                     Save Draft & Re-Calculate
                                 </x-filament::button>
@@ -655,7 +654,6 @@
                                     <x-slot name="trigger">
                                         <x-filament::button type="button" color="danger"
                                             icon="heroicon-m-x-circle" size="sm"
-                                            class="w-full sm:w-auto"
                                             title="Reject this document and remove it from the active review queue">
                                             Reject Document
                                         </x-filament::button>
@@ -669,7 +667,7 @@
                                         Are you sure you want to mark this document as rejected? This will remove the document from the active review queue.
                                     </x-slot>
 
-                                    <div class="flex flex-col gap-2 mt-2">
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
                                         <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300">
                                             Reason for Rejection (Optional)
                                         </label>
@@ -681,7 +679,7 @@
                                     </div>
 
                                     <x-slot name="footer">
-                                        <div class="flex justify-end items-center gap-3 w-full">
+                                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; width: 100%;">
                                             <x-filament::button type="button" color="gray"
                                                 x-on:click="$dispatch('close-modal', { id: 'reject-document-modal' })">
                                                 Cancel
@@ -699,11 +697,10 @@
                         </div>
 
                         {{-- Right Action Button --}}
-                        <div class="w-full sm:w-auto">
+                        <div>
                             @if (auth()->user()?->canVerifyDocuments())
                                 <x-filament::button type="button" wire:click="approveAndVerify" color="success"
                                     icon="heroicon-m-check-badge" size="md"
-                                    class="w-full sm:w-auto"
                                     title="Approve this reconciled document and commit transaction to the master financial ledger">
                                     Approve & Commit Transaction
                                 </x-filament::button>
