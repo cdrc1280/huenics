@@ -94,12 +94,13 @@ class ActivityLogResource extends Resource
                         'delivered', 'order_marked_delivered' => 'Delivered & Realized',
                         'fulfilled' => 'Fulfilled',
                         'documents_attached' => 'DR & SI Attached',
+                        'stock_added' => 'Stock Added',
                         'stock_deducted', 'inventory_deducted' => 'Stock Deducted',
                         'stock_restored', 'inventory_restored' => 'Stock Restored',
                         default => ucwords(str_replace('_', ' ', $state)),
                     })
                     ->colors([
-                        'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored', 'delivered', 'order_marked_delivered', 'fulfilled', 'documents_attached']),
+                        'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored', 'delivered', 'order_marked_delivered', 'fulfilled', 'documents_attached', 'stock_added']),
                         'info' => fn($state) => in_array($state, ['updated', 'line_item_adjusted', 'stock_deducted', 'inventory_deducted']),
                         'danger' => fn($state) => in_array($state, ['deleted', 'force_deleted', 'document_rejected']),
                         'primary' => fn($state) => in_array($state, ['login']),
@@ -152,6 +153,7 @@ class ActivityLogResource extends Resource
                         AuditLog::EVENT_UPDATED => 'Updated',
                         AuditLog::EVENT_DELIVERED => 'Order Marked Delivered',
                         AuditLog::EVENT_DOCUMENTS_ATTACHED => 'DR & SI Attached',
+                        AuditLog::EVENT_STOCK_ADDED => 'Stock Added',
                         AuditLog::EVENT_STOCK_DEDUCTED => 'Stock Deducted',
                         AuditLog::EVENT_STOCK_RESTORED => 'Stock Restored',
                         AuditLog::EVENT_CONVERTED => 'Quotation Converted',

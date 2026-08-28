@@ -164,7 +164,7 @@ class InventoryDashboard extends Page implements HasTable, HasForms
 
                             Notification::make()
                                 ->title('Stock Adjusted')
-                                ->body("Stock updated for {$record->product->canonical_name}.")
+                                ->body("Stock updated for {$record->product->canonical_name}. Transaction recorded in Activity Log.")
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {

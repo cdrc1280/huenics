@@ -14,7 +14,9 @@ class EditProduct extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            ProductResource::getAddStockAction(),
+        ];
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model

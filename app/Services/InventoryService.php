@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\PoItemSelectedComponent;
@@ -16,6 +17,38 @@ use Illuminate\Support\Facades\Log;
 class InventoryService
 {
     /**
+     * Add stock for a given product and log the addition to the Activity Log.
+     */
+    public function addStock(
+        Product $product,
+        float $quantity,
+        string $type = 'purchase_in',
+        string $notes = '',
+        ?string $reference = null,
+        ?User $user = null
+    ): InventoryTransaction {
+        $invItem = $product->inventoryItem ?? InventoryItem::firstOrCreate(
+            ['product_id' => $product->id],
+            [
+                'quantity_on_hand' => 0,
+                'quantity_reserved' => 0,
+                'reorder_point' => 10,
+                'unit' => $product->unit_default ?: 'pcs',
+            ]
+        );
+
+        return $this->adjustStock(
+            item: $invItem,
+            quantity: $quantity,
+            type: $type,
+            notes: $notes,
+            user: $user,
+            referenceType: $reference ? 'reference' : null,
+            referenceId: null
+        );
+    }
+
+    /**
      * Adjust stock for an inventory item and log the transaction.
      */
     public function adjustStock(
@@ -28,8 +61,11 @@ class InventoryService
         ?int $referenceId = null
     ): InventoryTransaction {
         return DB::transaction(function () use ($item, $quantity, $type, $notes, $user, $referenceType, $referenceId) {
+            $oldStock = (float) $item->quantity_on_hand;
+            $isAddition = in_array($type, ['initial_stock', 'purchase_in', 'adjustment_up', 'returned_items']);
+
             // Adjust quantity_on_hand based on transaction type
-            if (in_array($type, ['initial_stock', 'purchase_in', 'adjustment_up'])) {
+            if ($isAddition) {
                 $item->increment('quantity_on_hand', $quantity);
             } elseif (in_array($type, ['component_deduct', 'sales_out', 'adjustment_down'])) {
                 $item->decrement('quantity_on_hand', $quantity);
@@ -53,8 +89,55 @@ class InventoryService
 
             // Check and notify low stock
             $item->refresh();
+            $newStock = (float) $item->quantity_on_hand;
+
             if ($item->reorder_point && $item->quantity_on_hand <= $item->reorder_point) {
                 $this->triggerLowStockNotification($item);
+            }
+
+            // Record to immutable Activity Log & Audit Trail
+            try {
+                $product = $item->product ?: Product::find($item->product_id);
+                $actor = $user ?? auth()->user() ?? User::find($userId);
+                $unit = $item->unit ?: ($product?->unit_default ?: 'pcs');
+                $prodName = $product?->canonical_name ?? "Product #{$item->product_id}";
+
+                if ($isAddition) {
+                    $logEvent = AuditLog::EVENT_STOCK_ADDED;
+                    $logAction = 'stock_added';
+                    $summary = "Added " . number_format($quantity, 2) . " {$unit} to stock for {$prodName} (Stock: " . number_format($oldStock, 2) . " → " . number_format($newStock, 2) . "). Notes: {$notes}";
+                } else {
+                    $logEvent = AuditLog::EVENT_STOCK_DEDUCTED;
+                    $logAction = 'stock_deducted';
+                    $summary = "Deducted " . number_format($quantity, 2) . " {$unit} from stock for {$prodName} (Stock: " . number_format($oldStock, 2) . " → " . number_format($newStock, 2) . "). Notes: {$notes}";
+                }
+
+                AuditLog::logActivity(
+                    description: $summary,
+                    auditable: $product ?? $item,
+                    event: $logEvent,
+                    oldValue: ['quantity_on_hand' => $oldStock],
+                    newValue: [
+                        'quantity_on_hand' => $newStock,
+                        'quantity_changed' => $quantity,
+                        'transaction_type' => $type,
+                        'reference_type'   => $referenceType,
+                        'reference_id'     => $referenceId,
+                        'notes'            => $notes,
+                    ],
+                    properties: [
+                        'product_id'        => $product?->id,
+                        'product_code'      => $product?->product_code,
+                        'sku'               => $product?->sku,
+                        'unit'              => $unit,
+                        'inventory_item_id' => $item->id,
+                        'transaction_id'    => $transaction->id,
+                    ],
+                    user: $actor,
+                    action: $logAction
+                );
+            } catch (\Throwable $ex) {
+                Log::warning("Activity log failed for stock adjustment: " . $ex->getMessage());
             }
 
             return $transaction;

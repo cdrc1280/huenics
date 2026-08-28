@@ -27,6 +27,8 @@ class AuditLog extends Model
     public const EVENT_DOCUMENTS_ATTACHED = 'documents_attached';
     public const EVENT_STOCK_DEDUCTED = 'stock_deducted';
     public const EVENT_STOCK_RESTORED = 'stock_restored';
+    public const EVENT_STOCK_ADDED = 'stock_added';
+    public const EVENT_STOCK_ADJUSTED = 'stock_adjusted';
     public const EVENT_CUSTOM = 'custom';
 
     protected $fillable = [
@@ -158,6 +160,8 @@ class AuditLog extends Model
             'DeliveryReceipt' => 'Delivery Receipt',
             'SalesInvoice' => 'Sales Invoice',
             'Transaction' => 'Ledger',
+            'InventoryItem' => 'Inventory Item',
+            'InventoryTransaction' => 'Inventory Transaction',
             default => $base,
         };
     }
@@ -178,7 +182,10 @@ class AuditLog extends Model
             if (isset($r->dr_number)) return "#{$r->dr_number}";
             if (isset($r->invoice_number)) return "#{$r->invoice_number}";
             if (isset($r->document_number)) return "#{$r->document_number}";
-            if (isset($r->canonical_name)) return $r->canonical_name;
+            if (isset($r->canonical_name)) {
+                $sku = !empty($r->sku) ? " [{$r->sku}]" : (!empty($r->product_code) ? " [{$r->product_code}]" : '');
+                return "{$r->canonical_name}{$sku}";
+            }
             if (isset($r->name)) return $r->name;
             if (isset($r->transaction_code)) return "#{$r->transaction_code}";
         }

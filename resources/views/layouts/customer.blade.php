@@ -32,6 +32,11 @@
             background: rgba(17, 24, 39, 0.85);
             backdrop-filter: blur(8px);
         }
+        /* Bulletproof single-icon display per theme */
+        html.dark #theme-icon-sun { display: inline-block !important; }
+        html.dark #theme-icon-moon { display: none !important; }
+        html:not(.dark) #theme-icon-sun { display: none !important; }
+        html:not(.dark) #theme-icon-moon { display: inline-block !important; }
     </style>
 </head>
 <body class="flex min-h-full flex-col font-sans bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -102,10 +107,10 @@
                     <button type="button" 
                             id="theme-toggle"
                             onclick="toggleDarkMode()" 
-                            class="p-2 rounded-xl text-slate-500 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition focus:outline-none border border-transparent dark:border-slate-800" 
+                            class="p-2 rounded-xl text-slate-500 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition focus:outline-none border border-transparent dark:border-slate-800 flex items-center justify-center w-9 h-9" 
                             title="Toggle Light / Dark Theme"
                             aria-label="Toggle Theme">
-                        <i id="theme-icon-sun" class="fa-solid fa-sun text-amber-400 text-sm hidden"></i>
+                        <i id="theme-icon-sun" class="fa-solid fa-sun text-amber-400 text-sm"></i>
                         <i id="theme-icon-moon" class="fa-solid fa-moon text-slate-500 text-sm"></i>
                     </button>
 
@@ -373,18 +378,8 @@
         }
 
         function updateThemeIcons() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const sun = document.getElementById('theme-icon-sun');
-            const moon = document.getElementById('theme-icon-moon');
-            if (sun && moon) {
-                if (isDark) {
-                    sun.classList.remove('hidden');
-                    moon.classList.add('hidden');
-                } else {
-                    sun.classList.add('hidden');
-                    moon.classList.remove('hidden');
-                }
-            }
+            // Strict CSS rules (html.dark #theme-icon-sun / html:not(.dark) #theme-icon-moon) guarantee
+            // exactly one icon is rendered at all times per theme with zero delay or flicker.
         }
 
         // Initialize badge and theme icon on load
