@@ -274,8 +274,11 @@
 </section>
 
 <!-- Modal: Add from Catalog -->
-<div id="catalog-modal" class="fixed inset-0 z-50 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+<div id="catalog-modal" class="fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-200">
     <div class="bg-white dark:bg-[#111827] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <!-- Top Geometric Accent Bar -->
+        <div class="h-1.5 w-full bg-gradient-to-r from-[#214fe0] via-blue-500 to-[#1a42be]"></div>
+
         <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-[#161f38]">
             <div>
                 <h3 class="text-base font-bold text-slate-900 dark:text-white">Select Item From Catalog</h3>
@@ -447,15 +450,40 @@
     }
 
     function deleteRow(index) {
-        currentItems.splice(index, 1);
-        renderRows();
+        const item = currentItems[index];
+        const itemName = item?.description || 'this line item';
+
+        HuenicsModal.confirm({
+            title: 'Remove Line Item?',
+            message: `Are you sure you want to remove "${itemName}" from this quotation estimate?`,
+            icon: 'fa-solid fa-trash-can',
+            type: 'danger',
+            confirmText: 'Remove Item',
+            cancelText: 'Keep Item',
+            onConfirm: () => {
+                currentItems.splice(index, 1);
+                renderRows();
+                showToast('Item Removed', `"${itemName}" removed from quotation.`);
+            }
+        });
     }
 
     function clearAllItems() {
-        if (confirm('Are you sure you want to clear all items from this quotation?')) {
-            currentItems = [];
-            renderRows();
-        }
+        if (currentItems.length === 0) return;
+
+        HuenicsModal.confirm({
+            title: 'Clear All Line Items?',
+            message: 'Are you sure you want to clear all items from this quotation? This will reset your table and recalculate estimated project totals to zero.',
+            icon: 'fa-solid fa-trash-can',
+            type: 'danger',
+            confirmText: 'Clear All Items',
+            cancelText: 'Cancel',
+            onConfirm: () => {
+                currentItems = [];
+                renderRows();
+                showToast('Quotation Cleared', 'All line items removed from quotation.');
+            }
+        });
     }
 
     function addCustomRow() {
@@ -504,12 +532,16 @@
 
     // Modal helpers
     function openAddCatalogModal() {
-        document.getElementById('catalog-modal').classList.remove('hidden');
+        const modal = document.getElementById('catalog-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.getElementById('catalog-search-input').focus();
     }
 
     function closeAddCatalogModal() {
-        document.getElementById('catalog-modal').classList.add('hidden');
+        const modal = document.getElementById('catalog-modal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 
     function filterCatalogModal() {

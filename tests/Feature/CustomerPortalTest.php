@@ -253,4 +253,42 @@ class CustomerPortalTest extends TestCase
         $builderResponse->assertSee('dark:bg-[#111827]', false);
         $builderResponse->assertSee('catalog-modal', false);
     }
+
+    public function test_uniform_customer_modal_is_rendered_and_no_native_dialogs_used(): void
+    {
+        // 1. Uniform modal container exists on the customer layout
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('id="huenics-modal"', false);
+        $response->assertSee('id="huenics-modal-card"', false);
+        $response->assertSee('id="huenics-modal-title"', false);
+        $response->assertSee('id="huenics-modal-confirm-btn"', false);
+        $response->assertSee('id="huenics-modal-cancel-btn"', false);
+        $response->assertSee('window.HuenicsModal =', false);
+
+        // 2. Quotation builder uses HuenicsModal and never calls browser native confirm()
+        $builderResponse = $this->get('/quotation/builder');
+        $builderResponse->assertStatus(200);
+        $builderResponse->assertSee('HuenicsModal.confirm', false);
+        $builderResponse->assertDontSee("confirm('Are you sure", false);
+        $builderResponse->assertDontSee('window.confirm(', false);
+    }
+
+    public function test_tablet_mode_responsiveness_prevents_navbar_and_logo_collision(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Verify desktop nav uses lg:flex so it does not overlap logo on tablet screens (768px - 1023px)
+        $response->assertSee('class="hidden lg:flex items-center gap-4 xl:gap-7', false);
+
+        // Verify hamburger toggle is active on tablet (< 1024px)
+        $response->assertSee('lg:hidden', false);
+
+        // Verify mobile/tablet drawer is active up to lg
+        $response->assertSee('id="mobile-menu" class="hidden lg:hidden', false);
+
+        // Verify logo and right-actions are marked shrink-0 so they never get squashed
+        $response->assertSee('class="flex items-center gap-2 sm:gap-3 shrink-0"', false);
+    }
 }

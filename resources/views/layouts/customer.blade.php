@@ -68,25 +68,25 @@
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
                 <!-- Authentic HISI Logo from PDF Header -->
-                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0" title="Huenics Industrial Sales Inc.">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group shrink-0" title="Huenics Industrial Sales Inc.">
                         <div class="border-l-[3px] border-r-[3px] border-[#214fe0] dark:border-[#3b82f6] px-2 py-0.5 text-center shrink-0 bg-blue-50/50 dark:bg-blue-950/60 rounded-sm transition-colors">
                             <div class="text-lg sm:text-2xl font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa] leading-none">HISI</div>
                             <div class="text-[7.5px] sm:text-[9px] font-bold text-blue-900 dark:text-blue-200 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
                         </div>
-                        <div class="border-l border-slate-200 dark:border-slate-800 pl-2.5 sm:pl-3 min-w-0 truncate transition-colors">
-                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none truncate">
+                        <div class="border-l border-slate-200 dark:border-slate-800 pl-2.5 sm:pl-3 hidden sm:block shrink-0 transition-colors">
+                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
                                 HUENICS
                             </div>
-                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] dark:text-[#60a5fa] uppercase leading-none mt-0.5 truncate">
+                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] dark:text-[#60a5fa] uppercase leading-none mt-0.5">
                                 INDUSTRIAL SALES INC.
                             </div>
                         </div>
                     </a>
                 </div>
 
-                <!-- Desktop Nav Links -->
-                <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <!-- Desktop Nav Links (Visible on Laptop / Desktop >= 1024px) -->
+                <nav class="hidden lg:flex items-center gap-4 xl:gap-7 text-xs xl:text-sm font-medium text-slate-700 dark:text-slate-300 shrink-0">
                     <a href="{{ route('customer.home') }}" class="hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1' : '' }}">
                         Home
                     </a>
@@ -107,32 +107,32 @@
                     <button type="button" 
                             id="theme-toggle"
                             onclick="toggleDarkMode()" 
-                            class="p-2 rounded-xl text-slate-500 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition focus:outline-none border border-transparent dark:border-slate-800 flex items-center justify-center w-9 h-9" 
+                            class="p-2 rounded-xl text-slate-600 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 bg-white dark:bg-[#161f38] hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 shadow-sm flex items-center justify-center w-9 h-9" 
                             title="Toggle Light / Dark Theme"
                             aria-label="Toggle Theme">
                         <i id="theme-icon-sun" class="fa-solid fa-sun text-amber-400 text-sm"></i>
-                        <i id="theme-icon-moon" class="fa-solid fa-moon text-slate-500 text-sm"></i>
+                        <i id="theme-icon-moon" class="fa-solid fa-moon text-slate-600 dark:text-slate-400 text-sm"></i>
                     </button>
 
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-lg transition dark:shadow-[0_0_15px_rgba(33,79,224,0.35)]">
+                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-lg transition dark:shadow-[0_0_15px_rgba(33,79,224,0.35)] shrink-0">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
-                        <span class="hidden xs:inline sm:inline">Quotation Estimate</span>
+                        <span class="hidden sm:inline">Quotation</span><span class="hidden xl:inline"> Estimate</span>
                         <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">
                             0
                         </span>
                     </a>
 
-                    <!-- Mobile Menu Button -->
-                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none" aria-label="Toggle Navigation Menu">
+                    <!-- Mobile / Tablet Hamburger Button (Visible on Mobile & Tablet < 1024px) -->
+                    <button type="button" onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none" aria-label="Toggle Navigation Menu">
                         <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Mobile Nav Menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0f19] px-4 py-4 space-y-2 shadow-lg transition-colors">
+        <!-- Mobile & Tablet Nav Menu Drawer -->
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0f19] px-4 py-4 space-y-2 shadow-lg transition-colors">
             <a href="{{ route('customer.home') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.home') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
                 <i class="fa-solid fa-house w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Home
             </a>
@@ -162,6 +162,51 @@
             <div class="flex-1">
                 <p id="toast-title" class="font-bold text-xs text-white">Item Added</p>
                 <p id="toast-message" class="text-xs text-slate-300">Added to quotation cart.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Uniform Customer Modal (Confirmation & Alerts) -->
+    <div id="huenics-modal" 
+         class="fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-200"
+         role="dialog" 
+         aria-modal="true" 
+         aria-labelledby="huenics-modal-title">
+        <div id="huenics-modal-card" 
+             class="bg-white dark:bg-[#111827] rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 overflow-hidden transform scale-95 opacity-0 transition-all duration-200">
+            <!-- Top Geometric Accent Bar -->
+            <div class="h-1.5 w-full bg-gradient-to-r from-[#214fe0] via-blue-500 to-[#1a42be]"></div>
+
+            <div class="p-6">
+                <div class="flex items-start gap-4">
+                    <!-- Dynamic Icon Container -->
+                    <div id="huenics-modal-icon-container" class="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <i id="huenics-modal-icon" class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <h3 id="huenics-modal-title" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                            Confirmation
+                        </h3>
+                        <p id="huenics-modal-message" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                            Are you sure you want to proceed?
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" 
+                            id="huenics-modal-cancel-btn"
+                            class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f38] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-slate-400">
+                        Cancel
+                    </button>
+                    <button type="button" 
+                            id="huenics-modal-confirm-btn"
+                            class="px-5 py-2.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition focus:outline-none focus:ring-2 flex items-center gap-1.5">
+                        <span>Confirm</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -382,10 +427,165 @@
             // exactly one icon is rendered at all times per theme with zero delay or flicker.
         }
 
-        // Initialize badge and theme icon on load
+        // Global Uniform Modal Controller for Customer Portal
+        window.HuenicsModal = {
+            modalEl: null,
+            cardEl: null,
+            titleEl: null,
+            messageEl: null,
+            iconContainerEl: null,
+            iconEl: null,
+            confirmBtnEl: null,
+            cancelBtnEl: null,
+            confirmCallback: null,
+            cancelCallback: null,
+
+            init() {
+                this.modalEl = document.getElementById('huenics-modal');
+                this.cardEl = document.getElementById('huenics-modal-card');
+                this.titleEl = document.getElementById('huenics-modal-title');
+                this.messageEl = document.getElementById('huenics-modal-message');
+                this.iconContainerEl = document.getElementById('huenics-modal-icon-container');
+                this.iconEl = document.getElementById('huenics-modal-icon');
+                this.confirmBtnEl = document.getElementById('huenics-modal-confirm-btn');
+                this.cancelBtnEl = document.getElementById('huenics-modal-cancel-btn');
+
+                if (!this.modalEl) return;
+
+                // Close on cancel button
+                this.cancelBtnEl?.addEventListener('click', () => {
+                    const cb = this.cancelCallback;
+                    this.close();
+                    if (cb) cb();
+                });
+
+                // Confirm on confirm button
+                this.confirmBtnEl?.addEventListener('click', () => {
+                    const cb = this.confirmCallback;
+                    this.close();
+                    if (cb) cb();
+                });
+
+                // Close on clicking backdrop
+                this.modalEl.addEventListener('click', (e) => {
+                    if (e.target === this.modalEl) {
+                        const cb = this.cancelCallback;
+                        this.close();
+                        if (cb) cb();
+                    }
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && !this.modalEl.classList.contains('hidden')) {
+                        const cb = this.cancelCallback;
+                        this.close();
+                        if (cb) cb();
+                    }
+                });
+            },
+
+            confirm({
+                title = 'Confirmation',
+                message = 'Are you sure you want to proceed?',
+                icon = 'fa-solid fa-triangle-exclamation',
+                type = 'danger', // 'danger' | 'warning' | 'primary' | 'success'
+                confirmText = 'Confirm',
+                cancelText = 'Cancel',
+                onConfirm = () => {},
+                onCancel = () => {}
+            } = {}) {
+                if (!this.modalEl) this.init();
+
+                this.titleEl.textContent = title;
+                this.messageEl.textContent = message;
+                this.confirmCallback = onConfirm;
+                this.cancelCallback = onCancel;
+
+                this.applyTheme(type, icon, confirmText, cancelText, false);
+                this.open();
+            },
+
+            alert({
+                title = 'Notice',
+                message = '',
+                icon = 'fa-solid fa-circle-info',
+                type = 'primary',
+                buttonText = 'Got It',
+                onClose = () => {}
+            } = {}) {
+                if (!this.modalEl) this.init();
+
+                this.titleEl.textContent = title;
+                this.messageEl.textContent = message;
+                this.confirmCallback = onClose;
+                this.cancelCallback = onClose;
+
+                this.applyTheme(type, icon, buttonText, '', true);
+                this.open();
+            },
+
+            applyTheme(type, icon, confirmText, cancelText, isAlert = false) {
+                this.iconEl.className = icon;
+
+                const styles = {
+                    danger: {
+                        iconBg: 'bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/60',
+                        btnClass: 'bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white shadow-red-500/20',
+                    },
+                    warning: {
+                        iconBg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60',
+                        btnClass: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 text-white shadow-amber-500/20',
+                    },
+                    success: {
+                        iconBg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60',
+                        btnClass: 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white shadow-emerald-500/20',
+                    },
+                    primary: {
+                        iconBg: 'bg-blue-50 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] border border-blue-200 dark:border-blue-800/60',
+                        btnClass: 'bg-[#214fe0] hover:bg-[#1a42be] focus:ring-blue-500 text-white shadow-blue-500/20',
+                    },
+                };
+
+                const theme = styles[type] || styles.primary;
+                this.iconContainerEl.className = `w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 ${theme.iconBg}`;
+                this.confirmBtnEl.className = `px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition focus:outline-none focus:ring-2 flex items-center gap-1.5 ${theme.btnClass}`;
+                this.confirmBtnEl.querySelector('span').textContent = confirmText;
+
+                if (isAlert) {
+                    this.cancelBtnEl.classList.add('hidden');
+                } else {
+                    this.cancelBtnEl.classList.remove('hidden');
+                    this.cancelBtnEl.textContent = cancelText || 'Cancel';
+                }
+            },
+
+            open() {
+                this.modalEl.classList.remove('hidden');
+                this.modalEl.classList.add('flex');
+
+                requestAnimationFrame(() => {
+                    this.cardEl.classList.remove('scale-95', 'opacity-0');
+                    this.cardEl.classList.add('scale-100', 'opacity-100');
+                    this.confirmBtnEl.focus();
+                });
+            },
+
+            close() {
+                this.cardEl.classList.remove('scale-100', 'opacity-100');
+                this.cardEl.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.modalEl.classList.remove('flex');
+                    this.modalEl.classList.add('hidden');
+                }, 150);
+            }
+        };
+
+        // Initialize badge, theme icon, and modal on load
         document.addEventListener('DOMContentLoaded', () => {
             CartManager.updateNavBadge();
             updateThemeIcons();
+            HuenicsModal.init();
         });
     </script>
 
