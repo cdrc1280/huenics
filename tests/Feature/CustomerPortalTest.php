@@ -50,9 +50,10 @@ class CustomerPortalTest extends TestCase
         $response = $this->get('/about');
 
         $response->assertStatus(200);
-        $response->assertSee('About Huenics Industrial Sales Inc.');
+        $response->assertSee('Huenics Industrial Sales Inc.');
         $response->assertSee('Colors');
         $response->assertSee('Technology');
+        $response->assertSee('LIGHTING CLINIC');
     }
 
     public function test_customer_side_has_no_login_features(): void
@@ -155,5 +156,19 @@ class CustomerPortalTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_company_profile_products_are_stored_and_queryable(): void
+    {
+        $this->seed(\Database\Seeders\HuenicsCompanyProfileProductSeeder::class);
+
+        $response = $this->get('/products?category=Indoor+Downlights');
+        $response->assertStatus(200);
+        $response->assertSee('Citizen Japan');
+        $response->assertSee('HISI-JF-2240-7W');
+
+        $smartResponse = $this->get('/products?category=Smart+Home+%26+Automation');
+        $smartResponse->assertStatus(200);
+        $smartResponse->assertSee('HISI-SMART-GW');
     }
 }

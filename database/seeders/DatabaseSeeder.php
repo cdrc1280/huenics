@@ -68,13 +68,13 @@ class DatabaseSeeder extends Seeder
         $huenics = Vendor::firstOrCreate(
             ['slug' => 'huenics-industrial'],
             [
-                'name' => 'Huenics Industrial Supply Corp.',
+                'name' => 'Huenics Industrial Sales Inc.',
                 'tin' => '009-876-543-000',
-                'address' => '123 Pioneer St., Mandaluyong City, Metro Manila',
-                'contact_person' => 'Juan Dela Cruz',
-                'phone' => '+63 2 8123 4567',
-                'email' => 'sales@huenics.com',
-                'notes' => 'Primary internal operating vendor',
+                'address' => 'Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila',
+                'contact_person' => 'Customer Care',
+                'phone' => '(02) 8561 6836',
+                'email' => 'huenicsindustrialsales@gmail.com',
+                'notes' => 'Primary operating entity - Colors • Techniques • Technology',
                 'is_active' => true,
             ]
         );
@@ -402,5 +402,8 @@ class DatabaseSeeder extends Seeder
     //         ]
     //     );
     //     $reconciler->execute($vafDoc);
+
+        // Seed all products from official Company Profile
+        $this->call(HuenicsCompanyProfileProductSeeder::class);
     }
 }

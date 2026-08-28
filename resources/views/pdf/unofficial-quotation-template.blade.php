@@ -227,8 +227,8 @@
                 <div class="company-title">Huenics Industrial Sales Inc.</div>
                 <div class="company-subtitle">Colors &bull; Techniques &bull; Technology</div>
                 <div class="company-meta">
-                    916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, Manila<br>
-                    Telefax: (02) 8561-6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205<br>
+                    Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila<br>
+                    Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205<br>
                     Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com
                 </div>
             </td>

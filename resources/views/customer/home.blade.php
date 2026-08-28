@@ -112,10 +112,10 @@
             <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Product Portfolio</span>
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
-                    Featured Industrial Product Lines
+                    Commercial & Architectural Lighting
                 </h2>
                 <p class="text-sm text-slate-500 mt-1 max-w-xl">
-                    Explore our inventory of plumbing, electrical, structural, and pumping systems. Add products directly to your preliminary quotation cart.
+                    Explore our catalog of Citizen Japan C.O.B downlights, highbays, tracklights, architectural linear profiles, and smart digital systems.
                 </p>
             </div>
             <a href="{{ route('customer.products') }}" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold text-sm group">
@@ -192,16 +192,118 @@
     </div>
 </section>
 
-<!-- Why Choose Huenics Section -->
+<!-- Three Core Pillars (Page 4) -->
 <section class="py-16 bg-slate-100 border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-12">
-            <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Our Capabilities</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-blue-600">The Huenics Advantage</span>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
-                Built for Contractors, Developers & Engineers
+                Colors &bull; Techniques &bull; Technology
+            </h2>
+            <p class="text-sm text-slate-600 mt-2 font-medium italic">
+                "Focus on Pursuing Quality & Speed of Delivery."
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Right Color -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-palette"></i>
+                </div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-rose-600">Our Unique Feature</span>
+                <h3 class="text-lg font-bold text-slate-900">Right Color</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    In commercial and industrial illumination, color is everything. Huenics LED Technology achieves exacting color temperatures and high CRI rendering—allowing customers to achieve the best possible illumination.
+                </p>
+            </div>
+
+            <!-- Utilizing Techniques -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-gears"></i>
+                </div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Our Passion</span>
+                <h3 class="text-lg font-bold text-slate-900">Utilizing Techniques</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    The moment the client speaks, we listen. Huenics products are designed to the customer's greatest advantage through the continuous development of optical and engineering techniques.
+                </p>
+            </div>
+
+            <!-- Stand Out Technology -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Our Pride</span>
+                <h3 class="text-lg font-bold text-slate-900">Stand Out Technology</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Efficiency draws in customers and ensures repeat partnership. Becoming the option of choice for customers interested in value engineering and creating an ideal brightest atmosphere.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lighting Clinic & Value-Added Services (Pages 24-26) -->
+<section class="py-16 bg-white border-t border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-6 space-y-4">
+                <span class="inline-flex items-center gap-1.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <i class="fa-solid fa-wrench"></i> Value-Added Services
+                </span>
+                <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">
+                    LIGHTING CLINIC <span class="text-amber-400">&bull;</span> Enercon
+                </h2>
+                <p class="text-blue-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">
+                    Energy Conservation &bull; Repair &bull; Upgrade &bull; Retrofit
+                </p>
+                <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                    Our Enercon program provides comprehensive energy management and cost analysis in lighting. Extend fixture life, reduce replacement costs, and improve luminous efficacy across your facilities.
+                </p>
+                <div class="pt-2">
+                    <a href="{{ route('customer.about') }}" class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition">
+                        <span>Learn more about Lighting Clinic</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1.5 text-center sm:text-left">
+                    <div class="text-amber-400 font-bold text-xs uppercase">We Repair</div>
+                    <p class="text-[11px] text-slate-300 leading-snug">
+                        Downlights, Tracklights, Highbays, and more as long as major parts exist.
+                    </p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1.5 text-center sm:text-left">
+                    <div class="text-emerald-400 font-bold text-xs uppercase">We Upgrade</div>
+                    <p class="text-[11px] text-slate-300 leading-snug">
+                        Upgrade existing LED lights into high quality Citizen LED C.O.B chips.
+                    </p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1.5 text-center sm:text-left">
+                    <div class="text-blue-400 font-bold text-xs uppercase">We Retrofit</div>
+                    <p class="text-[11px] text-slate-300 leading-snug">
+                        Retrofit old or traditional fixtures to modern high-efficiency LED.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Huenics Section -->
+<section class="py-16 bg-slate-50 border-t border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Our Commitments</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+                Built for Quality, Speed & Dependability
             </h2>
             <p class="text-sm text-slate-500 mt-2">
-                We bridge high-volume manufacturer supply directly with jobsite procurement schedules.
+                Providing innovative and reliable quality products that go beyond expectations.
             </p>
         </div>
 

@@ -184,11 +184,11 @@
                     <div class="space-y-3 text-sm text-slate-400">
                         <p class="flex items-start gap-2.5">
                             <i class="fa-solid fa-location-dot text-blue-400 mt-1"></i>
-                            <span class="text-xs leading-relaxed">916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, NCR, City of Manila First District, Philippines</span>
+                            <span class="text-xs leading-relaxed">Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
-                            <i class="fa-solid fa-fax text-blue-400"></i>
-                            <span>Telefax: (02) 8561-6836</span>
+                            <i class="fa-solid fa-phone text-blue-400"></i>
+                            <span>Tel. #8561 6836</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
                             <i class="fa-solid fa-headset text-blue-400"></i>
@@ -206,7 +206,30 @@
                 </div>
             </div>
 
-            <div class="mt-12 pt-8 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <!-- Global Support Network Partners (Page 7) -->
+            <div class="mt-10 pt-6 border-t border-slate-800/80">
+                <div class="text-center sm:text-left mb-3">
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Global Support Network & Technology Partners
+                    </span>
+                </div>
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400">
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Citizen</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Osram</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Lumileds</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Philips LED Driver</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Inventronics</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Hyperion</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">MechaTronix</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Khatod</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Molex</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">BJB</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">Darkoo</span>
+                    <span class="bg-slate-800/90 px-2.5 py-1 rounded border border-slate-700 font-semibold text-slate-300">DONE</span>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <p>&copy; {{ date('Y') }} Huenics Industrial Sales Inc. (HISI). All rights reserved.</p>
                 <p>Prices are subject to change without prior notice. (VAT INC.)</p>
             </div>

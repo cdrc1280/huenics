@@ -56,8 +56,8 @@
                         Colors &bull; Techniques &bull; Technology
                     </div>
                     <div class="text-xs text-slate-600 mt-2 space-y-0.5">
-                        <div>916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, Manila</div>
-                        <div>Telefax: (02) 8561-6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
+                        <div>Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</div>
+                        <div>Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
                         <div>Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</div>
                     </div>
                 </div>
