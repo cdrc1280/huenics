@@ -40,6 +40,24 @@ class Product extends Model
         ];
     }
 
+    /**
+     * Get the active display price for customer facing views.
+     */
+    public function getDisplayPriceAttribute(): float
+    {
+        $selling = (float) $this->selling_price;
+        if ($selling > 0) {
+            return $selling;
+        }
+
+        $default = (float) $this->default_price;
+        if ($default > 0) {
+            return $default;
+        }
+
+        return 0.0;
+    }
+
     // ─── Relationships ────────────────────────────────────────────────
 
     public function aliases(): HasMany

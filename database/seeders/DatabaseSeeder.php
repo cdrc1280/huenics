@@ -124,6 +124,7 @@ class DatabaseSeeder extends Seeder
                 'category' => 'Pipes & Fittings',
                 'unit_default' => 'pcs',
                 'default_price' => 1880.56,
+                'selling_price' => 1880.56,
                 'is_huenics_owned' => true,
                 'is_active' => true,
             ]
@@ -136,6 +137,7 @@ class DatabaseSeeder extends Seeder
                 'category' => 'Structural Steel',
                 'unit_default' => 'pcs',
                 'default_price' => 320.00,
+                'selling_price' => 320.00,
                 'is_huenics_owned' => true,
                 'is_active' => true,
             ]
@@ -148,6 +150,7 @@ class DatabaseSeeder extends Seeder
                 'category' => 'Pumps & Equipment',
                 'unit_default' => 'unit',
                 'default_price' => 18500.00,
+                'selling_price' => 18500.00,
                 'is_huenics_owned' => true,
                 'is_active' => true,
             ]
@@ -160,6 +163,7 @@ class DatabaseSeeder extends Seeder
                 'category' => 'Electrical',
                 'unit_default' => 'mtr',
                 'default_price' => 85.50,
+                'selling_price' => 85.50,
                 'is_huenics_owned' => false,
                 'is_active' => true,
             ]

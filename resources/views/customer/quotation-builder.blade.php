@@ -340,17 +340,23 @@
     function initBuilder() {
         currentItems = CartManager.getCart();
         
-        // If empty, add one default sample line item so user has something immediately editable
+        // If empty, initialize with the first authentic item from the database catalog
         if (currentItems.length === 0) {
-            currentItems.push({
-                item_code: 'PVC-125-SCH40',
-                description: '1-1/4" PVC Pipe Sch 40',
-                quantity: 158,
-                unit: 'pcs',
-                unit_price: 1880.56,
-                line_total: 297128.48
-            });
-            CartManager.saveCart(currentItems);
+            const defaultDbItem = @json($catalogProducts->first());
+            if (defaultDbItem) {
+                const unitPrice = parseFloat(defaultDbItem.selling_price || defaultDbItem.default_price || 0);
+                const initQty = 10;
+                currentItems.push({
+                    id: defaultDbItem.id || null,
+                    item_code: defaultDbItem.sku || defaultDbItem.product_code || 'HISI-PROD',
+                    description: defaultDbItem.canonical_name,
+                    quantity: initQty,
+                    unit: defaultDbItem.unit_default || 'pcs',
+                    unit_price: unitPrice,
+                    line_total: parseFloat((initQty * unitPrice).toFixed(2))
+                });
+                CartManager.saveCart(currentItems);
+            }
         }
 
         renderRows();

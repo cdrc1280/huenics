@@ -171,4 +171,54 @@ class CustomerPortalTest extends TestCase
         $smartResponse->assertStatus(200);
         $smartResponse->assertSee('HISI-SMART-GW');
     }
+
+    public function test_all_products_listed_on_customer_side_originate_from_database(): void
+    {
+        \Illuminate\Support\Facades\Cache::flush();
+
+        // 1. Create a unique new product in the database
+        $uniqueSku = 'DB-TEST-' . uniqid();
+        $dbProduct = Product::create([
+            'sku' => $uniqueSku,
+            'canonical_name' => 'Database Verified Luminaire ' . $uniqueSku,
+            'category' => 'Indoor Downlights',
+            'unit_default' => 'set',
+            'default_price' => 4599.00,
+            'selling_price' => 4599.00,
+            'is_active' => true,
+            'description' => 'Real-time database product verification test.',
+        ]);
+
+        // 2. Product must appear in /products catalog from DB
+        $response = $this->get('/products?search=' . $uniqueSku);
+        $response->assertStatus(200);
+        $response->assertSee($dbProduct->canonical_name);
+        $response->assertSee('4,599.00');
+
+        // 3. Product must appear in Quotation Builder catalog modal from DB
+        \Illuminate\Support\Facades\Cache::flush();
+        $builderResponse = $this->get('/quotation/builder');
+        $builderResponse->assertStatus(200);
+        $builderResponse->assertSee($dbProduct->canonical_name);
+
+        // 4. Update the product in the database, and verify customer side immediately reflects DB changes
+        \Illuminate\Support\Facades\Cache::flush();
+        $dbProduct->update([
+            'canonical_name' => 'Updated DB Luminaire ' . $uniqueSku,
+            'selling_price' => 5999.00,
+        ]);
+
+        $updatedResponse = $this->get('/products?search=' . $uniqueSku);
+        $updatedResponse->assertStatus(200);
+        $updatedResponse->assertSee('Updated DB Luminaire ' . $uniqueSku);
+        $updatedResponse->assertSee('5,999.00');
+
+        // 5. Inactivate product in DB, verify it disappears from customer catalog
+        \Illuminate\Support\Facades\Cache::flush();
+        $dbProduct->update(['is_active' => false]);
+
+        $inactiveResponse = $this->get('/products?search=' . $uniqueSku);
+        $inactiveResponse->assertStatus(200);
+        $inactiveResponse->assertDontSee('Updated DB Luminaire ' . $uniqueSku);
+    }
 }
