@@ -5,37 +5,58 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class CustomerPortalController extends Controller
+class CustomerPortalController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('throttle:60,1', only: ['generateUnofficial']),
+        ];
+    }
+
     public function __construct(
         protected ExportUnofficialQuotationPdf $pdfExporter
-    ) {}
+    ) {
+    }
+
+    /**
+     * Get active product categories (Cached)
+     */
+    private function getActiveCategories()
+    {
+        return Cache::remember('customer_portal_categories', 600, fn() => Product::query()
+            ->where('is_active', true)
+            ->whereNotNull('category')
+            ->distinct()
+            ->pluck('category'));
+    }
 
     /**
      * Customer Portal Landing Page.
      */
     public function index()
     {
-        $featuredProducts = Product::query()
+        $featuredProducts = Cache::remember('customer_portal_featured', 600, fn() => Product::query()
             ->where('is_active', true)
             ->inRandomOrder()
             ->take(6)
-            ->get();
+            ->get());
 
-        $categories = Product::query()
-            ->where('is_active', true)
-            ->whereNotNull('category')
-            ->distinct()
-            ->pluck('category');
+        $categories = $this->getActiveCategories();
 
-        $totalProductsCount = Product::query()->where('is_active', true)->count();
+        $totalProductsCount = Cache::remember('customer_portal_total_count', 600, fn() => Product::query()->where('is_active', true)->count());
+        $yearsInBusiness = date('Y') - 2008;
 
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,
             'categories'         => $categories,
             'totalProductsCount' => $totalProductsCount,
+            'yearsInBusiness'    => $yearsInBusiness,
         ]);
     }
 
@@ -72,11 +93,7 @@ class CustomerPortalController extends Controller
 
         $products = $query->orderBy('category')->orderBy('canonical_name')->paginate(12)->withQueryString();
 
-        $categories = Product::query()
-            ->where('is_active', true)
-            ->whereNotNull('category')
-            ->distinct()
-            ->pluck('category');
+        $categories = $this->getActiveCategories();
 
         return view('customer.products', [
             'products'         => $products,
@@ -91,11 +108,11 @@ class CustomerPortalController extends Controller
      */
     public function quotationBuilder(Request $request)
     {
-        $catalogProducts = Product::query()
+        $catalogProducts = Cache::remember('customer_portal_catalog', 600, fn() => Product::query()
             ->where('is_active', true)
             ->select(['id', 'sku', 'product_code', 'canonical_name', 'unit_default', 'default_price', 'selling_price', 'category'])
             ->orderBy('canonical_name')
-            ->get();
+            ->get());
 
         return view('customer.quotation-builder', [
             'catalogProducts' => $catalogProducts,

@@ -40,7 +40,8 @@ class IngestDocumentAction
         ?int $vendorId = null,
         ?int $projectId = null,
         ?int $userId = null,
-        ?int $quotationId = null
+        ?int $quotationId = null,
+        bool $isConformePo = false
     ): Document {
         $candidates = [
             storage_path('app/private/' . $diskPath),
@@ -96,7 +97,12 @@ class IngestDocumentAction
                 'original_mime_type' => $mimeType,
                 'document_type' => $documentType ?: $existing->document_type,
             ]);
-            $this->parser->parseDocument($existing);
+            $parseResult = $this->parser->parseDocument($existing);
+            $existing->update([
+                'terms_and_conditions' => $parseResult['terms_and_conditions'] ?? null,
+                'payment_terms' => $parseResult['payment_terms'] ?? null,
+                'delivery_terms' => $parseResult['delivery_terms'] ?? null,
+            ]);
             $this->reconciler->execute($existing);
 
             try {
@@ -122,7 +128,12 @@ class IngestDocumentAction
 
         // Trigger dynamic per-vendor template parsing & mathematical reconciliation
         try {
-            $this->parser->parseDocument($document);
+            $parseResult = $this->parser->parseDocument($document);
+            $document->update([
+                'terms_and_conditions' => $parseResult['terms_and_conditions'] ?? null,
+                'payment_terms' => $parseResult['payment_terms'] ?? null,
+                'delivery_terms' => $parseResult['delivery_terms'] ?? null,
+            ]);
             $this->reconciler->execute($document);
         } catch (\Throwable $e) {
             Log::warning("Dynamic parsing notice for Document #{$document->id}: " . $e->getMessage());
@@ -130,7 +141,7 @@ class IngestDocumentAction
 
         // Auto-create corresponding pending Quotation or PO record for immediate table display
         try {
-            $this->syncInitialResourceRecord($document, $userId ?: (auth()->id() ?: 1), $quotationId);
+            $this->syncInitialResourceRecord($document, $userId ?: (auth()->id() ?: 1), $quotationId, $isConformePo);
         } catch (\Throwable $e) {
             Log::warning("Initial resource record sync notice for Document #{$document->id}: " . $e->getMessage());
         }
@@ -138,14 +149,14 @@ class IngestDocumentAction
         return $document;
     }
 
-    public function syncInitialResourceRecord(Document $document, int $userId, ?int $quotationId = null): void
+    public function syncInitialResourceRecord(Document $document, int $userId, ?int $quotationId = null, bool $isConformePo = false): void
     {
         $document->loadMissing(['lineItems', 'totals', 'vendor', 'project']);
 
         if ($document->document_type === Document::TYPE_VENDORS_AGREEMENT) {
             $this->syncQuotation($document, $userId);
         } elseif ($document->document_type === Document::TYPE_PURCHASE_ORDER) {
-            $this->syncPurchaseOrder($document, $userId, $quotationId);
+            $this->syncPurchaseOrder($document, $userId, $quotationId, $isConformePo);
         }
     }
 
@@ -182,6 +193,9 @@ class IngestDocumentAction
                 'estimated_profit' => round($totalAmount * 0.3, 2),
                 'status'           => Quotation::STATUS_PENDING,
                 'quotation_date'   => $quotationDate,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
             ]);
         } else {
             $updates = [
@@ -227,12 +241,14 @@ class IngestDocumentAction
         }
     }
 
-    protected function syncPurchaseOrder(Document $document, int $userId, ?int $quotationId = null): void
+    protected function syncPurchaseOrder(Document $document, int $userId, ?int $quotationId = null, bool $isConformePo = false): void
     {
         $customerName = $document->customer_name
             ?: ($document->project?->customer_name ?: ($document->vendor?->name ?: 'MGS CONSTRUCTION, INC.'));
         $orderDate = $document->document_date ?: now()->toDateString();
         $orderAmount = (float) ($document->totals?->printed_total ?: ($document->totals?->computed_grand_total ?: 0));
+
+        $isConforme = $isConformePo || preg_match('/CONFORMED\s*BY:/i', (string) $document->raw_extracted_text) || preg_match('/RECOMMENDED\s*BY:/i', (string) $document->raw_extracted_text);
 
         $po = PurchaseOrder::where('document_id', $document->id)->first();
         if (!$po) {
@@ -245,6 +261,7 @@ class IngestDocumentAction
                 'po_number'        => $poNumber,
                 'document_id'      => $document->id,
                 'quotation_id'     => $quotationId,
+                'is_conforme_po'   => $isConforme,
                 'sales_agent_id'   => $document->uploaded_by ?: $userId,
                 'customer_name'    => $customerName,
                 'project_id'       => $document->project_id,
@@ -259,6 +276,9 @@ class IngestDocumentAction
                 'warranty_status'  => PurchaseOrder::WARRANTY_NONE,
                 'delivery_status'  => PurchaseOrder::DELIVERY_PENDING,
                 'status'           => PurchaseOrder::STATUS_PENDING,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
             ]);
         } else {
             $updates = [
@@ -266,6 +286,7 @@ class IngestDocumentAction
                 'order_amount'     => $orderAmount,
                 'printed_vat'      => $document->totals?->printed_vat,
                 'computed_vat'     => $document->totals?->computed_vat,
+                'is_conforme_po'   => $isConforme,
             ];
             if ($quotationId && empty($po->quotation_id)) {
                 $updates['quotation_id'] = $quotationId;
@@ -316,6 +337,70 @@ class IngestDocumentAction
                 'line_total'       => $lineTotal,
                 'line_cost'        => round((float) $line->qty * $baseCost, 2),
             ]);
+        }
+
+        $this->verifyPOAgainstQuotation($document, $po);
+    }
+
+    protected function verifyPOAgainstQuotation(Document $document, PurchaseOrder $po): void
+    {
+        if ($po->is_conforme_po) {
+            return;
+        }
+
+        $quotation = $po->quotation ?? Quotation::where('document_id', $document->id)->first();
+        if (!$quotation) {
+            // Find by transaction
+            $trx = \App\Models\Transaction::where('purchase_order_document_id', $document->id)->first();
+            if ($trx && $trx->quotation_document_id) {
+                $quotation = Quotation::where('document_id', $trx->quotation_document_id)->first();
+            }
+        }
+
+        if (!$quotation) {
+            return; // No quotation linked
+        }
+
+        $mismatches = [];
+        $poLines = $po->lineItems()->get();
+        $qLines = $quotation->lineItems()->get();
+
+        foreach ($poLines as $poLine) {
+            $matched = false;
+            foreach ($qLines as $qLine) {
+                if ($poLine->product_id == $qLine->product_id || $poLine->item_code == $qLine->item_code) {
+                    $matched = true;
+                    if (abs($poLine->qty - $qLine->qty) > 0.01) {
+                        $mismatches[] = "Qty mismatch for {$poLine->description} (PO: {$poLine->qty}, Q: {$qLine->qty})";
+                    }
+                    if (abs($poLine->unit_price - $qLine->unit_price) > 0.01 && abs($poLine->unit_price - $qLine->discounted_price) > 0.01) {
+                        $mismatches[] = "Price mismatch for {$poLine->description} (PO: {$poLine->unit_price})";
+                    }
+                    break;
+                }
+            }
+            if (!$matched) {
+                $mismatches[] = "Line item not in quotation: {$poLine->description}";
+            }
+        }
+
+        if (!empty($mismatches)) {
+            \Filament\Notifications\Notification::make()
+                ->title('PO & Quotation Line Item Discrepancy')
+                ->body('Line items do not completely match linked Quotation:<br>' . implode('<br>', array_slice($mismatches, 0, 5)))
+                ->warning()
+                ->persistent()
+                ->send();
+
+            try {
+                \Filament\Notifications\Notification::make()
+                    ->title('PO & Quotation Mismatch')
+                    ->body(implode('<br>', $mismatches))
+                    ->warning()
+                    ->sendToDatabase(\App\Models\User::where('role', 'admin')->get());
+            } catch (\Throwable $e) {
+                // Ignore if DB notifications not configured in test environment
+            }
         }
     }
 }

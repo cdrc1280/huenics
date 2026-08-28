@@ -130,7 +130,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Customer / Contact Name <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="customer_name" required placeholder="e.g. Engr. Roberto Santos"
+                                <input type="text" name="customer_name" required placeholder="e.g. Engr. Roberto Santos" title="Customer or Contact Name"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white font-medium">
                             </div>
 
@@ -138,7 +138,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Company / Contractor Name
                                 </label>
-                                <input type="text" name="customer_company" placeholder="e.g. MGS Construction & Supply Corp."
+                                <input type="text" name="customer_company" placeholder="e.g. MGS Construction & Supply Corp." title="Company or Contractor Name"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
                             </div>
 
@@ -146,7 +146,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Contact Phone / Mobile
                                 </label>
-                                <input type="text" name="phone_no" placeholder="e.g. 0917-123-4567 / (02) 8987-6543"
+                                <input type="tel" name="phone_no" placeholder="e.g. 0917-123-4567 / (02) 8987-6543" title="Contact Phone Number" pattern="^[0-9\-\+\(\)\s]*$"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
                             </div>
 
@@ -154,7 +154,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Email Address
                                 </label>
-                                <input type="email" name="email" placeholder="e.g. procurement@contractor.ph"
+                                <input type="email" name="email" placeholder="e.g. procurement@contractor.ph" title="Email Address"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
                             </div>
 
@@ -162,7 +162,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Project Name
                                 </label>
-                                <input type="text" name="project_name" placeholder="e.g. Palanza Tower High-Rise Project"
+                                <input type="text" name="project_name" placeholder="e.g. Palanza Tower High-Rise Project" title="Project Name"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
                             </div>
 
@@ -170,7 +170,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Jobsite / Delivery Location
                                 </label>
-                                <input type="text" name="project_location" placeholder="e.g. Palanza St. cor. Santol, Quezon City"
+                                <input type="text" name="project_location" placeholder="e.g. Palanza St. cor. Santol, Quezon City" title="Jobsite Delivery Location"
                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
                             </div>
 
@@ -178,7 +178,7 @@
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Special Notes / Delivery Instructions
                                 </label>
-                                <textarea name="notes" rows="2" placeholder="e.g. Staggered delivery required. Schedule 40 pipes must include manufacturer test certificates."
+                                <textarea name="notes" rows="2" placeholder="e.g. Staggered delivery required. Schedule 40 pipes must include manufacturer test certificates." title="Special Notes or Delivery Instructions"
                                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white"></textarea>
                             </div>
                         </div>

@@ -44,6 +44,11 @@ class ListPurchaseOrders extends ListRecords
                         ->preserveFilenames()
                         ->storeFileNamesIn('original_filename'),
 
+                    Toggle::make('is_conforme_po')
+                        ->label('Conforme PO (Exempt from Quotation Matching)')
+                        ->helperText('Check if this is a signed conforme purchase order that does not require a matching quotation.')
+                        ->live(),
+
                     Select::make('quotation_id')
                         ->label('Link to Approved Quotation')
                         ->options(function () {
@@ -56,6 +61,7 @@ class ListPurchaseOrders extends ListRecords
                         })
                         ->searchable()
                         ->nullable()
+                        ->visible(fn($get) => !(bool) $get('is_conforme_po'))
                         ->placeholder('Select an approved quotation to link, or leave blank')
                         ->helperText('Optional: Select an approved quotation without an existing PO to automatically link and convert.'),
 
@@ -70,7 +76,8 @@ class ListPurchaseOrders extends ListRecords
                             vendorId: null,
                             projectId: null,
                             userId: auth()->id(),
-                            quotationId: !empty($data['quotation_id']) ? (int) $data['quotation_id'] : null
+                            quotationId: !empty($data['quotation_id']) ? (int) $data['quotation_id'] : null,
+                            isConformePo: (bool) ($data['is_conforme_po'] ?? false)
                         );
 
                         Notification::make()

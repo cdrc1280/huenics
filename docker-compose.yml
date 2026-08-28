@@ -43,6 +43,11 @@ services:
       QUEUE_CONNECTION: database
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: "lax"
+      SESSION_LIFETIME: 480
+      REDIS_PREFIX: "huenics_"
+      SESSION_ENCRYPT: "true"
     volumes:
       # Uploaded documents, PDFs, scanned invoices, signatures, attachments
       - app_storage:/var/www/html/storage/app
@@ -84,6 +89,7 @@ services:
     container_name: huenics_redis
     restart: always
     stop_grace_period: 15s
+    command: redis-server --maxmemory 256mb --maxmemory-policy noeviction --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:

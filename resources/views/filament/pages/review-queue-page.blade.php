@@ -45,9 +45,13 @@
                                 </x-filament::badge>
                             @endif
 
-                            @if ($currentDocument->document_type === 'purchase_order')
+                            @if ($currentDocument->document_type === 'purchase_order' && $this->isReadOnly)
                                 <x-filament::badge color="info" icon="heroicon-m-lock-closed" size="sm">
                                     Official PO (Read Only)
+                                </x-filament::badge>
+                            @elseif ($currentDocument->document_type === 'purchase_order' && !$this->isReadOnly)
+                                <x-filament::badge color="primary" size="sm">
+                                    Purchase Order
                                 </x-filament::badge>
                             @elseif ($this->isReadOnly)
                                 <x-filament::badge color="info" icon="heroicon-m-eye" size="sm">
@@ -344,6 +348,72 @@
                                     </x-filament::input.select>
                                 </x-filament::input.wrapper>
                             </x-filament-forms::field-wrapper>
+                        </div>
+                    </x-filament::section>
+
+                    {{-- SECTION 1.5: TERMS & PAYMENT --}}
+                    <x-filament::section>
+                        <x-slot name="heading">
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Terms & Payment</span>
+                        </x-slot>
+
+                        <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.25rem;">
+                            @if ($currentDocument->document_type === 'vendors_agreement')
+                                <div style="padding: 0.75rem; border-radius: 0.5rem; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.25); display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; color: #1e40af;">
+                                        <input type="checkbox" wire:model.live="isOfficialPo" @if($this->isReadOnly) disabled @endif style="border-radius: 0.25rem; border-color: #93c5fd; color: #2563eb; width: 1rem; height: 1rem;">
+                                        <span>Serve as Official Purchase Order (Conforme / Signed PO)</span>
+                                    </label>
+                                    @if ($isOfficialPo)
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                            <x-filament-forms::field-wrapper id="customerSignatureName" label="Customer Name Over Signature">
+                                                <x-filament::input.wrapper size="sm">
+                                                    <x-filament::input type="text" wire:model.lazy="customerSignatureName"
+                                                        :disabled="$this->isReadOnly"
+                                                        placeholder="e.g. Engr. Juan Dela Cruz"
+                                                        class="text-xs" />
+                                                </x-filament::input.wrapper>
+                                            </x-filament-forms::field-wrapper>
+                                            <x-filament-forms::field-wrapper id="customerSignedAt" label="Date Signed">
+                                                <x-filament::input.wrapper size="sm">
+                                                    <x-filament::input type="date" wire:model.lazy="customerSignedAt"
+                                                        :disabled="$this->isReadOnly"
+                                                        class="text-xs" />
+                                                </x-filament::input.wrapper>
+                                            </x-filament-forms::field-wrapper>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <x-filament-forms::field-wrapper id="termsAndConditions" label="Terms and Conditions">
+                                <x-filament::input.wrapper size="sm">
+                                    <textarea wire:model.lazy="termsAndConditions"
+                                        @if($this->isReadOnly) disabled @endif
+                                        rows="4"
+                                        class="w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition duration-75 focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500"
+                                        style="width: 100%; resize: vertical;"
+                                    ></textarea>
+                                </x-filament::input.wrapper>
+                            </x-filament-forms::field-wrapper>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <x-filament-forms::field-wrapper id="paymentTerms" label="Payment Terms">
+                                    <x-filament::input.wrapper size="sm">
+                                        <x-filament::input type="text" wire:model.lazy="paymentTerms"
+                                            :disabled="$this->isReadOnly"
+                                            class="text-xs" />
+                                    </x-filament::input.wrapper>
+                                </x-filament-forms::field-wrapper>
+
+                                <x-filament-forms::field-wrapper id="deliveryTerms" label="Delivery Terms">
+                                    <x-filament::input.wrapper size="sm">
+                                        <x-filament::input type="text" wire:model.lazy="deliveryTerms"
+                                            :disabled="$this->isReadOnly"
+                                            class="text-xs" />
+                                    </x-filament::input.wrapper>
+                                </x-filament-forms::field-wrapper>
+                            </div>
                         </div>
                     </x-filament::section>
                 </div>

@@ -36,6 +36,25 @@ if [ ! -f .env ]; then
     fi
 fi
 
+if [ ! -w /var/www/html/storage/app ]; then echo 'ERROR: storage/app is not writable' && exit 1; fi
+
+if [ "${SESSION_DRIVER}" = "redis" ] || [ "${CACHE_STORE}" = "redis" ]; then
+    REDIS_TARGET_HOST="${REDIS_HOST:-redis}"
+    REDIS_TARGET_PORT="${REDIS_PORT:-6379}"
+    echo "⏳ Waiting for Redis at ${REDIS_TARGET_HOST}:${REDIS_TARGET_PORT}..."
+    for i in $(seq 1 30); do
+        if redis-cli -h "${REDIS_TARGET_HOST}" -p "${REDIS_TARGET_PORT}" ping >/dev/null 2>&1; then
+            echo '✅ Redis connection verified.'
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo '⚠️ Redis ping timed out after 30s. Proceeding with application boot...'
+            break
+        fi
+        sleep 1
+    done
+fi
+
 # ─── 4. Generate APP_KEY if missing ───────────────────────────────────────────
 if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null && [ -z "$APP_KEY" ]; then
     echo "🔑 Generating application key..."

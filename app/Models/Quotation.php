@@ -67,6 +67,9 @@ class Quotation extends Model
         'is_official_po',
         'customer_signature_name',
         'customer_signed_at',
+        'terms_and_conditions',
+        'payment_terms',
+        'delivery_terms',
     ];
 
     protected function casts(): array

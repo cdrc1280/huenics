@@ -90,4 +90,28 @@ class FieldExtractor
             return null;
         }
     }
+
+    public function extractPaymentTerms(string $text): ?string
+    {
+        if (preg_match('/(?:Payment\s*Terms?|Terms?\s*of\s*Payment)\s*[:\-\.]?\s*([^\n\r]+)/i', $text, $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
+    }
+
+    public function extractDeliveryTerms(string $text): ?string
+    {
+        if (preg_match('/(?:Delivery\s*Terms?|Terms?\s*of\s*Delivery)\s*[:\-\.]?\s*([^\n\r]+)/i', $text, $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
+    }
+
+    public function extractTermsAndConditions(string $text): ?string
+    {
+        if (preg_match('/Terms\s*(?:and|&)\s*Conditions\s*[:\-\.]?\s*(.*?)(?=\n\s*(?:Total|Signed|Approved|Conforme|Prepared)|$)/is', $text, $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
+    }
 }

@@ -42,23 +42,19 @@
                     </a>
                 </div>
 
-                <!-- Trust Badges -->
-                <div class="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-slate-800/80">
-                    <div class="text-center lg:text-left">
-                        <div class="text-xl sm:text-2xl font-bold text-white">100%</div>
-                        <div class="text-xs text-slate-400">BIR 12% VAT Compliant</div>
+                <!-- Company Stats -->
+                <div class="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-slate-800/80">
+                    <div class="text-center lg:text-left" title="Total active products in our catalog">
+                        <div class="text-xl sm:text-2xl font-bold text-white">{{ number_format($totalProductsCount) }}+</div>
+                        <div class="text-xs text-slate-400">Industrial Products</div>
                     </div>
-                    <div class="text-center lg:text-left">
-                        <div class="text-xl sm:text-2xl font-bold text-white">24/7</div>
-                        <div class="text-xs text-slate-400">Instant Online Estimates</div>
+                    <div class="text-center lg:text-left" title="Different categories of supplies we offer">
+                        <div class="text-xl sm:text-2xl font-bold text-white">{{ $categories->count() }}</div>
+                        <div class="text-xs text-slate-400">Product Categories</div>
                     </div>
-                    <div class="text-center lg:text-left">
-                        <div class="text-xl sm:text-2xl font-bold text-white">Direct</div>
-                        <div class="text-xs text-slate-400">Wholesale Volume Pricing</div>
-                    </div>
-                    <div class="text-center lg:text-left">
-                        <div class="text-xl sm:text-2xl font-bold text-white">Fast</div>
-                        <div class="text-xs text-slate-400">Metro Manila Jobsite Delivery</div>
+                    <div class="text-center lg:text-left" title="Years serving the industry">
+                        <div class="text-xl sm:text-2xl font-bold text-white">{{ $yearsInBusiness }}</div>
+                        <div class="text-xs text-slate-400">Years in Business</div>
                     </div>
                 </div>
             </div>
@@ -80,29 +76,20 @@
 
                     <div class="space-y-3 text-xs text-slate-300">
                         <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 space-y-1.5">
-                            <div class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Sample Procurement Scenario:</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold tracking-wider" title="Real-time pricing for our top items">Featured Catalog Items:</div>
+                            @foreach($featuredProducts->take(2) as $prod)
                             <div class="flex justify-between font-medium">
-                                <span>1-1/4" PVC Pipe Sch 40 (158 pcs)</span>
-                                <span class="text-white font-semibold">₱ 297,128.48</span>
+                                <span class="truncate pr-2" title="{{ $prod->canonical_name }}">{{ $prod->canonical_name }} (1 {{ $prod->unit_default ?: 'pc' }})</span>
+                                <span class="text-white font-semibold whitespace-nowrap">₱ {{ number_format($prod->selling_price ?: $prod->default_price, 2) }}</span>
                             </div>
-                            <div class="flex justify-between font-medium">
-                                <span>1/2" Deformed Bar Grade 40 (500 pcs)</span>
-                                <span class="text-white font-semibold">₱ 160,000.00</span>
-                            </div>
+                            @endforeach
                         </div>
 
                         <div class="bg-slate-900/90 p-3.5 rounded-lg border border-slate-700/80 space-y-1.5">
-                            <div class="flex justify-between text-slate-400 text-xs">
-                                <span>Subtotal (Net Vatable):</span>
-                                <span>₱ 457,128.48</span>
-                            </div>
-                            <div class="flex justify-between text-slate-400 text-xs">
-                                <span>12% Philippine VAT:</span>
-                                <span>₱ 54,855.42</span>
-                            </div>
+                            <div class="text-xs text-slate-400 mb-2">Build your own quotation instantly with our portal.</div>
                             <div class="flex justify-between text-white font-bold text-sm pt-1 border-t border-slate-700">
-                                <span>Estimated Grand Total:</span>
-                                <span class="text-blue-400">₱ 511,983.90</span>
+                                <span>Real-time Pricing</span>
+                                <span class="text-blue-400">VAT Included</span>
                             </div>
                         </div>
 

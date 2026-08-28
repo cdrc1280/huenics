@@ -87,6 +87,14 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public ?float $printedTotal = null;
     public ?float $negotiatedAmount = null;
 
+    // Terms & Official PO / Conforme
+    public ?string $termsAndConditions = '';
+    public ?string $paymentTerms = '';
+    public ?string $deliveryTerms = '';
+    public bool $isOfficialPo = false;
+    public ?string $customerSignatureName = '';
+    public ?string $customerSignedAt = '';
+
     // Real-Time Synchronized Preview State
     public string $previewMode = 'live'; // 'live' or 'pdf'
     public array $originalState = [];
@@ -438,6 +446,27 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         $this->vendorId = $doc->vendor_id;
         $this->projectId = $doc->project_id;
 
+        $this->termsAndConditions = $doc->terms_and_conditions ?? '';
+        $this->paymentTerms = $doc->payment_terms ?? '';
+        $this->deliveryTerms = $doc->delivery_terms ?? '';
+
+        if ($doc->document_type === Document::TYPE_VENDORS_AGREEMENT) {
+            $quotation = Quotation::where('document_id', $doc->id)->first();
+            if ($quotation) {
+                $this->isOfficialPo = (bool) $quotation->is_official_po;
+                $this->customerSignatureName = $quotation->customer_signature_name ?? '';
+                $this->customerSignedAt = $quotation->customer_signed_at ? $quotation->customer_signed_at->format('Y-m-d') : '';
+            } else {
+                $this->isOfficialPo = false;
+                $this->customerSignatureName = '';
+                $this->customerSignedAt = '';
+            }
+        } else {
+            $this->isOfficialPo = false;
+            $this->customerSignatureName = '';
+            $this->customerSignedAt = '';
+        }
+
         $totals = $doc->totals;
         $this->printedSubtotal = $totals ? (float) $totals->printed_subtotal : null;
         $this->printedVat = $totals ? (float) $totals->printed_vat : null;
@@ -542,12 +571,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             return true;
         }
 
-        // 1. Purchase Orders are ALWAYS read-only in the verification workspace per business policy
-        if ($this->currentDocument->document_type === Document::TYPE_PURCHASE_ORDER) {
-            return true;
-        }
-
-        // 2. Only Sales Executive, Operations Manager, and Admin can edit quotations
+        // Only Sales Executive, Operations Manager, and Admin can edit
         if (!$user->canEditQuotationDocument()) {
             return true;
         }
@@ -831,7 +855,24 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             'phone_no' => $this->phoneNo,
             'vendor_id' => $this->vendorId,
             'project_id' => $this->projectId,
+            'terms_and_conditions' => $this->termsAndConditions,
+            'payment_terms' => $this->paymentTerms,
+            'delivery_terms' => $this->deliveryTerms,
         ]);
+
+        if ($this->currentDocument->document_type === Document::TYPE_VENDORS_AGREEMENT) {
+            $quotation = Quotation::where('document_id', $this->currentDocument->id)->first();
+            if ($quotation) {
+                $quotation->update([
+                    'is_official_po' => (bool) $this->isOfficialPo,
+                    'customer_signature_name' => $this->customerSignatureName ?: null,
+                    'customer_signed_at' => $this->customerSignedAt ? \Carbon\Carbon::parse($this->customerSignedAt) : null,
+                    'terms_and_conditions' => $this->termsAndConditions,
+                    'payment_terms' => $this->paymentTerms,
+                    'delivery_terms' => $this->deliveryTerms,
+                ]);
+            }
+        }
 
         // Save totals
         $this->currentDocument->totals()->updateOrCreate(
@@ -906,7 +947,12 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $transaction = $verifier->execute(
                 $this->currentDocument,
                 auth()->user() ?: \App\Models\User::first(),
-                $this->editableItems
+                $this->editableItems,
+                [
+                    'is_official_po' => $this->isOfficialPo,
+                    'customer_signature_name' => $this->customerSignatureName,
+                    'customer_signed_at' => $this->customerSignedAt,
+                ]
             );
 
             Notification::make()

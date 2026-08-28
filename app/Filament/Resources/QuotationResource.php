@@ -178,6 +178,20 @@ class QuotationResource extends Resource
                 ])
                 ->columnSpanFull(),
 
+            Section::make('Terms, Payment & Delivery')
+                ->icon('heroicon-o-document-text')
+                ->schema([
+                    Textarea::make('terms_and_conditions')
+                        ->label('Terms and Conditions')
+                        ->rows(4)
+                        ->columnSpanFull(),
+                    TextInput::make('payment_terms')
+                        ->label('Payment Terms'),
+                    TextInput::make('delivery_terms')
+                        ->label('Delivery Terms'),
+                ])
+                ->columnSpanFull(),
+
             Section::make('Line Items')
                 ->icon('heroicon-o-list-bullet')
                 ->schema([

@@ -54,8 +54,10 @@ class PurchaseOrder extends Model
     public const DELIVERY_DELIVERED = DeliveryStatus::Delivered->value;
     public const DELIVERY_OVERDUE = DeliveryStatus::Overdue->value;
 
-    // Warranty periods (Strictly 2 options: 1 Year, 2 Years & 6 Months)
+    // Warranty periods (3 options: 6 Months, 1 Year, 2 Years)
+    public const WARRANTY_6_MONTHS = WarrantyPeriod::SixMonths->value;
     public const WARRANTY_1_YEAR = WarrantyPeriod::OneYear->value;
+    public const WARRANTY_2_YEARS = WarrantyPeriod::TwoYears->value;
     public const WARRANTY_2_YEARS_6_MONTHS = WarrantyPeriod::TwoYearsSixMonths->value;
 
     // Warranty statuses
@@ -75,17 +77,19 @@ class PurchaseOrder extends Model
     public static function getWarrantyPeriodOptions(): array
     {
         return [
-            self::WARRANTY_1_YEAR => '1 Year (1 yr)',
-            self::WARRANTY_2_YEARS_6_MONTHS => '2 Years & 6 Months (2yrs and 6 months)',
+            self::WARRANTY_6_MONTHS => '6 Months',
+            self::WARRANTY_1_YEAR => '1 Year',
+            self::WARRANTY_2_YEARS => '2 Years',
         ];
     }
 
     public static function getWarrantyPeriodMonths(string $period): int
     {
         return match ($period) {
-            self::WARRANTY_1_YEAR => 12,
-            self::WARRANTY_2_YEARS_6_MONTHS, '2_years', '2yrs_6months' => 30,
-            '6_months' => 6,
+            self::WARRANTY_6_MONTHS, '6_months' => 6,
+            self::WARRANTY_1_YEAR, '1_year' => 12,
+            self::WARRANTY_2_YEARS, '2_years' => 24,
+            self::WARRANTY_2_YEARS_6_MONTHS, '2_years_6_months', '2yrs_6months' => 30,
             default => 12,
         };
     }
@@ -117,6 +121,10 @@ class PurchaseOrder extends Model
         'is_completed',
         'completed_at',
         'notes',
+        'terms_and_conditions',
+        'payment_terms',
+        'delivery_terms',
+        'is_conforme_po',
     ];
 
     protected function casts(): array
@@ -130,6 +138,7 @@ class PurchaseOrder extends Model
             'has_warranty' => 'boolean',
             'is_inventory_deducted' => 'boolean',
             'is_completed' => 'boolean',
+            'is_conforme_po' => 'boolean',
             'completed_at' => 'datetime',
             'order_amount' => 'decimal:2',
             'total_cost' => 'decimal:2',

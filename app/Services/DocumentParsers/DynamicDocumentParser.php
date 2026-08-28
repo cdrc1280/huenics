@@ -121,11 +121,18 @@ class DynamicDocumentParser
         $document->status = Document::STATUS_REQUIRES_REVIEW;
         $document->save();
 
+        $paymentTerms = $this->fieldExtractor->extractPaymentTerms($fullText);
+        $deliveryTerms = $this->fieldExtractor->extractDeliveryTerms($fullText);
+        $termsAndConditions = $this->fieldExtractor->extractTermsAndConditions($fullText);
+
         return [
             'success' => true,
             'confidence' => $confidence,
             'line_items_count' => count($lineItems),
             'message' => 'Document extracted successfully',
+            'payment_terms' => $paymentTerms,
+            'delivery_terms' => $deliveryTerms,
+            'terms_and_conditions' => $termsAndConditions,
         ];
     }
 

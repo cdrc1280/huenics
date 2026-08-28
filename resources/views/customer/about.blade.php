@@ -183,7 +183,7 @@
                 <div class="pt-2 flex flex-wrap gap-4 text-xs">
                     <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
                         <span class="text-slate-400">Head Office:</span>
-                        <span class="font-bold text-white ml-1">123 Pioneer St., Mandaluyong City</span>
+                        <span class="font-bold text-white ml-1">2F Starmall EDSA-Shaw, Mandaluyong City</span>
                     </div>
                     <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
                         <span class="text-slate-400">TIN:</span>

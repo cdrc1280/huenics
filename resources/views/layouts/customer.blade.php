@@ -213,7 +213,7 @@
                     <div class="space-y-3 text-sm text-slate-400">
                         <p class="flex items-start gap-2.5">
                             <i class="fa-solid fa-location-dot text-blue-400 mt-1"></i>
-                            <span>123 Pioneer St., Mandaluyong City, Metro Manila, 1550 Philippines</span>
+                            <span>2F Starmall EDSA-Shaw, Mandaluyong City, Metro Manila, 1550 Philippines</span>
                         </p>
                         <p class="flex items-center gap-2.5">
                             <i class="fa-solid fa-phone text-blue-400"></i>

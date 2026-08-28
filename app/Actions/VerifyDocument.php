@@ -200,6 +200,10 @@ class VerifyDocument
         $totalAmount = (float) ($totals?->printed_total ?: ($totals?->computed_grand_total ?: $finalAmount));
         $negotiatedAmount = $totals?->negotiated_amount ? (float) $totals->negotiated_amount : null;
 
+        $isOfficialPo = isset($options['is_official_po']) ? (bool) $options['is_official_po'] : ($quotation?->is_official_po ?? false);
+        $customerSigName = isset($options['customer_signature_name']) ? $options['customer_signature_name'] : ($quotation?->customer_signature_name ?? null);
+        $customerSignedAt = !empty($options['customer_signed_at']) ? \Carbon\Carbon::parse($options['customer_signed_at']) : ($quotation?->customer_signed_at ?? null);
+
         if ($quotation) {
             $quotation->update([
                 'quotation_number' => $document->document_number ?: $quotation->quotation_number,
@@ -214,6 +218,12 @@ class VerifyDocument
                 'estimated_profit' => round($totalAmount * 0.3, 2),
                 'status' => Quotation::STATUS_APPROVED,
                 'quotation_date' => $quotationDate,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
+                'is_official_po' => $isOfficialPo,
+                'customer_signature_name' => $customerSigName,
+                'customer_signed_at' => $customerSignedAt,
             ]);
         } else {
             $quotationNumber = $document->document_number;
@@ -237,6 +247,12 @@ class VerifyDocument
                 'estimated_profit' => round($totalAmount * 0.3, 2),
                 'status' => Quotation::STATUS_APPROVED,
                 'quotation_date' => $quotationDate,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
+                'is_official_po' => $isOfficialPo,
+                'customer_signature_name' => $customerSigName,
+                'customer_signed_at' => $customerSignedAt,
             ]);
         }
 
@@ -286,6 +302,9 @@ class VerifyDocument
                 'computed_vat' => $totals?->computed_vat,
                 'order_date' => $orderDate,
                 'status' => PurchaseOrder::STATUS_PENDING,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
             ]);
         } else {
             $poNumber = $document->document_number;
@@ -310,6 +329,9 @@ class VerifyDocument
                 'warranty_status' => PurchaseOrder::WARRANTY_NONE,
                 'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
                 'status' => PurchaseOrder::STATUS_PENDING,
+                'terms_and_conditions' => $document->terms_and_conditions,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
             ]);
         }
 

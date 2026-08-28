@@ -128,8 +128,10 @@ class EditPurchaseOrder extends EditRecord
                                     ->placeholder('Driver or logistics personnel'),
 
                                 TextInput::make('received_by')
-                                    ->label('Received By')
-                                    ->placeholder('Customer site receiver name'),
+                                    ->label('Received By (Client / Site Receiver)')
+                                    ->default(fn() => $this->record->customer_name)
+                                    ->placeholder('Customer site receiver name')
+                                    ->helperText('Name of the client or site personnel who received the delivery'),
                             ]),
                         ]),
 

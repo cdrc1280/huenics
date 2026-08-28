@@ -141,6 +141,11 @@ class PurchaseOrderResource extends Resource
                             }
                         }),
 
+                    Toggle::make('is_conforme_po')
+                        ->label('Conforme PO (No Quotation Required)')
+                        ->helperText('Check if this is a conforme purchase order that does not require a matching quotation')
+                        ->default(false),
+
                     TextInput::make('customer_name')
                         ->label('Customer / Client')
                         ->required(),
@@ -704,8 +709,10 @@ class PurchaseOrderResource extends Resource
                                         ->placeholder('Driver or logistics personnel'),
 
                                     TextInput::make('received_by')
-                                        ->label('Received By')
-                                        ->placeholder('Customer site receiver name'),
+                                        ->label('Received By (Client / Site Receiver)')
+                                        ->default(fn(PurchaseOrder $record) => $record->customer_name)
+                                        ->placeholder('Customer site receiver name')
+                                        ->helperText('Name of the client or site personnel who received the delivery'),
                                 ]),
                             ]),
 
