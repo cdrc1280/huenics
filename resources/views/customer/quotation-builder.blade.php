@@ -1,6 +1,6 @@
 @extends('layouts.customer')
 
-@section('title', 'Online Quotation Builder & Estimator - Huenics Industrial')
+@section('title', 'Instant Quotation Builder - Huenics Industrial Sales Inc.')
 
 @section('content')
 <!-- Header Banner -->
@@ -260,7 +260,7 @@
                             <span>Need Specialized Items or Bidding?</span>
                         </div>
                         <p class="text-slate-500 leading-relaxed">
-                            For non-standard pipe schedules, heavy structural beams, or custom pump sizing, email your Bill of Quantities to <strong>sales@huenics.com</strong> or call <strong>+63 (2) 8123 4567</strong>.
+                            For specialized lighting items, indent orders, or project bidding, email your requirements to <strong>huenicsindustrialsales@gmail.com</strong> or call <strong>(02) 8561-6836</strong> / <strong>+63 968 8500720</strong>.
                         </p>
                     </div>
                 </div>

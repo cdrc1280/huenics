@@ -1,6 +1,6 @@
 @extends('layouts.customer')
 
-@section('title', 'About Us - Huenics Industrial Supply Corp.')
+@section('title', 'About Us - Huenics Industrial Sales Inc.')
 
 @section('content')
 <!-- About Header Hero -->
@@ -12,10 +12,13 @@
                 <i class="fa-solid fa-building"></i> Corporate Profile
             </span>
             <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
-                About Huenics Industrial Supply Corp.
+                About Huenics Industrial Sales Inc.
             </h1>
+            <p class="text-blue-300 font-semibold text-sm tracking-wider uppercase mt-2">
+                Colors &bull; Techniques &bull; Technology
+            </p>
             <p class="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed font-normal">
-                A dependable Philippine engineering supply partner delivering certified plumbing, structural steel, fluid equipment, and electrical infrastructure materials for major civil and commercial projects.
+                A dependable Philippine engineering and commercial supply partner delivering certified commercial lighting, Citizen Japan C.O.B downlights, industrial electrical, and construction infrastructure materials.
             </p>
         </div>
     </div>
@@ -28,25 +31,25 @@
             <div class="lg:col-span-6 space-y-5">
                 <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Our Heritage & Mission</span>
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Reliability, Precision, and Certified Quality at Every Stage
+                    Precision, Technology, and Certified Standards
                 </h2>
                 <p class="text-sm text-slate-600 leading-relaxed">
-                    Founded to address the demanding supply logistics of modern construction in the Philippines, <strong>Huenics Industrial Supply Corp. (HISI)</strong> has established itself as an authoritative importer and wholesale distributor of civil, plumbing, mechanical, and electrical hardware.
+                    <strong>Huenics Industrial Sales Inc. (HISI)</strong> is an established direct importer, wholesale distributor, and technical supplier delivering engineering-grade commercial LED downlights, specialized indent orders, and critical infrastructure hardware across the Philippines.
                 </p>
                 <p class="text-sm text-slate-600 leading-relaxed">
-                    We maintain comprehensive warehousing in Mandaluyong City and dedicated transport networks to ensure critical-path building materials arrive on-site on schedule, compliant with strict ASTM, PNS, and ISO manufacturing standards.
+                    Headquartered in Paco, Manila, we maintain direct manufacturer access and strict testing protocols to guarantee dependable quality, backed by official warranties, comprehensive customer service, and full tax compliance.
                 </p>
 
                 <div class="pt-4 grid grid-cols-2 gap-4">
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div class="text-2xl font-black text-blue-600">100%</div>
-                        <div class="text-xs font-bold text-slate-900 mt-1">Certified Mill Test Specs</div>
-                        <div class="text-[11px] text-slate-500 mt-0.5">Full traceability on all steel & pipes</div>
+                        <div class="text-2xl font-black text-blue-600">1–2 Yrs</div>
+                        <div class="text-xs font-bold text-slate-900 mt-1">Official Warranty</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Limited warranty w/ replacement policy</div>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div class="text-2xl font-black text-blue-600">BIR 12%</div>
-                        <div class="text-xs font-bold text-slate-900 mt-1">Official VAT Invoicing</div>
-                        <div class="text-[11px] text-slate-500 mt-0.5">Transparent commercial receipts</div>
+                        <div class="text-2xl font-black text-blue-600">₱20,000+</div>
+                        <div class="text-xs font-bold text-slate-900 mt-1">Free Metro Delivery</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Complimentary Metro Manila transport</div>
                     </div>
                 </div>
             </div>
@@ -173,21 +176,31 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-slate-900 text-white rounded-2xl p-8 sm:p-12 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div class="lg:col-span-7 space-y-4">
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Direct Inquiries & Project Bidding</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Direct Inquiries & Technical Support</span>
                 <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                    Partner With Huenics For Your Next Development
+                    Partner With Huenics Industrial Sales Inc.
                 </h2>
                 <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Whether you are preparing a competitive bid or managing ongoing jobsite procurement, our sales engineering team provides expedited volume quotes and contract-pricing terms.
+                    Contact our technical sales team for project quotations, indent orders, specifications verification, and volume pricing.
                 </p>
-                <div class="pt-2 flex flex-wrap gap-4 text-xs">
+                <div class="pt-2 flex flex-col gap-2.5 text-xs">
                     <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
-                        <span class="text-slate-400">Head Office:</span>
-                        <span class="font-bold text-white ml-1">2F Starmall EDSA-Shaw, Mandaluyong City</span>
+                        <span class="text-slate-400 font-semibold">Head Office:</span>
+                        <span class="font-medium text-white ml-1">916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, Manila</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
+                            <span class="text-slate-400 font-semibold">Telefax:</span>
+                            <span class="font-medium text-white ml-1">(02) 8561-6836</span>
+                        </div>
+                        <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
+                            <span class="text-slate-400 font-semibold">Hotlines:</span>
+                            <span class="font-medium text-white ml-1">+63 968 8500720 / +63 965 6287205</span>
+                        </div>
                     </div>
                     <div class="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
-                        <span class="text-slate-400">TIN:</span>
-                        <span class="font-bold text-white ml-1">009-876-543-000-VAT</span>
+                        <span class="text-slate-400 font-semibold">Official Email:</span>
+                        <span class="font-medium text-white ml-1">huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</span>
                     </div>
                 </div>
             </div>

@@ -50,15 +50,15 @@
             <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6">
                 <div>
                     <div class="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
-                        Huenics Industrial Supply Corp.
+                        Huenics Industrial Sales Inc.
                     </div>
-                    <div class="text-xs text-slate-500 font-semibold mt-0.5">
-                        Direct Importer & Wholesale Engineering Distribution
+                    <div class="text-xs text-blue-600 font-semibold mt-0.5">
+                        Colors &bull; Techniques &bull; Technology
                     </div>
                     <div class="text-xs text-slate-600 mt-2 space-y-0.5">
-                        <div>123 Pioneer St., Mandaluyong City, Metro Manila, Philippines</div>
-                        <div>TIN: 009-876-543-000-VAT &bull; Tel: +63 (2) 8123 4567</div>
-                        <div>Email: sales@huenics.com &bull; Web: www.huenics.com</div>
+                        <div>916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, Manila</div>
+                        <div>Telefax: (02) 8561-6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
+                        <div>Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</div>
                     </div>
                 </div>
 
@@ -181,11 +181,12 @@
 
             <!-- Terms & Standard Guidelines -->
             <div class="border-t border-slate-200 pt-6 text-[11px] text-slate-500 space-y-2">
-                <div class="font-bold text-slate-800 uppercase tracking-wider text-xs">Standard Quotation Guidelines:</div>
+                <div class="font-bold text-slate-800 uppercase tracking-wider text-xs">Standard Quotation Terms & Notes:</div>
                 <ul class="list-disc list-inside space-y-1 leading-relaxed">
-                    <li>To place a formal order based on this estimate, contact your assigned account manager or email <strong>sales@huenics.com</strong>.</li>
-                    <li>All pricing includes 12% Value Added Tax. Prices are valid for 30 calendar days from the date of generation.</li>
-                    <li>Delivery lead times within Metro Manila are normally 2 to 5 business days upon official PO issuance and credit validation.</li>
+                    <li>To convert this estimate into an official binding Quotation / Purchase Order, email <strong>huenicsindustrialsales@gmail.com</strong> or contact CS: <strong>+63 968 8500720</strong>.</li>
+                    <li>Minimum order should be <strong>Php 20,000.00 above</strong> for Free Delivery within Metro Manila. Outside Metro Manila shipment cost will be applied.</li>
+                    <li>Prices are subject to change without prior notice (VAT INC.). Return & Exchange of items must be within 7 days upon delivery.</li>
+                    <li>1 to 2 Years limited warranty without physical damage. 1 mo. outright replacement for defective units upon verification.</li>
                 </ul>
             </div>
 

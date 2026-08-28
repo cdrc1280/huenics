@@ -224,12 +224,12 @@
     <table class="header-table">
         <tr>
             <td style="width: 58%;">
-                <div class="company-title">Huenics Industrial Supply Corp.</div>
-                <div class="company-subtitle">Direct Importer & Distributor of Engineering & Construction Supplies</div>
+                <div class="company-title">Huenics Industrial Sales Inc.</div>
+                <div class="company-subtitle">Colors &bull; Techniques &bull; Technology</div>
                 <div class="company-meta">
-                    123 Pioneer St., Mandaluyong City, Metro Manila, Philippines<br>
-                    TIN: 009-876-543-000-VAT &bull; Tel: +63 (2) 8123 4567<br>
-                    Email: sales@huenics.com &bull; Web: www.huenics.com
+                    916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, Manila<br>
+                    Telefax: (02) 8561-6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205<br>
+                    Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com
                 </div>
             </td>
             <td style="width: 42%;" class="estimate-badge-box">
@@ -346,18 +346,19 @@
 
     <!-- Terms & Instructions -->
     <div class="terms-box">
-        <div class="terms-title">Standard Terms & Ordering Guidelines:</div>
+        <div class="terms-title">Standard Terms & Conditions (Per Official Vendors Agreement):</div>
         <ol class="terms-list">
-            <li><strong>Official Conversion:</strong> To convert this unofficial quotation into an official binding Quotation / Purchase Order, present this reference number ({{ $quote['quotation_number'] ?? 'UNOFF-ESTIMATE' }}) to your Huenics Sales Representative or email <strong>sales@huenics.com</strong>.</li>
-            <li><strong>Prices:</strong> All prices are in Philippine Pesos (PHP) inclusive of 12% VAT unless stated otherwise. Prices are subject to change without prior notice based on raw material market index.</li>
-            <li><strong>Delivery / Pick-up:</strong> Delivery lead time is typically 2 to 5 business days within Metro Manila upon PO confirmation. Provincial freight and special crating are quoted separately.</li>
-            <li><strong>Payment Terms:</strong> Standard terms are Cash Before Delivery (CBD) / Bank Transfer for initial orders, or approved credit terms for verified corporate accounts.</li>
+            <li><strong>Official Conversion:</strong> To convert this estimate into an official binding Quotation / Purchase Order, present reference number ({{ $quote['quotation_number'] ?? 'UNOFF-ESTIMATE' }}) or email <strong>huenicsindustrialsales@gmail.com</strong> / CS: <strong>+63 968 8500720</strong>.</li>
+            <li><strong>Pricing:</strong> All prices are in Philippine Pesos (PHP) inclusive of 12% VAT (VAT INC.). Prices are subject to change without prior notice.</li>
+            <li><strong>Free Delivery Policy:</strong> Minimum amount of order should be <strong>Php 20,000.00 above</strong> for Free Delivery within Metro Manila. Outside Metro Manila shipment cost will be applied.</li>
+            <li><strong>Return & Exchange Policy:</strong> Return & exchange of items must be within <strong>7 days upon delivery</strong> with complete accessories, packaging, and sales invoice/warranty slip. Physical damage is not covered.</li>
+            <li><strong>Warranty Terms:</strong> 1–2 Years limited warranty w/o physical damage. 1 mo. outright replacement for defective units (subject to stock availability); after 30 days subject to repair/replacement in 2-5 working days.</li>
         </ol>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-        Huenics Ingestion & Distribution System &bull; Generated via Customer Web Portal &bull; www.huenics.com &bull; Support: +63 (2) 8123 4567
+        Huenics Industrial Sales Inc. (HISI) &bull; Colors &bull; Techniques &bull; Technology &bull; Telefax: (02) 8561-6836 &bull; CS: +63 968 8500720
     </div>
 
 </body>

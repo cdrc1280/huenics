@@ -1,6 +1,6 @@
 @extends('layouts.customer')
 
-@section('title', 'Huenics Industrial Supply - Direct Engineering & Construction Materials')
+@section('title', 'Huenics Industrial Sales Inc. - Colors • Techniques • Technology')
 
 @section('content')
 <!-- Hero Section -->
@@ -15,18 +15,18 @@
             <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 bg-blue-500/10 text-blue-300 border border-blue-500/20 px-3.5 py-1.5 rounded-full text-xs font-semibold">
                     <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                    Direct Importer & Wholesale Construction Supply
+                    Direct Importer & Wholesale Engineering Supplier &bull; HISI
                 </div>
                 
                 <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]">
-                    Engineering-Grade <br class="hidden sm:inline">
+                    Colors &bull; Techniques <br class="hidden sm:inline">
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300">
-                        Industrial Supplies
+                        & Technology
                     </span>
                 </h1>
 
                 <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                    Supplying top general contractors and developers with certified plumbing, structural steel, sewage pumps, HDPE conduits, and electrical infrastructure materials across the Philippines.
+                    Direct importer and wholesale distributor of commercial LED downlights, Citizen Japan COB modules, indent orders, and certified industrial supplies across the Philippines.
                 </p>
 
                 <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
@@ -210,29 +210,29 @@
                 <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">Strict 12% Philippine VAT Invoicing</h3>
+                <h3 class="text-lg font-bold text-slate-900">VAT Inclusive Invoicing</h3>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Complete tax documentation with Sales Invoices (SI) and Official Receipts (OR) compliant with BIR rules. Zero hidden discrepancies.
+                    All prices are VAT Inclusive (VAT INC.). Full commercial documentation with Sales Invoices (SI) and official vendor agreements.
+                </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Free Metro Manila Delivery (₱20k+)</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Minimum order of Php 20,000.00 and above enjoys Free Delivery within Metro Manila. Outside Metro Manila shipment cost applied.
                 </p>
             </div>
 
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
                 <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">
-                    <i class="fa-solid fa-truck-fast"></i>
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">Reliable Jobsite Delivery Fleet</h3>
+                <h3 class="text-lg font-bold text-slate-900">Official Product Warranty</h3>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Fleet of boom trucks, dropside trailers, and express delivery vans to dispatch heavy steel, pipes, and bulk machinery across Mega Manila & Luzon.
-                </p>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold">
-                    <i class="fa-solid fa-file-circle-check"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900">Immediate Digital Quotations</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Generate instant preliminary estimates directly on our web portal, review VAT math in real-time, and download formatted PDF estimates.
+                    1 to 2 Years limited warranty w/o physical damage. 7 days item change policy and 1 mo. outright defective replacement.
                 </p>
             </div>
         </div>

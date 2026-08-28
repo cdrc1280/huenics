@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Huenics Industrial Supply Corp.') - Industrial & Construction Supplies</title>
+    <title>@yield('title', 'Huenics Industrial Sales Inc.') - Colors • Techniques • Technology</title>
 
     <!-- Compiled Production Tailwind CSS & Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -24,17 +24,20 @@
     <div class="bg-slate-900 text-slate-300 text-xs py-2 px-3 sm:px-4 border-b border-slate-800">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs">
-                <span><i class="fa-solid fa-phone text-blue-400 mr-1"></i> +63 (2) 8123 4567</span>
-                <span class="hidden sm:inline"><i class="fa-solid fa-envelope text-blue-400 mr-1"></i> sales@huenics.com</span>
-                <span class="hidden lg:inline"><i class="fa-solid fa-location-dot text-blue-400 mr-1"></i> Mandaluyong City, Metro Manila</span>
+                <span><i class="fa-solid fa-fax text-blue-400 mr-1"></i> Telefax: (02) 8561-6836</span>
+                <span class="hidden sm:inline"><i class="fa-solid fa-headset text-blue-400 mr-1"></i> CS: +63 968 8500720</span>
+                <span class="hidden md:inline"><i class="fa-solid fa-envelope text-blue-400 mr-1"></i> huenicsindustrialsales@gmail.com</span>
             </div>
-            <div class="flex items-center gap-3 ml-auto sm:ml-0 text-[11px] sm:text-xs">
-                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-medium border border-emerald-500/30 whitespace-nowrap">
-                    <i class="fa-solid fa-check mr-1"></i> 12% VAT Compliant
+            <div class="flex items-center gap-2.5 ml-auto sm:ml-0 text-[11px] sm:text-xs">
+                <span class="text-blue-300 font-semibold tracking-wide hidden lg:inline">
+                    Colors &bull; Techniques &bull; Technology
                 </span>
-                <a href="{{ url('/admin/login') }}" class="text-slate-300 hover:text-white transition flex items-center gap-1 font-medium whitespace-nowrap">
-                    <i class="fa-solid fa-lock text-xs"></i> Employee Login
-                </a>
+                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-medium border border-emerald-500/30 whitespace-nowrap">
+                    <i class="fa-solid fa-truck-fast mr-1"></i> Free Delivery ₱20k+ (Metro Manila)
+                </span>
+                <span class="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-medium border border-blue-500/30 whitespace-nowrap">
+                    VAT Inclusive
+                </span>
             </div>
         </div>
     </div>
@@ -46,15 +49,15 @@
                 <!-- Logo -->
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                     <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0">
-                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
-                            <i class="fa-solid fa-cubes"></i>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-wider shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
+                            HISI
                         </div>
                         <div class="min-w-0 truncate">
                             <div class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none truncate">
-                                HUENICS <span class="text-blue-600 font-black">INDUSTRIAL</span>
+                                HUENICS <span class="text-blue-600 font-black">INDUSTRIAL SALES</span>
                             </div>
                             <div class="text-[9px] sm:text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5 truncate">
-                                Supply & Engineering Distribution
+                                Colors &bull; Techniques &bull; Technology
                             </div>
                         </div>
                     </a>
@@ -109,9 +112,6 @@
             <a href="{{ route('customer.quotation-builder') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
                 <i class="fa-solid fa-calculator w-6 text-blue-600"></i> Quotation Builder
             </a>
-            <a href="{{ url('/admin/login') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-500 hover:bg-slate-100 border-t border-slate-100 mt-2 pt-2">
-                <i class="fa-solid fa-lock w-6 text-slate-400"></i> Employee Login
-            </a>
         </div>
     </header>
 
@@ -140,16 +140,19 @@
                 <!-- Col 1: Brand Info -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                            <i class="fa-solid fa-cubes"></i>
+                        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xs tracking-wider">
+                            HISI
                         </div>
                         <span class="text-lg font-bold text-white tracking-tight">HUENICS INDUSTRIAL</span>
                     </div>
+                    <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">
+                        Colors &bull; Techniques &bull; Technology
+                    </p>
                     <p class="text-sm text-slate-400 leading-relaxed">
-                        Huenics Industrial Supply Corp. (HISI) is a leading distributor and direct importer of engineering, electrical, plumbing, piping, structural steel, and hardware supplies in the Philippines.
+                        Huenics Industrial Sales Inc. (HISI) is a trusted supplier and direct importer of commercial lighting, C.O.B downlights, industrial electrical, and construction supplies in the Philippines.
                     </p>
                     <div class="text-xs text-slate-500">
-                        BIR TIN: 009-876-543-000-VAT &bull; SEC Registered
+                        All Prices are VAT Inclusive (VAT INC.)
                     </div>
                 </div>
 
@@ -161,19 +164,17 @@
                         <li><a href="{{ route('customer.about') }}" class="hover:text-blue-400 transition">About Company</a></li>
                         <li><a href="{{ route('customer.products') }}" class="hover:text-blue-400 transition">Product Catalog</a></li>
                         <li><a href="{{ route('customer.quotation-builder') }}" class="hover:text-blue-400 transition">Online Quotation Builder</a></li>
-                        <li><a href="{{ url('/admin/login') }}" class="hover:text-blue-400 transition">Staff Portal</a></li>
                     </ul>
                 </div>
 
-                <!-- Col 3: Product Categories -->
+                <!-- Col 3: Product Categories & Policies -->
                 <div>
-                    <h3 class="text-sm font-semibold uppercase tracking-wider text-white mb-4">Product Lines</h3>
-                    <ul class="space-y-2.5 text-sm text-slate-400">
-                        <li><i class="fa-solid fa-angle-right text-xs text-blue-500 mr-1.5"></i> Pipes, Fittings & Valves</li>
-                        <li><i class="fa-solid fa-angle-right text-xs text-blue-500 mr-1.5"></i> Deformed Steel & Structural Bars</li>
-                        <li><i class="fa-solid fa-angle-right text-xs text-blue-500 mr-1.5"></i> Submersible & Sewage Pumps</li>
-                        <li><i class="fa-solid fa-angle-right text-xs text-blue-500 mr-1.5"></i> HDPE & Electrical Conduits</li>
-                        <li><i class="fa-solid fa-angle-right text-xs text-blue-500 mr-1.5"></i> Plumbing & Sanitary Fixtures</li>
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-white mb-4">Customer Policies</h3>
+                    <ul class="space-y-2.5 text-xs text-slate-400">
+                        <li><i class="fa-solid fa-truck text-xs text-blue-400 mr-1.5"></i> <strong>Free Delivery:</strong> Orders ₱20,000.00+ within Metro Manila</li>
+                        <li><i class="fa-solid fa-rotate-left text-xs text-blue-400 mr-1.5"></i> <strong>Return & Exchange:</strong> Within 7 days upon delivery</li>
+                        <li><i class="fa-solid fa-shield-check text-xs text-blue-400 mr-1.5"></i> <strong>Warranty:</strong> 1–2 Years limited warranty w/o physical damage</li>
+                        <li><i class="fa-solid fa-bolt text-xs text-blue-400 mr-1.5"></i> <strong>Replacement:</strong> 1 mo. outright replacement for defective units</li>
                     </ul>
                 </div>
 
@@ -183,27 +184,31 @@
                     <div class="space-y-3 text-sm text-slate-400">
                         <p class="flex items-start gap-2.5">
                             <i class="fa-solid fa-location-dot text-blue-400 mt-1"></i>
-                            <span>2F Starmall EDSA-Shaw, Mandaluyong City, Metro Manila, 1550 Philippines</span>
+                            <span class="text-xs leading-relaxed">916 Avida Towers Intima, Zulueta St., Brgy. 678, Zone 74, Dist. V, 1007 Paco, NCR, City of Manila First District, Philippines</span>
                         </p>
-                        <p class="flex items-center gap-2.5">
-                            <i class="fa-solid fa-phone text-blue-400"></i>
-                            <span>+63 (2) 8123 4567 / 0906-144-2553</span>
+                        <p class="flex items-center gap-2.5 text-xs">
+                            <i class="fa-solid fa-fax text-blue-400"></i>
+                            <span>Telefax: (02) 8561-6836</span>
                         </p>
-                        <p class="flex items-center gap-2.5">
+                        <p class="flex items-center gap-2.5 text-xs">
+                            <i class="fa-solid fa-headset text-blue-400"></i>
+                            <span>CS: +63 968 8500720 / Tech: +63 965 6287205</span>
+                        </p>
+                        <p class="flex items-center gap-2.5 text-xs">
                             <i class="fa-solid fa-envelope text-blue-400"></i>
-                            <span>sales@huenics.com</span>
+                            <span>huenicsindustrialsales@gmail.com</span>
                         </p>
-                        <p class="flex items-center gap-2.5">
-                            <i class="fa-solid fa-clock text-blue-400"></i>
-                            <span>Mon - Sat: 8:00 AM - 5:00 PM</span>
+                        <p class="flex items-center gap-2.5 text-xs">
+                            <i class="fa-solid fa-envelope-open-text text-blue-400"></i>
+                            <span>crm.huenics777@gmail.com</span>
                         </p>
                     </div>
                 </div>
             </div>
 
             <div class="mt-12 pt-8 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p>&copy; {{ date('Y') }} Huenics Industrial Supply Corp. All rights reserved.</p>
-                <p>Philippine Standard 12% VAT Applied to All Document Calculations.</p>
+                <p>&copy; {{ date('Y') }} Huenics Industrial Sales Inc. (HISI). All rights reserved.</p>
+                <p>Prices are subject to change without prior notice. (VAT INC.)</p>
             </div>
         </div>
     </footer>

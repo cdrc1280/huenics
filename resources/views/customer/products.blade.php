@@ -1,6 +1,6 @@
 @extends('layouts.customer')
 
-@section('title', 'Product Catalog & Showcase - Huenics Industrial Supply')
+@section('title', 'Product Catalog - Huenics Industrial Sales Inc.')
 
 @section('content')
 <!-- Header Banner -->
@@ -8,9 +8,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Engineering Material Showcase</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Colors &bull; Techniques &bull; Technology</span>
                 <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1">
-                    Industrial & Construction Product Catalog
+                    Commercial & Industrial Product Catalog
                 </h1>
                 <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl font-normal">
                     Select items and quantities to assemble your Bill of Quantities (BOQ). Click "Add to Quotation" to automatically build your preliminary estimate.

@@ -50,9 +50,22 @@ class CustomerPortalTest extends TestCase
         $response = $this->get('/about');
 
         $response->assertStatus(200);
-        $response->assertSee('About Huenics Industrial Supply Corp.');
-        $response->assertSee('Plumbing');
-        $response->assertSee('Structural Steel');
+        $response->assertSee('About Huenics Industrial Sales Inc.');
+        $response->assertSee('Colors');
+        $response->assertSee('Technology');
+    }
+
+    public function test_customer_side_has_no_login_features(): void
+    {
+        $pages = ['/', '/about', '/products', '/quotation/builder'];
+
+        foreach ($pages as $url) {
+            $response = $this->get($url);
+            $response->assertStatus(200);
+            $response->assertDontSee('Employee Login');
+            $response->assertDontSee('Staff Portal');
+            $response->assertDontSee('/admin/login');
+        }
     }
 
     public function test_customer_can_browse_product_catalog_and_filter(): void
