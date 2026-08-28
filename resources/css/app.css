@@ -4,6 +4,8 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
@@ -83,6 +85,39 @@
     border-right: 3px solid #214fe0;
     padding: 0.15rem 0.5rem;
     text-align: center;
+}
+
+/* Dark Theme Specific Enhancements */
+.dark .hisi-pill-badge {
+    background-color: #214fe0;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    border: 1px solid rgba(147, 197, 253, 0.35);
+}
+
+.dark .hisi-geometric-accent::before {
+    border-top-color: #153396;
+}
+
+.dark .hisi-geometric-accent::after {
+    background: repeating-linear-gradient(
+        -45deg,
+        rgba(59, 130, 246, 0.12),
+        rgba(59, 130, 246, 0.12) 4px,
+        transparent 4px,
+        transparent 12px
+    );
+}
+
+.dark .hisi-logo-box {
+    border-left-color: #3b82f6;
+    border-right-color: #3b82f6;
+    background-color: rgba(33, 79, 224, 0.15);
+}
+
+.dark ::selection {
+    background-color: #214fe0;
+    color: #ffffff;
 }
 
 

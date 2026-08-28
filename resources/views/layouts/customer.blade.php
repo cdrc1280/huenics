@@ -1,11 +1,23 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50 text-slate-900 antialiased">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full dark antialiased">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Huenics Industrial Sales Inc.') - Colors • Techniques • Technology</title>
+
+    <!-- Instant Dark Mode Init to Prevent Flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('huenics_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
     <!-- Compiled Production Tailwind CSS & Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -16,12 +28,16 @@
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
         }
+        .dark .glass-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
-<body class="flex min-h-full flex-col font-sans bg-slate-50">
+<body class="flex min-h-full flex-col font-sans bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
-    <!-- Top Banner (PDF Royal Blue) -->
-    <div class="bg-[#1a42be] text-white text-xs py-2 px-3 sm:px-4 border-b border-blue-900/40">
+    <!-- Top Banner (PDF Royal Blue in Light / Deep Obsidian Navy in Dark) -->
+    <div class="bg-[#1a42be] dark:bg-[#091129] text-white text-xs py-2 px-3 sm:px-4 border-b border-blue-900/40 dark:border-blue-950 transition-colors duration-200">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs">
                 <span><i class="fa-solid fa-phone text-blue-200 mr-1"></i> Tel. #8561 6836</span>
@@ -32,32 +48,32 @@
                 <span class="text-blue-100 font-semibold tracking-wider uppercase text-[10px] hidden lg:inline">
                     Colors &bull; Techniques &bull; Technology
                 </span>
-                <span class="bg-white/15 text-white px-2 py-0.5 rounded font-medium border border-white/20 whitespace-nowrap">
+                <span class="bg-white/15 dark:bg-blue-950/60 text-white px-2 py-0.5 rounded font-medium border border-white/20 dark:border-blue-800/50 whitespace-nowrap">
                     <i class="fa-solid fa-truck-fast mr-1"></i> Free Delivery ₱20k+ (Metro Manila)
                 </span>
-                <span class="bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded whitespace-nowrap text-[10px] uppercase tracking-wide">
+                <span class="bg-emerald-400 dark:bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded whitespace-nowrap text-[10px] uppercase tracking-wide shadow-sm">
                     VAT INC.
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- Main Navigation (Clean White & Royal Blue) -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <!-- Main Navigation (Clean White in Light / Sleek Dark Glass in Dark) -->
+    <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur border-b border-slate-200 dark:border-slate-800/90 shadow-sm transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
                 <!-- Authentic HISI Logo from PDF Header -->
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                     <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0" title="Huenics Industrial Sales Inc.">
-                        <div class="border-l-[3px] border-r-[3px] border-[#214fe0] px-2 py-0.5 text-center shrink-0 bg-blue-50/50 rounded-sm">
-                            <div class="text-lg sm:text-2xl font-black tracking-widest text-[#214fe0] leading-none">HISI</div>
-                            <div class="text-[7.5px] sm:text-[9px] font-bold text-blue-900 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
+                        <div class="border-l-[3px] border-r-[3px] border-[#214fe0] dark:border-[#3b82f6] px-2 py-0.5 text-center shrink-0 bg-blue-50/50 dark:bg-blue-950/60 rounded-sm transition-colors">
+                            <div class="text-lg sm:text-2xl font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa] leading-none">HISI</div>
+                            <div class="text-[7.5px] sm:text-[9px] font-bold text-blue-900 dark:text-blue-200 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
                         </div>
-                        <div class="border-l border-slate-200 pl-2.5 sm:pl-3 min-w-0 truncate">
-                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 uppercase leading-none truncate">
+                        <div class="border-l border-slate-200 dark:border-slate-800 pl-2.5 sm:pl-3 min-w-0 truncate transition-colors">
+                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none truncate">
                                 HUENICS
                             </div>
-                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] uppercase leading-none mt-0.5 truncate">
+                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] dark:text-[#60a5fa] uppercase leading-none mt-0.5 truncate">
                                 INDUSTRIAL SALES INC.
                             </div>
                         </div>
@@ -65,34 +81,45 @@
                 </div>
 
                 <!-- Desktop Nav Links -->
-                <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700">
-                    <a href="{{ route('customer.home') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
+                <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <a href="{{ route('customer.home') }}" class="hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1' : '' }}">
                         Home
                     </a>
-                    <a href="{{ route('customer.about') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.about') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
+                    <a href="{{ route('customer.about') }}" class="hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap {{ request()->routeIs('customer.about') ? 'text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1' : '' }}">
                         About Us
                     </a>
-                    <a href="{{ route('customer.products') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.products') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
+                    <a href="{{ route('customer.products') }}" class="hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap {{ request()->routeIs('customer.products') ? 'text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1' : '' }}">
                         Product Catalog
                     </a>
-                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.quotation-builder') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
+                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap {{ request()->routeIs('customer.quotation-builder') ? 'text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1' : '' }}">
                         Quotation Builder
                     </a>
                 </nav>
 
-                <!-- Action / Cart Button -->
+                <!-- Action / Cart Button & Theme Toggle -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <!-- Theme Toggle Button -->
+                    <button type="button" 
+                            id="theme-toggle"
+                            onclick="toggleDarkMode()" 
+                            class="p-2 rounded-xl text-slate-500 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition focus:outline-none border border-transparent dark:border-slate-800" 
+                            title="Toggle Light / Dark Theme"
+                            aria-label="Toggle Theme">
+                        <i id="theme-icon-sun" class="fa-solid fa-sun text-amber-400 text-sm hidden"></i>
+                        <i id="theme-icon-moon" class="fa-solid fa-moon text-slate-500 text-sm"></i>
+                    </button>
+
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-sm hover:shadow-md transition">
+                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-lg transition dark:shadow-[0_0_15px_rgba(33,79,224,0.35)]">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                         <span class="hidden xs:inline sm:inline">Quotation Estimate</span>
-                        <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-900 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">
+                        <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">
                             0
                         </span>
                     </a>
 
                     <!-- Mobile Menu Button -->
-                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none" aria-label="Toggle Navigation Menu">
+                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none" aria-label="Toggle Navigation Menu">
                         <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
                     </button>
                 </div>
@@ -100,18 +127,18 @@
         </div>
 
         <!-- Mobile Nav Menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-2 shadow-lg">
-            <a href="{{ route('customer.home') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.home') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
-                <i class="fa-solid fa-house w-6 text-blue-600"></i> Home
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0f19] px-4 py-4 space-y-2 shadow-lg transition-colors">
+            <a href="{{ route('customer.home') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.home') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <i class="fa-solid fa-house w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Home
             </a>
-            <a href="{{ route('customer.about') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.about') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
-                <i class="fa-solid fa-building w-6 text-blue-600"></i> About Us
+            <a href="{{ route('customer.about') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.about') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <i class="fa-solid fa-building w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> About Us
             </a>
-            <a href="{{ route('customer.products') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.products') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
-                <i class="fa-solid fa-box-open w-6 text-blue-600"></i> Product Catalog
+            <a href="{{ route('customer.products') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.products') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <i class="fa-solid fa-box-open w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Product Catalog
             </a>
-            <a href="{{ route('customer.quotation-builder') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-100 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 text-blue-700 font-semibold' : '' }}">
-                <i class="fa-solid fa-calculator w-6 text-blue-600"></i> Quotation Builder
+            <a href="{{ route('customer.quotation-builder') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <i class="fa-solid fa-calculator w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Quotation Builder
             </a>
         </div>
     </header>
@@ -339,9 +366,31 @@
             }, 3000);
         }
 
-        // Initialize badge on load
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const sun = document.getElementById('theme-icon-sun');
+            const moon = document.getElementById('theme-icon-moon');
+            if (sun && moon) {
+                if (isDark) {
+                    sun.classList.remove('hidden');
+                    moon.classList.add('hidden');
+                } else {
+                    sun.classList.add('hidden');
+                    moon.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Initialize badge and theme icon on load
         document.addEventListener('DOMContentLoaded', () => {
             CartManager.updateNavBadge();
+            updateThemeIcons();
         });
     </script>
 

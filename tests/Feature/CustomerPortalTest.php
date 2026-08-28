@@ -221,4 +221,36 @@ class CustomerPortalTest extends TestCase
         $inactiveResponse->assertStatus(200);
         $inactiveResponse->assertDontSee('Updated DB Luminaire ' . $uniqueSku);
     }
+
+    public function test_dark_theme_is_supported_across_customer_side(): void
+    {
+        // 1. Home page renders with dark theme layout tokens and toggle
+        $homeResponse = $this->get('/');
+        $homeResponse->assertStatus(200);
+        $homeResponse->assertSee('theme-toggle', false);
+        $homeResponse->assertSee('theme-icon-sun', false);
+        $homeResponse->assertSee('theme-icon-moon', false);
+        $homeResponse->assertSee('class="h-full dark antialiased"', false);
+        $homeResponse->assertSee('huenics_theme', false);
+        $homeResponse->assertSee('dark:bg-[#070b14]', false);
+
+        // 2. About page renders with dark theme
+        $aboutResponse = $this->get('/about');
+        $aboutResponse->assertStatus(200);
+        $aboutResponse->assertSee('dark:bg-[#070b14]', false);
+        $aboutResponse->assertSee('dark:text-white', false);
+
+        // 3. Products page renders with dark theme
+        $productsResponse = $this->get('/products');
+        $productsResponse->assertStatus(200);
+        $productsResponse->assertSee('dark:bg-[#070b14]', false);
+        $productsResponse->assertSee('dark:border-slate-800', false);
+
+        // 4. Quotation builder renders with dark theme
+        $builderResponse = $this->get('/quotation/builder');
+        $builderResponse->assertStatus(200);
+        $builderResponse->assertSee('dark:bg-[#070b14]', false);
+        $builderResponse->assertSee('dark:bg-[#111827]', false);
+        $builderResponse->assertSee('catalog-modal', false);
+    }
 }
