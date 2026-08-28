@@ -12,10 +12,77 @@
     --color-brand-100: #dbeafe;
     --color-brand-200: #bfdbfe;
     --color-brand-500: #3b82f6;
-    --color-brand-600: #2563eb;
-    --color-brand-700: #1d4ed8;
-    --color-brand-800: #1e40af;
-    --color-brand-900: #1e3a8a;
-    --color-brand-950: #0f172a;
+    --color-brand-600: #214fe0;
+    --color-brand-700: #1a42be;
+    --color-brand-800: #153396;
+    --color-brand-900: #122872;
+    --color-brand-950: #0b1742;
+
+    --color-hisi-blue: #214fe0;
+    --color-hisi-dark: #0f216b;
+    --color-hisi-light: #eef3ff;
 }
+
+/* HISI Signature PDF Category Badge */
+.hisi-pill-badge {
+    background-color: #214fe0;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.6875rem;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.85rem;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(33, 79, 224, 0.25);
+}
+
+/* HISI Signature Geometric Diagonal Accents from PDF */
+.hisi-geometric-accent {
+    position: relative;
+    overflow: hidden;
+}
+.hisi-geometric-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-top: 140px solid #214fe0;
+    border-left: 140px solid transparent;
+    pointer-events: none;
+    z-index: 1;
+}
+.hisi-geometric-accent::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 220px;
+    height: 220px;
+    background: repeating-linear-gradient(
+        -45deg,
+        rgba(33, 79, 224, 0.08),
+        rgba(33, 79, 224, 0.08) 4px,
+        transparent 4px,
+        transparent 12px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* HISI Logo Frame from PDF */
+.hisi-logo-frame {
+    display: inline-flex;
+    align-items: center;
+}
+.hisi-logo-box {
+    border-left: 3px solid #214fe0;
+    border-right: 3px solid #214fe0;
+    padding: 0.15rem 0.5rem;
+    text-align: center;
+}
+
 

@@ -47,10 +47,10 @@
         }
         .unofficial-badge {
             display: inline-block;
-            background-color: #fef3c7;
-            border: 1.5px solid #d97706;
-            color: #92400e;
-            font-size: 11px;
+            background-color: #eff6ff;
+            border: 1.5px solid #214fe0;
+            color: #214fe0;
+            font-size: 10px;
             font-weight: bold;
             padding: 4px 10px;
             border-radius: 4px;
@@ -135,14 +135,14 @@
             margin-bottom: 16px;
         }
         .items-table th {
-            background-color: #0f172a;
+            background-color: #214fe0;
             color: #ffffff;
             font-size: 9.5px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding: 6px 8px;
-            border: 1px solid #0f172a;
+            border: 1px solid #214fe0;
             text-align: left;
         }
         .items-table td {
@@ -174,11 +174,11 @@
             font-size: 10px;
         }
         .totals-table tr.grand-total td {
-            background-color: #0f172a;
+            background-color: #214fe0;
             color: #ffffff;
             font-weight: bold;
             font-size: 12px;
-            border-color: #0f172a;
+            border-color: #214fe0;
         }
         .clear {
             clear: both;
@@ -220,13 +220,25 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header with Authentic HISI Logo from PDF -->
     <table class="header-table">
         <tr>
             <td style="width: 58%;">
-                <div class="company-title">Huenics Industrial Sales Inc.</div>
-                <div class="company-subtitle">Colors &bull; Techniques &bull; Technology</div>
-                <div class="company-meta">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 52px; vertical-align: middle; border: none; padding: 0;">
+                            <div style="border-left: 2.5px solid #214fe0; border-right: 2.5px solid #214fe0; padding: 3px 2px; text-align: center; background-color: #f0f4ff;">
+                                <div style="font-size: 15px; font-weight: 900; color: #214fe0; letter-spacing: 1px; line-height: 1;">HISI</div>
+                                <div style="font-size: 5px; font-weight: bold; color: #1e3a8a; margin-top: 2px;">Colors &bull; Tech</div>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; border: none; padding: 0 0 0 10px;">
+                            <div class="company-title">Huenics Industrial Sales Inc.</div>
+                            <div class="company-subtitle" style="color: #214fe0; font-weight: bold;">Colors &bull; Techniques &bull; Technology</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="company-meta" style="margin-top: 6px;">
                     Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila<br>
                     Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205<br>
                     Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com

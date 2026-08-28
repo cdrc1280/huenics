@@ -20,44 +20,45 @@
 </head>
 <body class="flex min-h-full flex-col font-sans bg-slate-50">
 
-    <!-- Top Banner -->
-    <div class="bg-slate-900 text-slate-300 text-xs py-2 px-3 sm:px-4 border-b border-slate-800">
+    <!-- Top Banner (PDF Royal Blue) -->
+    <div class="bg-[#1a42be] text-white text-xs py-2 px-3 sm:px-4 border-b border-blue-900/40">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs">
-                <span><i class="fa-solid fa-fax text-blue-400 mr-1"></i> Telefax: (02) 8561-6836</span>
-                <span class="hidden sm:inline"><i class="fa-solid fa-headset text-blue-400 mr-1"></i> CS: +63 968 8500720</span>
-                <span class="hidden md:inline"><i class="fa-solid fa-envelope text-blue-400 mr-1"></i> huenicsindustrialsales@gmail.com</span>
+                <span><i class="fa-solid fa-phone text-blue-200 mr-1"></i> Tel. #8561 6836</span>
+                <span class="hidden sm:inline"><i class="fa-solid fa-headset text-blue-200 mr-1"></i> CS: +63 968 8500720</span>
+                <span class="hidden md:inline"><i class="fa-solid fa-envelope text-blue-200 mr-1"></i> huenicsindustrialsales@gmail.com</span>
             </div>
             <div class="flex items-center gap-2.5 ml-auto sm:ml-0 text-[11px] sm:text-xs">
-                <span class="text-blue-300 font-semibold tracking-wide hidden lg:inline">
+                <span class="text-blue-100 font-semibold tracking-wider uppercase text-[10px] hidden lg:inline">
                     Colors &bull; Techniques &bull; Technology
                 </span>
-                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-medium border border-emerald-500/30 whitespace-nowrap">
+                <span class="bg-white/15 text-white px-2 py-0.5 rounded font-medium border border-white/20 whitespace-nowrap">
                     <i class="fa-solid fa-truck-fast mr-1"></i> Free Delivery ₱20k+ (Metro Manila)
                 </span>
-                <span class="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-medium border border-blue-500/30 whitespace-nowrap">
-                    VAT Inclusive
+                <span class="bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded whitespace-nowrap text-[10px] uppercase tracking-wide">
+                    VAT INC.
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- Main Navigation -->
+    <!-- Main Navigation (Clean White & Royal Blue) -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
-                <!-- Logo -->
+                <!-- Authentic HISI Logo from PDF Header -->
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0">
-                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-wider shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
-                            HISI
+                    <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0" title="Huenics Industrial Sales Inc.">
+                        <div class="border-l-[3px] border-r-[3px] border-[#214fe0] px-2 py-0.5 text-center shrink-0 bg-blue-50/50 rounded-sm">
+                            <div class="text-lg sm:text-2xl font-black tracking-widest text-[#214fe0] leading-none">HISI</div>
+                            <div class="text-[7.5px] sm:text-[9px] font-bold text-blue-900 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
                         </div>
-                        <div class="min-w-0 truncate">
-                            <div class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none truncate">
-                                HUENICS <span class="text-blue-600 font-black">INDUSTRIAL SALES</span>
+                        <div class="border-l border-slate-200 pl-2.5 sm:pl-3 min-w-0 truncate">
+                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 uppercase leading-none truncate">
+                                HUENICS
                             </div>
-                            <div class="text-[9px] sm:text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5 truncate">
-                                Colors &bull; Techniques &bull; Technology
+                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] uppercase leading-none mt-0.5 truncate">
+                                INDUSTRIAL SALES INC.
                             </div>
                         </div>
                     </a>
@@ -65,16 +66,16 @@
 
                 <!-- Desktop Nav Links -->
                 <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-700">
-                    <a href="{{ route('customer.home') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.home') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.home') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
                         Home
                     </a>
-                    <a href="{{ route('customer.about') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.about') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.about') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.about') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
                         About Us
                     </a>
-                    <a href="{{ route('customer.products') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.products') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.products') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.products') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
                         Product Catalog
                     </a>
-                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-blue-600 transition whitespace-nowrap {{ request()->routeIs('customer.quotation-builder') ? 'text-blue-600 font-semibold' : '' }}">
+                    <a href="{{ route('customer.quotation-builder') }}" class="hover:text-[#214fe0] transition whitespace-nowrap {{ request()->routeIs('customer.quotation-builder') ? 'text-[#214fe0] font-bold border-b-2 border-[#214fe0] pb-1' : '' }}">
                         Quotation Builder
                     </a>
                 </nav>
@@ -82,7 +83,7 @@
                 <!-- Action / Cart Button -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-sm hover:shadow transition">
+                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-sm hover:shadow-md transition">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                         <span class="hidden xs:inline sm:inline">Quotation Estimate</span>
                         <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-900 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">

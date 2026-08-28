@@ -3,24 +3,28 @@
 @section('title', 'Instant Quotation Builder - Huenics Industrial Sales Inc.')
 
 @section('content')
-<!-- Header Banner -->
-<section class="bg-slate-900 text-white py-10 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Header Banner (PDF Crisp White & Royal Blue Theme) -->
+<section class="bg-white py-10 border-b border-slate-200 relative overflow-hidden hisi-geometric-accent">
+    <!-- Diagonal Stripes Accent -->
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 via-blue-500/5 to-transparent pointer-events-none"></div>
+    <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <span class="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                <span class="inline-flex items-center gap-1.5 bg-blue-50 text-[#214fe0] border border-blue-200 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">
                     <i class="fa-solid fa-file-invoice"></i> Unofficial Customer Estimate Generator
                 </span>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 mt-2">
                     Commercial Quotation & BOQ Builder
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl font-normal">
+                <p class="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl font-normal">
                     Assemble line items, specify project details, calculate automated 12% Philippine VAT, and export a ready-to-print or downloadable PDF estimate.
                 </p>
             </div>
             <a href="{{ route('customer.products') }}" 
-               class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-4 py-2 rounded-xl transition">
-                <i class="fa-solid fa-plus text-blue-400"></i>
+               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fa-solid fa-plus"></i>
                 <span>Add More From Catalog</span>
             </a>
         </div>

@@ -3,21 +3,25 @@
 @section('title', 'Product Catalog - Huenics Industrial Sales Inc.')
 
 @section('content')
-<!-- Header Banner -->
-<section class="bg-slate-900 text-white py-12 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Header Banner (PDF Crisp White & Royal Blue Theme) -->
+<section class="bg-white py-12 border-b border-slate-200 relative overflow-hidden hisi-geometric-accent">
+    <!-- Diagonal Stripes Accent -->
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 via-blue-500/5 to-transparent pointer-events-none"></div>
+    <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Colors &bull; Techniques &bull; Technology</span>
-                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1">
-                    Commercial & Industrial Product Catalog
+                <span class="text-xs font-black uppercase tracking-widest text-[#214fe0]">Colors &bull; Techniques &bull; Technology</span>
+                <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-slate-950 mt-1">
+                    Commercial & Architectural Product Catalog
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl font-normal">
-                    Select items and quantities to assemble your Bill of Quantities (BOQ). Click "Add to Quotation" to automatically build your preliminary estimate.
+                <p class="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl font-normal">
+                    Select items and quantities to assemble your Bill of Quantities (BOQ). Click "Add to Quote" to automatically build your preliminary estimate.
                 </p>
             </div>
             <a href="{{ route('customer.quotation-builder') }}" 
-               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition shrink-0">
+               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition shrink-0">
                 <i class="fa-solid fa-file-signature"></i>
                 <span>Open Quotation Builder</span>
             </a>
@@ -36,18 +40,18 @@
                        name="search" 
                        value="{{ $search }}" 
                        placeholder="Search products by SKU, name, or keywords..."
-                       class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                       class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#214fe0] focus:outline-none bg-slate-50">
             </div>
 
             <!-- Category Filter -->
             <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
                 <a href="{{ route('customer.products', ['search' => $search]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition {{ empty($selectedCategory) || $selectedCategory === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                   class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition {{ empty($selectedCategory) || $selectedCategory === 'all' ? 'bg-[#214fe0] text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                     All Categories
                 </a>
                 @foreach($categories as $category)
                     <a href="{{ route('customer.products', ['category' => $category, 'search' => $search]) }}" 
-                       class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition border border-slate-200 {{ $selectedCategory === $category ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 hover:bg-blue-50 hover:text-blue-700' }}">
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition border border-slate-200 {{ $selectedCategory === $category ? 'bg-[#214fe0] text-white border-[#214fe0] shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-blue-50 hover:text-[#214fe0]' }}">
                         {{ $category }}
                     </a>
                 @endforeach
@@ -70,7 +74,7 @@
             @if(!empty($search))
                 <span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-semibold">Keyword: "{{ $search }}"</span>
             @endif
-            <a href="{{ route('customer.products') }}" class="ml-auto text-blue-600 hover:underline font-bold">
+            <a href="{{ route('customer.products') }}" class="ml-auto text-[#214fe0] hover:underline font-bold">
                 <i class="fa-solid fa-xmark mr-1"></i> Clear Filters
             </a>
         </div>
@@ -78,34 +82,34 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($products as $product)
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+            <div class="bg-white border-2 border-slate-200 hover:border-[#214fe0] rounded-xl p-5 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
                 <div>
-                    <!-- Category & SKU Tag -->
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded">
-                            {{ $product->category ?: 'General' }}
+                    <!-- Authentic Category Pill Badge & SKU Tag from PDF -->
+                    <div class="flex justify-between items-start gap-2 mb-2.5">
+                        <span class="hisi-pill-badge">
+                            {{ strtoupper($product->category ?: 'Lighting') }}
                         </span>
-                        <span class="text-[11px] font-mono text-slate-400 font-semibold">
+                        <span class="text-[11px] font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
                             {{ $product->sku ?: $product->product_code ?: 'SKU-GEN' }}
                         </span>
                     </div>
 
                     <!-- Title -->
-                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition line-clamp-2 mb-1.5">
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-[#214fe0] transition line-clamp-2 mb-1.5">
                         {{ $product->canonical_name }}
                     </h3>
 
                     <!-- Description -->
                     <p class="text-xs text-slate-500 line-clamp-3 mb-4 leading-relaxed">
-                        {{ $product->description ?: 'Standard Philippine commercial grade material. Tested for compliance with DPWH & ASTM standards.' }}
+                        {{ $product->description ?: 'Certified commercial and industrial lighting product from official Huenics catalog.' }}
                     </p>
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 space-y-3">
                     <div class="flex justify-between items-baseline">
-                        <span class="text-[11px] text-slate-500 font-medium">Standard Rate:</span>
+                        <span class="text-[11px] text-slate-500 font-medium">Standard Price:</span>
                         <div class="text-right">
-                            <span class="text-base font-extrabold text-slate-900">
+                            <span class="text-base font-black text-[#214fe0]">
                                 ₱ {{ number_format($product->selling_price ?: $product->default_price ?: 0, 2) }}
                             </span>
                             <span class="text-[11px] text-slate-500 font-normal"> / {{ $product->unit_default ?: 'pcs' }}</span>
@@ -134,7 +138,7 @@
 
                         <button type="button" 
                                 onclick="addProductToQuote({{ json_encode($product) }}, document.getElementById('qty-{{ $product->id }}').value)"
-                                class="flex-1 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm">
+                                class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] text-white text-xs font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-cart-plus text-xs"></i>
                             <span>Add to Quote</span>
                         </button>

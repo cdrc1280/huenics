@@ -3,21 +3,24 @@
 @section('title', 'About Us - Huenics Industrial Sales Inc.')
 
 @section('content')
-<!-- About Header Hero -->
-<section class="bg-slate-900 text-white py-16 lg:py-20 relative overflow-hidden">
-    <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div class="max-w-3xl">
-            <span class="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3.5 py-1 rounded-full text-xs font-semibold mb-4">
-                <i class="fa-solid fa-lightbulb"></i> Company Profile &bull; HISI
-            </span>
-            <h1 class="text-3xl sm:text-5xl font-black tracking-tight">
-                Huenics Industrial Sales Inc.
+<!-- About Header Hero (PDF Design: Crisp White, Royal Blue & Geometric Accents) -->
+<section class="relative bg-white py-14 lg:py-18 border-b border-slate-200 overflow-hidden hisi-geometric-accent">
+    <!-- Diagonal Stripes Accent -->
+    <div class="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-[#214fe0]/15 via-blue-500/5 to-transparent pointer-events-none"></div>
+    <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-30" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-3xl space-y-3">
+            <div class="inline-flex items-center gap-2 bg-blue-50 text-[#214fe0] border border-blue-200 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-lightbulb"></i> Company Profile &bull; HISI (Page 2)
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-950">
+                About Huenics Industrial Sales Inc.
             </h1>
-            <p class="text-blue-400 font-bold text-sm sm:text-base tracking-widest uppercase mt-2">
+            <p class="text-[#214fe0] font-black text-sm sm:text-base tracking-widest uppercase">
                 Colors &bull; Techniques &bull; Technology
             </p>
-            <p class="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed font-normal">
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed font-normal pt-1">
                 Emerged from the strength in combining technical expertise to meet customers' demands in providing innovative and reliable quality products. Committed to go beyond expectations.
             </p>
         </div>
@@ -314,45 +317,48 @@
 <!-- Corporate Details & Contact Card (Page 7) -->
 <section class="py-16 bg-white border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-slate-900 text-white rounded-2xl p-8 sm:p-12 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7 space-y-4">
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Head Office & Inquiries</span>
-                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <div class="bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <!-- Diagonal pinstripes from PDF -->
+            <div class="absolute inset-0 pointer-events-none opacity-10" style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);"></div>
+
+            <div class="lg:col-span-7 space-y-4 relative z-10">
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Head Office & Inquiries &bull; Page 7</span>
+                <h2 class="text-2xl sm:text-3xl font-black tracking-tight">
                     Partner With Huenics Industrial Sales Inc.
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
                     Reach out for commercial lighting layout consulting, custom indent orders, sample demonstrations, or competitive project pricing.
                 </p>
                 <div class="pt-2 flex flex-col gap-2.5 text-xs">
-                    <div class="bg-slate-800 px-3.5 py-2.5 rounded-lg border border-slate-700">
-                        <span class="text-slate-400 font-semibold">Office Address:</span>
+                    <div class="bg-white/10 backdrop-blur px-3.5 py-2.5 rounded-lg border border-white/15">
+                        <span class="text-blue-200 font-semibold">Office Address:</span>
                         <span class="font-medium text-white ml-1">Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div class="bg-slate-800 px-3.5 py-2.5 rounded-lg border border-slate-700">
-                            <span class="text-slate-400 font-semibold">Contact No:</span>
+                        <div class="bg-white/10 backdrop-blur px-3.5 py-2.5 rounded-lg border border-white/15">
+                            <span class="text-blue-200 font-semibold">Contact No:</span>
                             <span class="font-medium text-white ml-1">Tel. #8561 6836</span>
                         </div>
-                        <div class="bg-slate-800 px-3.5 py-2.5 rounded-lg border border-slate-700">
-                            <span class="text-slate-400 font-semibold">Hotlines:</span>
+                        <div class="bg-white/10 backdrop-blur px-3.5 py-2.5 rounded-lg border border-white/15">
+                            <span class="text-blue-200 font-semibold">Hotlines:</span>
                             <span class="font-medium text-white ml-1">+63 968 8500720 / +63 965 6287205</span>
                         </div>
                     </div>
-                    <div class="bg-slate-800 px-3.5 py-2.5 rounded-lg border border-slate-700">
-                        <span class="text-slate-400 font-semibold">Official Email:</span>
+                    <div class="bg-white/10 backdrop-blur px-3.5 py-2.5 rounded-lg border border-white/15">
+                        <span class="text-blue-200 font-semibold">Official Email:</span>
                         <span class="font-medium text-white ml-1">huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</span>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
+            <div class="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center relative z-10">
                 <a href="{{ route('customer.quotation-builder') }}" 
-                   class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-xl transition text-sm text-center">
+                   class="inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center shadow-lg">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>Generate Instant Unofficial Estimate</span>
                 </a>
                 <a href="{{ route('customer.products') }}" 
-                   class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold py-3.5 px-6 rounded-xl transition text-sm text-center">
+                   class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center">
                     <i class="fa-solid fa-box-open"></i>
                     <span>Explore Products Catalog</span>
                 </a>

@@ -24,7 +24,7 @@
 
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
                 <a href="{{ route('customer.quotation.download-pdf', ['payload' => base64_encode(json_encode($quote))]) }}" 
-                   class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+                   class="flex-1 md:flex-initial bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
                     <i class="fa-solid fa-file-pdf"></i>
                     <span>Download PDF</span>
                 </a>
@@ -47,18 +47,22 @@
         <div class="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 shadow-lg space-y-8 print:border-none print:shadow-none print:p-0">
             
             <!-- Document Header -->
+            <!-- Document Header with PDF HISI Logo -->
             <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6">
-                <div>
-                    <div class="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
-                        Huenics Industrial Sales Inc.
+                <div class="flex items-start gap-3">
+                    <div class="border-l-[3px] border-r-[3px] border-[#214fe0] px-2.5 py-1 text-center shrink-0 bg-blue-50/50 rounded-sm">
+                        <div class="text-xl sm:text-2xl font-black tracking-widest text-[#214fe0] leading-none">HISI</div>
+                        <div class="text-[8px] font-bold text-blue-900 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
                     </div>
-                    <div class="text-xs text-blue-600 font-semibold mt-0.5">
-                        Colors &bull; Techniques &bull; Technology
-                    </div>
-                    <div class="text-xs text-slate-600 mt-2 space-y-0.5">
-                        <div>Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</div>
-                        <div>Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
-                        <div>Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</div>
+                    <div class="border-l border-slate-300 pl-3">
+                        <div class="text-lg font-black text-slate-900 tracking-tight uppercase">
+                            Huenics Industrial Sales Inc.
+                        </div>
+                        <div class="text-xs text-slate-600 mt-1 space-y-0.5">
+                            <div>Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</div>
+                            <div>Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
+                            <div>Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</div>
+                        </div>
                     </div>
                 </div>
 
