@@ -25,15 +25,17 @@ class CustomerPortalController extends Controller implements HasMiddleware
     }
 
     /**
-     * Get active product categories (Cached)
+     * Get active product categories
      */
     private function getActiveCategories()
     {
-        return Cache::remember('customer_portal_categories', 600, fn() => Product::query()
+        return Product::query()
             ->where('is_active', true)
             ->whereNotNull('category')
+            ->where('category', '!=', '')
             ->distinct()
-            ->pluck('category'));
+            ->orderBy('category')
+            ->pluck('category');
     }
 
     /**
@@ -41,15 +43,15 @@ class CustomerPortalController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $featuredProducts = Cache::remember('customer_portal_featured', 600, fn() => Product::query()
+        $featuredProducts = Product::query()
             ->where('is_active', true)
             ->inRandomOrder()
             ->take(6)
-            ->get());
+            ->get();
 
         $categories = $this->getActiveCategories();
 
-        $totalProductsCount = Cache::remember('customer_portal_total_count', 600, fn() => Product::query()->where('is_active', true)->count());
+        $totalProductsCount = Product::query()->where('is_active', true)->count();
         $yearsInBusiness = date('Y') - 2008;
 
         return view('customer.home', [
@@ -108,11 +110,11 @@ class CustomerPortalController extends Controller implements HasMiddleware
      */
     public function quotationBuilder(Request $request)
     {
-        $catalogProducts = Cache::remember('customer_portal_catalog', 600, fn() => Product::query()
+        $catalogProducts = Product::query()
             ->where('is_active', true)
             ->select(['id', 'sku', 'product_code', 'canonical_name', 'unit_default', 'default_price', 'selling_price', 'category'])
             ->orderBy('canonical_name')
-            ->get());
+            ->get();
 
         return view('customer.quotation-builder', [
             'catalogProducts' => $catalogProducts,
