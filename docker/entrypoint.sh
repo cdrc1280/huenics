@@ -18,8 +18,8 @@ mkdir -p \
     public/vendor/filament \
     public/vendor/livewire
 
-chown -R www-data:www-data storage bootstrap/cache public
-chmod -R 775 storage bootstrap/cache public
+chown -R www-data:www-data storage bootstrap/cache public database 2>/dev/null || true
+chmod -R 775 storage bootstrap/cache public database 2>/dev/null || true
 
 # ─── 2. Bind Nginx to Cloud PaaS / Railway $PORT dynamically (defaults to 80) ─
 TARGET_PORT="${PORT:-80}"
@@ -36,23 +36,23 @@ if [ ! -f .env ]; then
     fi
 fi
 
-if [ ! -w /var/www/html/storage/app ]; then echo 'ERROR: storage/app is not writable' && exit 1; fi
+if [ -n "$APP_KEY" ] && ! grep -q "^APP_KEY=" .env 2>/dev/null; then
+    echo "APP_KEY=${APP_KEY}" >> .env
+fi
 
 if [ "${SESSION_DRIVER}" = "redis" ] || [ "${CACHE_STORE}" = "redis" ]; then
     REDIS_TARGET_HOST="${REDIS_HOST:-redis}"
     REDIS_TARGET_PORT="${REDIS_PORT:-6379}"
-    echo "⏳ Waiting for Redis at ${REDIS_TARGET_HOST}:${REDIS_TARGET_PORT}..."
-    for i in $(seq 1 30); do
-        if redis-cli -h "${REDIS_TARGET_HOST}" -p "${REDIS_TARGET_PORT}" ping >/dev/null 2>&1; then
-            echo '✅ Redis connection verified.'
-            break
-        fi
-        if [ "$i" -eq 30 ]; then
-            echo '⚠️ Redis ping timed out after 30s. Proceeding with application boot...'
-            break
-        fi
-        sleep 1
-    done
+    echo "⏳ Checking Redis at ${REDIS_TARGET_HOST}:${REDIS_TARGET_PORT}..."
+    if command -v redis-cli >/dev/null 2>&1; then
+        for i in $(seq 1 10); do
+            if redis-cli -h "${REDIS_TARGET_HOST}" -p "${REDIS_TARGET_PORT}" ping >/dev/null 2>&1; then
+                echo '✅ Redis connection verified.'
+                break
+            fi
+            sleep 1
+        done
+    fi
 fi
 
 # ─── 4. Generate APP_KEY if missing ───────────────────────────────────────────
@@ -66,6 +66,8 @@ echo "🔗 Linking storage and publishing assets..."
 php artisan storage:link --force || true
 php artisan filament:assets || true
 php artisan livewire:publish --assets || true
+chown -R www-data:www-data storage bootstrap/cache public 2>/dev/null || true
+chmod -R 775 storage bootstrap/cache public 2>/dev/null || true
 
 # ─── 6. Run Database Migrations SAFELY (Incremental additions only) ───────────
 echo "📦 Checking and applying safe database migrations..."

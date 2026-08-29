@@ -159,31 +159,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 });
 
 // ─── HTTP Fallback Route (Uniform Design & Smart Alias Routing) ─────────────
-Route::fallback(function (\Illuminate\Http\Request $request) {
-    // Smart Aliases for common user typos or variations
-    $path = trim(strtolower($request->path()), '/');
+Route::fallback([CustomerPortalController::class, 'fallback'])->name('fallback');
 
-    if (in_array($path, ['quotation-builder', 'quote', 'quote-builder', 'estimator'])) {
-        return redirect()->route('customer.quotation-builder');
-    }
-
-    if (in_array($path, ['catalog', 'shop', 'items', 'store', 'product-catalog'])) {
-        return redirect()->route('customer.products');
-    }
-
-    if (in_array($path, ['contact', 'contact-us', 'company', 'profile'])) {
-        return redirect()->route('customer.about');
-    }
-
-    if ($request->expectsJson() || $request->is('api/*')) {
-        return response()->json([
-            'status' => 404,
-            'error'  => 'Not Found',
-            'message' => 'The requested endpoint was not found on this server.',
-        ], 404);
-    }
-
-    return response()->view('errors.404', [], 404);
-});
 
 

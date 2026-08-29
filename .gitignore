@@ -16,6 +16,7 @@ Homestead.yaml
 /public/build
 /public/hot
 /public/storage
+/public/vendor
 /public/fonts-manifest.dev.json
 
 # Storage & Uploads

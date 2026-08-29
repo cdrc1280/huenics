@@ -90,6 +90,7 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     tesseract-ocr \
     poppler-utils \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python imaging packages for OCR runner
@@ -106,7 +107,9 @@ RUN docker-php-ext-install \
     exif \
     gd \
     bcmath \
-    opcache
+    opcache \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 WORKDIR /var/www/html
 

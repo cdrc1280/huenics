@@ -26,8 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS in production & behind reverse proxies (Vercel, Cloudflare, AWS)
-        if ($this->app->environment('production') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+        // Force HTTPS when configured or behind HTTPS reverse proxies (Cloudflare, Railway, AWS, Load Balancers)
+        $isHttps = (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1'))
+            || str_starts_with((string) config('app.url'), 'https://');
+
+        if ($isHttps) {
             URL::forceScheme('https');
         }
 
