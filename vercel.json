@@ -1,6 +1,7 @@
 {
     "version": 2,
     "framework": null,
+    "buildCommand": "npm run build",
     "outputDirectory": "public",
     "functions": {
         "api/index.php": {
@@ -9,6 +10,14 @@
         }
     },
     "routes": [
+        {
+            "src": "^/livewire/livewire\\.js$",
+            "dest": "/vendor/livewire/livewire.js"
+        },
+        {
+            "src": "^/vendor/(.*)",
+            "dest": "/vendor/$1"
+        },
         {
             "src": "^/css/(.*)",
             "dest": "/css/$1"
@@ -44,11 +53,11 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "APP_URL": "https://huenics.vercel.app",
         "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
         "CACHE_STORE": "array",
-        "SESSION_DRIVER": "file",
+        "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr"
     }
 }

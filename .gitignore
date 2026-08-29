@@ -13,10 +13,8 @@ Homestead.yaml
 
 # Node & Frontend
 /node_modules
-/public/build
 /public/hot
 /public/storage
-/public/vendor
 /public/fonts-manifest.dev.json
 
 # Storage & Uploads

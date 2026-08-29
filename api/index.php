@@ -58,10 +58,10 @@ try {
         $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbTarget;
     }
 
-    // ─── Session: file ───────────────────────────────────────────────────
+    // ─── Session: cookie (Serverless Lambdas must use cookie to persist state) ─
     if (empty(getenv('SESSION_DRIVER')) && empty($_ENV['SESSION_DRIVER'])) {
-        putenv('SESSION_DRIVER=file');
-        $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'file';
+        putenv('SESSION_DRIVER=cookie');
+        $_ENV['SESSION_DRIVER'] = $_SERVER['SESSION_DRIVER'] = 'cookie';
     }
 
     // ─── APP_KEY ─────────────────────────────────────────────────────────
