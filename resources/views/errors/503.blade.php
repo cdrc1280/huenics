@@ -4,10 +4,6 @@
 
 @section('badge', 'Notice 503 • System Upgrades Underway')
 
-@section('icon')
-    <i class="fa-solid fa-screwdriver-wrench"></i>
-@endsection
-
 @section('code', '503')
 
 @section('heading', 'Scheduled Catalog Maintenance')

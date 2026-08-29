@@ -4,10 +4,6 @@
 
 @section('badge', 'Error 500 • Internal System Notice')
 
-@section('icon')
-    <i class="fa-solid fa-server"></i>
-@endsection
-
 @section('code', '500')
 
 @section('heading', 'System Processing Request')

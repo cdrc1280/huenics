@@ -4,10 +4,6 @@
 
 @section('badge', 'Error 419 • Security Token Timeout')
 
-@section('icon')
-    <i class="fa-solid fa-clock-rotate-left"></i>
-@endsection
-
 @section('code', '419')
 
 @section('heading', 'Quotation Session Timed Out')

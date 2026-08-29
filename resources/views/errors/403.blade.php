@@ -4,10 +4,6 @@
 
 @section('badge', 'Error 403 • Restricted Area')
 
-@section('icon')
-    <i class="fa-solid fa-shield-halved"></i>
-@endsection
-
 @section('code', '403')
 
 @section('heading', 'Restricted Administrative Portal')
