@@ -59,6 +59,74 @@ class FieldExtractor
     }
 
     /**
+     * Extract a field value using an array of extraction rules (from layout header_rules JSON).
+     * This supports the vendor-specific layout configurations stored in vendor_document_layouts.header_rules.
+     *
+     * @param string $fullText
+     * @param array<int, string> $lines
+     * @param array|string $rules  Either a single rule array or an array of rule arrays
+     * @return string|null
+     */
+    public function extractByRules(string $fullText, array $lines, array|string $rules): ?string
+    {
+        // If rules is a string (simple regex pattern), wrap it
+        if (is_string($rules)) {
+            $rules = [['extraction_strategy' => 'regex_header', 'regex_pattern' => $rules, 'post_process' => 'trim']];
+        }
+
+        // If rules is a single rule definition (has 'extraction_strategy' key), wrap it
+        if (isset($rules['extraction_strategy'])) {
+            $rules = [$rules];
+        }
+
+        foreach ($rules as $rule) {
+            $strategy = $rule['extraction_strategy'] ?? 'regex_header';
+            $pattern = $rule['regex_pattern'] ?? null;
+            $postProcess = $rule['post_process'] ?? 'trim';
+            $rawValue = null;
+
+            switch ($strategy) {
+                case 'regex_header':
+                case 'keyword_offset':
+                    if ($pattern && preg_match($pattern, $fullText, $m)) {
+                        $rawValue = $m[1] ?? $m[0];
+                    }
+                    break;
+
+                case 'column_position':
+                    $colStart = $rule['column_start'] ?? null;
+                    $colEnd = $rule['column_end'] ?? null;
+                    if ($colStart !== null) {
+                        foreach ($lines as $line) {
+                            $start = max(0, $colStart);
+                            $length = ($colEnd !== null && $colEnd > $start) ? ($colEnd - $start) : null;
+                            $extracted = ($length !== null) ? substr($line, $start, $length) : substr($line, $start);
+                            $extracted = trim($extracted);
+                            if (!empty($extracted) && preg_match('/\d/', $extracted)) {
+                                $rawValue = $extracted;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+
+                case 'table_row_index':
+                    $rowOffset = $rule['row_offset'] ?? null;
+                    if ($rowOffset !== null && isset($lines[$rowOffset])) {
+                        $rawValue = $lines[$rowOffset];
+                    }
+                    break;
+            }
+
+            if ($rawValue !== null && trim($rawValue) !== '') {
+                return $this->postProcess(trim($rawValue), $postProcess);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Apply formatting and data type normalization.
      */
     public function postProcess(mixed $value, string $action): mixed

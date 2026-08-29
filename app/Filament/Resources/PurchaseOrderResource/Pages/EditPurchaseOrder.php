@@ -29,14 +29,29 @@ class EditPurchaseOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            PurchaseOrderResource::getLinkToQuotationAction(),
             Action::make('approve_po')
                 ->label('Approve PO')
                 ->icon('heroicon-m-check-circle')
                 ->color('success')
-                ->tooltip('Approve purchase order to authorize fulfillment and delivery')
+                ->tooltip(function (): string {
+                    if (!$this->record->is_conforme_po && !$this->record->quotation_id) {
+                        return 'Normal PO must be linked to an approved quotation first before approval.';
+                    }
+                    return 'Approve purchase order to authorize fulfillment and delivery';
+                })
                 ->visible(fn(): bool => !$this->record->trashed() && !$this->record->isApproved() && $this->record->status !== PurchaseOrder::STATUS_CANCELLED && $this->record->status !== PurchaseOrder::STATUS_REJECTED)
-                ->requiresConfirmation()
+                ->disabled(fn(): bool => !$this->record->is_conforme_po && !$this->record->quotation_id)
+                ->requiresConfirmation(fn(): bool => $this->record->is_conforme_po || (bool) $this->record->quotation_id)
                 ->action(function () {
+                    if (!$this->record->is_conforme_po && !$this->record->quotation_id) {
+                        Notification::make()
+                            ->title('Quotation Link Required')
+                            ->body("PO {$this->record->po_number} is a normal purchase order and must be linked to an approved quotation first.")
+                            ->warning()
+                            ->send();
+                        return;
+                    }
                     $this->record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
                     if ($this->record->document) {
                         $this->record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);

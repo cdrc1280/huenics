@@ -203,12 +203,12 @@
                 </div>
 
                 {{-- RIGHT COLUMN: Document Information --}}
-                <div class="lg:col-span-7 flex flex-col gap-6">
+                <div class="lg:col-span-7 flex flex-col gap-6" style="display: flex; flex-direction: column; gap: 1.5rem;">
 
                     {{-- ANOMALY CALLOUT BOX --}}
                     @if ($currentDocument->hasMismatches())
                         <div
-                            style="padding: 1rem 1.25rem; border-radius: 0.75rem; background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35);">
+                            style="padding: 1rem 1.25rem; border-radius: 0.75rem; background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); margin-bottom: 1.5rem;">
                             <div
                                 style="display: flex; align-items: center; gap: 0.5rem; color: #dc2626; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.5rem;">
                                 <x-filament::icon icon="heroicon-s-exclamation-triangle"
@@ -259,21 +259,22 @@
                     @endif
 
                     {{-- SECTION 1: DOCUMENT HEADER INFORMATION --}}
-                    <x-filament::section>
-                        <x-slot name="heading">
-                            <span
-                                class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Document
-                                Information</span>
-                        </x-slot>
+                    <div style="margin-top: 0.5rem; margin-bottom: 1.5rem;" class="my-6">
+                        <x-filament::section>
+                            <x-slot name="heading">
+                                <span
+                                    class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Document
+                                    Information</span>
+                            </x-slot>
 
-                        <div class="grid grid-cols-1 gap-4 p-1 md:grid-cols-3">
-                            <x-filament-forms::field-wrapper id="documentNumber" label="Quotation / PO No." :required="true">
-                                <x-filament::input.wrapper size="sm">
-                                    <x-filament::input type="text" wire:model.lazy="documentNumber"
-                                        :disabled="$this->isReadOnly"
-                                        class="text-xs font-semibold" />
-                                </x-filament::input.wrapper>
-                            </x-filament-forms::field-wrapper>
+                            <div class="grid grid-cols-1 gap-4 p-1 md:grid-cols-3" style="margin: 0.5rem 0;">
+                                <x-filament-forms::field-wrapper id="documentNumber" label="Quotation / PO No." :required="true">
+                                    <x-filament::input.wrapper size="sm">
+                                        <x-filament::input type="text" wire:model.lazy="documentNumber"
+                                            :disabled="$this->isReadOnly"
+                                            class="text-xs font-semibold" />
+                                    </x-filament::input.wrapper>
+                                </x-filament-forms::field-wrapper>
 
                             <x-filament-forms::field-wrapper id="documentDate" label="Document Date" :required="true">
                                 <x-filament::input.wrapper size="sm">
@@ -350,21 +351,324 @@
                             </x-filament-forms::field-wrapper>
                         </div>
                     </x-filament::section>
+                    </div>
 
-                    {{-- SECTION 1.5: TERMS & PAYMENT --}}
-                    <x-filament::section>
-                        <x-slot name="heading">
-                            <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Terms & Payment</span>
-                        </x-slot>
+                    {{-- SECTION 1.5: TERMS & CONDITIONS TABLE (AUTHENTIC LAYOUT WITH CHECKBOXES) --}}
+                    <style>
+                        .tc-card {
+                            border: 1px solid #cbd5e1;
+                            border-radius: 0.5rem;
+                            overflow-x: auto;
+                            font-size: 0.75rem;
+                            background-color: #ffffff;
+                            color: #0f172a;
+                        }
+                        .dark .tc-card {
+                            border-color: #334155;
+                            background-color: #0f172a;
+                            color: #f1f5f9;
+                        }
+                        .tc-header {
+                            background-color: #f1f5f9;
+                            font-weight: 700;
+                            padding: 0.5rem 0.75rem;
+                            font-size: 0.75rem;
+                            border-bottom: 1px solid #cbd5e1;
+                            color: #0f172a;
+                            letter-spacing: 0.025em;
+                        }
+                        .dark .tc-header {
+                            background-color: #1e293b;
+                            color: #f8fafc;
+                            border-bottom-color: #334155;
+                        }
+                        .tc-body {
+                            padding: 0.75rem;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.75rem;
+                            min-width: 620px;
+                        }
+                        .tc-row {
+                            display: grid;
+                            grid-template-columns: 150px 290px 1fr;
+                            align-items: flex-start;
+                            gap: 1rem;
+                            border-bottom: 1px dashed #e2e8f0;
+                            padding-bottom: 0.625rem;
+                        }
+                        .dark .tc-row {
+                            border-bottom-color: #1e293b;
+                        }
+                        .tc-row-last {
+                            display: grid;
+                            grid-template-columns: 150px 290px 1fr;
+                            align-items: flex-start;
+                            gap: 1rem;
+                        }
+                        .tc-row-title {
+                            font-weight: 700;
+                            line-height: 1.25rem;
+                            color: #0f172a;
+                            font-size: 0.75rem;
+                        }
+                        .dark .tc-row-title {
+                            color: #f8fafc;
+                        }
+                        .tc-options-wrap {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 0.75rem 2rem;
+                            align-items: flex-start;
+                        }
+                        .tc-label {
+                            display: inline-flex;
+                            align-items: flex-start;
+                            gap: 0.5rem;
+                            cursor: pointer;
+                            user-select: none;
+                        }
+                        .tc-checkbox {
+                            width: 1rem;
+                            height: 1rem;
+                            min-width: 1rem;
+                            min-height: 1rem;
+                            margin-top: 0.125rem;
+                            flex-shrink: 0;
+                            border-radius: 0.25rem;
+                            cursor: pointer;
+                        }
+                        .tc-label-text {
+                            font-size: 0.75rem;
+                            line-height: 1.25rem;
+                            font-weight: 500;
+                            color: #1e293b;
+                        }
+                        .dark .tc-label-text {
+                            color: #e2e8f0;
+                        }
+                        .tc-label-text-bold {
+                            font-size: 0.75rem;
+                            line-height: 1.25rem;
+                            font-weight: 700;
+                            color: #1d4ed8;
+                        }
+                        .dark .tc-label-text-bold {
+                            color: #60a5fa;
+                        }
+                        .tc-validity-input {
+                            border: none;
+                            border-bottom: 1px solid #94a3b8;
+                            background: transparent;
+                            font-weight: 600;
+                            padding: 0.125rem 0.375rem;
+                            width: 140px;
+                            font-size: 0.75rem;
+                            line-height: 1.25rem;
+                            color: #0f172a;
+                        }
+                        .dark .tc-validity-input {
+                            border-bottom-color: #64748b;
+                            color: #f8fafc;
+                        }
+                        .tc-notes-container {
+                            border: 1px solid #f87171;
+                            border-radius: 0.375rem;
+                            padding: 0.625rem 0.875rem;
+                            font-size: 0.725rem;
+                            line-height: 1.4;
+                            background-color: #fef2f2;
+                        }
+                        .dark .tc-notes-container {
+                            border-color: #991b1b;
+                            background-color: rgba(127, 29, 29, 0.15);
+                        }
+                        .tc-notes-heading {
+                            color: #dc2626;
+                            font-weight: 800;
+                            font-size: 0.7rem;
+                            letter-spacing: 0.05em;
+                            margin-bottom: 0.25rem;
+                        }
+                        .dark .tc-notes-heading {
+                            color: #f87171;
+                        }
+                        .tc-notes-body {
+                            color: #334155;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.25rem;
+                        }
+                        .dark .tc-notes-body {
+                            color: #cbd5e1;
+                        }
+                        .tc-notes-badge {
+                            color: #b91c1c;
+                            font-weight: 700;
+                        }
+                        .dark .tc-notes-badge {
+                            color: #fca5a5;
+                        }
+                        .tc-notes-badge-underline {
+                            color: #b91c1c;
+                            font-weight: 700;
+                            text-decoration: underline;
+                        }
+                        .dark .tc-notes-badge-underline {
+                            color: #fca5a5;
+                        }
+                        .tc-po-signoff {
+                            padding: 0.75rem;
+                            border-radius: 0.5rem;
+                            background-color: #eff6ff;
+                            border: 1px solid #bfdbfe;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.75rem;
+                        }
+                        .dark .tc-po-signoff {
+                            background-color: rgba(30, 58, 138, 0.15);
+                            border-color: #1e3a8a;
+                        }
+                        .tc-po-signoff-title {
+                            font-size: 0.75rem;
+                            font-weight: 700;
+                            color: #1d4ed8;
+                        }
+                        .dark .tc-po-signoff-title {
+                            color: #60a5fa;
+                        }
+                        .tc-details-summary {
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            color: #475569;
+                            transition: color 0.15s ease;
+                        }
+                        .dark .tc-details-summary {
+                            color: #94a3b8;
+                        }
+                        .tc-details-summary:hover {
+                            color: #2563eb;
+                        }
+                        .dark .tc-details-summary:hover {
+                            color: #60a5fa;
+                        }
+                    </style>
 
-                        <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.25rem;">
-                            @if ($currentDocument->document_type === 'vendors_agreement')
-                                <div style="padding: 0.75rem; border-radius: 0.5rem; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.25); display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; color: #1e40af;">
-                                        <input type="checkbox" wire:model.live="isOfficialPo" @if($this->isReadOnly) disabled @endif style="border-radius: 0.25rem; border-color: #93c5fd; color: #2563eb; width: 1rem; height: 1rem;">
-                                        <span>Serve as Official Purchase Order (Conforme / Signed PO)</span>
-                                    </label>
-                                    @if ($isOfficialPo)
+                    <div style="margin-bottom: 1.5rem;" class="mb-6">
+                        <x-filament::section>
+                            <x-slot name="heading">
+                                <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Terms & Conditions</span>
+                            </x-slot>
+
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                {{-- Authentic Terms & Conditions Card Table --}}
+                                <div class="tc-card">
+                                    <div class="tc-header">
+                                        Terms and Conditions
+                                    </div>
+                                    <div class="tc-body">
+                                        
+                                        {{-- Row 1: Validity --}}
+                                        <div class="tc-row">
+                                            <div class="tc-row-title">Validity</div>
+                                            <div style="grid-column: span 2; display: flex; align-items: center;">
+                                                <input type="text" wire:model.lazy="tcValidity" @if($this->isReadOnly) disabled @endif
+                                                    class="tc-validity-input focus:ring-0 focus:border-primary-500 dark:focus:border-primary-400"
+                                                    placeholder="15 days">
+                                            </div>
+                                        </div>
+
+                                        {{-- Row 2: Stock Availability --}}
+                                        <div class="tc-row">
+                                            <div class="tc-row-title">Stock Availability</div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcStock" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">Stock</span>
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcNonStock" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">Non-Stock / Special Items/Indent Order</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- Row 3: Terms Of Delivery --}}
+                                        <div class="tc-row">
+                                            <div class="tc-row-title">Terms Of Delivery</div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcDelivery4To7" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">4-7 days</span>
+                                                </label>
+                                            </div>
+                                            <div style="display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcDelivery10To15" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">10-15 days</span>
+                                                </label>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcDelivery45To60" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">45-60 days</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- Row 4: Payment Terms --}}
+                                        <div class="tc-row">
+                                            <div class="tc-row-title">Payment Terms</div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcPaymentCodDp" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">COD / 50% DP ; 50% PDC 30 Days</span>
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcPaymentApproved" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">Approved Terms</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- Row 5: Remarks --}}
+                                        <div class="tc-row-last">
+                                            <div class="tc-row-title">Remarks</div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcRemarksOfficialPo" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-blue-400 dark:border-blue-500 text-blue-600 focus:ring-blue-500 dark:bg-slate-800">
+                                                    <span class="tc-label-text-bold">Serve as an Official P.O.</span>
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <label class="tc-label">
+                                                    <input type="checkbox" wire:model.live="tcRemarksNonReturnable" @if($this->isReadOnly) disabled @endif
+                                                        class="tc-checkbox border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:checked:bg-primary-600">
+                                                    <span class="tc-label-text">Non- Returnable/ Non- Cancealable</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Conditional Signature Box when "Serve as an Official P.O." is Checked --}}
+                                @if ($tcRemarksOfficialPo || $isOfficialPo)
+                                    <div class="tc-po-signoff">
+                                        <div class="tc-po-signoff-title">
+                                            Official Purchase Order Sign-off Details (Conforme / Signed PO)
+                                        </div>
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                             <x-filament-forms::field-wrapper id="customerSignatureName" label="Customer Name Over Signature">
                                                 <x-filament::input.wrapper size="sm">
@@ -382,40 +686,43 @@
                                                 </x-filament::input.wrapper>
                                             </x-filament-forms::field-wrapper>
                                         </div>
-                                    @endif
+                                    </div>
+                                @endif
+
+                                {{-- NOTES CALLOUT BOX (Exact Match to PDF Form) --}}
+                                <div class="tc-notes-container">
+                                    <div class="tc-notes-heading">NOTES:</div>
+                                    <div class="tc-notes-body">
+                                        <div>* Minimum amount of order should be <strong class="tc-notes-badge">Php 20,000 .00</strong> above for Free Delivery within Metro Manila. Outside Metro Manila Shipment cost will be applied.</div>
+                                        <div>* Return & Exchange of Items should be within <strong class="tc-notes-badge-underline">7 days upon delivery</strong>.</div>
+                                        <div>* Gate fees or any other entrance fees not included. Additional charges shall be applied for deliveries before or after office hour.</div>
+                                        <div>* Please inspect item before installation. Complaints will not be entertained after items have been installed.</div>
+                                        <div>* Special order, sale/phase out and non-regular items are not allowed for return.</div>
+                                    </div>
                                 </div>
-                            @endif
 
-                            <x-filament-forms::field-wrapper id="termsAndConditions" label="Terms and Conditions">
-                                <x-filament::input.wrapper size="sm">
-                                    <textarea wire:model.lazy="termsAndConditions"
-                                        @if($this->isReadOnly) disabled @endif
-                                        rows="4"
-                                        class="w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition duration-75 focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500"
-                                        style="width: 100%; resize: vertical;"
-                                    ></textarea>
-                                </x-filament::input.wrapper>
-                            </x-filament-forms::field-wrapper>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <x-filament-forms::field-wrapper id="paymentTerms" label="Payment Terms">
-                                    <x-filament::input.wrapper size="sm">
-                                        <x-filament::input type="text" wire:model.lazy="paymentTerms"
-                                            :disabled="$this->isReadOnly"
-                                            class="text-xs" />
-                                    </x-filament::input.wrapper>
-                                </x-filament-forms::field-wrapper>
-
-                                <x-filament-forms::field-wrapper id="deliveryTerms" label="Delivery Terms">
-                                    <x-filament::input.wrapper size="sm">
-                                        <x-filament::input type="text" wire:model.lazy="deliveryTerms"
-                                            :disabled="$this->isReadOnly"
-                                            class="text-xs" />
-                                    </x-filament::input.wrapper>
-                                </x-filament-forms::field-wrapper>
+                                {{-- Optional Custom Terms & Additional Notes --}}
+                                <details style="font-size: 0.75rem;">
+                                    <summary class="tc-details-summary">
+                                        <span>Show Raw / Additional Custom Terms</span>
+                                    </summary>
+                                    <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <x-filament-forms::field-wrapper id="termsAndConditions" label="Raw Terms & Conditions Notes">
+                                            <x-filament::input.wrapper size="sm">
+                                                <textarea wire:model.lazy="termsAndConditions"
+                                                    @if($this->isReadOnly) disabled @endif
+                                                    rows="3"
+                                                    class="w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-xs shadow-sm transition duration-75 focus:border-primary-500 focus:ring-1 focus:ring-inset focus:ring-primary-500 disabled:opacity-70 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-primary-500"
+                                                    style="width: 100%; resize: vertical;"
+                                                    placeholder="Optional special terms or additional clauses..."
+                                                ></textarea>
+                                            </x-filament::input.wrapper>
+                                        </x-filament-forms::field-wrapper>
+                                    </div>
+                                </details>
                             </div>
-                        </div>
-                    </x-filament::section>
+                        </x-filament::section>
+                    </div>
                 </div>
             </div>
 
@@ -679,30 +986,65 @@
                     </div>
                 </x-filament::section>
 
-                {{-- SECTION 4: 2-WAY CROSS-REFERENCE (QUOTATION & PURCHASE ORDER) --}}
-                @if ($crossRefQuotation || $crossRefPO)
+                {{-- SECTION 4: 2-WAY CROSS-REFERENCE & LINE ITEM RECONCILIATION --}}
+                @if ($crossRefQuotation || $crossRefPO || $this->reconciliation)
                     <x-filament::section>
                         <x-slot name="heading">
-                            <span
-                                class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">2-Way
-                                Cross-Referenced Documents (Quotation & Purchase Order)</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                <span
+                                    class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">2-Way
+                                    Cross-Referenced Documents & Line Item Reconciliation</span>
+                                @if ($this->reconciliation && $this->reconciliation['has_discrepancies'])
+                                    <span style="font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 9999px; background: rgba(245, 158, 11, 0.2);" class="text-amber-800 dark:text-amber-200">
+                                        {{ $this->reconciliation['discrepancy_count'] }} Line Discrepancies
+                                    </span>
+                                @elseif ($this->reconciliation)
+                                    <span style="font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 9999px; background: rgba(34, 197, 94, 0.2);" class="text-emerald-800 dark:text-emerald-200">
+                                        100% Match
+                                    </span>
+                                @endif
+                            </div>
                         </x-slot>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs" style="margin-bottom: 1rem;">
                             <div
-                                style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid {{ $crossRefQuotation ? '#16a34a' : '#9ca3af' }}; background: {{ $crossRefQuotation ? 'rgba(22, 163, 74, 0.08)' : 'transparent' }};">
+                                style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid {{ ($crossRefQuotation || !empty($this->reconciliation['quotation_number'])) ? '#16a34a' : '#9ca3af' }}; background: {{ ($crossRefQuotation || !empty($this->reconciliation['quotation_number'])) ? 'rgba(22, 163, 74, 0.08)' : 'transparent' }};">
                                 <strong style="display: block; margin-bottom: 0.25rem;">1. Quotation:</strong>
                                 <span
-                                    style="font-family: monospace; font-weight: 600;">{{ $crossRefQuotation ? $crossRefQuotation->document_number : 'Not yet linked' }}</span>
+                                    style="font-family: monospace; font-weight: 600;">{{ $crossRefQuotation ? $crossRefQuotation->document_number : ($this->reconciliation['quotation_number'] ?? 'Not yet linked') }}</span>
                             </div>
                             <div
-                                style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid {{ $crossRefPO ? '#16a34a' : '#9ca3af' }}; background: {{ $crossRefPO ? 'rgba(22, 163, 74, 0.08)' : 'transparent' }};">
+                                style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid {{ ($crossRefPO || $this->currentDocument?->document_type === 'purchase_order') ? '#16a34a' : '#9ca3af' }}; background: {{ ($crossRefPO || $this->currentDocument?->document_type === 'purchase_order') ? 'rgba(22, 163, 74, 0.08)' : 'transparent' }};">
                                 <strong style="display: block; margin-bottom: 0.25rem;">2. Purchase Order:</strong>
                                 <span
-                                    style="font-family: monospace; font-weight: 600;">{{ $crossRefPO ? $crossRefPO->document_number : 'Not yet linked' }}</span>
+                                    style="font-family: monospace; font-weight: 600;">{{ $crossRefPO ? $crossRefPO->document_number : ($this->currentDocument?->document_type === 'purchase_order' ? $this->currentDocument->document_number : 'Not yet linked') }}</span>
                             </div>
                         </div>
+
+                        @if ($this->reconciliation && $this->reconciliation['has_linked_quotation'])
+                            <div style="margin-top: 1.25rem; border-top: 1px solid rgba(156, 163, 175, 0.2); padding-top: 1.25rem;">
+                                @include('filament.infolists.po-quotation-reconciliation', ['reconciliation' => $this->reconciliation, 'getRecord' => null])
+                            </div>
+                        @endif
                     </x-filament::section>
+                @endif
+
+                @if ($this->isUnlinkedNormalPo)
+                    <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.4); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;" class="text-amber-800 dark:text-amber-300 text-xs">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <x-heroicon-m-exclamation-triangle style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" class="text-amber-600 dark:text-amber-400" />
+                            <span>This is a <strong>Normal Purchase Order</strong> (not a Conforme PO). It must be linked to an approved quotation before it can be approved and committed to the master ledger.</span>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($this->isPoWithDiscrepancy)
+                    <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; background-color: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.4); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;" class="text-rose-800 dark:text-rose-300 text-xs">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <x-heroicon-m-exclamation-circle style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" class="text-rose-600 dark:text-rose-400" />
+                            <span><strong>Approval Restricted:</strong> Line item discrepancies detected with linked Quotation #{{ $this->reconciliation['quotation_number'] ?? '' }}. You can review and update line items above, but approval is blocked until all discrepancies are resolved.</span>
+                        </div>
+                    </div>
                 @endif
 
                 {{-- SECTION 5: ACTIONS BAR --}}
@@ -771,7 +1113,8 @@
                             @if (auth()->user()?->canVerifyDocuments())
                                 <x-filament::button type="button" wire:click="approveAndVerify" color="success"
                                     icon="heroicon-m-check-badge" size="md"
-                                    title="Approve this reconciled document and commit transaction to the master financial ledger">
+                                    :disabled="$this->isUnlinkedNormalPo || $this->isPoWithDiscrepancy"
+                                    :title="$this->isPoWithDiscrepancy ? 'Approval restricted: PO has line item discrepancies with linked quotation' : ($this->isUnlinkedNormalPo ? 'Normal PO must be linked to an approved quotation before approval' : 'Approve this reconciled document and commit transaction to the master financial ledger')">
                                     Approve & Commit Transaction
                                 </x-filament::button>
                             @else

@@ -7,6 +7,7 @@ use App\Models\Quotation;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\On;
 
 class SalesOverviewWidget extends BaseWidget
 {
@@ -19,6 +20,36 @@ class SalesOverviewWidget extends BaseWidget
     public ?int $selectedWeek = null;
     public ?int $selectedMonth = null;
     public ?int $selectedYear = null;
+
+    public function mount(
+        ?int $agentId = null,
+        bool $isInhouse = false,
+        string $periodType = 'month',
+        ?string $selectedDate = null,
+        ?int $selectedWeek = null,
+        ?int $selectedMonth = null,
+        ?int $selectedYear = null
+    ): void {
+        $this->agentId = $agentId;
+        $this->isInhouse = $isInhouse;
+        $this->periodType = $periodType;
+        $this->selectedDate = $selectedDate ?? now()->toDateString();
+        $this->selectedWeek = $selectedWeek ?? (int) now()->weekOfYear;
+        $this->selectedMonth = $selectedMonth ?? (int) now()->month;
+        $this->selectedYear = $selectedYear ?? (int) now()->year;
+    }
+
+    #[On('salesFilterUpdated')]
+    public function updateFilter(array $filterData): void
+    {
+        $this->agentId = $filterData['selectedAgentId'] ?? null;
+        $this->isInhouse = (bool) ($filterData['filterInhouse'] ?? false);
+        $this->periodType = $filterData['periodType'] ?? 'month';
+        $this->selectedDate = $filterData['selectedDate'] ?? now()->toDateString();
+        $this->selectedWeek = (int) ($filterData['selectedWeek'] ?? now()->weekOfYear);
+        $this->selectedMonth = (int) ($filterData['selectedMonth'] ?? now()->month);
+        $this->selectedYear = (int) ($filterData['selectedYear'] ?? now()->year);
+    }
 
     public function getDateRange(): array
     {
@@ -76,29 +107,35 @@ class SalesOverviewWidget extends BaseWidget
         $selectedMonth = $this->selectedMonth;
         $selectedYear = $this->selectedYear;
 
+        $lastUpdated = PurchaseOrder::max('updated_at') . '_' . Quotation::max('updated_at');
         $cacheKey = 'sales_overview_' . md5(json_encode([
-            $agentId, $isInhouse, $periodType, $selectedDate, $selectedWeek, $selectedMonth, $selectedYear,
+            $agentId, $isInhouse, $periodType, $selectedDate, $selectedWeek, $selectedMonth, $selectedYear, $lastUpdated,
         ]));
 
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addMinutes(5), function () use ($startDate, $endDate, $agentId, $isInhouse) {
-            $startStr = $startDate->toDateString();
-            $endStr = $endDate->toDateString();
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($startDate, $endDate, $agentId, $isInhouse) {
+            $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
+            $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
+            $startDateOnly = $startDate->toDateString();
+            $endDateOnly = $endDate->toDateString();
 
-            $quotationQuery = Quotation::where(function ($q) use ($startStr, $endStr, $startDate, $endDate) {
+            $quotationQuery = Quotation::where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $q->whereBetween('quotation_date', [$startStr, $endStr])
-                  ->orWhere(fn($sub) => $sub->whereNull('quotation_date')->whereBetween('created_at', [$startDate, $endDate]));
+                  ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                  ->orWhereBetween('created_at', [$startStr, $endStr]);
             });
 
-            $poQuery = PurchaseOrder::where('is_completed', true)
-                ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
-                ->where(function ($q) use ($startStr, $endStr, $startDate, $endDate) {
+            $poQuery = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
+                ->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                     $q->whereBetween('order_date', [$startStr, $endStr])
-                      ->orWhere(fn($sub) => $sub->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]));
+                      ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                      ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
+                      ->orWhereBetween('completed_at', [$startStr, $endStr])
+                      ->orWhereBetween('created_at', [$startStr, $endStr]);
                 });
 
             if ($isInhouse) {
-                $quotationQuery->whereHas('salesAgent', fn($q) => $q->where('is_owner', true));
-                $poQuery->whereHas('salesAgent', fn($q) => $q->where('is_owner', true));
+                $quotationQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $poQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
             } elseif ($agentId) {
                 $quotationQuery->where('sales_agent_id', $agentId);
                 $poQuery->where('sales_agent_id', $agentId);
@@ -110,19 +147,19 @@ class SalesOverviewWidget extends BaseWidget
                 ? round(($convertedPos / $totalQuotations) * 100, 1)
                 : 0;
 
-            $totalRevenue = (float) (clone $poQuery)->sum('order_amount') ?? 0.0;
-            $totalProfit = (float) (clone $poQuery)->sum('realized_profit') ?? 0.0;
+            $totalRevenue = (float) ((clone $poQuery)->sum('order_amount') ?? 0.0);
+            $totalProfit = (float) ((clone $poQuery)->sum('realized_profit') ?? 0.0);
 
             $warrantyQuery = PurchaseOrder::whereBetween('warranty_end_date', [now(), now()->addDays(30)])
                 ->whereNotIn('warranty_status', ['expired', 'no_warranty']);
 
             $overdueQuery = PurchaseOrder::where('expected_delivery_date', '<', now())
-                ->where('delivery_status', '!=', 'delivered')
+                ->whereNotIn('delivery_status', [PurchaseOrder::DELIVERY_DELIVERED, 'delivered'])
                 ->where('is_completed', false);
 
             if ($isInhouse) {
-                $warrantyQuery->whereHas('salesAgent', fn($q) => $q->where('is_owner', true));
-                $overdueQuery->whereHas('salesAgent', fn($q) => $q->where('is_owner', true));
+                $warrantyQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $overdueQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
             } elseif ($agentId) {
                 $warrantyQuery->where('sales_agent_id', $agentId);
                 $overdueQuery->where('sales_agent_id', $agentId);

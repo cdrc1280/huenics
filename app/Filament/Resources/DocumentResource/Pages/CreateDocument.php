@@ -23,14 +23,26 @@ class CreateDocument extends CreateRecord
                 documentType: $data['document_type'] ?? Document::TYPE_PURCHASE_ORDER,
                 vendorId: !empty($data['vendor_id']) ? (int) $data['vendor_id'] : null,
                 projectId: !empty($data['project_id']) ? (int) $data['project_id'] : null,
-                userId: auth()->id() ?: 1
+                userId: auth()->id() ?: 1,
+                quotationId: null,
+                isConformePo: (bool) ($data['is_conforme_po'] ?? false)
             );
 
-            Notification::make()
-                ->title('PDF Ingested & Extracted')
-                ->body("Extracted line items and arithmetic checks completed.")
-                ->success()
-                ->send();
+            if (!empty($record->is_duplicate)) {
+                $docRef = $record->document_number ? " (Reference: {$record->document_number})" : '';
+                Notification::make()
+                    ->title('Duplicate Document Detected')
+                    ->body("This file has already been ingested previously as '{$record->original_filename}'{$docRef}. Redirecting to the existing document.")
+                    ->warning()
+                    ->duration(8000)
+                    ->send();
+            } else {
+                Notification::make()
+                    ->title('PDF Ingested & Extracted')
+                    ->body("Extracted line items and arithmetic checks completed.")
+                    ->success()
+                    ->send();
+            }
 
             return $record;
         } catch (\Throwable $e) {

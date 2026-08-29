@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Seed Dynamic Roles, Granular Permissions, and Default Accounts
+        $this->call(RoleAndPermissionSeeder::class);
+
         // 1. Users for all 4 Multi-Auth Roles
         $admin = User::updateOrCreate(
             ['email' => 'admin@huenics.com'],

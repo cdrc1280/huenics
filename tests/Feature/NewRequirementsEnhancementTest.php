@@ -206,4 +206,82 @@ class NewRequirementsEnhancementTest extends TestCase
         $method->invoke($action, $doc, $po);
         $this->assertTrue($po->is_conforme_po);
     }
+
+    public function test_review_queue_page_renders_and_syncs_structured_terms_checkboxes(): void
+    {
+        $doc = Document::create([
+            'uploaded_by' => $this->admin->id,
+            'file_hash' => 'hash_terms_checkbox_test_' . uniqid(),
+            'original_filename' => 'quotation_sample.pdf',
+            'disk_path' => 'documents/uploads/quotation_sample.pdf',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'raw_extracted_text' => 'Terms and Conditions Validity 15 days Stock Availability ✔ Stock Terms Of Delivery 4-7 days Payment Terms COD PDC 30 Days Remarks Serve as an Official P.O.',
+        ]);
+
+        $component = \Livewire\Livewire::actingAs($this->admin)
+            ->test(\App\Filament\Pages\ReviewQueuePage::class, ['document_id' => $doc->id])
+            ->assertSee('Terms and Conditions')
+            ->assertSee('Stock Availability')
+            ->assertSee('Terms Of Delivery')
+            ->assertSee('Payment Terms')
+            ->assertSee('Remarks')
+            ->assertSee('Serve as an Official P.O.')
+            ->assertSee('Non-Stock / Special Items/Indent Order')
+            ->assertSee('45-60 days')
+            ->set('tcStock', true)
+            ->set('tcNonStock', false)
+            ->set('tcDelivery10To15', true)
+            ->set('tcRemarksOfficialPo', true);
+
+        // Verify that isOfficialPo synced automatically
+        $this->assertTrue($component->get('isOfficialPo'));
+        $this->assertTrue($component->get('tcRemarksOfficialPo'));
+        $this->assertTrue($component->get('tcStock'));
+        $this->assertFalse($component->get('tcNonStock'));
+        $this->assertTrue($component->get('tcDelivery10To15'));
+    }
+
+    public function test_upload_quotation_action_warns_on_duplicate_file(): void
+    {
+        // First upload
+        $action = app(\App\Actions\IngestDocumentAction::class);
+        $doc = $action->execute(
+            diskPath: 'documents/uploads/dup_test_vaf.pdf',
+            originalFilename: 'dup_test_vaf.pdf',
+            documentType: Document::TYPE_VENDORS_AGREEMENT,
+            userId: $this->admin->id
+        );
+
+        // Uploading duplicate via ListQuotations
+        \Livewire\Livewire::actingAs($this->admin)
+            ->test(\App\Filament\Resources\QuotationResource\Pages\ListQuotations::class)
+            ->callAction('upload_quotation', [
+                'disk_path' => ['documents/uploads/dup_test_vaf.pdf'],
+                'original_filename' => 'dup_test_vaf.pdf',
+            ])
+            ->assertNotified('Duplicate Quotation Detected');
+    }
+
+    public function test_upload_po_action_warns_on_duplicate_file(): void
+    {
+        // First upload
+        $action = app(\App\Actions\IngestDocumentAction::class);
+        $doc = $action->execute(
+            diskPath: 'documents/uploads/dup_test_po.pdf',
+            originalFilename: 'dup_test_po.pdf',
+            documentType: Document::TYPE_PURCHASE_ORDER,
+            userId: $this->admin->id
+        );
+
+        // Uploading duplicate via ListPurchaseOrders
+        \Livewire\Livewire::actingAs($this->admin)
+            ->test(\App\Filament\Resources\PurchaseOrderResource\Pages\ListPurchaseOrders::class)
+            ->callAction('upload_po', [
+                'disk_path' => ['documents/uploads/dup_test_po.pdf'],
+                'original_filename' => 'dup_test_po.pdf',
+            ])
+            ->assertNotified('Duplicate Purchase Order Detected');
+    }
 }
+
+

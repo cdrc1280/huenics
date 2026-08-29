@@ -436,7 +436,39 @@ OCR;
         $this->assertEquals($quotation->id, $po->quotation_id);
         $this->assertEquals(Quotation::STATUS_CONVERTED, $quotation->fresh()->status);
     }
+
+    public function test_duplicate_document_upload_is_flagged_and_does_not_create_duplicate(): void
+    {
+        $action = app(\App\Actions\IngestDocumentAction::class);
+
+        // First upload
+        $doc1 = $action->execute(
+            diskPath: 'documents/uploads/test_unique_doc.pdf',
+            originalFilename: 'test_unique_doc.pdf',
+            documentType: Document::TYPE_VENDORS_AGREEMENT,
+            userId: $this->user->id
+        );
+
+        $this->assertNotNull($doc1);
+        $this->assertFalse($doc1->is_duplicate);
+
+        $initialCount = Document::count();
+
+        // Second upload with same path/filename (same hash)
+        $doc2 = $action->execute(
+            diskPath: 'documents/uploads/test_unique_doc.pdf',
+            originalFilename: 'test_unique_doc.pdf',
+            documentType: Document::TYPE_VENDORS_AGREEMENT,
+            userId: $this->user->id
+        );
+
+        $this->assertNotNull($doc2);
+        $this->assertTrue($doc2->is_duplicate);
+        $this->assertEquals($doc1->id, $doc2->id);
+        $this->assertEquals($initialCount, Document::count());
+    }
 }
+
 
 
 

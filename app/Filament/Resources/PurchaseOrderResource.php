@@ -144,7 +144,7 @@ class PurchaseOrderResource extends Resource
                     Toggle::make('is_conforme_po')
                         ->label('Conforme PO (No Quotation Required)')
                         ->helperText('Check if this is a conforme purchase order that does not require a matching quotation')
-                        ->visible(fn () => auth()->user()?->is_owner === true)
+                        ->visible(fn() => auth()->user()?->is_owner === true)
                         ->default(false),
 
                     TextInput::make('customer_name')
@@ -390,6 +390,59 @@ class PurchaseOrderResource extends Resource
     protected static function getTableColumns(): array
     {
         return [
+            TextColumn::make('connected_quotation')
+                ->label('Connected Quotation')
+                ->state(function (PurchaseOrder $record): string {
+                    if ($record->quotation) {
+                        $reconciliation = $record->getReconciliationReport();
+                        if ($reconciliation['has_discrepancies']) {
+                            return "{$record->quotation->quotation_number} ({$reconciliation['discrepancy_count']} Discrepancies)";
+                        }
+                        return "{$record->quotation->quotation_number} (Matched)";
+                    }
+                    if ($record->is_conforme_po) {
+                        return 'Conforme PO (No Quotation)';
+                    }
+                    return 'Not Linked';
+                })
+                ->badge()
+                ->icon(fn(PurchaseOrder $record) => match (true) {
+                    (bool) $record->quotation && $record->hasLineItemDiscrepancies() => 'heroicon-m-exclamation-triangle',
+                    (bool) $record->quotation => 'heroicon-m-check-badge',
+                    $record->is_conforme_po => 'heroicon-m-document-check',
+                    default => 'heroicon-m-exclamation-triangle',
+                })
+                ->color(fn(PurchaseOrder $record) => match (true) {
+                    (bool) $record->quotation && $record->hasLineItemDiscrepancies() => 'warning',
+                    (bool) $record->quotation => 'success',
+                    $record->is_conforme_po => 'gray',
+                    default => 'danger',
+                })
+                ->url(fn(PurchaseOrder $record) => $record->quotation ? QuotationResource::getUrl('view', ['record' => $record->quotation]) : null)
+                ->tooltip(function (PurchaseOrder $record): string {
+                    if ($record->quotation) {
+                        $reconciliation = $record->getReconciliationReport();
+                        if ($reconciliation['has_discrepancies']) {
+                            return "Connected to Quotation {$record->quotation->quotation_number} with {$reconciliation['discrepancy_count']} discrepancies (Qty: {$reconciliation['qty_mismatches_count']}, Price: {$reconciliation['price_mismatches_count']}, Unquoted: {$reconciliation['missing_in_quotation_count']}). Click 'Line Item Discrepancies' to inspect.";
+                        }
+                        return "Connected to Quotation {$record->quotation->quotation_number} (₱" . number_format((float) $record->quotation->total_amount, 2) . ") — 100% line items and pricing match perfectly.";
+                    }
+                    if ($record->is_conforme_po) {
+                        return "Conforme Purchase Order — self-contained order, quotation link not required";
+                    }
+                    return "Unlinked Normal PO — must be linked to an approved quotation before Review and Approval";
+                })
+                ->searchable(query: function ($query, string $search) {
+                    return $query->whereHas('quotation', function ($q) use ($search) {
+                        $q->where('quotation_number', 'like', "%{$search}%");
+                    });
+                })
+                ->sortable(query: function ($query, string $direction) {
+                    return $query->leftJoin('quotations', 'purchase_orders.quotation_id', '=', 'quotations.id')
+                        ->orderBy('quotations.quotation_number', $direction)
+                        ->select('purchase_orders.*');
+                }),
+
             TextColumn::make('po_number')
                 ->label('PO #')
                 ->searchable()
@@ -415,13 +468,13 @@ class PurchaseOrderResource extends Resource
                 ->default('—')
                 ->tooltip(fn(PurchaseOrder $record): string => "Project Site: " . ($record->project?->name ?? 'General / None')),
 
-            TextColumn::make('quotation.quotation_number')
-                ->label('Quotation #')
-                ->sortable()
-                ->searchable()
-                ->default('—')
-                ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Linked Quotation: {$record->quotation->quotation_number}" : 'No linked quotation')
-                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('is_conforme_po')
+                ->label('PO Type')
+                ->badge()
+                ->formatStateUsing(fn(bool $state) => $state ? 'Conforme PO' : 'Normal PO')
+                ->color(fn(bool $state) => $state ? 'info' : 'gray'),
+
+
 
             TextColumn::make('order_amount')
                 ->label('Order Amount')
@@ -591,18 +644,226 @@ class PurchaseOrderResource extends Resource
         ];
     }
 
-    protected static function getTableActions(): array
+    public static function getLinkToQuotationAction(): Action
+    {
+        return Action::make('link_to_quotation')
+            ->label(fn(PurchaseOrder $record): string => $record->quotation_id ? 'Change Linked Quotation' : 'Link to Approved Quotation')
+            ->icon('heroicon-m-link')
+            ->color(fn(PurchaseOrder $record): string => $record->quotation_id ? 'gray' : 'info')
+            ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Currently linked to Quotation {$record->quotation->quotation_number}. Click to change or unlink." : 'Link this PO to an approved quotation')
+            ->modalHeading(fn(PurchaseOrder $record): string => "Link PO #{$record->po_number} to Approved Quotation")
+            ->modalDescription('Select an approved quotation to link to this purchase order. This connects the quotation and PO, allows line-item cross-verification, and fills missing customer details.')
+            ->modalSubmitActionLabel('Save Link')
+            ->form([
+                Select::make('quotation_id')
+                    ->label('Approved Quotation')
+                    ->options(function (?PurchaseOrder $record) {
+                        $query = Quotation::query();
+                        if ($record && $record->quotation_id) {
+                            $query->where(function ($q) use ($record) {
+                                $q->where('status', Quotation::STATUS_APPROVED)
+                                    ->orWhere('status', Quotation::STATUS_CONVERTED)
+                                    ->orWhere('id', $record->quotation_id);
+                            });
+                        } else {
+                            $query->where(function ($q) {
+                                $q->where('status', Quotation::STATUS_APPROVED)
+                                    ->orWhere(function ($sub) {
+                                        $sub->where('status', Quotation::STATUS_CONVERTED)
+                                            ->whereDoesntHave('purchaseOrders');
+                                    });
+                            });
+                        }
+
+                        if ($record && $record->customer_name) {
+                            $cName = strtolower(trim($record->customer_name));
+                            $query->orderByRaw("CASE WHEN LOWER(customer_name) LIKE ? THEN 0 ELSE 1 END", ["%{$cName}%"]);
+                        }
+
+                        $query->orderBy('quotation_date', 'desc')->orderBy('id', 'desc');
+
+                        return $query->get()->mapWithKeys(fn(Quotation $q) => [
+                            $q->id => "{$q->quotation_number} — {$q->customer_name} (₱" . number_format((float) $q->total_amount, 2) . ") — " . ($q->quotation_date ? \Carbon\Carbon::parse($q->quotation_date)->format('M j, Y') : 'No Date')
+                        ]);
+                    })
+                    ->searchable()
+                    ->nullable()
+                    ->placeholder('Select an approved quotation (or clear to unlink)')
+                    ->default(fn(PurchaseOrder $record) => $record->quotation_id)
+                    ->helperText('Quotations matching this PO customer name appear first. Leave empty to unlink.'),
+
+                Toggle::make('sync_missing_details')
+                    ->label('Fill missing PO fields from Quotation')
+                    ->default(true)
+                    ->helperText('Fills customer name, project site, payment terms, delivery terms, and notes if currently empty on this PO.'),
+
+                Toggle::make('verify_line_items')
+                    ->label('Cross-Verify Line Items & Pricing')
+                    ->default(true)
+                    ->helperText('Compares line items and prices between the PO and Quotation, notifying you of any discrepancies.'),
+            ])
+            ->action(function (PurchaseOrder $record, array $data) {
+                if (empty($data['quotation_id'])) {
+                    $oldQuot = $record->quotation;
+                    $record->quotation_id = null;
+                    $record->save();
+                    if ($oldQuot && $oldQuot->purchaseOrders()->count() === 0) {
+                        $oldQuot->update(['status' => Quotation::STATUS_APPROVED]);
+                    }
+                    Notification::make()
+                        ->title('Quotation Unlinked')
+                        ->info()
+                        ->body("PO #{$record->po_number} is no longer linked to any quotation.")
+                        ->send();
+                    return;
+                }
+
+                $oldQuotId = $record->quotation_id;
+                $quotation = Quotation::findOrFail($data['quotation_id']);
+
+                // If switching from a previously linked quotation, restore previous quotation status
+                if ($oldQuotId && (int)$oldQuotId !== (int)$quotation->id) {
+                    $prevQuot = Quotation::find($oldQuotId);
+                    if ($prevQuot && $prevQuot->purchaseOrders()->where('id', '!=', $record->id)->count() === 0) {
+                        $prevQuot->update(['status' => Quotation::STATUS_APPROVED]);
+                    }
+                }
+
+                $record->quotation_id = $quotation->id;
+                $record->unsetRelation('quotation');
+                $record->setRelation('quotation', $quotation);
+
+                if (!empty($data['sync_missing_details'])) {
+                    if (empty($record->customer_name) || $record->customer_name === 'Valued Customer') {
+                        $record->customer_name = $quotation->customer_name;
+                    }
+                    if (empty($record->project_id) && $quotation->project_id) {
+                        $record->project_id = $quotation->project_id;
+                    }
+                    if (empty($record->payment_terms) && $quotation->payment_terms) {
+                        $record->payment_terms = $quotation->payment_terms;
+                    }
+                    if (empty($record->delivery_terms) && $quotation->delivery_terms) {
+                        $record->delivery_terms = $quotation->delivery_terms;
+                    }
+                    if (empty($record->terms_and_conditions) && $quotation->terms_and_conditions) {
+                        $record->terms_and_conditions = $quotation->terms_and_conditions;
+                    }
+                }
+
+                $record->save();
+                $record->unsetRelation('quotation');
+                $record->unsetRelation('lineItems');
+                $record->setRelation('quotation', $quotation);
+
+                if ($quotation->status === Quotation::STATUS_APPROVED) {
+                    $quotation->update(['status' => Quotation::STATUS_CONVERTED]);
+                }
+
+                if ($record->document_id && $quotation->document_id) {
+                    $trx = \App\Models\Transaction::where('purchase_order_document_id', $record->document_id)->first();
+                    if ($trx) {
+                        $trx->update(['quotation_document_id' => $quotation->document_id]);
+                    }
+                }
+
+                $reconciliation = $record->getReconciliationReport($quotation);
+
+                if ($reconciliation['has_discrepancies']) {
+                    $summaryParts = [];
+                    if ($reconciliation['qty_mismatches_count'] > 0) $summaryParts[] = "{$reconciliation['qty_mismatches_count']} Qty mismatches";
+                    if ($reconciliation['price_mismatches_count'] > 0) $summaryParts[] = "{$reconciliation['price_mismatches_count']} Price mismatches";
+                    if ($reconciliation['missing_in_quotation_count'] > 0) $summaryParts[] = "{$reconciliation['missing_in_quotation_count']} Unquoted items";
+                    if ($reconciliation['missing_in_po_count'] > 0) $summaryParts[] = "{$reconciliation['missing_in_po_count']} Items missing from PO";
+
+                    Notification::make()
+                        ->title('Linked with Line Item Discrepancies')
+                        ->warning()
+                        ->body("PO #{$record->po_number} was linked to Quotation #{$quotation->quotation_number}.\nDetected " . implode(', ', $summaryParts) . ".\nUse the 'Line Item Discrepancies' action or check the PO View page to review detailed line-by-line comparison.")
+                        ->persistent()
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->title('Successfully Linked to Approved Quotation')
+                        ->success()
+                        ->body("PO #{$record->po_number} is now linked to Quotation #{$quotation->quotation_number}. All line items and pricing match 100%.")
+                        ->send();
+                }
+            });
+    }
+
+    public static function getTableActions(): array
     {
         return [
             ActionGroup::make([
+                static::getLinkToQuotationAction(),
+
+                Action::make('view_discrepancies')
+                    ->label(fn(PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'Line Item Discrepancies' : 'Reconciliation Report')
+                    ->icon('heroicon-m-scale')
+                    ->color(fn(PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'warning' : 'info')
+                    ->tooltip('View side-by-side line item comparison and discrepancy analysis against linked quotation')
+                    ->visible(fn(PurchaseOrder $r): bool => (bool) $r->quotation_id)
+                    ->modalHeading(fn(PurchaseOrder $r): string => "PO #{$r->po_number} vs Quotation #{$r->quotation?->quotation_number} Line Item Reconciliation")
+                    ->modalDescription('Detailed comparison of quantities, unit prices, and line items between this Purchase Order and its connected Quotation.')
+                    ->modalWidth('5xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn(PurchaseOrder $record) => view('filament.infolists.po-quotation-reconciliation', [
+                        'reconciliation' => $record->getReconciliationReport(),
+                        'getRecord' => fn() => $record,
+                    ])),
+
+                Action::make('toggle_conforme')
+                    ->label(fn(PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal PO' : 'Switch to Conforme PO')
+                    ->icon('heroicon-m-arrows-right-left')
+                    ->color('gray')
+                    ->tooltip(fn(PurchaseOrder $r) => $r->is_conforme_po
+                        ? 'Convert to Normal PO (requires linking to an approved quotation)'
+                        : 'Convert to Conforme PO (exempt from quotation matching)')
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                    ->requiresConfirmation()
+                    ->modalHeading(fn(PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal Purchase Order' : 'Switch to Conforme Purchase Order')
+                    ->modalDescription(fn(PurchaseOrder $r) => $r->is_conforme_po
+                        ? 'Switching to Normal PO will require this purchase order to be linked to an approved quotation before Review and Approval.'
+                        : 'Switching to Conforme PO exempts this purchase order from quotation matching, immediately unlocking Review and Approval.')
+                    ->action(function (PurchaseOrder $record) {
+                        $newVal = !$record->is_conforme_po;
+                        $record->update(['is_conforme_po' => $newVal]);
+                        $typeLabel = $newVal ? 'Conforme PO' : 'Normal PO';
+                        Notification::make()->title("PO Classification Updated to {$typeLabel}")->success()->send();
+                    }),
+
                 Action::make('approve_po')
                     ->label('Approve PO')
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
-                    ->tooltip('Approve purchase order to authorize fulfillment and delivery')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
-                    ->requiresConfirmation()
+                    ->tooltip(function (PurchaseOrder $record): string {
+                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                            return 'Normal PO must be linked to an approved quotation first before approval.';
+                        }
+                        return 'Approve purchase order to authorize fulfillment and delivery';
+                    })
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id) && !$r->hasLineItemDiscrepancies())
+                    ->disabled(fn(PurchaseOrder $r): bool => (!$r->is_conforme_po && !$r->quotation_id) || $r->hasLineItemDiscrepancies())
+                    ->requiresConfirmation(fn(PurchaseOrder $r): bool => $r->is_conforme_po || (bool) $r->quotation_id)
                     ->action(function (PurchaseOrder $record) {
+                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                            Notification::make()
+                                ->title('Quotation Link Required')
+                                ->body("PO {$record->po_number} is a normal purchase order and must be linked to an approved quotation first.")
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+                        if ($record->hasLineItemDiscrepancies()) {
+                            Notification::make()
+                                ->title('Approval Restricted: Line Item Discrepancies')
+                                ->body("PO {$record->po_number} has line item discrepancies with linked Quotation #{$record->quotation?->quotation_number}. Discrepancies must be resolved before approval.")
+                                ->danger()
+                                ->send();
+                            return;
+                        }
                         $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
                         if ($record->document) {
                             $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
@@ -614,15 +875,32 @@ class PurchaseOrderResource extends Resource
                     ->label('Review & Verify')
                     ->icon('heroicon-m-clipboard-document-check')
                     ->color('warning')
-                    ->tooltip('Review, verify math and reconcile purchase order line items')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                    ->tooltip(function (PurchaseOrder $record): string {
+                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                            return 'Normal PO must be linked to an approved quotation first before review & verification.';
+                        }
+                        return 'Review, verify math and reconcile purchase order line items';
+                    })
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id))
+                    ->disabled(fn(PurchaseOrder $r): bool => !$r->is_conforme_po && !$r->quotation_id)
                     ->url(function (PurchaseOrder $record) {
+                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                            return null;
+                        }
                         if ($record->document_id) {
                             return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
                         }
                         return null;
                     })
                     ->action(function (PurchaseOrder $record) {
+                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                            Notification::make()
+                                ->title('Quotation Link Required')
+                                ->body("PO {$record->po_number} is a normal purchase order and must be linked to an approved quotation first.")
+                                ->warning()
+                                ->send();
+                            return;
+                        }
                         if ($record->document_id) {
                             return redirect(ReviewQueuePage::getUrl(['document_id' => $record->document_id]));
                         }
@@ -818,13 +1096,17 @@ class PurchaseOrderResource extends Resource
                         Notification::make()->title('PO Cancelled')->warning()->send();
                     }),
 
-                EditAction::make(),
                 ViewAction::make(),
                 DeleteAction::make()->requiresConfirmation(),
                 RestoreAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed()),
                 ForceDeleteAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
             ]),
         ];
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
     }
 
     protected static function getTableBulkActions(): array
@@ -842,7 +1124,6 @@ class PurchaseOrderResource extends Resource
     {
         return [
             'index' => Pages\ListPurchaseOrders::route('/'),
-            'edit' => Pages\EditPurchaseOrder::route('/{record}/edit'),
             'view' => Pages\ViewPurchaseOrder::route('/{record}'),
         ];
     }

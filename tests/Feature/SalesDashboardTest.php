@@ -1,0 +1,292 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Filament\Pages\SalesDashboard;
+use App\Filament\Widgets\SalesOverviewWidget;
+use App\Models\PurchaseOrder;
+use App\Models\Quotation;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class SalesDashboardTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected User $admin;
+    protected User $salesRep;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'is_owner' => true,
+            'name' => 'Admin User',
+        ]);
+
+        $this->salesRep = User::factory()->create([
+            'role' => User::ROLE_SALES_EXECUTIVE,
+            'is_owner' => false,
+            'name' => 'Sales Executive One',
+        ]);
+    }
+
+    public function test_sales_dashboard_page_can_be_rendered(): void
+    {
+        $this->actingAs($this->admin);
+
+        Livewire::test(SalesDashboard::class)
+            ->assertSuccessful()
+            ->assertSee('Sales Performance Filters')
+            ->assertSee('Sales Leaderboard');
+    }
+
+    public function test_sales_dashboard_fetches_correct_data_when_filtering_by_month(): void
+    {
+        $this->actingAs($this->admin);
+
+        Quotation::create([
+            'quotation_number' => 'HISI-Q-TEST-01',
+            'quotation_date' => '2026-01-15',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer A',
+            'total_amount' => 50000.00,
+            'status' => Quotation::STATUS_CONVERTED,
+        ]);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-TEST-01',
+            'order_date' => '2026-01-20',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer A',
+            'order_amount' => 50000.00,
+            'realized_profit' => 15000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'month')
+            ->set('filterData.selectedYear', 2026)
+            ->set('filterData.selectedMonth', 1)
+            ->assertSuccessful()
+            ->assertSee('Sales Executive One')
+            ->assertSee('₱50,000.00');
+
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 1,
+            'agentId' => $this->salesRep->id,
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱50,000.00')
+            ->assertSee('100%');
+    }
+
+    public function test_sales_dashboard_fetches_correct_data_when_filtering_by_year(): void
+    {
+        $this->actingAs($this->admin);
+
+        Quotation::create([
+            'quotation_number' => 'HISI-Q-TEST-02',
+            'quotation_date' => '2026-06-10',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer B',
+            'total_amount' => 120000.00,
+            'status' => Quotation::STATUS_APPROVED,
+        ]);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-TEST-02',
+            'order_date' => '2026-06-15',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer B',
+            'order_amount' => 120000.00,
+            'realized_profit' => 36000.00,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'is_completed' => true,
+            'is_conforme_po' => false,
+        ]);
+
+        Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'years')
+            ->set('filterData.selectedYear', 2026)
+            ->assertSuccessful()
+            ->assertSee('₱120,000.00');
+
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'years',
+            'selectedYear' => 2026,
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱120,000.00')
+            ->assertSee('₱36,000.00');
+    }
+
+    public function test_sales_dashboard_fetches_correct_data_when_filtering_by_days(): void
+    {
+        $this->actingAs($this->admin);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-TEST-DAY',
+            'order_date' => '2026-03-12',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer C',
+            'order_amount' => 88000.00,
+            'realized_profit' => 20000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'days')
+            ->set('filterData.selectedDate', '2026-03-12')
+            ->assertSuccessful()
+            ->assertSee('₱88,000.00');
+
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'days',
+            'selectedDate' => '2026-03-12',
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱88,000.00');
+    }
+
+    public function test_sales_dashboard_fetches_correct_data_when_filtering_by_weeks(): void
+    {
+        $this->actingAs($this->admin);
+
+        $date = Carbon::parse('2026-03-12');
+        $week = $date->weekOfYear;
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-TEST-WEEK',
+            'order_date' => '2026-03-12',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Test Customer D',
+            'order_amount' => 45000.00,
+            'realized_profit' => 12000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'weeks')
+            ->set('filterData.selectedYear', 2026)
+            ->set('filterData.selectedWeek', $week)
+            ->assertSuccessful()
+            ->assertSee('₱45,000.00');
+
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'weeks',
+            'selectedYear' => 2026,
+            'selectedWeek' => $week,
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱45,000.00');
+    }
+
+    public function test_inhouse_filter_toggles_owner_accounts_and_resets_selected_agent(): void
+    {
+        $this->actingAs($this->admin);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-REP',
+            'order_date' => '2026-01-10',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Rep Client',
+            'order_amount' => 30000.00,
+            'realized_profit' => 9000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-INHOUSE',
+            'order_date' => '2026-01-12',
+            'sales_agent_id' => $this->admin->id,
+            'customer_name' => 'Direct Owner Client',
+            'order_amount' => 75000.00,
+            'realized_profit' => 25000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        $test = Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'month')
+            ->set('filterData.selectedYear', 2026)
+            ->set('filterData.selectedMonth', 1)
+            ->set('filterData.filterInhouse', true)
+            ->assertSuccessful()
+            ->assertSee('Admin User')
+            ->assertSee('₱75,000.00')
+            ->assertDontSee('Sales Executive One');
+
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 1,
+            'isInhouse' => true,
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱75,000.00');
+    }
+
+    public function test_sales_figures_display_when_completed_in_period_even_with_prior_order_date(): void
+    {
+        $this->actingAs($this->admin);
+
+        // PO with order_date in January 2026, but fulfilled/completed in August 2026
+        PurchaseOrder::create([
+            'po_number' => 'PO-REALIZED-AUG',
+            'order_date' => '2026-01-08',
+            'completed_at' => '2026-08-29 13:00:00',
+            'actual_delivery_date' => '2026-08-29',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Realized Customer',
+            'order_amount' => 950000.03,
+            'realized_profit' => 285000.01,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'is_completed' => true,
+            'is_conforme_po' => false,
+        ]);
+
+        // When viewing August 2026, sales figures must display properly
+        Livewire::test(SalesDashboard::class)
+            ->set('filterData.periodType', 'month')
+            ->set('filterData.selectedYear', 2026)
+            ->set('filterData.selectedMonth', 8)
+            ->assertSuccessful()
+            ->assertSee('Sales Executive One')
+            ->assertSee('₱950,000.03');
+
+        // SalesOverviewWidget must also display the ₱950,000.03 revenue
+        Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 8,
+            'agentId' => $this->salesRep->id,
+        ])
+            ->assertSuccessful()
+            ->assertSee('₱950,000.03')
+            ->assertSee('₱285,000.01');
+    }
+}

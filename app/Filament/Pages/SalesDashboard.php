@@ -77,11 +77,18 @@ class SalesDashboard extends Page implements HasTable, HasForms
                         ])->schema([
                             Select::make('selectedAgentId')
                                 ->label('Filter by S.E.')
-                                ->options(fn() => User::whereIn('role', [
-                                    User::ROLE_SALES_EXECUTIVE,
-                                    User::ROLE_ADMIN,
-                                    User::ROLE_OPERATIONS_MANAGER,
-                                ])->pluck('name', 'id'))
+                                ->options(function ($get) {
+                                    $q = User::whereIn('role', [
+                                        User::ROLE_SALES_EXECUTIVE,
+                                        User::ROLE_ADMIN,
+                                        User::ROLE_OPERATIONS_MANAGER,
+                                        User::ROLE_CEO,
+                                    ]);
+                                    if ((bool) $get('filterInhouse')) {
+                                        $q->where('is_owner', true);
+                                    }
+                                    return $q->pluck('name', 'id');
+                                })
                                 ->placeholder('All Sales Executives')
                                 ->searchable()
                                 ->live()
@@ -93,6 +100,11 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                 ->helperText('Filter by owner accounts')
                                 ->inline(false)
                                 ->live()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    if ($state) {
+                                        $set('selectedAgentId', null);
+                                    }
+                                })
                                 ->columnSpan(['default' => 12, 'sm' => 5, 'md' => 5, 'lg' => 5]),
 
                             ToggleButtons::make('periodType')
@@ -233,45 +245,78 @@ class SalesDashboard extends Page implements HasTable, HasForms
         }
     }
 
+    public function getWidgetData(): array
+    {
+        return [
+            'agentId' => $this->filterData['selectedAgentId'] ?? null,
+            'isInhouse' => (bool) ($this->filterData['filterInhouse'] ?? false),
+            'periodType' => $this->filterData['periodType'] ?? 'month',
+            'selectedDate' => $this->filterData['selectedDate'] ?? now()->toDateString(),
+            'selectedWeek' => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
+            'selectedMonth' => (int) ($this->filterData['selectedMonth'] ?? now()->month),
+            'selectedYear' => (int) ($this->filterData['selectedYear'] ?? now()->year),
+        ];
+    }
+
+    public function updatedFilterData(): void
+    {
+        $this->flushCachedTableRecords();
+        $this->table = $this->table($this->makeTable());
+        $this->dispatch('salesFilterUpdated', filterData: $this->filterData);
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
-            SalesOverviewWidget::make([
-                'agentId' => $this->filterData['selectedAgentId'] ?? null,
-                'isInhouse' => (bool) ($this->filterData['filterInhouse'] ?? false),
-                'periodType' => $this->filterData['periodType'] ?? 'month',
-                'selectedDate' => $this->filterData['selectedDate'] ?? now()->toDateString(),
-                'selectedWeek' => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
-                'selectedMonth' => (int) ($this->filterData['selectedMonth'] ?? now()->month),
-                'selectedYear' => (int) ($this->filterData['selectedYear'] ?? now()->year),
-            ]),
+            SalesOverviewWidget::class,
         ];
     }
 
     public function table(Table $table): Table
     {
         [$startDate, $endDate, $periodLabel] = $this->getDateRange();
-        $startStr = $startDate->toDateString();
-        $endStr = $endDate->toDateString();
+        $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
+        $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
+        $startDateOnly = $startDate->toDateString();
+        $endDateOnly = $endDate->toDateString();
 
         $selectedAgentId = $this->filterData['selectedAgentId'] ?? null;
         $filterInhouse = (bool) ($this->filterData['filterInhouse'] ?? false);
+
+        $poDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+            $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+                $sub->whereBetween('order_date', [$startStr, $endStr])
+                    ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                    ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
+                    ->orWhereBetween('completed_at', [$startStr, $endStr])
+                    ->orWhereBetween('created_at', [$startStr, $endStr]);
+            });
+        };
+
+        $qDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+            $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+                $sub->whereBetween('quotation_date', [$startStr, $endStr])
+                    ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                    ->orWhereBetween('created_at', [$startStr, $endStr]);
+            });
+        };
 
         $query = User::query()
             ->whereIn('role', [
                 User::ROLE_SALES_EXECUTIVE,
                 User::ROLE_ADMIN,
                 User::ROLE_OPERATIONS_MANAGER,
+                User::ROLE_CEO,
             ])
             ->withCount([
-                'quotations as period_quotations' => fn($q) => $q->where(fn($sub) => $sub->whereBetween('quotation_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('quotation_date')->whereBetween('created_at', [$startDate, $endDate]))),
-                'purchaseOrders as period_pos' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'quotations as period_quotations' => $qDateScope,
+                'purchaseOrders as period_pos' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ])
             ->withSum([
-                'purchaseOrders as period_achieved' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'purchaseOrders as period_achieved' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'order_amount')
             ->withSum([
-                'purchaseOrders as period_profit' => fn($q) => $q->where('is_completed', true)->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where(fn($sub) => $sub->whereBetween('order_date', [$startStr, $endStr])->orWhere(fn($s2) => $s2->whereNull('order_date')->whereBetween('created_at', [$startDate, $endDate]))),
+                'purchaseOrders as period_profit' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'realized_profit');
 
         if ($filterInhouse) {

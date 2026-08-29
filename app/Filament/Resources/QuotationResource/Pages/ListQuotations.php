@@ -47,13 +47,28 @@ class ListQuotations extends ListRecords
                 ])
                 ->action(function (array $data) {
                     try {
+                        $rawPath = $data['disk_path'] ?? '';
+                        $diskPath = is_array($rawPath) ? (string) reset($rawPath) : (string) $rawPath;
+                        $originalFilename = $data['original_filename'] ?? basename($diskPath);
+
                         $document = app(IngestDocumentAction::class)->execute(
-                            diskPath: $data['disk_path'],
-                            originalFilename: $data['original_filename'] ?? basename($data['disk_path']),
+                            diskPath: $diskPath,
+                            originalFilename: $originalFilename,
                             documentType: Document::TYPE_VENDORS_AGREEMENT,
                             vendorId: null,
                             projectId: null
                         );
+
+                        if (!empty($document->is_duplicate)) {
+                            $docRef = $document->document_number ? " (Reference: {$document->document_number})" : '';
+                            Notification::make()
+                                ->title('Duplicate Quotation Detected')
+                                ->body("This file has already been uploaded previously as '{$document->original_filename}'{$docRef}. A duplicate document was not created.")
+                                ->warning()
+                                ->duration(8000)
+                                ->send();
+                            return;
+                        }
 
                         Notification::make()
                             ->title('Quotation Uploaded & Added to List')

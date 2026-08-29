@@ -249,6 +249,28 @@ class PurchaseOrder extends Model
             && \Carbon\Carbon::parse($this->expected_delivery_date)->isPast();
     }
 
+    public function getReconciliationReport(?Quotation $quotation = null): array
+    {
+        if ($quotation) {
+            $this->setRelation('quotation', $quotation);
+        } else {
+            if ($this->relationLoaded('quotation') && $this->getRelation('quotation')?->id !== $this->quotation_id) {
+                $this->unsetRelation('quotation');
+            }
+        }
+
+        return app(\App\Services\PoQuotationReconciler::class)->reconcile($this, $quotation);
+    }
+
+    public function hasLineItemDiscrepancies(): bool
+    {
+        if (!$this->quotation_id && !$this->quotation) {
+            return false;
+        }
+
+        return $this->getReconciliationReport()['has_discrepancies'] ?? false;
+    }
+
     public function getDeliveryStatusLabelAttribute(): string
     {
         return match ($this->delivery_status) {

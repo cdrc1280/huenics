@@ -266,27 +266,14 @@ class DynamicDocumentParser
             }
         }
 
-        // 1. Document Number
+        // 1. Document Number — Multi-strategy extraction tuned per document type
         if (empty($data['document_number'])) {
-            if (preg_match('/(?:^|\n|\r)\s*(?:No\.?|NO|PO\s*No\.?|P\.O\.\s*No\.?|Quotation\s*No\.?)\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
-                $candidate = trim($m[1]);
-                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
-                    $data['document_number'] = $candidate;
-                }
-            }
-            if (empty($data['document_number']) && preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/]+?)(?=(?:\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\r|\n|$))/i', $fullText, $m)) {
-                $candidate = trim($m[1]);
-                if (preg_match('/\d/', $candidate) && !preg_match('/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL)$/i', $candidate)) {
-                    $data['document_number'] = $candidate;
-                }
-            }
+            $data['document_number'] = $this->extractDocumentNumber($fullText, $docType);
         }
 
-        // 2. Document Date
+        // 2. Document Date — Extract order/quotation date, NOT delivery date
         if (empty($data['document_date'])) {
-            if (preg_match('/(?:Date|Quotation\s*Date|PO\s*Date|Order\s*Date|Dated)\s*[:\.]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|[0-9]{4}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{1,2})/i', $fullText, $m)) {
-                $data['document_date'] = $this->fieldExtractor->postProcess($m[1], 'parse_date');
-            }
+            $data['document_date'] = $this->extractDocumentDate($fullText, $docType);
         }
 
         // 3. Customer Company
@@ -331,6 +318,125 @@ class DynamicDocumentParser
     }
 
     /**
+     * Multi-strategy document number extraction tuned per document type.
+     *
+     * Quotation documents use formats like: VAF#251000163- P rev.2, VAF-2026-081, 261001- P
+     * Purchase Orders use formats like: 4010027093 (10-digit MGS), PO-2026-0001
+     * Order Slips use formats like: S.O.# 26005
+     */
+    protected function extractDocumentNumber(string $fullText, string $docType): ?string
+    {
+        $candidates = [];
+        $rejectedKeywords = '/^(?:FORM|AGREEMENT|VENDORS|REFERENCES|PRODUCT|DESCRIPTION|QTY|UNIT|TOTAL|PURCHASE|ORDER|QUOTATION|DATE|PRICE|CUSTOMER|ADDRESS|INC|CORP)$/i';
+
+        // ─── Quotation-specific patterns ──────────────────────────────────
+        if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
+            // VAF# format: "VAF#251000163- P rev.2" or "VAF#261001 P"
+            if (preg_match('/VAF\s*[#]\s*([A-Za-z0-9\-\s\.\/]+?)(?=\s*[\-\–]\s*(?:Palanza|Project|Rev)|[\r\n]|$)/i', $fullText, $m)) {
+                $cand = trim(preg_replace('/\s+/', ' ', $m[1]));
+                if (preg_match('/\d/', $cand)) {
+                    $candidates[] = ['value' => 'VAF#' . $cand, 'priority' => 100];
+                }
+            }
+
+            // VAF- dash format: "VAF-2026-081"
+            if (preg_match('/\b(VAF\-[A-Za-z0-9\-]+)\b/i', $fullText, $m)) {
+                $cand = trim($m[1]);
+                if (preg_match('/\d/', $cand)) {
+                    $candidates[] = ['value' => $cand, 'priority' => 95];
+                }
+            }
+
+            // Labeled format: "Quotation No: 261001- P" or "Quotation No. VAF-2026-081"
+            if (preg_match('/Quotation\s*(?:No\.?|#|Number)\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/\#]+?)(?=\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\s*[\r\n]|$)/i', $fullText, $m)) {
+                $cand = trim(preg_replace('/\s+$/', '', $m[1]));
+                if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                    $candidates[] = ['value' => $cand, 'priority' => 90];
+                }
+            }
+        }
+
+        // ─── Purchase Order-specific patterns ─────────────────────────────
+        if ($docType === Document::TYPE_PURCHASE_ORDER) {
+            // Labeled PO format: "P.O. No: PO-2026-0001", "P.O. No: 4010027093", "PO# 12345"
+            if (preg_match('/\b(?:P\.?O\.?|Purchase\s*Order)\s*(?:No\.?|#|Number|[:\.\-])\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
+                $cand = trim($m[1]);
+                if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                    $candidates[] = ['value' => $cand, 'priority' => 100];
+                }
+            }
+
+            // Pure numeric PO at line start: "No. 4010027093" (MGS 10-digit format)
+            if (preg_match('/(?:^|\n|\r)\s*No\.?\s*[:\.\-]?\s*(\d{6,15})/i', $fullText, $m)) {
+                $candidates[] = ['value' => trim($m[1]), 'priority' => 95];
+            }
+        }
+
+        // ─── Order Slip / Sales Order patterns ────────────────────────────
+        if (preg_match('/(?:Order\s*Slip|S\.?O\.?)\s*[#]?\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{3,25})/i', $fullText, $m)) {
+            $cand = trim($m[1]);
+            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                $candidates[] = ['value' => $cand, 'priority' => 85];
+            }
+        }
+
+        // ─── Universal fallback patterns ──────────────────────────────────
+        // Generic "No." at line start
+        if (preg_match('/(?:^|\n|\r)\s*(?:No\.?|NO)\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
+            $cand = trim($m[1]);
+            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                $candidates[] = ['value' => $cand, 'priority' => 70];
+            }
+        }
+
+        // Generic labeled document number (broadest)
+        if (preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/\#]+?)(?=\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\s*[\r\n]|$)/i', $fullText, $m)) {
+            $cand = trim(preg_replace('/\s+$/', '', $m[1]));
+            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                $candidates[] = ['value' => $cand, 'priority' => 60];
+            }
+        }
+
+        if (empty($candidates)) {
+            return null;
+        }
+
+        // Sort by priority descending, pick highest
+        usort($candidates, fn($a, $b) => $b['priority'] <=> $a['priority']);
+
+        // Clean the winning candidate: trim trailing/leading whitespace, trailing periods, trailing dashes
+        $winner = trim($candidates[0]['value']);
+        $winner = rtrim($winner, '.-: ');
+
+        return $winner;
+    }
+
+    /**
+     * Extract the document date (order date / quotation date), carefully avoiding delivery dates.
+     */
+    protected function extractDocumentDate(string $fullText, string $docType): ?string
+    {
+        $datePattern = '([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|[0-9]{4}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{1,2})';
+
+        // Priority 1: Explicit order/quotation date labels (excludes "Delivery Date")
+        if (preg_match('/(?:Quotation\s*Date|PO\s*Date|Order\s*Date)\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+            return $this->fieldExtractor->postProcess($m[1], 'parse_date');
+        }
+
+        // Priority 2: Generic "Date:" label — but NOT if preceded by "Delivery" or "Expected"
+        if (preg_match('/(?<!Delivery\s)(?<!Expected\s)(?<!Expiry\s)(?<!Warranty\s)\bDate\b\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+            return $this->fieldExtractor->postProcess($m[1], 'parse_date');
+        }
+
+        // Priority 3: "Dated" label
+        if (preg_match('/\bDated\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+            return $this->fieldExtractor->postProcess($m[1], 'parse_date');
+        }
+
+        return null;
+    }
+
+    /**
      * Extract line items from table structure supporting Quotation & PO formats.
      */
     protected function extractLineItems(?VendorDocumentLayout $layout, string $fullText, array $lines, Document $document): array
@@ -341,14 +447,16 @@ class DynamicDocumentParser
 
         // ─── Strategy A: Purchase Order Row Scanner ───────────────────────
         // Format: [Item No.] [Material Code?] [Qty] [UoM] [Description] [Unit Cost] [Total Cost]
-        $poPattern = '/(?:^|\n)\s*(?:(?<itemNo>\d{1,4})\s+)?(?:(?<materialCode>[A-Z0-9\-\_]{3,15})\s+)?(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>PC|PCS|SET|SETS|LOT|UNIT|UNITS|BOX|BOXES|ROLL|ROLLS|M|MTR|METERS?|METER|PACK|PACKS|PAIR|PAIRS|LENGTH|LENGTHS|KG|LTR|EA)\s+(?<desc>[\s\S]+?)\s+(?:₱|P|PHP)?\s*(?<unitCost>[\d,]+\.\d{2})\s+(?:₱|P|PHP)?\s*(?<totalCost>[\d,]+\.\d{2})(?=\s*(?:\n|\r|$|\*{4}|SUBTOTAL|Item\s*No|Vendor:))/im';
+        // This strategy is strictly for Purchase Orders where description follows Qty & Unit.
+        if ($document->document_type === Document::TYPE_PURCHASE_ORDER) {
+            $poPattern = '/(?:^|\n)\s*(?:(?<itemNo>\d{1,4})\s+)?(?:(?<materialCode>[A-Z0-9\-\_]{3,15})\s+)?(?<qty>\d+(?:[\,\.]\d+)?)\s+(?<unit>PC|PCS|SET|SETS|LOT|UNIT|UNITS|BOX|BOXES|ROLL|ROLLS|M|MTR|METERS?|METER|PACK|PACKS|PAIR|PAIRS|LENGTH|LENGTHS|KG|LTR|EA)\s+(?<desc>[\s\S]+?)\s+(?:₱|P|PHP)?\s*(?<unitCost>[\d,]+\.\d{2})\s+(?:₱|P|PHP)?\s*(?<totalCost>[\d,]+\.\d{2})(?=\s*(?:\n|\r|$|\*{4}|SUBTOTAL|Item\s*No|Vendor:))/im';
 
-        if (preg_match_all($poPattern, $fullText, $poMatches, PREG_SET_ORDER) && count($poMatches) > 0) {
-            foreach ($poMatches as $m) {
-                $rawDesc = trim(preg_replace('/\s+/', ' ', $m['desc']));
-                $rawDesc = preg_replace('/^(?:(?:Item\s*No|Material\s*Code|Qty|UoM|Material\s*Description|Unit\s*Cost|Total\s*Cost|White)\s*)+/i', '', $rawDesc);
-                $rawDesc = trim($rawDesc);
-                if (empty($rawDesc)) continue;
+            if (preg_match_all($poPattern, $fullText, $poMatches, PREG_SET_ORDER) && count($poMatches) > 0) {
+                foreach ($poMatches as $m) {
+                    $rawDesc = trim(preg_replace('/\s+/', ' ', $m['desc']));
+                    $rawDesc = preg_replace('/^(?:(?:Item\s*No|Material\s*Code|Qty|UoM|Material\s*Description|Unit\s*Cost|Total\s*Cost|White)\s*)+/i', '', $rawDesc);
+                    $rawDesc = trim($rawDesc);
+                    if (empty($rawDesc) || preg_match('/^[\d\,\.\s\-\–\—₱P]+$/', $rawDesc)) continue;
 
                 $itemNo = !empty($m['itemNo']) ? (int) $m['itemNo'] : null;
                 $matCode = !empty($m['materialCode']) ? trim($m['materialCode']) : null;
@@ -381,6 +489,7 @@ class DynamicDocumentParser
                 ];
             }
         }
+    }
 
         // ─── Strategy B: Quotation Row Scanner ─────────────────────────────
         // Format: [Item Code] [Description] [Qty] [Unit] [UnitPrice] [DiscountedPrice] [Total]
@@ -630,7 +739,7 @@ class DynamicDocumentParser
     protected function matchProductByDescription(string $description, ?int $vendorId = null, ?string $itemCode = null, ?float $unitPrice = null, ?string $unit = null): ?int
     {
         $cleanName = trim($description);
-        if (empty($cleanName)) {
+        if (empty($cleanName) || preg_match('/^[\d\,\.\s\-\–\—₱P]+$/', $cleanName)) {
             return null;
         }
 

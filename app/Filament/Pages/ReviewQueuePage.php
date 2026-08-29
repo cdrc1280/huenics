@@ -95,6 +95,18 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public ?string $customerSignatureName = '';
     public ?string $customerSignedAt = '';
 
+    // Structured Terms & Conditions Checkboxes (Matching authentic Huenics Quotation / VAF form)
+    public string $tcValidity = '15 days';
+    public bool $tcStock = false;
+    public bool $tcNonStock = true;
+    public bool $tcDelivery4To7 = false;
+    public bool $tcDelivery10To15 = false;
+    public bool $tcDelivery45To60 = true;
+    public bool $tcPaymentCodDp = true;
+    public bool $tcPaymentApproved = false;
+    public bool $tcRemarksOfficialPo = false;
+    public bool $tcRemarksNonReturnable = true;
+
     // Real-Time Synchronized Preview State
     public string $previewMode = 'live'; // 'live' or 'pdf'
     public array $originalState = [];
@@ -103,6 +115,65 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public function setPreviewMode(string $mode): void
     {
         $this->previewMode = $mode;
+    }
+
+    public function updated($propertyName): void
+    {
+        if (str_starts_with((string) $propertyName, 'tc')) {
+            $this->syncTermsData();
+        }
+        if ($propertyName === 'isOfficialPo') {
+            $this->tcRemarksOfficialPo = (bool) $this->isOfficialPo;
+            $this->syncTermsData();
+        }
+    }
+
+    public function syncTermsData(): void
+    {
+        // 1. Sync Official PO flag with remarks
+        $this->isOfficialPo = (bool) $this->tcRemarksOfficialPo;
+
+        // 2. Format Payment Terms string
+        $payments = [];
+        if ($this->tcPaymentCodDp) {
+            $payments[] = 'COD / 50% DP ; 50% PDC 30 Days';
+        }
+        if ($this->tcPaymentApproved) {
+            $payments[] = 'Approved Terms';
+        }
+        if (!empty($payments)) {
+            $this->paymentTerms = implode(', ', $payments);
+        }
+
+        // 3. Format Delivery Terms string
+        $deliveries = [];
+        if ($this->tcDelivery4To7) {
+            $deliveries[] = '4-7 days';
+        }
+        if ($this->tcDelivery10To15) {
+            $deliveries[] = '10-15 days';
+        }
+        if ($this->tcDelivery45To60) {
+            $deliveries[] = '45-60 days';
+        }
+        if (!empty($deliveries)) {
+            $this->deliveryTerms = implode(', ', $deliveries);
+        }
+
+        // 4. Structured JSON data for persistence
+        $structured = [
+            'validity' => $this->tcValidity,
+            'stock' => $this->tcStock,
+            'non_stock' => $this->tcNonStock,
+            'delivery_4_7' => $this->tcDelivery4To7,
+            'delivery_10_15' => $this->tcDelivery10To15,
+            'delivery_45_60' => $this->tcDelivery45To60,
+            'payment_cod_dp' => $this->tcPaymentCodDp,
+            'payment_approved' => $this->tcPaymentApproved,
+            'remarks_official_po' => $this->tcRemarksOfficialPo,
+            'remarks_non_returnable' => $this->tcRemarksNonReturnable,
+        ];
+        $this->termsAndConditions = json_encode($structured);
     }
 
     public function isFieldModified(string $field): bool
@@ -167,6 +238,16 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             'phoneNo' => $this->phoneNo,
             'items' => $this->editableItems,
             'mod' => $mod,
+            'tcValidity' => $this->tcValidity,
+            'tcStock' => $this->tcStock,
+            'tcNonStock' => $this->tcNonStock,
+            'tcDelivery4To7' => $this->tcDelivery4To7,
+            'tcDelivery10To15' => $this->tcDelivery10To15,
+            'tcDelivery45To60' => $this->tcDelivery45To60,
+            'tcPaymentCodDp' => $this->tcPaymentCodDp,
+            'tcPaymentApproved' => $this->tcPaymentApproved,
+            'tcRemarksOfficialPo' => $this->tcRemarksOfficialPo,
+            'tcRemarksNonReturnable' => $this->tcRemarksNonReturnable,
         ];
 
         $encoded = base64_encode(json_encode($payload));
@@ -178,9 +259,9 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public ?Document $crossRefPO = null;
     public ?Transaction $existingTransaction = null;
 
-    public function mount(): void
+    public function mount(?int $document_id = null): void
     {
-        $docId = request()->query('document_id');
+        $docId = $document_id ?: request()->query('document_id');
 
         if ($docId) {
             $this->loadDocument((int) $docId);
@@ -467,6 +548,57 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $this->customerSignedAt = '';
         }
 
+        // Parse Structured Terms & Conditions Checkboxes
+        $rawTc = (string) ($doc->terms_and_conditions ?? '');
+        $tcJson = json_decode($rawTc, true);
+
+        if (is_array($tcJson) && (isset($tcJson['stock']) || isset($tcJson['non_stock']) || isset($tcJson['validity']))) {
+            $this->tcValidity = $tcJson['validity'] ?? '15 days';
+            $this->tcStock = (bool) ($tcJson['stock'] ?? false);
+            $this->tcNonStock = (bool) ($tcJson['non_stock'] ?? true);
+            $this->tcDelivery4To7 = (bool) ($tcJson['delivery_4_7'] ?? false);
+            $this->tcDelivery10To15 = (bool) ($tcJson['delivery_10_15'] ?? false);
+            $this->tcDelivery45To60 = (bool) ($tcJson['delivery_45_60'] ?? true);
+            $this->tcPaymentCodDp = (bool) ($tcJson['payment_cod_dp'] ?? true);
+            $this->tcPaymentApproved = (bool) ($tcJson['payment_approved'] ?? false);
+            $this->tcRemarksOfficialPo = (bool) ($tcJson['remarks_official_po'] ?? false);
+            $this->tcRemarksNonReturnable = (bool) ($tcJson['remarks_non_returnable'] ?? true);
+        } else {
+            $combinedText = ($doc->raw_extracted_text ?? '') . ' ' . $rawTc;
+
+            // Validity
+            if (preg_match('/Validity\s*[:\.]?\s*(\d+\s*days)/i', $combinedText, $m)) {
+                $this->tcValidity = trim($m[1]);
+            } else {
+                $this->tcValidity = '15 days';
+            }
+
+            // Stock Availability
+            $this->tcStock = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*Stock\b|Stock\s*[✔✓v\[x\]■])/i', $combinedText);
+            $this->tcNonStock = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*Non-Stock|Non-Stock.*?Special.*?Items)/i', $combinedText) || !$this->tcStock);
+
+            // Terms of Delivery
+            $this->tcDelivery4To7 = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*4-7\s*days|4-7\s*days\s*[✔✓v\[x\]■])/i', $combinedText);
+            $this->tcDelivery10To15 = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*10-15\s*days|10-15\s*days\s*[✔✓v\[x\]■])/i', $combinedText);
+            $this->tcDelivery45To60 = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*(?:45-60|30-45)\s*days|(?:45-60|30-45)\s*days\s*[✔✓v\[x\]■])/i', $combinedText) || (!$this->tcDelivery4To7 && !$this->tcDelivery10To15));
+
+            // Payment Terms
+            $this->tcPaymentCodDp = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*(?:COD|50\%\s*DP)|(?:COD|50\%\s*DP).*?PDC)/i', $combinedText) || true);
+            $this->tcPaymentApproved = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*Approved\s*Terms|Approved\s*Terms\s*[✔✓v\[x\]■])/i', $combinedText);
+
+            // Remarks
+            $this->tcRemarksOfficialPo = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*Serve\s*as\s*(?:an\s*)?Official\s*P\.?O\.?|Serve\s*as\s*(?:an\s*)?Official\s*P\.?O\.?\s*[✔✓v\[x\]■])/i', $combinedText) || $this->isOfficialPo);
+            $this->tcRemarksNonReturnable = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*Non-\s*Returnable|Non-\s*Returnable.*?[✔✓v\[x\]■]|Non-\s*Cancealable)/i', $combinedText) || true);
+        }
+
+        if ($this->isOfficialPo) {
+            $this->tcRemarksOfficialPo = true;
+        } elseif ($this->tcRemarksOfficialPo) {
+            $this->isOfficialPo = true;
+        }
+
+        $this->syncTermsData();
+
         $totals = $doc->totals;
         $this->printedSubtotal = $totals ? (float) $totals->printed_subtotal : null;
         $this->printedVat = $totals ? (float) $totals->printed_vat : null;
@@ -577,6 +709,41 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
 
         return false;
+    }
+
+    public function getIsUnlinkedNormalPoProperty(): bool
+    {
+        if (!$this->currentDocument || $this->currentDocument->document_type !== \App\Models\Document::TYPE_PURCHASE_ORDER) {
+            return false;
+        }
+
+        $po = \App\Models\PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
+        if ($po) {
+            return !$po->is_conforme_po && !$po->quotation_id;
+        }
+
+        return false;
+    }
+
+    public function getReconciliationProperty(): ?array
+    {
+        if (!$this->currentDocument || $this->currentDocument->document_type !== \App\Models\Document::TYPE_PURCHASE_ORDER) {
+            return null;
+        }
+
+        $po = \App\Models\PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
+        if ($po && $po->quotation_id) {
+            $po->unsetRelation('quotation');
+            $po->unsetRelation('lineItems');
+            return $po->getReconciliationReport();
+        }
+
+        return null;
+    }
+
+    public function getIsPoWithDiscrepancyProperty(): bool
+    {
+        return (bool) ($this->reconciliation['has_discrepancies'] ?? false);
     }
 
     // Undo / Redo History Stacks
@@ -936,6 +1103,26 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
 
         if (!$this->currentDocument) {
+            return;
+        }
+
+        if ($this->isUnlinkedNormalPo) {
+            Notification::make()
+                ->title('Quotation Link Required')
+                ->body('This is a normal purchase order and must be linked to an approved quotation before it can be verified and committed.')
+                ->danger()
+                ->persistent()
+                ->send();
+            return;
+        }
+
+        if ($this->isPoWithDiscrepancy) {
+            Notification::make()
+                ->title('Approval Blocked: Line Item Discrepancies')
+                ->body('This purchase order has line item or pricing discrepancies with its linked quotation. Discrepancies must be resolved before verification and approval.')
+                ->danger()
+                ->persistent()
+                ->send();
             return;
         }
 

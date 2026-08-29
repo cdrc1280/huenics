@@ -48,7 +48,7 @@ class ListPurchaseOrders extends ListRecords
                     Toggle::make('is_conforme_po')
                         ->label('Conforme PO (Exempt from Quotation Matching)')
                         ->helperText('Check if this is a signed conforme purchase order that does not require a matching quotation.')
-                        ->visible(fn () => auth()->user()?->is_owner === true)
+                        ->default(false)
                         ->live(),
 
                     Select::make('quotation_id')
@@ -71,9 +71,13 @@ class ListPurchaseOrders extends ListRecords
                 ])
                 ->action(function (array $data) {
                     try {
+                        $rawPath = $data['disk_path'] ?? '';
+                        $diskPath = is_array($rawPath) ? (string) reset($rawPath) : (string) $rawPath;
+                        $originalFilename = $data['original_filename'] ?? basename($diskPath);
+
                         $document = app(IngestDocumentAction::class)->execute(
-                            diskPath: $data['disk_path'],
-                            originalFilename: $data['original_filename'] ?? basename($data['disk_path']),
+                            diskPath: $diskPath,
+                            originalFilename: $originalFilename,
                             documentType: Document::TYPE_PURCHASE_ORDER,
                             vendorId: null,
                             projectId: null,
@@ -81,6 +85,17 @@ class ListPurchaseOrders extends ListRecords
                             quotationId: !empty($data['quotation_id']) ? (int) $data['quotation_id'] : null,
                             isConformePo: (bool) ($data['is_conforme_po'] ?? false)
                         );
+
+                        if (!empty($document->is_duplicate)) {
+                            $docRef = $document->document_number ? " (Reference: {$document->document_number})" : '';
+                            Notification::make()
+                                ->title('Duplicate Purchase Order Detected')
+                                ->body("This file has already been uploaded previously as '{$document->original_filename}'{$docRef}. A duplicate document was not created.")
+                                ->warning()
+                                ->duration(8000)
+                                ->send();
+                            return;
+                        }
 
                         Notification::make()
                             ->title('Purchase Order Uploaded & Added to List')

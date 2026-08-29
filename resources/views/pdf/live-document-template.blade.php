@@ -257,28 +257,28 @@
             <table style="width: 100%; border-collapse: collapse; font-size: 7px;">
                 <tr>
                     <td style="width: 100px; font-weight: bold; padding: 1px 3px;">Validity</td>
-                    <td style="padding: 1px 3px;">15 days</td>
+                    <td style="padding: 1px 3px;">{{ !empty($tcValidity) ? $tcValidity : '15 days' }}</td>
                     <td></td>
                 </tr>
                 <tr>
                     <td style="font-weight: bold; padding: 1px 3px;">Stock Availability</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">&nbsp;</span> Stock</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">✔</span> Non-Stock / Special Items/Indent Order</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">{!! !empty($tcStock) ? '✔' : '&nbsp;' !!}</span> Stock</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">{!! isset($tcNonStock) ? (!empty($tcNonStock) ? '✔' : '&nbsp;') : '✔' !!}</span> Non-Stock / Special Items/Indent Order</td>
                 </tr>
                 <tr>
                     <td style="font-weight: bold; padding: 1px 3px;">Terms Of Delivery</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">&nbsp;</span> 4-7 days</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">&nbsp;</span> 10-15 days &nbsp;&nbsp;&nbsp; <span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">✔</span> {{ $hasClientRef ? '30-45days' : '45-60 days' }}</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">{!! !empty($tcDelivery4To7) ? '✔' : '&nbsp;' !!}</span> 4-7 days</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">{!! !empty($tcDelivery10To15) ? '✔' : '&nbsp;' !!}</span> 10-15 days &nbsp;&nbsp;&nbsp; <span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">{!! isset($tcDelivery45To60) ? (!empty($tcDelivery45To60) ? '✔' : '&nbsp;') : '✔' !!}</span> {{ $hasClientRef ? '30-45days' : '45-60 days' }}</td>
                 </tr>
                 <tr>
                     <td style="font-weight: bold; padding: 1px 3px;">Payment Terms</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">✔</span> COD / 50% DP ; 50% PDC 30 Days</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">&nbsp;</span> Approved Terms</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">{!! isset($tcPaymentCodDp) ? (!empty($tcPaymentCodDp) ? '✔' : '&nbsp;') : '✔' !!}</span> COD / 50% DP ; 50% PDC 30 Days</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">{!! !empty($tcPaymentApproved) ? '✔' : '&nbsp;' !!}</span> Approved Terms</td>
                 </tr>
                 <tr>
                     <td style="font-weight: bold; padding: 1px 3px;">Remarks</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">&nbsp;</span> Serve as an Official P.O.</td>
-                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">✔</span> Non- Returnable/ Non- Cancealable</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 2px; display: inline-block;">{!! !empty($tcRemarksOfficialPo) ? '✔' : '&nbsp;' !!}</span> Serve as an Official P.O.</td>
+                    <td style="padding: 1px 3px;"><span style="border: 1px solid #000; padding: 0 1.5px; display: inline-block; font-weight: bold;">{!! isset($tcRemarksNonReturnable) ? (!empty($tcRemarksNonReturnable) ? '✔' : '&nbsp;') : '✔' !!}</span> Non- Returnable/ Non- Cancealable</td>
                 </tr>
             </table>
         </div>

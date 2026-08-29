@@ -86,6 +86,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         }
 
         if (empty($payload)) {
+            $tcJson = json_decode((string) ($document->terms_and_conditions ?? ''), true);
             $payload = [
                 'documentNumber' => $document->document_number,
                 'documentDate' => $document->document_date ? $document->document_date->format('Y-m-d') : null,
@@ -96,6 +97,16 @@ Route::middleware(['web', 'auth'])->group(function () {
                 'phoneNo' => $document->phone_no ?: '0906-144-2553',
                 'items' => $document->lineItems->toArray(),
                 'mod' => [],
+                'tcValidity' => $tcJson['validity'] ?? '15 days',
+                'tcStock' => $tcJson['stock'] ?? false,
+                'tcNonStock' => $tcJson['non_stock'] ?? true,
+                'tcDelivery4To7' => $tcJson['delivery_4_7'] ?? false,
+                'tcDelivery10To15' => $tcJson['delivery_10_15'] ?? false,
+                'tcDelivery45To60' => $tcJson['delivery_45_60'] ?? true,
+                'tcPaymentCodDp' => $tcJson['payment_cod_dp'] ?? true,
+                'tcPaymentApproved' => $tcJson['payment_approved'] ?? false,
+                'tcRemarksOfficialPo' => $tcJson['remarks_official_po'] ?? false,
+                'tcRemarksNonReturnable' => $tcJson['remarks_non_returnable'] ?? true,
             ];
         }
 

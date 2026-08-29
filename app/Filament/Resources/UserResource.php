@@ -79,7 +79,7 @@ class UserResource extends Resource
 
                         Forms\Components\Select::make('role')
                             ->label('Assigned System Role')
-                            ->options(User::getAvailableRoles())
+                            ->options(fn() => User::getAvailableRoles())
                             ->required()
                             ->default(User::ROLE_OPERATIONS_MANAGER)
                             ->helperText('Defines permissions across ingestion, review queue, and financial views.'),
@@ -109,12 +109,12 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state, User $record): string => $record->roleRelation?->name ?? match ($state) {
                         User::ROLE_ADMIN => 'Admin',
                         User::ROLE_OPERATIONS_MANAGER => 'Operations Manager',
                         User::ROLE_SALES_EXECUTIVE => 'Sales Executive',
                         User::ROLE_CEO => 'CEO / Executive',
-                        default => $state,
+                        default => ucwords(str_replace('_', ' ', $state)),
                     })
                     ->color(fn(string $state): string => match ($state) {
                         User::ROLE_ADMIN => 'primary',
@@ -135,7 +135,7 @@ class UserResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
-                    ->options(User::getAvailableRoles()),
+                    ->options(fn() => User::getAvailableRoles()),
                 TrashedFilter::make(),
             ])
             ->actions([

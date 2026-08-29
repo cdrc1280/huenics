@@ -111,7 +111,14 @@ class DocumentResource extends Resource
                                             'Vendors Agreement Form (Quotation)',
                                     ])
                                     ->default(Document::TYPE_PURCHASE_ORDER)
-                                    ->required(),
+                                    ->required()
+                                    ->live(),
+
+                                Forms\Components\Toggle::make('is_conforme_po')
+                                    ->label('Conforme PO (No Quotation Required)')
+                                    ->helperText('Check if this is a signed conforme purchase order that does not require a matching quotation.')
+                                    ->visible(fn($get) => $get('document_type') === Document::TYPE_PURCHASE_ORDER)
+                                    ->default(false),
                             ]),
                     ])
                     ->columnSpanFull(),

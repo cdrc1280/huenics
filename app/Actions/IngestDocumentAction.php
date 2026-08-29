@@ -91,24 +91,14 @@ class IngestDocumentAction
 
         $existing = Document::where('file_hash', $fileHash)->first();
         if ($existing) {
-            $existing->update([
-                'disk_path' => $diskPath,
-                'original_filename' => $originalFilename ?: basename($diskPath),
-                'original_mime_type' => $mimeType,
-                'document_type' => $documentType ?: $existing->document_type,
-            ]);
-            $parseResult = $this->parser->parseDocument($existing);
-            $existing->update([
-                'terms_and_conditions' => $parseResult['terms_and_conditions'] ?? null,
-                'payment_terms' => $parseResult['payment_terms'] ?? null,
-                'delivery_terms' => $parseResult['delivery_terms'] ?? null,
-            ]);
-            $this->reconciler->execute($existing);
+            $existing->is_duplicate = true;
+            $existing->wasRecentlyCreated = false;
 
-            try {
-                $this->syncInitialResourceRecord($existing, $userId ?: (auth()->id() ?: 1), $quotationId);
-            } catch (\Throwable $e) {
-                Log::warning("Initial resource record sync notice for existing Document #{$existing->id}: " . $e->getMessage());
+            // Delete duplicate physical file from temporary upload storage if distinct
+            if ($diskPath && $existing->disk_path && $diskPath !== $existing->disk_path) {
+                try {
+                    \Illuminate\Support\Facades\Storage::disk('local')->delete($diskPath);
+                } catch (\Throwable) {}
             }
 
             return $existing;
@@ -137,6 +127,23 @@ class IngestDocumentAction
             $this->reconciler->execute($document);
         } catch (\Throwable $e) {
             Log::warning("Dynamic parsing notice for Document #{$document->id}: " . $e->getMessage());
+        }
+
+        // Check if a document with this exact document number already exists for this document type
+        if (!empty($document->document_number)) {
+            $duplicateNumberDoc = Document::where('id', '!=', $document->id)
+                ->where('document_type', $document->document_type)
+                ->where('document_number', $document->document_number)
+                ->first();
+
+            if ($duplicateNumberDoc) {
+                $document->is_duplicate = true;
+                $document->duplicate_of_id = $duplicateNumberDoc->id;
+            } else {
+                $document->is_duplicate = false;
+            }
+        } else {
+            $document->is_duplicate = false;
         }
 
         // Auto-create corresponding pending Quotation or PO record for immediate table display
@@ -248,7 +255,30 @@ class IngestDocumentAction
         $orderDate = $document->document_date ?: now()->toDateString();
         $orderAmount = (float) ($document->totals?->printed_total ?: ($document->totals?->computed_grand_total ?: 0));
 
-        $isConforme = $isConformePo || preg_match('/CONFORMED\s*BY:/i', (string) $document->raw_extracted_text) || preg_match('/RECOMMENDED\s*BY:/i', (string) $document->raw_extracted_text);
+        $rawText = (string) $document->raw_extracted_text;
+
+        // Determine whether this PO is a Conforme PO or a Normal PO:
+        // 1. Explicit user selection during upload takes highest priority.
+        $isConforme = $isConformePo;
+
+        // 2. If not explicitly flagged by the user, detect ONLY unambiguous Conforme markers:
+        if (!$isConforme) {
+            // Check if the document header explicitly declares it as a Conforme PO
+            $hasConformeTitle = (bool) preg_match('/\b(?:CONFORME\s+PURCHASE\s+ORDER|PURCHASE\s+ORDER\s+CONFORME|CONFORME\s+P\.?O\.?)\b/i', $rawText);
+
+            // Check if it is a Huenics Vendors Agreement Form that serves as an official PO
+            $isVendorsAgreementPo = (bool) preg_match('/(?:VENDORS\s+AGREEMENT|QUOTATION)\b/i', $rawText)
+                && (bool) preg_match('/(?:✔|☑|\[x\]|✓)\s*Serve\s*as\s*an\s*Official\s*P\.?O\.?/i', $rawText);
+
+            // An official client PO (e.g. MGS Construction) that has "PURCHASE ORDER" and lists Huenics as vendor
+            // is ALWAYS a normal PO, even if it has signatory lines like "Recommended By:" or "Conformed By:".
+            $isClientPurchaseOrder = (bool) preg_match('/\bPURCHASE\s+ORDER\b/i', $rawText)
+                && (bool) preg_match('/\b(?:Vendor|Supplier)\s*:\s*.*HUENICS/i', $rawText);
+
+            if (($hasConformeTitle || $isVendorsAgreementPo) && !$isClientPurchaseOrder) {
+                $isConforme = true;
+            }
+        }
 
         $po = PurchaseOrder::where('document_id', $document->id)->first();
         if (!$po) {

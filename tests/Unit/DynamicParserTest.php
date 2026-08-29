@@ -216,4 +216,226 @@ OCR;
         $this->assertEquals(101785.69, (float) $doc->totals->printed_vat);
         $this->assertEquals(950000.03, (float) $doc->totals->printed_total);
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Document Number Extraction Accuracy Tests
+    // ═══════════════════════════════════════════════════════════════════
+
+    public function test_quotation_number_extraction_vaf_dash_format(): void
+    {
+        $text = <<<OCR
+HUENICS INDUSTRIAL SUPPLY
+VENDORS AGREEMENT FORM (QUOTATION)
+Quotation No: VAF-2026-081
+Date: August 5, 2026
+Customer: MGS CONSTRUCTION
+Item Code Product Description Qty Unit Unit Price Discounted Price Total
+HISI-MTL-6W Magnetic Tracklight 6w 3000k 158 pcs 2,100.00 1,890.00 298,620.00
+Total Amount: 298,620.00
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_vaf_dash_' . uniqid(),
+            'original_filename' => 'VAF-2026-081.pdf',
+            'disk_path' => 'documents/uploads/VAF-2026-081.pdf',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        $this->assertEquals('VAF-2026-081', $doc->document_number);
+    }
+
+    public function test_quotation_number_extraction_labeled_format(): void
+    {
+        $text = <<<OCR
+HUENICS INDUSTRIAL SUPPLY
+VENDORS AGREEMENT FORM (QUOTATION)
+Quotation No. 261001- P
+Date: January 5, 2026
+Company: MGS CONSTRUCTION, INC.
+Item Code Product Description Qty Unit Unit Price Discounted Price Total
+HISI-JF-2240-7W Led Downlight Citizen Japan 7w 500 pcs 1,730.94 1,557.85 778,925.00
+Total Amount: 778,925.00
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_labeled_qtn_' . uniqid(),
+            'original_filename' => 'VAF_261001_P.pdf',
+            'disk_path' => 'documents/uploads/VAF_261001_P.pdf',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        $this->assertEquals('261001- P', $doc->document_number);
+    }
+
+    public function test_po_number_extraction_mgs_10_digit(): void
+    {
+        $text = <<<OCR
+No. 4010027093
+MGS CONSTRUCTION, INC.
+2f Starmall Annex, Alabang-Zapote Rd.
+VAT.Reg.TIN:005-129-052-00000
+PURCHASE ORDER
+10 500 PC 7W LED COB Down Light, 3500K, White Rim 1,730.94 865,470.00
+SUBTOTAL 865,470.00 PHP
+TOTAL 865,470.00 PHP
+Date: 01/08/2026 Delivery Date: 01/26/2026
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_mgs_po_' . uniqid(),
+            'original_filename' => 'PO_4010027093.pdf',
+            'disk_path' => 'documents/uploads/PO_4010027093.pdf',
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        $this->assertEquals('4010027093', $doc->document_number);
+    }
+
+    public function test_po_number_extraction_with_po_label(): void
+    {
+        $text = <<<OCR
+ACME BUILDERS CORPORATION
+PURCHASE ORDER
+P.O. No: PO-2026-0045
+Date: August 15, 2026
+10 100 PCS LED Panel Light 40W 2,500.00 250,000.00
+SUBTOTAL 250,000.00 PHP
+TOTAL 250,000.00 PHP
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_po_label_' . uniqid(),
+            'original_filename' => 'PO-2026-0045.pdf',
+            'disk_path' => 'documents/uploads/PO-2026-0045.pdf',
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        $this->assertEquals('PO-2026-0045', $doc->document_number);
+    }
+
+    public function test_order_slip_number_extraction(): void
+    {
+        $text = <<<OCR
+HUENICS INDUSTRIAL SUPPLY
+ORDER SLIP
+S.O.# 26005
+Date: August 2, 2026
+Deliver To: 3030 Palanza Tower
+10 50 PCS LED Driver 100W 2,825.59 141,279.50
+TOTAL 141,279.50 PHP
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_order_slip_' . uniqid(),
+            'original_filename' => 'OS_26005.pdf',
+            'disk_path' => 'documents/uploads/OS_26005.pdf',
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        $this->assertEquals('26005', $doc->document_number);
+    }
+
+    public function test_date_extraction_avoids_delivery_date(): void
+    {
+        $text = <<<OCR
+No. 4010027093
+MGS CONSTRUCTION, INC.
+PURCHASE ORDER
+10 500 PC LED Down Light 1,730.94 865,470.00
+TOTAL 865,470.00 PHP
+Date: 01/08/2026 Delivery Date: 01/26/2026
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_date_test_' . uniqid(),
+            'original_filename' => 'PO_date_test.pdf',
+            'disk_path' => 'documents/uploads/PO_date_test.pdf',
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        // Should extract order date (01/08/2026), NOT delivery date (01/26/2026)
+        $this->assertNotNull($doc->document_date);
+        $this->assertEquals('2026-01-08', $doc->document_date->format('Y-m-d'));
+    }
+
+    public function test_quotation_number_extraction_vaf_hash_format(): void
+    {
+        $text = <<<OCR
+HUENICS INDUSTRIAL SUPPLY
+VENDORS AGREEMENT FORM (QUOTATION)
+VAF#251000163- P rev.2 - Palanza Tower - Magnetic Tracklights
+Date: July 15, 2026
+Company: MGS CONSTRUCTION, INC.
+Item Code Product Description Qty Unit Unit Price Discounted Price Total
+HISI-MTL-6W Magnetic Tracklight 6w 3000k 158 pcs 2,100.00 1,890.00 298,620.00
+90° L connector 56 pcs 1,100.00 990.00 55,440.00
+Total Amount: 354,060.00 Negotiated Amount: 350,000.00
+OCR;
+
+        $doc = Document::create([
+            'uploaded_by' => $this->user->id,
+            'file_hash' => 'hash_vaf_hash_' . uniqid(),
+            'original_filename' => 'VAF_251000163.pdf',
+            'disk_path' => 'documents/uploads/VAF_251000163.pdf',
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'raw_extracted_text' => $text,
+        ]);
+
+        $this->parser->parseDocument($doc);
+
+        // Should extract the VAF# number with prefix preserved
+        $this->assertNotNull($doc->document_number);
+        $this->assertStringContainsString('251000163', $doc->document_number);
+    }
+
+    public function test_field_extractor_extract_by_rules_works(): void
+    {
+        $extractor = new FieldExtractor();
+        $text = "PURCHASE ORDER\nP.O. No: PO-2026-0045\nDate: August 15, 2026";
+        $lines = explode("\n", $text);
+
+        // Test regex_header strategy
+        $result = $extractor->extractByRules($text, $lines, [
+            'extraction_strategy' => 'regex_header',
+            'regex_pattern' => '/P\.O\.\s*No:\s*([A-Za-z0-9\-]+)/i',
+            'post_process' => 'trim',
+        ]);
+        $this->assertEquals('PO-2026-0045', $result);
+
+        // Test with string shorthand (simple regex)
+        $result2 = $extractor->extractByRules($text, $lines, '/P\.O\.\s*No:\s*([A-Za-z0-9\-]+)/i');
+        $this->assertEquals('PO-2026-0045', $result2);
+
+        // Test returns null on no match
+        $result3 = $extractor->extractByRules($text, $lines, [
+            'extraction_strategy' => 'regex_header',
+            'regex_pattern' => '/NONEXISTENT:\s*(\w+)/i',
+            'post_process' => 'trim',
+        ]);
+        $this->assertNull($result3);
+    }
 }
