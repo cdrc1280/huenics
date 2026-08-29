@@ -41,5 +41,22 @@ class AppServiceProvider extends ServiceProvider
         // Register Authentication Activity Listeners
         Event::listen(Login::class, [LogAuthenticationActivity::class, 'handleLogin']);
         Event::listen(Logout::class, [LogAuthenticationActivity::class, 'handleLogout']);
+
+        // Ensure Filament frontend notifications are dispatched directly to the browser
+        // without relying on multi-request session round-trips (crucial for serverless Vercel)
+        if (class_exists(\Livewire\Livewire::class)) {
+            \Livewire\on('dehydrate', function (\Livewire\Component $component): void {
+                if (! \Livewire\Livewire::isLivewireRequest()) {
+                    return;
+                }
+
+                $notifications = session()->get('filament.notifications') ?? [];
+                if (!empty($notifications)) {
+                    foreach ($notifications as $notification) {
+                        $component->dispatch('notificationSent', notification: $notification);
+                    }
+                }
+            });
+        }
     }
 }

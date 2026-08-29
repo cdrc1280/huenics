@@ -42,6 +42,8 @@ class AdminPanelProvider extends PanelProvider
                 'Master Data & Registry',
                 'System Administration',
             ])
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->renderHook(
                 'panels::head.end',
                 fn (): string => Blade::render('
