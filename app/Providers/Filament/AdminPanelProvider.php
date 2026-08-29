@@ -42,7 +42,10 @@ class AdminPanelProvider extends PanelProvider
                 'Master Data & Registry',
                 'System Administration',
             ])
-            ->databaseNotifications(fn () => rescue(fn () => \Illuminate\Support\Facades\Schema::hasTable('notifications'), false, false))
+            ->databaseNotifications(
+                condition: fn () => rescue(fn () => \Illuminate\Support\Facades\Schema::hasTable('notifications'), false, false),
+                isLazy: false,
+            )
             ->databaseNotificationsPolling('30s')
             ->renderHook(
                 'panels::head.end',
@@ -98,6 +101,10 @@ class AdminPanelProvider extends PanelProvider
                         }
                     </style>
                 ')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn (): string => Blade::render('@include("filament.hooks.notification-bridge")')
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
