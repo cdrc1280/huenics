@@ -168,6 +168,13 @@ class SalesOverviewWidget extends BaseWidget
             $expiringSoon = $warrantyQuery->count();
             $overdueDeliveries = $overdueQuery->count();
 
+            $avgOrderValue = $convertedPos > 0 ? ($totalRevenue / $convertedPos) : 0.0;
+
+            $pendingApprovalCount = PurchaseOrder::where('status', PurchaseOrder::STATUS_PENDING)
+                ->when($isInhouse, fn($q) => $q->where(fn($sub) => $sub->whereHas('salesAgent', fn($s) => $s->where('is_owner', true))->orWhereNull('sales_agent_id')))
+                ->when(!$isInhouse && $agentId, fn($q) => $q->where('sales_agent_id', $agentId))
+                ->count();
+
             return [
                 'totalQuotations' => $totalQuotations,
                 'convertedPos' => $convertedPos,
@@ -176,6 +183,8 @@ class SalesOverviewWidget extends BaseWidget
                 'totalProfit' => $totalProfit,
                 'expiringSoon' => $expiringSoon,
                 'overdueDeliveries' => $overdueDeliveries,
+                'avgOrderValue' => $avgOrderValue,
+                'pendingApprovalCount' => $pendingApprovalCount,
             ];
         });
 
@@ -216,6 +225,14 @@ class SalesOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($data['overdueDeliveries'] > 0 ? 'danger' : 'success')
                 ->extraAttributes(['title' => 'Confirmed Purchase Orders exceeding expected delivery date']),
+
+            Stat::make('Avg. Order Value', '₱' . number_format($data['avgOrderValue'], 2))
+                ->description($data['pendingApprovalCount'] > 0
+                    ? "{$data['pendingApprovalCount']} PO(s) pending approval"
+                    : 'No pending approvals')
+                ->descriptionIcon($data['pendingApprovalCount'] > 0 ? 'heroicon-m-inbox-arrow-down' : 'heroicon-m-check-circle')
+                ->color($data['pendingApprovalCount'] > 0 ? 'warning' : 'success')
+                ->extraAttributes(['title' => "Average order value per confirmed PO during {$periodLabel}. Shows count of POs awaiting approval."]),
         ];
     }
 }
