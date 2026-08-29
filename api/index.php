@@ -15,10 +15,16 @@ register_shutdown_function(function () {
 });
 
 try {
-    // ─── Force HTTPS behind Vercel edge ──────────────────────────────────
+    // ─── Force HTTPS & sanitize remote IP behind Vercel edge ─────────────
     if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
         $_SERVER['HTTPS'] = 'on';
         $_SERVER['SERVER_PORT'] = '443';
+    }
+
+    if (empty($_SERVER['REMOTE_ADDR'])) {
+        $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_X_REAL_IP'] ?? '127.0.0.1';
+        $ip = trim(explode(',', $forwarded)[0]);
+        $_SERVER['REMOTE_ADDR'] = filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
     }
 
     // ─── Create writable directories in /tmp ─────────────────────────────

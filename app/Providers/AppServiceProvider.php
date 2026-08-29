@@ -50,12 +50,19 @@ class AppServiceProvider extends ServiceProvider
                     return;
                 }
 
-                $notifications = session()->get('filament.notifications') ?? [];
-                if (!empty($notifications)) {
-                    foreach ($notifications as $notification) {
-                        $component->dispatch('notificationSent', notification: $notification);
+                rescue(function () use ($component) {
+                    $notifications = session()->get('filament.notifications')
+                        ?? session()->get('filament.claimed_notifications')
+                        ?? [];
+
+                    if (!empty($notifications) && is_array($notifications)) {
+                        foreach ($notifications as $notification) {
+                            if (is_array($notification)) {
+                                $component->dispatch('notificationSent', notification: $notification);
+                            }
+                        }
                     }
-                }
+                }, report: false);
             });
         }
     }

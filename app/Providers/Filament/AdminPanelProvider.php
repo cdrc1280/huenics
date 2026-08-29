@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'Master Data & Registry',
                 'System Administration',
             ])
-            ->databaseNotifications()
+            ->databaseNotifications(fn () => rescue(fn () => \Illuminate\Support\Facades\Schema::hasTable('notifications'), false, false))
             ->databaseNotificationsPolling('30s')
             ->renderHook(
                 'panels::head.end',
