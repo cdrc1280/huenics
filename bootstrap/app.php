@@ -21,13 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            if ($request->header('X-Debug-Error') === 'huenics-inspect') {
+        $exceptions->render(function (\Throwable $e) {
+            if (isset($_GET['debug_error']) || isset($_SERVER['HTTP_X_DEBUG_ERROR']) || request()?->header('X-Debug-Error') === 'huenics-inspect') {
                 return response()->json([
                     'error' => $e->getMessage(),
                     'class' => get_class($e),
                     'file' => $e->getFile() . ':' . $e->getLine(),
-                    'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 20),
+                    'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 25),
                 ], 500);
             }
         });
