@@ -13,6 +13,7 @@ use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
@@ -47,6 +48,7 @@ class ListPurchaseOrders extends ListRecords
                     Toggle::make('is_conforme_po')
                         ->label('Conforme PO (Exempt from Quotation Matching)')
                         ->helperText('Check if this is a signed conforme purchase order that does not require a matching quotation.')
+                        ->visible(fn () => auth()->user()?->is_owner === true)
                         ->live(),
 
                     Select::make('quotation_id')

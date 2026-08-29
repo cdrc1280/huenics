@@ -144,6 +144,7 @@ class PurchaseOrderResource extends Resource
                     Toggle::make('is_conforme_po')
                         ->label('Conforme PO (No Quotation Required)')
                         ->helperText('Check if this is a conforme purchase order that does not require a matching quotation')
+                        ->visible(fn () => auth()->user()?->is_owner === true)
                         ->default(false),
 
                     TextInput::make('customer_name')
