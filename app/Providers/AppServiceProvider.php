@@ -42,54 +42,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Login::class, [LogAuthenticationActivity::class, 'handleLogin']);
         Event::listen(Logout::class, [LogAuthenticationActivity::class, 'handleLogout']);
 
-        // Polyfill json_extract for SQLite runtimes lacking JSON1 (e.g. AWS Lambda / Vercel PHP)
-        $registerSqliteJsonPolyfill = function ($connection) {
-            if ($connection instanceof \Illuminate\Database\SQLiteConnection) {
-                $pdo = $connection->getPdo();
-                if ($pdo && method_exists($pdo, 'sqliteCreateFunction')) {
-                    $pdo->sqliteCreateFunction('json_extract', function ($json, $path) {
-                        if (empty($json) || empty($path)) {
-                            return null;
-                        }
-                        $data = json_decode((string) $json, true);
-                        if (!is_array($data)) {
-                            return null;
-                        }
-
-                        $cleanPath = trim(str_replace(['$', '"', "'", '[', ']'], '', $path));
-                        $parts = explode('.', $cleanPath);
-                        $val = $data;
-                        foreach ($parts as $part) {
-                            if ($part === '') {
-                                continue;
-                            }
-                            if (is_array($val) && array_key_exists($part, $val)) {
-                                $val = $val[$part];
-                            } else {
-                                return null;
-                            }
-                        }
-
-                        return is_scalar($val) ? $val : json_encode($val);
-                    });
-                }
-            }
-        };
-
-        Event::listen(
-            \Illuminate\Database\Events\ConnectionEstablished::class,
-            function ($event) use ($registerSqliteJsonPolyfill) {
-                $registerSqliteJsonPolyfill($event->connection);
-            }
-        );
-
-        try {
-            if (\Illuminate\Support\Facades\DB::connection() instanceof \Illuminate\Database\SQLiteConnection) {
-                $registerSqliteJsonPolyfill(\Illuminate\Support\Facades\DB::connection());
-            }
-        } catch (\Throwable $e) {
-            // DB not yet initialized
-        }
+        // Register ExtendedSQLiteConnection resolver to guarantee json_extract polyfill
+        // on all SQLite connections (crucial for AWS Lambda / Vercel PHP without JSON1)
+        \Illuminate\Database\Connection::resolverFor('sqlite', function ($connection, $database, $prefix, $config) {
+            return new \App\Database\ExtendedSQLiteConnection($connection, $database, $prefix, $config);
+        });
 
         // Ensure Filament frontend notifications are dispatched directly to the browser
         // without relying on multi-request session round-trips (crucial for serverless Vercel)
