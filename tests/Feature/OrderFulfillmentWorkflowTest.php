@@ -328,4 +328,120 @@ class OrderFulfillmentWorkflowTest extends TestCase
             'event'          => \App\Models\AuditLog::EVENT_DELIVERED,
         ]);
     }
+
+    public function test_fulfillment_succeeds_when_same_file_is_uploaded_for_both_dr_and_si(): void
+    {
+        Storage::fake('local');
+
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-FULFILL-DUP-01',
+            'sales_agent_id' => $this->agent->id,
+            'customer_name' => 'DMCI Holdings',
+            'order_amount' => 150000.00,
+            'total_cost' => 100000.00,
+            'realized_profit' => 50000.00,
+            'order_date' => now()->toDateString(),
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+        ]);
+
+        $po->lineItems()->create([
+            'line_no' => 1,
+            'product_id' => $this->product->id,
+            'description' => '12W LED Commercial Down Light',
+            'qty' => 60,
+            'unit' => 'pcs',
+            'unit_price' => 2500.00,
+            'line_total' => 150000.00,
+        ]);
+
+        // Same physical file content uploaded for both DR and SI
+        $combinedPdf = UploadedFile::fake()->create('combined_dr_si.pdf', 300, 'application/pdf');
+        $drPath = $combinedPdf->store('documents/dr', 'local');
+        $siPath = $combinedPdf->store('documents/si', 'local');
+
+        $service = app(OrderFulfillmentService::class);
+
+        // This must succeed without throwing SQLSTATE[23000]: 1062 Duplicate entry
+        $result = $service->attachFulfillmentDocuments($po, [
+            'dr_file'        => $drPath,
+            'dr_number'      => 'DR-DUP-001',
+            'delivery_date'  => now()->toDateString(),
+            'si_file'        => $siPath,
+            'si_number'      => 'SI-DUP-001',
+            'invoice_date'   => now()->toDateString(),
+            'payment_status' => SalesInvoice::STATUS_PAID,
+            'total_amount'   => 150000.00,
+        ], $this->admin);
+
+        $this->assertNotNull($result['delivery_receipt']);
+        $this->assertNotNull($result['sales_invoice']);
+        $this->assertEquals('DR-DUP-001', $result['delivery_receipt']->dr_number);
+        $this->assertEquals('SI-DUP-001', $result['sales_invoice']->si_number);
+
+        // Verify both DR and SI are linked to the single deduplicated document record
+        $this->assertEquals($result['delivery_receipt']->document_id, $result['sales_invoice']->document_id);
+    }
+
+    public function test_fulfillment_succeeds_when_reuploading_file_with_existing_hash(): void
+    {
+        Storage::fake('local');
+
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-FULFILL-DUP-02',
+            'sales_agent_id' => $this->agent->id,
+            'customer_name' => 'Robinsons Land Corp',
+            'order_amount' => 200000.00,
+            'total_cost' => 140000.00,
+            'realized_profit' => 60000.00,
+            'order_date' => now()->toDateString(),
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+        ]);
+
+        $po->lineItems()->create([
+            'line_no' => 1,
+            'product_id' => $this->product->id,
+            'description' => '12W LED Commercial Down Light',
+            'qty' => 80,
+            'unit' => 'pcs',
+            'unit_price' => 2500.00,
+            'line_total' => 200000.00,
+        ]);
+
+        $pdf = UploadedFile::fake()->create('DR00423.pdf', 400, 'application/pdf');
+        $filePath = $pdf->store('documents/dr', 'local');
+        $fullPath = Storage::disk('local')->path($filePath);
+        $hash = hash_file('sha256', $fullPath);
+
+        // Pre-create an existing document record with this exact file hash (simulating past upload)
+        $existingDoc = Document::create([
+            'disk_path'          => $filePath,
+            'original_filename'  => 'DR00423.pdf',
+            'original_mime_type' => 'application/pdf',
+            'file_size'          => 400,
+            'file_hash'          => $hash,
+            'document_type'      => 'delivery_receipt',
+            'document_number'    => 'DR-2026-0001',
+            'document_date'      => now()->toDateString(),
+            'uploaded_by'        => $this->admin->id,
+            'status'             => Document::STATUS_VERIFIED,
+        ]);
+
+        $service = app(OrderFulfillmentService::class);
+
+        // Fulfill using the same file path and hash
+        $result = $service->attachFulfillmentDocuments($po, [
+            'dr_file'        => $filePath,
+            'dr_number'      => 'DR-2026-0002',
+            'delivery_date'  => now()->toDateString(),
+            'si_file'        => null,
+            'payment_status' => SalesInvoice::STATUS_PAID,
+            'total_amount'   => 200000.00,
+        ], $this->admin);
+
+        $this->assertNotNull($result['delivery_receipt']);
+        $this->assertEquals('DR-2026-0002', $result['delivery_receipt']->dr_number);
+        $this->assertEquals($existingDoc->id, $result['delivery_receipt']->document_id);
+    }
 }

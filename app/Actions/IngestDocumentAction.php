@@ -89,8 +89,12 @@ class IngestDocumentAction
             };
         }
 
-        $existing = Document::where('file_hash', $fileHash)->first();
+        $existing = Document::withTrashed()->where('file_hash', $fileHash)->first();
         if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+            }
+
             $existing->is_duplicate = true;
             $existing->wasRecentlyCreated = false;
 

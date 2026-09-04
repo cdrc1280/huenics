@@ -352,24 +352,66 @@ class OrderFulfillmentService
             default => 'application/octet-stream',
         };
 
-        return Document::create([
-            'project_id'         => $projectId,
-            'uploaded_by'        => $userId,
-            'verified_by'        => $userId,
-            'verified_at'        => now(),
-            'disk_path'          => $diskPath,
-            'original_filename'  => $filename,
-            'original_mime_type' => $mimeType,
-            'file_size'          => $fileSize,
-            'file_hash'          => $hash,
-            'document_type'      => $documentType,
-            'document_number'    => $documentNumber,
-            'document_date'      => $documentDate ?? now()->toDateString(),
-            'status'             => Document::STATUS_VERIFIED,
-            'parsed_data'        => [
-                'attached_via' => 'order_fulfillment_workflow',
-                'format'       => $ext,
-            ],
-        ]);
+        // Content-addressable deduplication guard against documents.documents_file_hash_unique:
+        // If a physical file with this identical SHA-256 hash already exists (active or soft-deleted),
+        // safely reuse and restore the existing document record instead of violating the database unique key.
+        if ($hash) {
+            $existing = Document::withTrashed()->where('file_hash', $hash)->first();
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+
+                $updates = array_filter([
+                    'project_id'      => $projectId ?: $existing->project_id,
+                    'document_number' => $documentNumber ?: $existing->document_number,
+                    'document_date'   => $documentDate ?: $existing->document_date,
+                    'verified_by'     => $userId ?: $existing->verified_by,
+                    'verified_at'     => $existing->verified_at ?: now(),
+                    'status'          => Document::STATUS_VERIFIED,
+                ], fn ($v) => $v !== null);
+
+                if (!empty($updates)) {
+                    $existing->update($updates);
+                }
+
+                return $existing;
+            }
+        }
+
+        // Guaranteed non-null 64-char hash fallback if file could not be read
+        $finalHash = $hash ?: hash('sha256', $diskPath . '|' . ($documentNumber ?? '') . '|' . microtime(true));
+
+        try {
+            return Document::create([
+                'project_id'         => $projectId,
+                'uploaded_by'        => $userId,
+                'verified_by'        => $userId,
+                'verified_at'        => now(),
+                'disk_path'          => $diskPath,
+                'original_filename'  => $filename,
+                'original_mime_type' => $mimeType,
+                'file_size'          => $fileSize,
+                'file_hash'          => $finalHash,
+                'document_type'      => $documentType,
+                'document_number'    => $documentNumber,
+                'document_date'      => $documentDate ?? now()->toDateString(),
+                'status'             => Document::STATUS_VERIFIED,
+                'parsed_data'        => [
+                    'attached_via' => 'order_fulfillment_workflow',
+                    'format'       => $ext,
+                ],
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException|\Illuminate\Database\QueryException $e) {
+            // Concurrent or duplicate hash fallback
+            $existing = Document::withTrashed()->where('file_hash', $finalHash)->first();
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                return $existing;
+            }
+            throw $e;
+        }
     }
 }
