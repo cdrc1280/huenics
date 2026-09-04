@@ -444,7 +444,16 @@
                         @if($product->image_url)
                             <img src="{{ $product->image_url }}" alt="{{ $product->canonical_name }}" loading="lazy" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300 ease-out">
                         @else
-                            <img src="{{ asset('images/placeholder-product.png') }}" alt="{{ $product->canonical_name }}" loading="lazy" class="w-24 h-24 object-contain opacity-60 group-hover:scale-105 transition-transform duration-300">
+                            <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 w-full h-full p-4 relative select-none">
+                                <div class="relative w-16 h-16 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center mb-1.5 group-hover:scale-110 group-hover:bg-blue-100/80 dark:group-hover:bg-blue-900/60 transition-all duration-300 shadow-sm">
+                                    <svg class="w-8 h-8 text-[#214fe0] dark:text-[#60a5fa] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-extrabold tracking-wider uppercase font-mono text-slate-500 dark:text-slate-400 group-hover:text-[#214fe0] dark:group-hover:text-[#60a5fa] transition-colors">
+                                    {{ $product->category ?: 'Lighting' }}
+                                </span>
+                            </div>
                         @endif
                         <span class="absolute top-2.5 left-2.5 hisi-pill-badge shadow-sm">
                             {{ strtoupper($product->category ?: 'Lighting') }}

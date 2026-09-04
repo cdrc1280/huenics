@@ -58,4 +58,27 @@ class CustomerPortalProductionSimulationTest extends TestCase
         $this->assertNotEmpty($renderedHtml);
         $this->assertStringContainsString('Huenics', $renderedHtml);
     }
+
+    public function test_product_cards_display_lighting_icon_when_no_image(): void
+    {
+        Product::create([
+            'sku' => 'TEST-LIGHT-01',
+            'canonical_name' => '12W LED Downlight Test',
+            'category' => 'Indoor Downlights',
+            'unit_default' => 'pcs',
+            'default_price' => 1250.00,
+            'selling_price' => 1250.00,
+            'is_active' => true,
+            'image_path' => null,
+        ]);
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Verify the lightbulb luminaire SVG icon is rendered
+        $response->assertSee('M9.663 17h4.673M12 3v1');
+
+        // Verify the old ugly placeholder-product.png is NOT used on the customer homepage
+        $response->assertDontSee('placeholder-product.png');
+    }
 }
