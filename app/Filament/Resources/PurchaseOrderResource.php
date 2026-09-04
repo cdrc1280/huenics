@@ -70,7 +70,7 @@ class PurchaseOrderResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ])
-            ->with(['salesAgent', 'project', 'quotation']);
+            ->with(['salesAgent', 'project', 'quotation', 'deliveryReceipts', 'salesInvoices']);
         $user = auth()->user();
 
         if ($user && $user->isSalesExecutive()) {
@@ -575,11 +575,23 @@ class PurchaseOrderResource extends Resource
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
 
-            TextColumn::make('delivery_receipt_no')
-                ->label('DR #')
-                ->searchable()
-                ->placeholder('—')
-                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('delivery_receipts_display')
+                ->label('DR #s')
+                ->state(fn(PurchaseOrder $record): string => $record->delivery_receipt_numbers_string)
+                ->badge()
+                ->color('info')
+                ->tooltip(fn(PurchaseOrder $record): string => "Linked DRs: {$record->delivery_receipt_numbers_string} (" . $record->deliveryReceipts->count() . " DRs)")
+                ->searchable(query: fn(Builder $query, string $search) => $query->whereHas('deliveryReceipts', fn($q) => $q->where('dr_number', 'like', "%{$search}%")))
+                ->toggleable(),
+
+            TextColumn::make('sales_invoices_display')
+                ->label('SI #s')
+                ->state(fn(PurchaseOrder $record): string => $record->sales_invoice_numbers_string)
+                ->badge()
+                ->color('success')
+                ->tooltip(fn(PurchaseOrder $record): string => "Linked SIs: {$record->sales_invoice_numbers_string} (" . $record->salesInvoices->count() . " SIs, Total: ₱" . number_format($record->total_invoiced_amount, 2) . ")")
+                ->searchable(query: fn(Builder $query, string $search) => $query->whereHas('salesInvoices', fn($q) => $q->where('si_number', 'like', "%{$search}%")))
+                ->toggleable(),
 
             TextColumn::make('warranty_status')
                 ->label('Warranty')
@@ -970,7 +982,7 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-arrow-up-tray')
                     ->color('primary')
                     ->tooltip('Upload physical Delivery Receipt (DR) and Sales Invoice (SI) hard copies (Images/PDF)')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && !$r->isCompleted())
+                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved())
                     ->modalHeading(fn(PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
                     ->modalDescription('Upload physical hard copies of both Delivery Receipt (DR) and Sales Invoice (SI) in PDF or Image format.')
                     ->modalWidth('4xl')
@@ -1135,6 +1147,14 @@ class PurchaseOrderResource extends Resource
                 RestoreBulkAction::make()->requiresConfirmation(),
                 ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
             ]),
+        ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            PurchaseOrderResource\RelationManagers\DeliveryReceiptsRelationManager::class,
+            PurchaseOrderResource\RelationManagers\SalesInvoicesRelationManager::class,
         ];
     }
 

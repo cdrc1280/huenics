@@ -212,6 +212,29 @@ class PurchaseOrder extends Model
         return (bool) $this->is_completed || $this->hasBothDrAndSi();
     }
 
+    public function getDeliveryReceiptNumbersStringAttribute(): string
+    {
+        $numbers = $this->deliveryReceipts->pluck('dr_number')->filter()->values();
+        if ($numbers->isNotEmpty()) {
+            return $numbers->implode(', ');
+        }
+        return $this->delivery_receipt_no ?: '—';
+    }
+
+    public function getSalesInvoiceNumbersStringAttribute(): string
+    {
+        $numbers = $this->salesInvoices->pluck('si_number')->filter()->values();
+        if ($numbers->isNotEmpty()) {
+            return $numbers->implode(', ');
+        }
+        return $this->sales_invoice_no ?: '—';
+    }
+
+    public function getTotalInvoicedAmountAttribute(): float
+    {
+        return (float) $this->salesInvoices->sum('total_amount');
+    }
+
     public function getFulfillmentStatusLabelAttribute(): string
     {
         if ($this->isCompleted()) {

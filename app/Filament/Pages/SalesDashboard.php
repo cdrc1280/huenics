@@ -276,6 +276,86 @@ class SalesDashboard extends Page implements HasTable, HasForms
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('exportAllAnalytics')
+                ->label('Export Complete Sales Report (CSV)')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->tooltip('Export comprehensive dashboard summary, leaderboard rankings, and monthly trend breakdown')
+                ->action(function (ExportExecutiveReportPdf $service) {
+                    $data = $service->buildReportData($this->filterData);
+                    $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $data['periodLabel']);
+                    $filename = 'huenics-sales-analytics-' . strtolower($periodLabel) . '-' . date('Ymd-His') . '.csv';
+
+                    return response()->streamDownload(function () use ($data) {
+                        $handle = fopen('php://output', 'w');
+                        fputs($handle, "\xEF\xBB\xBF");
+
+                        // 1. Executive Header
+                        fputcsv($handle, ['HUENICS INDUSTRIAL SALES INC. — COMPREHENSIVE SALES & PERFORMANCE REPORT']);
+                        fputcsv($handle, ['Timeframe / Filter Scope', $data['periodLabel']]);
+                        fputcsv($handle, ['Export Timestamp', now()->toDateTimeString()]);
+                        fputcsv($handle, []);
+
+                        // 2. High-Level KPI Summary
+                        fputcsv($handle, ['=== EXECUTIVE SUMMARY & KPIS ===']);
+                        fputcsv($handle, ['Metric', 'Value']);
+                        fputcsv($handle, ['Total Sales Achieved', 'PHP ' . number_format($data['kpis']['total_sales'], 2)]);
+                        fputcsv($handle, ['Total Realized Gross Profit', 'PHP ' . number_format($data['kpis']['total_profit'], 2)]);
+                        fputcsv($handle, ['Total Quotations Generated', $data['kpis']['total_quotations']]);
+                        fputcsv($handle, ['Total Purchase Orders Won', $data['kpis']['total_pos']]);
+                        fputcsv($handle, ['Quotation-to-PO Win Rate', $data['kpis']['win_rate'] . '%']);
+                        $avgDeal = $data['kpis']['total_pos'] > 0 ? $data['kpis']['total_sales'] / $data['kpis']['total_pos'] : 0;
+                        fputcsv($handle, ['Average Deal Size (PO)', 'PHP ' . number_format($avgDeal, 2)]);
+                        fputcsv($handle, []);
+
+                        // 3. Sales Leaderboard Rankings
+                        fputcsv($handle, ['=== SALES EXECUTIVE LEADERBOARD RANKINGS ===']);
+                        fputcsv($handle, ['Rank', 'Sales Agent', 'Account Type', 'Sales Achieved (PHP)', 'Realized Profit (PHP)', 'Quotations Count', 'POs Won', 'Win Rate']);
+                        foreach ($data['leaderboard'] as $idx => $row) {
+                            fputcsv($handle, [
+                                $idx + 1,
+                                $row['name'],
+                                $row['role_label'],
+                                number_format($row['sales_achieved'], 2, '.', ''),
+                                number_format($row['profit'], 2, '.', ''),
+                                $row['quotations'],
+                                $row['pos'],
+                                $row['win_rate'],
+                            ]);
+                        }
+                        fputcsv($handle, [
+                            'TOTALS',
+                            '',
+                            '',
+                            number_format($data['kpis']['total_sales'], 2, '.', ''),
+                            number_format($data['kpis']['total_profit'], 2, '.', ''),
+                            $data['kpis']['total_quotations'],
+                            $data['kpis']['total_pos'],
+                            $data['kpis']['win_rate'] . '%',
+                        ]);
+                        fputcsv($handle, []);
+
+                        // 4. Monthly Trend Breakdown
+                        if (!empty($data['monthlyTrends'])) {
+                            fputcsv($handle, ['=== MONTHLY TREND BREAKDOWN ===']);
+                            fputcsv($handle, ['Month', 'Confirmed Sales (PHP)', 'Gross Profit (PHP)', 'POs Count', 'Quotations Count']);
+                            foreach ($data['monthlyTrends'] as $m) {
+                                fputcsv($handle, [
+                                    $m['label'],
+                                    number_format($m['sales'], 2, '.', ''),
+                                    number_format($m['profit'], 2, '.', ''),
+                                    $m['pos'],
+                                    $m['quotations'],
+                                ]);
+                            }
+                        }
+
+                        fclose($handle);
+                    }, $filename, [
+                        'Content-Type' => 'text/csv; charset=UTF-8',
+                    ]);
+                }),
+
             Action::make('downloadExecutiveReport')
                 ->label('Download Executive Report (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -328,7 +408,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
                         fclose($handle);
                     }, $filename, [
-                        'Content-Type' => 'text/csv',
+                        'Content-Type' => 'text/csv; charset=UTF-8',
                     ]);
                 }),
         ];

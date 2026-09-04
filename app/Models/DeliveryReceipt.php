@@ -34,18 +34,31 @@ class DeliveryReceipt extends Model
     protected $fillable = [
         'dr_number',
         'purchase_order_id',
+        'customer_name',
+        'customer_tin',
+        'delivery_address',
+        'terms',
+        'project_name',
+        'sales_invoice_numbers',
+        'rs_number',
+        'delivery_type',
         'document_id',
         'delivered_by',
         'received_by',
+        'prepared_by',
+        'approved_by',
         'delivery_date',
+        'received_date',
         'remarks',
         'status',
+        'file_path',
     ];
 
     protected function casts(): array
     {
         return [
             'delivery_date' => 'date',
+            'received_date' => 'date',
         ];
     }
 

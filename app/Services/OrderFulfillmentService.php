@@ -53,14 +53,21 @@ class OrderFulfillmentService
             // ─── 2. Create or Update DeliveryReceipt Model ────────────────
             $drNumber = $data['dr_number'] ?? ($drDoc?->document_number ?: DeliveryReceipt::generateNumber());
             $deliveryReceipt = DeliveryReceipt::create([
-                'dr_number'         => $drNumber,
-                'purchase_order_id' => $po->id,
-                'document_id'       => $drDoc?->id,
-                'delivered_by'      => $data['delivered_by'] ?? null,
-                'received_by'       => $data['received_by'] ?? null,
-                'delivery_date'     => $deliveryDate,
-                'remarks'           => $data['dr_remarks'] ?? ($data['remarks'] ?? "Fulfilled for PO {$po->po_number}"),
-                'status'            => DeliveryReceipt::STATUS_DELIVERED,
+                'dr_number'             => $drNumber,
+                'purchase_order_id'     => $po->id,
+                'document_id'           => $drDoc?->id,
+                'customer_name'         => $data['customer_name'] ?? $po->customer_name,
+                'customer_tin'          => $data['customer_tin'] ?? null,
+                'delivery_address'      => $data['delivery_address'] ?? ($po->project?->location ?? null),
+                'terms'                 => $data['terms'] ?? ($po->delivery_terms ?? null),
+                'project_name'          => $data['project_name'] ?? ($po->project?->name ?? null),
+                'sales_invoice_numbers' => $data['sales_invoice_numbers'] ?? null,
+                'delivered_by'          => $data['delivered_by'] ?? null,
+                'received_by'           => $data['received_by'] ?? null,
+                'delivery_date'         => $deliveryDate,
+                'remarks'               => $data['dr_remarks'] ?? ($data['remarks'] ?? "Fulfilled for PO {$po->po_number}"),
+                'status'                => DeliveryReceipt::STATUS_DELIVERED,
+                'file_path'             => $data['dr_file'] ?? null,
             ]);
 
             // Populate DR Items from PO Line Items
@@ -92,26 +99,39 @@ class OrderFulfillmentService
             // ─── 4. Create or Update SalesInvoice Model ───────────────────
             $siNumber = $data['si_number'] ?? ($siDoc?->document_number ?: SalesInvoice::generateNumber());
             $subtotal = isset($data['subtotal']) ? (float) $data['subtotal'] : (float) ($po->order_amount / 1.12);
+            $discountAmount = isset($data['discount_amount']) ? (float) $data['discount_amount'] : 0.0;
+            $netOfVat = isset($data['net_of_vat']) ? (float) $data['net_of_vat'] : (float) $subtotal;
             $vatAmount = isset($data['vat_amount']) ? (float) $data['vat_amount'] : (float) ($po->order_amount - $subtotal);
             $totalAmount = isset($data['total_amount']) ? (float) $data['total_amount'] : (float) $po->order_amount;
 
             $paymentStatus = $data['payment_status'] ?? SalesInvoice::STATUS_PAID;
             $salesInvoice = SalesInvoice::create([
-                'si_number'           => $siNumber,
-                'purchase_order_id'   => $po->id,
-                'delivery_receipt_id' => $deliveryReceipt->id,
-                'document_id'         => $siDoc?->id,
-                'customer_name'       => $data['customer_name'] ?? $po->customer_name,
-                'billing_address'     => $data['billing_address'] ?? ($po->project?->location ?? null),
-                'invoice_date'        => $invoiceDate,
-                'due_date'            => $data['due_date'] ?? null,
-                'subtotal'            => round($subtotal, 2),
-                'vat_amount'          => round($vatAmount, 2),
-                'total_amount'        => round($totalAmount, 2),
-                'payment_status'      => $paymentStatus,
-                'payment_date'        => $data['payment_date'] ?? ($paymentStatus === SalesInvoice::STATUS_PAID ? $invoiceDate : null),
-                'notes'               => $data['notes'] ?? "Sales invoice for PO {$po->po_number} and DR {$drNumber}",
+                'si_number'                  => $siNumber,
+                'purchase_order_id'          => $po->id,
+                'delivery_receipt_id'        => $deliveryReceipt->id,
+                'delivery_receipt_numbers'   => $drNumber,
+                'document_id'                => $siDoc?->id,
+                'customer_name'              => $data['customer_name'] ?? $po->customer_name,
+                'customer_tin'               => $data['customer_tin'] ?? null,
+                'business_style'             => $data['business_style'] ?? ($data['customer_name'] ?? $po->customer_name),
+                'billing_address'            => $data['billing_address'] ?? ($po->project?->location ?? null),
+                'terms'                      => $data['terms'] ?? ($po->payment_terms ?? null),
+                'invoice_date'               => $invoiceDate,
+                'due_date'                   => $data['due_date'] ?? null,
+                'subtotal'                   => round($subtotal, 2),
+                'discount_amount'            => round($discountAmount, 2),
+                'net_of_vat'                 => round($netOfVat, 2),
+                'vatable_sales'              => round($netOfVat, 2),
+                'vat_amount'                 => round($vatAmount, 2),
+                'total_amount'               => round($totalAmount, 2),
+                'payment_status'             => $paymentStatus,
+                'payment_date'               => $data['payment_date'] ?? ($paymentStatus === SalesInvoice::STATUS_PAID ? $invoiceDate : null),
+                'notes'                      => $data['notes'] ?? "Sales invoice for PO {$po->po_number} and DR {$drNumber}",
+                'file_path'                  => $data['si_file'] ?? null,
             ]);
+
+            // Also update DR's cross-ref SI numbers
+            $deliveryReceipt->update(['sales_invoice_numbers' => $siNumber]);
 
             // Populate SI Items from PO Line Items
             foreach ($po->lineItems()->with('product')->get() as $line) {
@@ -167,9 +187,13 @@ class OrderFulfillmentService
                 ]);
             }
 
-            // Update PO delivery receipt no
+            // Update PO delivery receipt no and sales invoice no (aggregate all attached numbers)
+            $allDrNumbers = $po->deliveryReceipts()->pluck('dr_number')->filter()->unique()->implode(', ');
+            $allSiNumbers = $po->salesInvoices()->pluck('si_number')->filter()->unique()->implode(', ');
+
             $po->update([
-                'delivery_receipt_no'  => $drNumber,
+                'delivery_receipt_no'  => $allDrNumbers ?: $drNumber,
+                'sales_invoice_no'     => $allSiNumbers ?: $siNumber,
                 'actual_delivery_date' => $deliveryDate,
             ]);
 

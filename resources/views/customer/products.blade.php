@@ -299,6 +299,7 @@
     };
 
     document.addEventListener('click', function(e) {
+        if (!e.target || typeof e.target.closest !== 'function') return;
         const catLink = e.target.closest('a[href*="/products"]');
         if (catLink && !catLink.getAttribute('href').startsWith('#')) {
             window.showProductsSkeleton();

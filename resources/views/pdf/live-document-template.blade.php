@@ -8,7 +8,7 @@
             margin: 10px 14px;
         }
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
             font-size: 8px;
             color: #000000;
             line-height: 1.15;
@@ -168,16 +168,17 @@
                     <tr style="border-bottom: 1px solid #000; font-size: 8px; {{ $isModLine ? 'background-color: #fffbeb;' : '' }}">
                         <td style="border-right: 1px solid #000; padding: 4px; font-weight: bold; vertical-align: top;">
                             <span class="{{ !empty($mod['items'][$idx]['material_code']) ? 'highlight' : '' }}">
-                                {{ $item['material_code'] ?: '—' }}
+                                {{ ($item['material_code'] ?? ($item['item_code'] ?? ($item['product_code'] ?? '—'))) ?: '—' }}
                             </span>
                         </td>
                         @php
                             $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
                             $prodImg = $prod?->base64_image;
+                            $itemDesc = $item['description'] ?? ($item['product_name'] ?? ($item['canonical_name'] ?? '—'));
                         @endphp
                         <td style="border-right: 1px solid #000; padding: 4px; vertical-align: top;">
                             <span class="{{ !empty($mod['items'][$idx]['description']) ? 'highlight' : '' }}">
-                                {{ $item['description'] }}
+                                {{ $itemDesc }}
                             </span>
                             @if(!$hasClientRef && $prodImg)
                                 <div style="margin-top: 3px;">

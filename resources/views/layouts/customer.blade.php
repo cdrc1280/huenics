@@ -24,9 +24,54 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Production Vector Icons (Lucide Icons) -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- GSAP 3.12 & ScrollTrigger for High-Performance Motion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- Three.js for 3D Photonic Luminaire Stage -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         
+        /* -------------------------------------------------------------
+         * 3D Spatial Physics & Dynamic Specular Sheen (Antixor / Luxury Standard)
+         * ------------------------------------------------------------- */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .card-3d, [data-3d-tilt] {
+            transform-style: preserve-3d;
+            transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+            will-change: transform;
+            position: relative;
+        }
+        .glare-sheen {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 60%);
+            opacity: 0;
+            mix-blend-mode: overlay;
+            transition: opacity 0.25s ease;
+            z-index: 20;
+        }
+        .dark .glare-sheen {
+            background: radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.16) 0%, transparent 60%);
+        }
+        .hero-halo-glow {
+            background: radial-gradient(circle, rgba(33, 79, 224, 0.22) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 72%);
+        }
+        .dark .hero-halo-glow {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(30, 58, 138, 0.12) 52%, transparent 72%);
+        }
+        [data-3d-depth] {
+            transform: translateZ(calc(var(--depth, 15) * 1px));
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
         /* -------------------------------------------------------------
          * 1. Theme Crossfade (Surface Containers Only, Zero Twinkling)
          * ------------------------------------------------------------- */
@@ -44,10 +89,7 @@
          * 2. High-Performance 3D Spatial Stage & Instant Morph
          * ------------------------------------------------------------- */
         #page-stage {
-            perspective: 1200px;
-            perspective-origin: 50% 20%;
-            transform-style: preserve-3d;
-            backface-visibility: hidden;
+            position: relative;
         }
 
         .page-3d-in {
@@ -792,6 +834,8 @@
 
                 // 2. Intercept internal link clicks
                 document.addEventListener('click', (e) => {
+                    if (e.defaultPrevented) return;
+                    if (!e.target || typeof e.target.closest !== 'function') return;
                     const link = e.target.closest('a');
                     if (!link) return;
 
@@ -834,6 +878,7 @@
 
                 // 3. Hover / Touch Prefetching for 0ms Instant Click Response
                 const prefetchHandler = (e) => {
+                    if (!e.target || typeof e.target.closest !== 'function') return;
                     const link = e.target.closest('a');
                     if (!link) return;
                     const href = link.getAttribute('href');
@@ -1530,14 +1575,27 @@
             }
         };
 
-        // Tactile 3D Card Tilt & Spatial Depth Engine
+        // Tactile 3D Card Tilt, Specular Sheen & GSAP Spatial Motion Engine
         window.Huenics3D = {
             init() {
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-                const elements = document.querySelectorAll('.card-interactive, .bento-surface, .product-card, .catalog-card');
-                elements.forEach(el => {
+
+                // 1. Interactive 3D Perspective Tilt on Cards with Dynamic Specular Glare
+                const tiltElements = document.querySelectorAll('.card-interactive, .bento-surface, .product-card, .catalog-card, [data-3d-tilt]');
+                tiltElements.forEach(el => {
                     if (el.dataset.tiltActive) return;
                     el.dataset.tiltActive = 'true';
+
+                    // Ensure card has relative positioning & preserve-3d
+                    el.classList.add('perspective-1000', 'preserve-3d');
+
+                    // Inject dynamic specular glare element if not present
+                    let glare = el.querySelector('.glare-sheen');
+                    if (!glare) {
+                        glare = document.createElement('div');
+                        glare.className = 'glare-sheen';
+                        el.appendChild(glare);
+                    }
 
                     let rect;
                     const onMouseMove = (e) => {
@@ -1546,20 +1604,45 @@
                         const y = e.clientY - rect.top;
                         const xPct = (x / rect.width) - 0.5;
                         const yPct = (y / rect.height) - 0.5;
-                        const maxTilt = 4.0;
+                        const maxTilt = parseFloat(el.dataset.maxTilt || 6.0);
                         const tiltX = -(yPct * maxTilt).toFixed(2);
                         const tiltY = (xPct * maxTilt).toFixed(2);
-                        el.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate3d(0, -4px, 10px)`;
+
+                        el.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate3d(0, -6px, 12px)`;
+
+                        // Dynamic glare sheen tracking
+                        if (glare) {
+                            const glareX = (x / rect.width) * 100;
+                            const glareY = (y / rect.height) * 100;
+                            glare.style.opacity = '1';
+                            glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.22) 0%, transparent 60%)`;
+                        }
+
+                        // Parallax internal 3D layers
+                        const depthLayers = el.querySelectorAll('[data-3d-depth]');
+                        depthLayers.forEach(layer => {
+                            const depth = parseFloat(layer.dataset.depth || 18);
+                            const px = (xPct * depth).toFixed(1);
+                            const py = (yPct * depth).toFixed(1);
+                            layer.style.transform = `translate3d(${px}px, ${py}px, ${depth}px)`;
+                        });
                     };
 
                     const onMouseEnter = () => {
                         rect = el.getBoundingClientRect();
                         el.style.transition = 'transform 0.1s ease-out, box-shadow 0.25s ease';
+                        if (glare) glare.style.opacity = '0.7';
                     };
 
                     const onMouseLeave = () => {
-                        el.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease';
+                        el.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease';
                         el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)';
+                        if (glare) glare.style.opacity = '0';
+                        const depthLayers = el.querySelectorAll('[data-3d-depth]');
+                        depthLayers.forEach(layer => {
+                            layer.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                            layer.style.transform = 'translate3d(0, 0, 0)';
+                        });
                         rect = null;
                     };
 
@@ -1567,6 +1650,62 @@
                     el.addEventListener('mousemove', onMouseMove);
                     el.addEventListener('mouseleave', onMouseLeave);
                 });
+
+                // 2. Interactive Hero 3D Stage Mouse Tracking
+                const heroStage = document.getElementById('hero-3d-stage');
+                if (heroStage && !heroStage.dataset.heroTiltActive) {
+                    heroStage.dataset.heroTiltActive = 'true';
+                    let heroRect;
+                    const heroContainer = heroStage.parentElement;
+                    heroContainer.addEventListener('mousemove', (e) => {
+                        if (!heroRect) heroRect = heroContainer.getBoundingClientRect();
+                        const x = e.clientX - heroRect.left;
+                        const y = e.clientY - heroRect.top;
+                        const xPct = (x / heroRect.width) - 0.5;
+                        const yPct = (y / heroRect.height) - 0.5;
+                        const rotX = -(yPct * 12).toFixed(2);
+                        const rotY = (xPct * 16).toFixed(2);
+                        heroStage.style.transform = `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(20px)`;
+                    });
+                    heroContainer.addEventListener('mouseleave', () => {
+                        heroStage.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                        heroStage.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0)';
+                        heroRect = null;
+                    });
+                    heroContainer.addEventListener('mouseenter', () => {
+                        heroStage.style.transition = 'transform 0.15s ease-out';
+                    });
+                }
+
+                // 3. GSAP Stagger Reveals with Guaranteed Visibility Fallback
+                if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                    gsap.registerPlugin(ScrollTrigger);
+
+                    gsap.utils.toArray('.stagger-cards').forEach(container => {
+                        const items = container.children;
+                        if (!items || items.length === 0) return;
+                        gsap.from(items, {
+                            scrollTrigger: {
+                                trigger: container,
+                                start: 'top 92%',
+                                once: true,
+                            },
+                            opacity: 0,
+                            y: 20,
+                            duration: 0.5,
+                            stagger: 0.08,
+                            ease: 'power2.out',
+                            clearProps: 'all',
+                        });
+                    });
+
+                    // Refresh ScrollTrigger once DOM layout and Three.js canvas size settle
+                    setTimeout(() => {
+                        if (typeof ScrollTrigger !== 'undefined') {
+                            ScrollTrigger.refresh();
+                        }
+                    }, 350);
+                }
             }
         };
 

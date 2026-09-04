@@ -54,7 +54,7 @@ class InventoryDashboard extends Page implements HasTable, HasForms
         return $table
             ->query(
                 InventoryItem::query()
-                    ->with(['product'])
+                    ->with(['product.components'])
                     ->join('products', 'inventory_items.product_id', '=', 'products.id')
                     ->select('inventory_items.*')
                     ->orderBy('products.canonical_name')
@@ -89,6 +89,37 @@ class InventoryDashboard extends Page implements HasTable, HasForms
                     })
                     ->tooltip(fn(InventoryItem $record): string => "Physical stock on hand: {$record->quantity_on_hand} {$record->unit}"),
 
+                TextColumn::make('bom_hierarchy')
+                    ->label('BOM / Assembly')
+                    ->badge()
+                    ->state(function (InventoryItem $record): string {
+                        $parentCount = $record->product?->components?->count() ?? 0;
+                        if ($parentCount > 0) {
+                            return "Parent ({$parentCount})";
+                        }
+                        $usages = \App\Models\ProductComponent::where('component_product_id', $record->product_id)->count();
+                        if ($usages > 0) {
+                            return "Sub-Part ({$usages})";
+                        }
+                        return 'Standard';
+                    })
+                    ->color(fn (string $state): string => match (true) {
+                        str_starts_with($state, 'Parent') => 'info',
+                        str_starts_with($state, 'Sub-Part') => 'warning',
+                        default => 'gray',
+                    })
+                    ->tooltip(function (InventoryItem $record): string {
+                        if ($record->product && $record->product->components->isNotEmpty()) {
+                            $partNames = $record->product->components->pluck('component_name')->filter()->take(3)->implode(', ');
+                            return "Parent assembly with sub-components: " . ($partNames ?: 'Multiple parts');
+                        }
+                        $parents = \App\Models\Product::whereHas('components', fn($q) => $q->where('component_product_id', $record->product_id))->pluck('canonical_name')->take(2)->implode(', ');
+                        if ($parents) {
+                            return "Sub-component used in: " . $parents;
+                        }
+                        return 'Standard standalone inventory product';
+                    }),
+
                 TextColumn::make('quantity_reserved')
                     ->label('Reserved')
                     ->numeric(0)
@@ -104,11 +135,35 @@ class InventoryDashboard extends Page implements HasTable, HasForms
                 TextColumn::make('reorder_point')
                     ->label('Reorder Point')
                     ->numeric(0)
-                    ->default('—')
+                    ->placeholder('—')
                     ->tooltip(fn(InventoryItem $record): string => "Minimum safety stock threshold: {$record->reorder_point} {$record->unit}"),
 
                 TextColumn::make('unit')
                     ->label('Unit'),
+
+                TextColumn::make('location')
+                    ->label('Location')
+                    ->badge()
+                    ->color('info')
+                    ->searchable()
+                    ->sortable()
+                    ->default('—')
+                    ->tooltip(fn(InventoryItem $record): string => "Storage Location: " . ($record->location ?: 'Unassigned')),
+
+                TextColumn::make('supplier_name')
+                    ->label('Supplier')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->default('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('po_number')
+                    ->label('P.O. Nos.')
+                    ->searchable()
+                    ->sortable()
+                    ->default('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 IconColumn::make('low_stock_flag')
                     ->label('Low Stock?')
@@ -120,6 +175,23 @@ class InventoryDashboard extends Page implements HasTable, HasForms
                     ->falseColor('success')
                     ->tooltip(fn(InventoryItem $r): string => $r->reorder_point && $r->quantity_on_hand <= $r->reorder_point ? 'Low stock warning: stock level is at or below reorder threshold' : 'Stock level is healthy'),
             ])
+            ->headerActions([
+                Action::make('download_template')
+                    ->label('Download Template')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->url(route('inventory.download-template'))
+                    ->openUrlInNewTab(false)
+                    ->tooltip('Download sample Inventory Report CSV template'),
+
+                Action::make('export_csv')
+                    ->label('Export Inventory Report')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->url(route('inventory.export-report'))
+                    ->openUrlInNewTab(false)
+                    ->tooltip('Export the current inventory report matching reference ledger format'),
+            ])
             ->filters([
                 Filter::make('low_stock')
                     ->label('Low Stock Only')
@@ -130,58 +202,35 @@ class InventoryDashboard extends Page implements HasTable, HasForms
                     ->query(fn(Builder $query) => $query->where('quantity_on_hand', '<=', 0)),
             ])
             ->actions([
-
                 ActionGroup::make([
+                    Action::make('view_bom')
+                        ->label('View BOM Hierarchy')
+                        ->icon('heroicon-o-puzzle-piece')
+                        ->color('info')
+                        ->visible(fn(InventoryItem $record): bool => 
+                            ($record->product && $record->product->components()->exists()) ||
+                            \App\Models\ProductComponent::where('component_product_id', $record->product_id)->exists()
+                        )
+                        ->modalHeading(fn(InventoryItem $record): string => "BOM Hierarchy: {$record->product?->canonical_name}")
+                        ->modalDescription('Parent-child assembly relationship, component stock availability, and unit cost breakdown')
+                        ->modalWidth('5xl')
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Close')
+                        ->modalContent(function (InventoryItem $record) {
+                            $parentComponents = $record->product 
+                                ? $record->product->components()->with(['componentProduct.inventoryItem'])->get() 
+                                : collect();
+                            $usedInParents = \App\Models\Product::whereHas('components', fn($q) => $q->where('component_product_id', $record->product_id))
+                                ->with([
+                                    'inventoryItem',
+                                    'components' => fn($q) => $q->where('component_product_id', $record->product_id),
+                                ])->get();
 
-                    Action::make('adjust_stock')
-                        ->label('Adjust Stock')
-                        ->icon('heroicon-m-adjustments-horizontal')
-                        ->color('primary')
-                        ->tooltip('Perform manual stock adjustment (Initial Stock, Purchase In, Adjustment Up/Down)')
-                        ->form([
-
-                            Select::make('type')
-                                ->label('Adjustment Type')
-                                ->options([
-                                    'initial_stock' => 'Initial Stock',
-                                    'purchase_in' => 'Purchase In (Received)',
-                                    'adjustment_up' => 'Adjustment — Add Stock',
-                                    'adjustment_down' => 'Adjustment — Remove Stock',
-                                ])
-                                ->required(),
-
-                            TextInput::make('quantity')
-                                ->label('Quantity')
-                                ->numeric()
-                                ->minValue(0.0001)
-                                ->required(),
-
-                            Textarea::make('notes')
-                                ->label('Reason / Notes')
-                                ->required(),
-                        ])
-                        ->action(function (InventoryItem $record, array $data) {
-                            try {
-                                app(InventoryService::class)->adjustStock(
-                                    $record,
-                                    (float) $data['quantity'],
-                                    $data['type'],
-                                    $data['notes'],
-                                    auth()->user() ?? User::first()
-                                );
-
-                                Notification::make()
-                                    ->title('Stock Adjusted')
-                                    ->body("Stock updated for {$record->product->canonical_name}. Transaction recorded in Activity Log.")
-                                    ->success()
-                                    ->send();
-                            } catch (\Throwable $e) {
-                                Notification::make()
-                                    ->title('Adjustment Failed')
-                                    ->body($e->getMessage())
-                                    ->danger()
-                                    ->send();
-                            }
+                            return view('filament.components.inventory-bom-modal', [
+                                'record' => $record,
+                                'parentComponents' => $parentComponents,
+                                'usedInParents' => $usedInParents,
+                            ]);
                         }),
 
                     Action::make('view_history')
@@ -194,7 +243,7 @@ class InventoryDashboard extends Page implements HasTable, HasForms
                             return view('filament.modals.inventory-history', compact('transactions'));
                         })
                         ->modalSubmitAction(false),
-                ])
+                ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->heading('Stock Ledger')
             ->emptyStateHeading('No inventory records found')

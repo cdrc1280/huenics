@@ -79,7 +79,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         $payloadRaw = request()->query('payload');
         $payload = [];
         if ($payloadRaw) {
-            $decoded = json_decode(base64_decode($payloadRaw), true);
+            $normalized = strtr($payloadRaw, '-_', '+/');
+            $mod4 = strlen($normalized) % 4;
+            if ($mod4 > 0) {
+                $normalized .= str_repeat('=', 4 - $mod4);
+            }
+            $decoded = json_decode(base64_decode($normalized), true);
             if (is_array($decoded)) {
                 $payload = $decoded;
             }
@@ -156,7 +161,56 @@ Route::middleware(['web', 'auth'])->group(function () {
             'Content-Disposition' => 'attachment; filename="SI-' . $salesInvoice->si_number . '.pdf"',
         ]);
     })->name('sales-invoices.export-pdf');
+
+    // Products Catalog CSV Export & Template Download
+    Route::get('/products/export-csv', function () {
+        $csv = app(\App\Services\ProductImportExportService::class)->exportCsv();
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-' . date('Ymd-His') . '.csv"',
+        ]);
+    })->name('products.export-csv');
+
+    Route::get('/products/download-template', function () {
+        $template = app(\App\Services\ProductImportExportService::class)->generateSampleCsvTemplate();
+        return response($template, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="huenics-product-import-template.csv"',
+        ]);
+    })->name('products.download-template');
+
+    // Inventory Report CSV Export & Template Download
+    Route::get('/inventory/export-report', function () {
+        $csv = app(\App\Services\InventoryReportService::class)->exportInventoryReport();
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="huenics-inventory-report-' . date('Ymd-His') . '.csv"',
+        ]);
+    })->name('inventory.export-report');
+
+    Route::get('/inventory/download-template', function () {
+        $template = app(\App\Services\InventoryReportService::class)->generateSampleInventoryCsv();
+        return response($template, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="huenics-inventory-template.csv"',
+        ]);
+    })->name('inventory.download-template');
 });
+
+// ─── Public Storage Asset Fallback Route ────────────────────────────────────
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath) || is_dir($fullPath)) {
+        abort(404, 'Asset not found.');
+    }
+
+    $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+
+    return response()->file($fullPath, [
+        'Content-Type'  => $mime,
+        'Cache-Control' => 'public, max-age=86400, immutable',
+    ]);
+})->where('path', '.*')->name('storage.local');
 
 // ─── HTTP Fallback Route (Uniform Design & Smart Alias Routing) ─────────────
 Route::fallback([CustomerPortalController::class, 'fallback'])->name('fallback');

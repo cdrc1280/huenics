@@ -18,6 +18,15 @@ class InventoryTransaction extends Model
         'reference_type',
         'reference_id',
         'quantity',
+        'po_number',
+        'supplier_name',
+        'customer_name',
+        'project_name',
+        'location',
+        'date_released',
+        'transit_in',
+        'transit_out',
+        'balance_after',
         'notes',
         'performed_by',
         'created_at',
@@ -26,8 +35,12 @@ class InventoryTransaction extends Model
     protected function casts(): array
     {
         return [
-            'quantity' => 'decimal:4',
-            'created_at' => 'datetime',
+            'quantity'      => 'decimal:4',
+            'transit_in'    => 'decimal:4',
+            'transit_out'   => 'decimal:4',
+            'balance_after' => 'decimal:4',
+            'date_released' => 'date',
+            'created_at'    => 'datetime',
         ];
     }
 

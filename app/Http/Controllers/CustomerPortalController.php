@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationLineItem;
@@ -48,14 +49,16 @@ class CustomerPortalController extends Controller implements HasMiddleware
     {
         $featuredProducts = Product::query()
             ->where('is_active', true)
-            ->inRandomOrder()
-            ->take(6)
+            ->with(['inventoryItem'])
+            ->orderBy('category')
+            ->orderBy('canonical_name')
+            ->take(16)
             ->get();
 
         $categories = $this->getActiveCategories();
 
         $totalProductsCount = Product::query()->where('is_active', true)->count();
-        $yearsInBusiness = 4;
+        $yearsInBusiness = CompanySetting::getYearsInBusiness();
 
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,

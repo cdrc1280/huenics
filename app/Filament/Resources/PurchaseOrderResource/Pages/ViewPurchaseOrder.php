@@ -337,7 +337,19 @@ class ViewPurchaseOrder extends ViewRecord
                             default => 'warning',
                         }),
                     TextEntry::make('actual_delivery_date')->label('Delivered On')->date('M j, Y')->placeholder('Not yet delivered'),
-                    TextEntry::make('delivery_receipt_no')->label('DR #')->placeholder('—'),
+                    TextEntry::make('delivery_receipt_numbers_string')
+                        ->label('Linked DR #s')
+                        ->badge()
+                        ->color('info')
+                        ->placeholder('—'),
+                    TextEntry::make('sales_invoice_numbers_string')
+                        ->label('Linked SI #s')
+                        ->badge()
+                        ->color('success')
+                        ->placeholder('—'),
+                    TextEntry::make('total_invoiced_amount')
+                        ->label('Total Invoiced')
+                        ->money('PHP'),
                     TextEntry::make('warranty_status')->label('Warranty Status')->badge()
                         ->color(fn(string $state) => match ($state) {
                             PurchaseOrder::WARRANTY_ACTIVE => 'success',

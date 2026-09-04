@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\SalesInvoiceStatus;
+use App\Enums\UnitOfMeasure;
 use App\Filament\Resources\SalesInvoiceResource\Pages;
 use App\Models\DeliveryReceipt;
 use App\Models\Product;
@@ -20,6 +22,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -43,17 +46,19 @@ class SalesInvoiceResource extends Resource
 {
     protected static ?string $model = SalesInvoice::class;
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-receipt-percent';
+    protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+    protected static ?string $navigationLabel = 'Sales Invoices (SI)';
+    protected static ?int $navigationSort = 4;
 
-    public static function shouldRegisterNavigation(): bool
+    public static function canAccess(): bool
     {
-        return false;
+        return auth()->user()?->canManageQuotations() ?? true;
     }
 
     public static function canCreate(): bool
     {
-        // SIs are strictly uploaded from physical hard copies via the unified Upload DR & SI workflow
-        return false;
+        return true;
     }
 
     public static function getEloquentQuery(): Builder
@@ -61,98 +66,136 @@ class SalesInvoiceResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ])
+            ->with(['purchaseOrder.project', 'deliveryReceipt', 'items']);
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Invoice Header Details')
-                ->description('Attached physical sales invoice details, customer, and payment status.')
+            Section::make('Sales Invoice Header (Official BIR Green Form)')
+                ->description('Huenics Industrial Sales Inc. pre-printed official serial Sales Invoice details.')
                 ->icon('heroicon-o-receipt-percent')
                 ->schema([
-                    TextInput::make('si_number')
-                        ->label('SI #')
-                        ->required()
-                        ->default(fn () => SalesInvoice::generateNumber())
-                        ->dehydrated(),
+                    Grid::make(3)->schema([
+                        TextInput::make('si_number')
+                            ->label('SI # (Serial No.)')
+                            ->placeholder('e.g. 0402, 0403, 0424')
+                            ->default(fn () => SalesInvoice::generateNumber())
+                            ->required()
+                            ->dehydrated(),
 
-                    Select::make('purchase_order_id')
-                        ->label('Purchase Order')
-                        ->relationship('purchaseOrder', 'po_number')
-                        ->searchable()
-                        ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, $set) {
-                            if ($state) {
-                                $po = PurchaseOrder::with('lineItems.product')->find($state);
-                                if ($po) {
-                                    $set('customer_name', $po->customer_name);
-                                    $subtotal = 0;
-                                    $items = $po->lineItems->map(function ($line) use (&$subtotal) {
-                                        $qty = (float) $line->qty;
-                                        $price = (float) ($line->discounted_price ?: $line->unit_price);
-                                        $lineTotal = (float) ($line->line_total ?: round($qty * $price, 2));
-                                        $subtotal += $lineTotal;
-                                        return [
-                                            'product_id' => $line->product_id,
-                                            'description' => $line->description ?: ($line->product?->canonical_name ?? 'Line Item'),
-                                            'qty' => $qty,
-                                            'unit' => $line->unit ?: 'pcs',
-                                            'unit_price' => $price,
-                                            'line_total' => $lineTotal,
-                                        ];
-                                    })->toArray();
-                                    $vat = round($subtotal * 0.12, 2);
-                                    $set('items', $items);
-                                    $set('subtotal', $subtotal);
-                                    $set('vat_amount', $vat);
-                                    $set('total_amount', $subtotal + $vat);
+                        DatePicker::make('invoice_date')
+                            ->label('Invoice Date')
+                            ->required()
+                            ->default(now()),
+
+                        Select::make('payment_status')
+                            ->label('Payment Status')
+                            ->options(SalesInvoiceStatus::class)
+                            ->required()
+                            ->default(SalesInvoiceStatus::Paid),
+                    ]),
+
+                    Grid::make(2)->schema([
+                        Select::make('purchase_order_id')
+                            ->label('Purchase Order Reference')
+                            ->relationship('purchaseOrder', 'po_number')
+                            ->searchable()
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state) {
+                                    $po = PurchaseOrder::with(['lineItems.product', 'project', 'deliveryReceipts'])->find($state);
+                                    if ($po) {
+                                        $set('customer_name', $po->customer_name);
+                                        $set('business_style', $po->customer_name);
+                                        $set('billing_address', $po->project?->location ?? null);
+                                        if ($po->deliveryReceipts->isNotEmpty()) {
+                                            $set('delivery_receipt_numbers', $po->deliveryReceipts->pluck('dr_number')->implode(', '));
+                                        }
+
+                                        $subtotal = 0;
+                                        $items = $po->lineItems->map(function ($line) use (&$subtotal) {
+                                            $qty = (float) $line->qty;
+                                            $price = (float) ($line->discounted_price ?: $line->unit_price);
+                                            $lineTotal = (float) ($line->line_total ?: round($qty * $price, 2));
+                                            $subtotal += $lineTotal;
+                                            return [
+                                                'product_id'  => $line->product_id,
+                                                'description' => $line->description ?: ($line->product?->canonical_name ?? 'Line Item'),
+                                                'qty'         => $qty,
+                                                'unit'        => $line->unit ?: 'pcs',
+                                                'unit_price'  => $price,
+                                                'line_total'  => $lineTotal,
+                                            ];
+                                        })->toArray();
+
+                                        $netOfVat = round($subtotal / 1.12, 2);
+                                        $vat = round($netOfVat * 0.12, 2);
+
+                                        $set('items', $items);
+                                        $set('subtotal', $subtotal);
+                                        $set('discount_amount', 0);
+                                        $set('net_of_vat', $netOfVat);
+                                        $set('vatable_sales', $netOfVat);
+                                        $set('vat_amount', $vat);
+                                        $set('total_amount', round($netOfVat + $vat, 2));
+                                    }
                                 }
-                            }
-                        }),
+                            }),
 
-                    Select::make('delivery_receipt_id')
-                        ->label('Linked Delivery Receipt (DR)')
-                        ->relationship('deliveryReceipt', 'dr_number')
-                        ->searchable()
-                        ->nullable(),
+                        TextInput::make('customer_name')
+                            ->label('Sold To (Customer Name)')
+                            ->required(),
 
-                    TextInput::make('customer_name')
-                        ->label('Customer / Company')
-                        ->required(),
+                        TextInput::make('customer_tin')
+                            ->label('Customer TIN')
+                            ->placeholder('e.g. 005-129-052-00000'),
 
-                    TextInput::make('billing_address')
-                        ->label('Billing Address')
-                        ->columnSpanFull(),
+                        TextInput::make('business_style')
+                            ->label('Business Style')
+                            ->placeholder('e.g. MGS CONSTRUCTION, INC.'),
 
-                    DatePicker::make('invoice_date')
-                        ->label('Invoice Date')
-                        ->required()
-                        ->default(now()),
+                        TextInput::make('terms')
+                            ->label('Terms')
+                            ->placeholder('e.g. 30 Days / COD'),
 
-                    DatePicker::make('due_date')
-                        ->label('Due Date')
-                        ->default(now()->addDays(30)),
+                        Textarea::make('billing_address')
+                            ->label('Billing Address')
+                            ->placeholder('Customer registered billing address')
+                            ->columnSpanFull(),
 
-                    Select::make('payment_status')
-                        ->label('Payment Status')
-                        ->options(\App\Enums\SalesInvoiceStatus::class)
-                        ->required()
-                        ->default(\App\Enums\SalesInvoiceStatus::Paid),
+                        TextInput::make('delivery_receipt_numbers')
+                            ->label('Cross-Ref DR # (DR Numbers)')
+                            ->placeholder('e.g. 00426, 00423')
+                            ->helperText('Connected Delivery Receipt numbers for this billing'),
 
-                    DatePicker::make('payment_date')
-                        ->label('Payment Date')
-                        ->nullable(),
+                        TextInput::make('collection_receipt_numbers')
+                            ->label('Collection Receipt # (RC #)')
+                            ->placeholder('e.g. RC# 1410708, 1410709, 1410710')
+                            ->helperText('Official Collection Receipts issued for this billing'),
 
-                    Textarea::make('notes')
-                        ->label('Payment / Invoicing Notes')
-                        ->columnSpanFull(),
-                ])
-                ->columns(2),
+                        TextInput::make('rs_number')
+                            ->label('Requisition Slip # (RS #)')
+                            ->placeholder('e.g. RS-042'),
 
-            Section::make('Invoice Line Items')
-                ->description('Itemized breakdown of billable goods matching the Purchase Order.')
+                        TextInput::make('osca_pwd_id')
+                            ->label('OSCA / PWD ID No.')
+                            ->placeholder('Senior Citizen / PWD ID if applicable'),
+
+                        DatePicker::make('due_date')
+                            ->label('Due Date')
+                            ->default(now()->addDays(30)),
+
+                        DatePicker::make('payment_date')
+                            ->label('Payment Date')
+                            ->nullable(),
+                    ]),
+                ]),
+
+            Section::make('Articles / Billed Line Items')
+                ->description('Itemized billable goods matching the Purchase Order.')
                 ->icon('heroicon-o-list-bullet')
                 ->schema([
                     Repeater::make('items')
@@ -162,11 +205,10 @@ class SalesInvoiceResource extends Resource
                                 ->label('Product')
                                 ->options(Product::pluck('canonical_name', 'id'))
                                 ->searchable()
-                                ->required()
-                                ->columnSpan(5),
+                                ->columnSpan(4),
 
                             TextInput::make('qty')
-                                ->label('Qty')
+                                ->label('QTY.')
                                 ->numeric()
                                 ->required()
                                 ->live()
@@ -178,14 +220,19 @@ class SalesInvoiceResource extends Resource
                                 ->columnSpan(2),
 
                             Select::make('unit')
-                                ->label('Unit')
-                                ->options(\App\Enums\UnitOfMeasure::class)
+                                ->label('UNIT')
+                                ->options(UnitOfMeasure::class)
                                 ->default('pcs')
                                 ->required()
                                 ->columnSpan(1),
 
+                            TextInput::make('description')
+                                ->label('ARTICLES / Description')
+                                ->required()
+                                ->columnSpan(5),
+
                             TextInput::make('unit_price')
-                                ->label('Unit Price (₱)')
+                                ->label('UNIT PRICE (₱)')
                                 ->numeric()
                                 ->prefix('₱')
                                 ->required()
@@ -195,43 +242,133 @@ class SalesInvoiceResource extends Resource
                                     $qty = (float) $get('qty');
                                     $set('line_total', round($qty * $price, 2));
                                 })
-                                ->columnSpan(2),
+                                ->columnSpan(3),
 
                             TextInput::make('line_total')
-                                ->label('Total (₱)')
+                                ->label('AMOUNT (₱)')
                                 ->numeric()
                                 ->prefix('₱')
                                 ->required()
-                                ->columnSpan(2),
+                                ->columnSpan(3),
                         ])
-                        ->columns(12)
+                        ->columns(18)
                         ->defaultItems(1)
                         ->addActionLabel('+ Add Invoice Item'),
                 ]),
 
-            Section::make('Invoice Financial Summary')
-                ->description('Calculated totals including subtotal, 12% Value Added Tax, and net invoice amount.')
+            Section::make('Financial Summary & BIR VAT Breakdown')
+                ->description('Official 12% Value Added Tax breakdown matching the physical green invoice form.')
                 ->icon('heroicon-o-calculator')
                 ->schema([
                     Grid::make(3)->schema([
                         TextInput::make('subtotal')
-                            ->label('Subtotal (₱)')
+                            ->label('Total Sales (VAT Inclusive) ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                $total = (float) $state;
+                                $discount = (float) ($get('discount_amount') ?? 0);
+                                $netOfVat = round(($total - $discount) / 1.12, 2);
+                                $vat = round($netOfVat * 0.12, 2);
+                                $set('net_of_vat', $netOfVat);
+                                $set('vatable_sales', $netOfVat);
+                                $set('vat_amount', $vat);
+                                $set('total_amount', round($netOfVat + $vat, 2));
+                            }),
+
+                        TextInput::make('discount_amount')
+                            ->label('Less: Discount ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->default(0)
+                            ->live()
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                $discount = (float) $state;
+                                $total = (float) ($get('subtotal') ?? 0);
+                                $netOfVat = round(($total - $discount) / 1.12, 2);
+                                $vat = round($netOfVat * 0.12, 2);
+                                $set('net_of_vat', $netOfVat);
+                                $set('vatable_sales', $netOfVat);
+                                $set('vat_amount', $vat);
+                                $set('total_amount', round($netOfVat + $vat, 2));
+                            }),
+
+                        TextInput::make('net_of_vat')
+                            ->label('Amount Net of VAT ₱')
                             ->numeric()
                             ->prefix('₱')
                             ->required(),
+
+                        TextInput::make('vatable_sales')
+                            ->label('VATable Sales ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->required(),
+
+                        TextInput::make('vat_exempt_sales')
+                            ->label('VAT-Exempt Sales ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->default(0),
+
+                        TextInput::make('zero_rated_sales')
+                            ->label('Zero Rated Sales ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->default(0),
 
                         TextInput::make('vat_amount')
-                            ->label('VAT 12% (₱)')
+                            ->label('VAT-Amount (12%) ₱')
                             ->numeric()
                             ->prefix('₱')
                             ->required(),
 
+                        TextInput::make('withholding_tax')
+                            ->label('Less: Withholding Tax ₱')
+                            ->numeric()
+                            ->prefix('₱')
+                            ->default(0),
+
                         TextInput::make('total_amount')
-                            ->label('Grand Total (₱)')
+                            ->label('TOTAL AMOUNT DUE ₱')
                             ->numeric()
                             ->prefix('₱')
                             ->required(),
                     ]),
+                ]),
+
+            Section::make('Signatures & Acknowledgements')
+                ->icon('heroicon-o-pencil-square')
+                ->schema([
+                    Grid::make(2)->schema([
+                        TextInput::make('cashier_representative')
+                            ->label('Cashier / Authorized Representative')
+                            ->placeholder('Name of authorized representative'),
+
+                        DatePicker::make('cashier_signature_date')
+                            ->label('Cashier Signature Date')
+                            ->default(now()),
+
+                        Textarea::make('notes')
+                            ->label('Invoicing / Payment Notes')
+                            ->columnSpanFull(),
+                    ]),
+                ]),
+
+            Section::make('Scanned Hard Copy (Physical Green SI)')
+                ->icon('heroicon-o-document-arrow-up')
+                ->schema([
+                    FileUpload::make('file_path')
+                        ->label('Upload Scanned SI (PDF or Image)')
+                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                        ->maxSize(25600)
+                        ->disk('local')
+                        ->directory('documents/si')
+                        ->preserveFilenames()
+                        ->helperText('Attach scanned official green sales invoice with cashier stamp and signature.')
+                        ->columnSpanFull(),
                 ]),
         ]);
     }
@@ -253,103 +390,92 @@ class SalesInvoiceResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->color('primary')
-                    ->tooltip(fn(SalesInvoice $r): string => "Linked PO: " . ($r->purchaseOrder?->po_number ?? 'N/A')),
+                    ->tooltip(fn (SalesInvoice $r): string => "Linked PO: " . ($r->purchaseOrder?->po_number ?? 'N/A')),
 
                 TextColumn::make('customer_name')
                     ->label('Customer')
                     ->searchable()
-                    ->sortable()
-                    ->tooltip(fn(SalesInvoice $r): string => "Customer: " . $r->customer_name),
-
-                IconColumn::make('has_document')
-                    ->label('Attached Copy')
-                    ->state(fn(SalesInvoice $r): bool => !empty($r->document_id))
-                    ->boolean()
-                    ->trueIcon('heroicon-s-document-check')
-                    ->falseIcon('heroicon-o-document')
-                    ->trueColor('success')
-                    ->falseColor('gray')
-                    ->tooltip(fn(SalesInvoice $r): string => $r->document ? "Hard copy attached: {$r->document->original_filename}" : 'Physical copy linked'),
+                    ->sortable(),
 
                 TextColumn::make('invoice_date')
                     ->label('Invoice Date')
                     ->date('M d, Y')
                     ->sortable(),
 
-                TextColumn::make('total_amount')
-                    ->label('Total Amount')
+                TextColumn::make('delivery_receipt_numbers')
+                    ->label('DR #s')
+                    ->default('—')
+                    ->badge()
+                    ->color('info'),
+
+                TextColumn::make('collection_receipt_numbers')
+                    ->label('RC #s')
+                    ->default('—')
+                    ->badge()
+                    ->color('gray'),
+
+                TextColumn::make('subtotal')
+                    ->label('Sales (VAT Inc.)')
                     ->money('PHP')
-                    ->sortable()
+                    ->sortable(),
+
+                TextColumn::make('vat_amount')
+                    ->label('12% VAT')
+                    ->money('PHP')
+                    ->sortable(),
+
+                TextColumn::make('total_amount')
+                    ->label('Total Due')
+                    ->money('PHP')
                     ->weight('bold')
-                    ->color('primary'),
+                    ->color('success')
+                    ->sortable(),
 
                 TextColumn::make('payment_status')
-                    ->label('Payment')
+                    ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'unpaid' => 'Unpaid',
-                        'partial' => 'Partial',
-                        'paid' => 'Paid',
-                        'cancelled' => 'Cancelled',
-                        default => ucfirst(str_replace('_', ' ', $state)),
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'unpaid', 'cancelled' => 'danger',
-                        'partial' => 'warning',
+                    ->color(fn ($state) => match ($state instanceof SalesInvoiceStatus ? $state->value : (string) $state) {
                         'paid' => 'success',
+                        'partial' => 'warning',
+                        'unpaid' => 'danger',
                         default => 'gray',
                     }),
 
-                TextColumn::make('payment_date')
-                    ->label('Paid On')
-                    ->date('M d, Y')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('file_path')
+                    ->label('Scanned Copy')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-document-check')
+                    ->falseIcon('heroicon-o-document')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->getStateUsing(fn (SalesInvoice $r): bool => !empty($r->file_path) || !empty($r->document_id)),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('payment_status')
-                    ->options([
-                        'unpaid' => 'Unpaid',
-                        'partial' => 'Partial',
-                        'paid' => 'Paid',
-                    ]),
+                    ->options(SalesInvoiceStatus::class),
                 TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
-                    Action::make('mark_paid')
-                        ->label('Record Full Payment')
-                        ->icon('heroicon-m-banknotes')
-                        ->color('success')
-                        ->visible(fn(SalesInvoice $r): bool => !$r->trashed() && $r->payment_status !== 'paid')
-                        ->requiresConfirmation()
-                        ->action(function (SalesInvoice $record) {
-                            $record->update([
-                                'payment_status' => 'paid',
-                                'payment_date' => now()->toDateString(),
-                            ]);
-                            Notification::make()->title('Payment Recorded')->body("Invoice {$record->si_number} marked as Paid.")->success()->send();
-                        }),
-
                     Action::make('export_pdf')
                         ->label('Export PDF')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('gray')
-                        ->visible(fn(SalesInvoice $record): bool => !$record->trashed())
                         ->url(fn (SalesInvoice $record) => route('sales-invoices.export-pdf', $record))
                         ->openUrlInNewTab(),
 
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(SalesInvoice $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(SalesInvoice $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (SalesInvoice $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (SalesInvoice $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }
@@ -357,8 +483,10 @@ class SalesInvoiceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSalesInvoices::route('/'),
-            'edit' => Pages\EditSalesInvoice::route('/{record}/edit'),
+            'index'  => Pages\ListSalesInvoices::route('/'),
+            'create' => Pages\CreateSalesInvoice::route('/create'),
+            'view'   => Pages\ViewSalesInvoice::route('/{record}'),
+            'edit'   => Pages\EditSalesInvoice::route('/{record}/edit'),
         ];
     }
 }

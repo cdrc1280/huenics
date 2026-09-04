@@ -250,7 +250,8 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             'tcRemarksNonReturnable' => $this->tcRemarksNonReturnable,
         ];
 
-        $encoded = base64_encode(json_encode($payload));
+        $json = json_encode($payload);
+        $encoded = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
         return route('documents.live-pdf', ['document' => $this->currentDocument->id, 'payload' => $encoded, 'v' => substr(md5($encoded), 0, 8)]);
     }
 
@@ -696,11 +697,6 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     {
         if (!$this->currentDocument) {
             return false;
-        }
-
-        // Purchase Orders are strictly read-only in the review queue
-        if ($this->currentDocument->document_type === Document::TYPE_PURCHASE_ORDER) {
-            return true;
         }
 
         $user = auth()->user();

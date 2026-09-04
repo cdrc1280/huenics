@@ -19,6 +19,9 @@ class Product extends Model
         'image_path',
         'sku',
         'category',
+        'wattage',
+        'voltage',
+        'color_temperature',
         'unit_default',
         'default_price',
         'base_cost_price',
@@ -87,6 +90,30 @@ class Product extends Model
             ->groupBy('component_group')
             ->map(fn ($items) => $items->values())
             ->toArray();
+    }
+
+    /**
+     * Get total Bill of Materials (BOM) cost rolling up all sub-components.
+     */
+    public function getTotalBomCostAttribute(): float
+    {
+        return (float) $this->components->sum(fn (ProductComponent $c) => $c->total_cost);
+    }
+
+    /**
+     * Get count of attached sub-components.
+     */
+    public function getComponentsCountAttribute(): int
+    {
+        return (int) $this->components()->count();
+    }
+
+    /**
+     * Check whether product has sub-components configured.
+     */
+    public function getHasSubComponentsAttribute(): bool
+    {
+        return $this->components()->exists();
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────

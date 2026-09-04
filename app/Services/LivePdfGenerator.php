@@ -51,14 +51,33 @@ class LivePdfGenerator
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
 
         $dompdf = new Dompdf($options);
 
-        $html = view('pdf.live-document-template', $data)->render();
-        $dompdf->loadHtml($html);
+        // Normalize data to clean UTF-8 and standard ASCII slashes to avoid '?' rendering
+        $cleanedData = $this->normalizePdfData($data);
+
+        $html = view('pdf.live-document-template', $cleanedData)->render();
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
         return $dompdf->output();
+    }
+
+    private function normalizePdfData(mixed $data): mixed
+    {
+        if (is_array($data)) {
+            return array_map([$this, 'normalizePdfData'], $data);
+        }
+
+        if (is_string($data)) {
+            // Replace non-ASCII/Unicode alternative slashes with standard ASCII '/'
+            $data = str_replace(["\xE2\x88\x95", "\xE2\x81\x84", "\xEF\xBC\x8F", '∕', '⁄', '／'], '/', $data);
+            return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+        }
+
+        return $data;
     }
 }

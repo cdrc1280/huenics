@@ -18,16 +18,26 @@ class InventoryItem extends Model
         'quantity_reserved',
         'reorder_point',
         'unit',
+        'location',
+        'supplier_name',
+        'po_number',
+        'customer_name',
+        'project_name',
+        'date_released',
+        'inbound_date',
+        'remarks',
         'last_counted_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity_on_hand' => 'decimal:4',
+            'quantity_on_hand'  => 'decimal:4',
             'quantity_reserved' => 'decimal:4',
-            'reorder_point' => 'decimal:4',
-            'last_counted_at' => 'datetime',
+            'reorder_point'     => 'decimal:4',
+            'date_released'     => 'date',
+            'inbound_date'      => 'date',
+            'last_counted_at'   => 'datetime',
         ];
     }
 

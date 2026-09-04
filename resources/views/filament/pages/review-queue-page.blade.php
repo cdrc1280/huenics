@@ -741,25 +741,37 @@
                         @forelse($editableItems as $index => $item)
                             <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                 <x-filament::section compact>
-                                    @if (!empty($item['total_mismatch']))
-                                        <x-slot name="heading">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-danger-600 text-white shadow-sm dark:bg-danger-500" style="display: inline-flex; align-items: center; gap: 0.375rem; white-space: nowrap; vertical-align: middle;">
-                                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4 inline-block text-white shrink-0" />
-                                                <span style="display: inline; vertical-align: middle;">Discrepancy Flagged</span>
+                                    <x-slot name="heading">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                            <span class="font-bold text-xs text-gray-800 dark:text-gray-200">
+                                                Line #{{ $item['line_no'] ?? ($index + 1) }}
                                             </span>
-                                        </x-slot>
-                                    @endif
+                                            @if (!empty($item['material_code']))
+                                                <span class="font-mono text-xs text-gray-500 dark:text-gray-400">[{{ $item['material_code'] }}]</span>
+                                            @endif
+                                            @if (!empty($item['total_mismatch']))
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-danger-600 text-white shadow-sm dark:bg-danger-500">
+                                                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-3.5 w-3.5 inline-block text-white shrink-0" />
+                                                    Discrepancy Flagged
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </x-slot>
 
                                     <x-slot name="headerEnd">
                                         @if (!$this->isReadOnly)
-                                            <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
                                                 <x-filament::icon-button wire:click="cloneLineItem({{ $index }})"
                                                     icon="heroicon-m-document-duplicate" color="gray" size="sm"
                                                     tooltip="Duplicate Item" label="Duplicate" />
 
-                                                <x-filament::icon-button wire:click="removeLineItem({{ $index }})"
-                                                    icon="heroicon-m-trash" color="danger" size="sm"
-                                                    tooltip="Delete Line Item" label="Delete" />
+                                                <x-filament::button wire:click="removeLineItem({{ $index }})"
+                                                    color="danger" size="xs"
+                                                    icon="heroicon-m-trash"
+                                                    tooltip="Delete Line Item"
+                                                    wire:confirm="Are you sure you want to delete this line item?">
+                                                    Delete
+                                                </x-filament::button>
                                             </div>
                                         @endif
                                     </x-slot>
