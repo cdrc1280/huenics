@@ -81,7 +81,20 @@
                                     </tr>
                                 </thead>
                                 <tbody id="items-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
-                                    <!-- Dynamic rows populated via JavaScript from CartManager -->
+                                    <!-- Bento Pulse Skeleton Placeholder (Replaced by JS on cart load) -->
+                                    @for($sk = 0; $sk < 3; $sk++)
+                                    <tr class="bento-pulse">
+                                        <td class="py-4 px-3 text-center"><div class="h-4 w-5 rounded bg-slate-200/80 dark:bg-slate-700/70 mx-auto"></div></td>
+                                        <td class="py-4 px-3">
+                                            <div class="h-4 w-{{ ['2/3', '3/4', '1/2'][$sk] }} rounded bg-slate-200/80 dark:bg-slate-700/70 mb-1.5"></div>
+                                            <div class="h-3 w-1/3 rounded bg-slate-200/50 dark:bg-slate-800/60"></div>
+                                        </td>
+                                        <td class="py-4 px-3 text-center"><div class="h-5 w-14 rounded bg-slate-200/70 dark:bg-slate-700/70 mx-auto"></div></td>
+                                        <td class="py-4 px-3 text-center"><div class="h-7 w-16 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 mx-auto"></div></td>
+                                        <td class="py-4 px-3 text-center"><div class="h-5 w-24 rounded-full bg-blue-100/70 dark:bg-blue-950/70 mx-auto"></div></td>
+                                        <td class="py-4 px-3 text-center"><div class="h-6 w-6 rounded bg-slate-200/60 dark:bg-slate-700/60 mx-auto"></div></td>
+                                    </tr>
+                                    @endfor
                                 </tbody>
                             </table>
                         </div>

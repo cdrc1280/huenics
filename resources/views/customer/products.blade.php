@@ -81,7 +81,12 @@
         </div>
         @endif
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Bento Grid Pulse Loading Skeleton for Dynamic Filter & Search -->
+        <div id="products-bento-skeleton" class="hidden">
+            <x-bento-skeleton variant="catalog" :count="8" />
+        </div>
+
+        <div id="products-real-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($products as $product)
             <div class="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-slate-800 hover:border-[#214fe0] dark:hover:border-[#3b82f6] rounded-2xl p-4 shadow-sm hover:shadow-xl dark:hover:shadow-[0_12px_30px_rgba(33,79,224,0.18)] card-interactive flex flex-col justify-between group">
                 <div>
@@ -234,11 +239,50 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', window.updateFloatingCartBar);
-    document.addEventListener('huenics:page-loaded', window.updateFloatingCartBar);
+    window.showProductsSkeleton = function() {
+        const skeleton = document.getElementById('products-bento-skeleton');
+        const grid = document.getElementById('products-real-grid');
+        if (skeleton && grid) {
+            grid.classList.add('hidden');
+            skeleton.classList.remove('hidden');
+        }
+    };
+
+    window.hideProductsSkeleton = function() {
+        const skeleton = document.getElementById('products-bento-skeleton');
+        const grid = document.getElementById('products-real-grid');
+        if (skeleton && grid) {
+            skeleton.classList.add('hidden');
+            grid.classList.remove('hidden');
+        }
+    };
+
+    document.addEventListener('click', function(e) {
+        const catLink = e.target.closest('a[href*="/products"]');
+        if (catLink && !catLink.getAttribute('href').startsWith('#')) {
+            window.showProductsSkeleton();
+        }
+    });
+
+    const searchForm = document.querySelector('form[action*="/products"]');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function() {
+            window.showProductsSkeleton();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        window.updateFloatingCartBar();
+        window.hideProductsSkeleton();
+    });
+    document.addEventListener('huenics:page-loaded', function() {
+        window.updateFloatingCartBar();
+        window.hideProductsSkeleton();
+    });
     // Immediate invocation if dynamically loaded
     if (document.readyState !== 'loading') {
         window.updateFloatingCartBar();
+        window.hideProductsSkeleton();
     }
 </script>
 @endpush
