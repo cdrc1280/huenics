@@ -10,7 +10,7 @@
         <div class="print:hidden bg-white dark:bg-[#111827] border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors animate-fade-in-up">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl font-bold shrink-0">
-                    <i class="fa-solid fa-circle-check"></i>
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-slate-900 dark:text-white">
@@ -26,19 +26,19 @@
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
                 <a href="{{ route('customer.quotation.download-pdf', ['payload' => base64_encode(json_encode($quote))]) }}" 
                    class="flex-1 md:flex-initial bg-[#214fe0] hover:bg-[#1a42be] btn-interactive text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
-                    <i class="fa-solid fa-file-pdf"></i>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>Download PDF</span>
                 </a>
 
                 <button type="button" onclick="window.print()" 
                         class="flex-1 md:flex-initial bg-slate-800 dark:bg-[#161f38] hover:bg-slate-700 dark:hover:bg-slate-700 btn-interactive text-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-transparent dark:border-slate-700">
-                    <i class="fa-solid fa-print"></i>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     <span>Print</span>
                 </button>
 
                 <a href="{{ route('customer.quotation-builder') }}" 
-                   class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 btn-interactive text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700">
-                    <i class="fa-solid fa-arrow-left"></i>
+                   class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 btn-interactive text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 border border-slate-300 dark:border-slate-700">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     <span>New Estimate</span>
                 </a>
             </div>
@@ -68,7 +68,7 @@
 
                 <div class="text-left sm:text-right space-y-1.5">
                     <span class="inline-flex items-center bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60 font-bold text-xs px-3 py-1 rounded-md uppercase tracking-wider print:bg-blue-100 print:text-blue-900">
-                        <i class="fa-solid fa-file-invoice-dollar mr-1.5 text-blue-700 dark:text-blue-400"></i>
+                        <svg class="w-3.5 h-3.5 mr-1.5 text-blue-700 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>Bill of Quantities (BOQ) &amp; RFQ</span>
                     </span>
                     <div class="text-sm font-bold font-mono text-slate-900 dark:text-white print:text-slate-900">
@@ -159,7 +159,7 @@
                             <td class="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400 print:text-slate-600">{{ $item['unit'] }}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full whitespace-nowrap print:border-blue-300 print:text-[#214fe0]">
-                                    <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Quote Upon Request
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Quote Upon Request
                                 </span>
                             </td>
                         </tr>

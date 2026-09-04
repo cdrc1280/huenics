@@ -22,50 +22,106 @@
     <!-- Compiled Production Tailwind CSS & Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Production Vector Icons (Lucide Icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         [x-cloak] { display: none !important; }
         
-        /* View Transitions API (Modern SPA & Theme Waves) */
+        /* -------------------------------------------------------------
+         * 1. Ultra-Smooth View Transitions & Theme Crossfade
+         * Eliminates twinkling, flickering, and node repainting
+         * ------------------------------------------------------------- */
         @view-transition {
             navigation: auto;
         }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 250ms;
+            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
         ::view-transition-old(root) {
-            animation: 160ms cubic-bezier(0.16, 1, 0.3, 1) both pageFadeOut;
+            animation-name: rootFadeOut;
         }
         ::view-transition-new(root) {
-            animation: 260ms cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
+            animation-name: rootFadeIn;
+            mix-blend-mode: normal;
         }
-        @keyframes pageFadeOut {
+
+        @keyframes rootFadeOut {
             from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.99); }
+            to { opacity: 0; transform: scale(0.995); }
         }
-        @keyframes pageSlideIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Circular Reveal Transition for Theme Toggle */
-        html.theme-transitioning::view-transition-old(root),
-        html.theme-transitioning::view-transition-new(root) {
-            animation: none !important;
-            mix-blend-mode: normal !important;
-        }
-        html.theme-transitioning::view-transition-new(root) {
-            z-index: 9999 !important;
-        }
-        html.theme-transitioning::view-transition-old(root) {
-            z-index: 1 !important;
+        @keyframes rootFadeIn {
+            from { opacity: 0; transform: scale(1.005); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        /* Fallback Smooth Theme Transition */
-        html.theme-transition,
-        html.theme-transition *,
-        html.theme-transition *::before,
-        html.theme-transition *::after {
-            transition: background-color 320ms cubic-bezier(0.16, 1, 0.3, 1),
-                        border-color 320ms cubic-bezier(0.16, 1, 0.3, 1),
-                        color 320ms cubic-bezier(0.16, 1, 0.3, 1),
-                        box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+        /* Dedicated Theme Transition: Clean container surface fade, NEVER on * */
+        html.theme-transitioning body,
+        html.theme-transitioning header,
+        html.theme-transitioning #page-content,
+        html.theme-transitioning footer {
+            transition: background-color 260ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+
+        /* -------------------------------------------------------------
+         * 2. 3D Spatial Depth & Cinematic Page Navigation
+         * ------------------------------------------------------------- */
+        #page-stage {
+            perspective: 1200px;
+            perspective-origin: center top;
+            transform-style: preserve-3d;
+        }
+
+        .page-3d-in {
+            animation: page3DEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+            will-change: transform, opacity;
+        }
+
+        .page-3d-out {
+            animation: page3DExit 160ms cubic-bezier(0.25, 1, 0.5, 1) both;
+            will-change: transform, opacity;
+        }
+
+        @keyframes page3DEnter {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 16px, -24px) scale(0.99);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+        }
+
+        @keyframes page3DExit {
+            0% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate3d(0, -10px, -16px) scale(0.99);
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * 3. Tactile 3D Card Physics & Ambient Depth Surfaces
+         * ------------------------------------------------------------- */
+        .card-interactive,
+        .bento-surface,
+        .product-card,
+        .catalog-card {
+            transform-style: preserve-3d;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        border-color 0.28s ease;
+            will-change: transform, box-shadow;
+        }
+        .card-interactive:hover {
+            transform: translate3d(0, -4px, 12px);
         }
 
         /* Spring & Inertia Micro-Interactions */
@@ -254,16 +310,16 @@
     <div class="bg-[#1a42be] dark:bg-[#091129] text-white text-xs py-2 px-3 sm:px-4 border-b border-blue-900/40 dark:border-blue-950 transition-colors duration-200">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs">
-                <span><i class="fa-solid fa-phone text-blue-200 mr-1"></i> Tel. #8561 6836</span>
-                <span class="hidden sm:inline"><i class="fa-solid fa-headset text-blue-200 mr-1"></i> CS: +63 968 8500720</span>
-                <span class="hidden md:inline"><i class="fa-solid fa-envelope text-blue-200 mr-1"></i> huenicsindustrialsales@gmail.com</span>
+                <span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> Tel. #8561 6836</span>
+                <span class="hidden sm:inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg> CS: +63 968 8500720</span>
+                <span class="hidden md:inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> huenicsindustrialsales@gmail.com</span>
             </div>
             <div class="flex items-center gap-2.5 ml-auto sm:ml-0 text-[11px] sm:text-xs">
                 <span class="text-blue-100 font-semibold tracking-wider uppercase text-[10px] hidden lg:inline">
                     Colors &bull; Techniques &bull; Technology
                 </span>
-                <span class="bg-white/15 dark:bg-blue-950/60 text-white px-2 py-0.5 rounded font-medium border border-white/20 dark:border-blue-800/50 whitespace-nowrap">
-                    <i class="fa-solid fa-truck-fast mr-1"></i> Free Delivery ₱20k+ (Metro Manila)
+                <span class="inline-flex items-center gap-1.5 bg-white/15 dark:bg-blue-950/60 text-white px-2 py-0.5 rounded font-medium border border-white/20 dark:border-blue-800/50 whitespace-nowrap">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg> Free Delivery ₱20k+ (Metro Manila)
                 </span>
                 <span class="bg-emerald-400 dark:bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded whitespace-nowrap text-[10px] uppercase tracking-wide shadow-sm">
                     VAT INC.
@@ -319,13 +375,24 @@
                             class="p-2 rounded-xl text-slate-600 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 bg-white dark:bg-[#161f38] hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 shadow-sm flex items-center justify-center w-9 h-9" 
                             title="Toggle Light / Dark Theme"
                             aria-label="Toggle Theme">
-                        <i id="theme-icon-sun" class="fa-solid fa-sun text-amber-400 text-sm"></i>
-                        <i id="theme-icon-moon" class="fa-solid fa-moon text-slate-600 dark:text-slate-400 text-sm"></i>
+                        <span id="theme-icon-sun" class="flex items-center justify-center">
+                            <svg class="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m14.14-14.14l-1.41 1.41" />
+                            </svg>
+                        </span>
+                        <span id="theme-icon-moon" class="flex items-center justify-center">
+                            <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                            </svg>
+                        </span>
                     </button>
 
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-lg transition dark:shadow-[0_0_15px_rgba(33,79,224,0.35)] shrink-0">
-                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                       class="relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 dark:shadow-[0_0_15px_rgba(33,79,224,0.35)] shrink-0">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                         <span class="hidden sm:inline">Quotation</span><span class="hidden xl:inline"> Estimate</span>
                         <span id="nav-cart-count" class="hidden bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs px-1.5 py-0.2 rounded-full ml-0.5 sm:ml-1">
                             0
@@ -334,7 +401,9 @@
 
                     <!-- Mobile / Tablet Hamburger Button (Visible on Mobile & Tablet < 1024px) -->
                     <button type="button" onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none" aria-label="Toggle Navigation Menu">
-                        <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -342,31 +411,33 @@
 
         <!-- Mobile & Tablet Nav Menu Drawer -->
         <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0f19] px-4 py-4 space-y-2 shadow-lg transition-colors">
-            <a href="{{ route('customer.home') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.home') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
-                <i class="fa-solid fa-house w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Home
+            <a href="{{ route('customer.home') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.home') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <svg class="w-4 h-4 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> Home
             </a>
-            <a href="{{ route('customer.about') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.about') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
-                <i class="fa-solid fa-building w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> About Us
+            <a href="{{ route('customer.about') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.about') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <svg class="w-4 h-4 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> About Us
             </a>
-            <a href="{{ route('customer.products') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.products') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
-                <i class="fa-solid fa-box-open w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Product Catalog
+            <a href="{{ route('customer.products') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.products') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <svg class="w-4 h-4 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> Product Catalog
             </a>
-            <a href="{{ route('customer.quotation-builder') }}" class="flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
-                <i class="fa-solid fa-calculator w-6 text-[#214fe0] dark:text-[#60a5fa]"></i> Quotation Builder
+            <a href="{{ route('customer.quotation-builder') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 {{ request()->routeIs('customer.quotation-builder') ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa] font-semibold' : '' }}">
+                <svg class="w-4 h-4 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg> Quotation Builder
             </a>
         </div>
     </header>
 
-    <!-- Main Content Area with Uniform Page Transition -->
-    <main id="page-content" class="flex-grow page-transition-wrapper">
-        @yield('content')
-    </main>
+    <!-- Main Content Area with 3D Spatial Stage -->
+    <div id="page-stage" class="flex-grow flex flex-col">
+        <main id="page-content" class="flex-grow page-3d-in">
+            @yield('content')
+        </main>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm">
         <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
             <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                <i class="fa-solid fa-check"></i>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
             <div class="flex-1">
                 <p id="toast-title" class="font-bold text-xs text-white">Item Added</p>
@@ -390,7 +461,9 @@
                 <div class="flex items-start gap-4">
                     <!-- Dynamic Icon Container -->
                     <div id="huenics-modal-icon-container" class="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0">
-                        <i id="huenics-modal-icon" class="fa-solid fa-triangle-exclamation"></i>
+                        <span id="huenics-modal-icon">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </span>
                     </div>
 
                     <div class="flex-1 min-w-0">
@@ -458,10 +531,10 @@
                 <div>
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-white mb-4">Customer Policies</h3>
                     <ul class="space-y-2.5 text-xs text-slate-400">
-                        <li><i class="fa-solid fa-truck text-xs text-blue-400 mr-1.5"></i> <strong>Free Delivery:</strong> Orders ₱20,000.00+ within Metro Manila</li>
-                        <li><i class="fa-solid fa-rotate-left text-xs text-blue-400 mr-1.5"></i> <strong>Return & Exchange:</strong> Within 7 days upon delivery</li>
-                        <li><i class="fa-solid fa-shield-check text-xs text-blue-400 mr-1.5"></i> <strong>Warranty:</strong> 1–2 Years limited warranty w/o physical damage</li>
-                        <li><i class="fa-solid fa-bolt text-xs text-blue-400 mr-1.5"></i> <strong>Replacement:</strong> 1 mo. outright replacement for defective units</li>
+                        <li class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg> <span><strong>Free Delivery:</strong> Orders ₱20,000.00+ within Metro Manila</span></li>
+                        <li class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> <span><strong>Return & Exchange:</strong> Within 7 days upon delivery</span></li>
+                        <li class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> <span><strong>Warranty:</strong> 1–2 Years limited warranty w/o physical damage</span></li>
+                        <li class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span><strong>Replacement:</strong> 1 mo. outright replacement for defective units</span></li>
                     </ul>
                 </div>
 
@@ -470,23 +543,23 @@
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-white mb-4">Head Office</h3>
                     <div class="space-y-3 text-sm text-slate-400">
                         <p class="flex items-start gap-2.5">
-                            <i class="fa-solid fa-location-dot text-blue-400 mt-1"></i>
+                            <svg class="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span class="text-xs leading-relaxed">Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
-                            <i class="fa-solid fa-phone text-blue-400"></i>
+                            <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                             <span>Tel. #8561 6836</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
-                            <i class="fa-solid fa-headset text-blue-400"></i>
+                            <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
                             <span>CS: +63 968 8500720 / Tech: +63 965 6287205</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
-                            <i class="fa-solid fa-envelope text-blue-400"></i>
+                            <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                             <span>huenicsindustrialsales@gmail.com</span>
                         </p>
                         <p class="flex items-center gap-2.5 text-xs">
-                            <i class="fa-solid fa-envelope-open-text text-blue-400"></i>
+                            <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"/></svg>
                             <span>crm.huenics777@gmail.com</span>
                         </p>
                     </div>
@@ -613,10 +686,10 @@
 
             if (isSuccess) {
                 iconEl.className = 'w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold';
-                iconEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+                iconEl.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
             } else {
                 iconEl.className = 'w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold';
-                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                iconEl.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
             }
 
             toast.classList.remove('translate-y-20', 'opacity-0');
@@ -629,55 +702,31 @@
         }
 
         function toggleDarkMode(event) {
-            const hasViewTransition = document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const isDark = document.documentElement.classList.contains('dark');
+            const nextTheme = isDark ? 'light' : 'dark';
 
-            if (!hasViewTransition) {
-                document.documentElement.classList.add('theme-transition');
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
+            const applyThemeChange = () => {
+                document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+                localStorage.setItem('huenics_theme', nextTheme);
                 updateThemeIcons();
-                setTimeout(() => {
-                    document.documentElement.classList.remove('theme-transition');
-                }, 350);
-                return;
-            }
+                if (window.lucide) lucide.createIcons();
+            };
 
-            document.documentElement.classList.add('theme-transitioning');
-
-            const x = event && typeof event.clientX === 'number' ? event.clientX : window.innerWidth / 2;
-            const y = event && typeof event.clientY === 'number' ? event.clientY : 40;
-            const maxRadius = Math.hypot(
-                Math.max(x, window.innerWidth - x),
-                Math.max(y, window.innerHeight - y)
-            );
-
-            const transition = document.startViewTransition(() => {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
-                updateThemeIcons();
-            });
-
-            transition.ready.then(() => {
-                const animation = document.documentElement.animate(
-                    {
-                        clipPath: [
-                            `circle(0px at ${x}px ${y}px)`,
-                            `circle(${maxRadius}px at ${x}px ${y}px)`
-                        ]
-                    },
-                    {
-                        duration: 420,
-                        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                        pseudoElement: '::view-transition-new(root)'
-                    }
-                );
-
-                animation.finished.finally(() => {
+            if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.documentElement.classList.add('theme-transitioning');
+                const transition = document.startViewTransition(() => {
+                    applyThemeChange();
+                });
+                transition.finished.finally(() => {
                     document.documentElement.classList.remove('theme-transitioning');
                 });
-            }).catch(() => {
-                document.documentElement.classList.remove('theme-transitioning');
-            });
+            } else {
+                document.documentElement.classList.add('theme-transitioning');
+                applyThemeChange();
+                setTimeout(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                }, 280);
+            }
         }
 
         function updateThemeIcons() {
@@ -774,57 +823,58 @@
 
                     const currentContent = document.getElementById('page-content');
 
-                    const swapDom = () => {
-                        document.title = newTitle;
-
-                        if (currentContent) {
-                            currentContent.innerHTML = newContent.innerHTML;
-                            currentContent.classList.remove('page-transition-wrapper', 'page-transition-exit');
-                            void currentContent.offsetWidth; // Force reflow
-                            currentContent.classList.add('page-transition-wrapper');
-                        }
-
-                        if (pushState) {
-                            window.history.pushState({}, '', url);
-                        }
-
-                        // Update active desktop & mobile navbar links
-                        const targetPath = new URL(url, window.location.origin).pathname;
-                        this.updateActiveNavLinks(targetPath);
-
-                        // Re-evaluate page scripts
-                        this.reexecuteScripts(currentContent);
-
-                        // Re-initialize cart badge
-                        if (window.CartManager) {
-                            window.CartManager.updateNavBadge();
-                        }
-
-                        // Close mobile drawer if open
-                        const mobileMenu = document.getElementById('mobile-menu');
-                        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-                            mobileMenu.classList.add('hidden');
-                        }
-
-                        // Smooth scroll to top
-                        window.scrollTo({ top: 0, behavior: 'instant' });
-
-                        // Dispatch page-loaded event for any interactive widgets
-                        document.dispatchEvent(new CustomEvent('huenics:page-loaded', { detail: { url } }));
-                    };
-
-                    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                        document.startViewTransition(() => swapDom());
-                    } else {
-                        if (currentContent) {
-                            currentContent.classList.add('page-transition-exit');
-                            setTimeout(() => {
-                                swapDom();
-                            }, 100);
-                        } else {
-                            swapDom();
-                        }
+                    if (currentContent) {
+                        currentContent.classList.remove('page-3d-in');
+                        currentContent.classList.add('page-3d-out');
                     }
+
+                    await new Promise(resolve => setTimeout(resolve, 130));
+
+                    document.title = newTitle;
+
+                    if (currentContent) {
+                        currentContent.innerHTML = newContent.innerHTML;
+                        currentContent.classList.remove('page-3d-out');
+                        void currentContent.offsetWidth; // Force reflow
+                        currentContent.classList.add('page-3d-in');
+                    }
+
+                    if (pushState) {
+                        window.history.pushState({}, '', url);
+                    }
+
+                    // Update active desktop & mobile navbar links
+                    const targetPath = new URL(url, window.location.origin).pathname;
+                    this.updateActiveNavLinks(targetPath);
+
+                    // Re-evaluate page scripts
+                    this.reexecuteScripts(currentContent);
+
+                    // Re-initialize cart badge
+                    if (window.CartManager) {
+                        window.CartManager.updateNavBadge();
+                    }
+
+                    // Re-initialize 3D physics & Lucide vector icons
+                    if (window.Huenics3D) {
+                        window.Huenics3D.init();
+                    }
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+
+                    // Close mobile drawer if open
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+
+                    // Instant scroll to top
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+
+                    // Dispatch page-loaded event for any interactive widgets
+                    document.dispatchEvent(new CustomEvent('huenics:page-loaded', { detail: { url } }));
+
                 } catch (err) {
                     console.error('SPA Navigation error:', err);
                     window.location.href = url;
@@ -956,7 +1006,7 @@
             confirm({
                 title = 'Confirmation',
                 message = 'Are you sure you want to proceed?',
-                icon = 'fa-solid fa-triangle-exclamation',
+                icon = 'warning',
                 type = 'danger', // 'danger' | 'warning' | 'primary' | 'success'
                 confirmText = 'Confirm',
                 cancelText = 'Cancel',
@@ -977,7 +1027,7 @@
             alert({
                 title = 'Notice',
                 message = '',
-                icon = 'fa-solid fa-circle-info',
+                icon = 'info',
                 type = 'primary',
                 buttonText = 'Got It',
                 onClose = () => {}
@@ -994,7 +1044,17 @@
             },
 
             applyTheme(type, icon, confirmText, cancelText, isAlert = false) {
-                this.iconEl.className = icon;
+                if (icon && icon.includes('<svg')) {
+                    this.iconContainerEl.innerHTML = icon;
+                } else if (icon && (icon.includes('trash') || icon.includes('delete'))) {
+                    this.iconContainerEl.innerHTML = '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+                } else if (icon && (icon.includes('check') || icon.includes('success'))) {
+                    this.iconContainerEl.innerHTML = '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+                } else if (icon && (icon.includes('info') || icon.includes('circle-info'))) {
+                    this.iconContainerEl.innerHTML = '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+                } else {
+                    this.iconContainerEl.innerHTML = '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+                }
 
                 const styles = {
                     danger: {
@@ -1049,12 +1109,54 @@
             }
         };
 
-        // Initialize badge, theme icon, modal, and SPA navigator on load
+        // Tactile 3D Card Tilt & Spatial Depth Engine
+        window.Huenics3D = {
+            init() {
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                const elements = document.querySelectorAll('.card-interactive, .bento-surface, .product-card, .catalog-card');
+                elements.forEach(el => {
+                    if (el.dataset.tiltActive) return;
+                    el.dataset.tiltActive = 'true';
+
+                    let rect;
+                    const onMouseMove = (e) => {
+                        if (!rect) rect = el.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        const xPct = (x / rect.width) - 0.5;
+                        const yPct = (y / rect.height) - 0.5;
+                        const maxTilt = 4.0;
+                        const tiltX = -(yPct * maxTilt).toFixed(2);
+                        const tiltY = (xPct * maxTilt).toFixed(2);
+                        el.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate3d(0, -4px, 10px)`;
+                    };
+
+                    const onMouseEnter = () => {
+                        rect = el.getBoundingClientRect();
+                        el.style.transition = 'transform 0.1s ease-out, box-shadow 0.25s ease';
+                    };
+
+                    const onMouseLeave = () => {
+                        el.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease';
+                        el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)';
+                        rect = null;
+                    };
+
+                    el.addEventListener('mouseenter', onMouseEnter);
+                    el.addEventListener('mousemove', onMouseMove);
+                    el.addEventListener('mouseleave', onMouseLeave);
+                });
+            }
+        };
+
+        // Initialize badge, theme icon, modal, 3D physics, and SPA navigator on load
         document.addEventListener('DOMContentLoaded', () => {
             CartManager.updateNavBadge();
             updateThemeIcons();
             HuenicsModal.init();
             HuenicsNavigator.init();
+            if (window.Huenics3D) Huenics3D.init();
+            if (window.lucide) lucide.createIcons();
         });
     </script>
 
