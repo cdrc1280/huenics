@@ -413,8 +413,8 @@
 
 @push('scripts')
 <script>
-    function addProductToQuote(product, qty) {
+    window.addProductToQuote = function(product, qty) {
         CartManager.addItem(product, qty);
-    }
+    };
 </script>
 @endpush

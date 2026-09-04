@@ -28,67 +28,42 @@
         [x-cloak] { display: none !important; }
         
         /* -------------------------------------------------------------
-         * 1. Ultra-Smooth View Transitions & Theme Crossfade
-         * Eliminates twinkling, flickering, and node repainting
+         * 1. Theme Crossfade (Surface Containers Only, Zero Twinkling)
          * ------------------------------------------------------------- */
-        @view-transition {
-            navigation: auto;
-        }
-
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-            animation-duration: 250ms;
-            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        ::view-transition-old(root) {
-            animation-name: rootFadeOut;
-        }
-        ::view-transition-new(root) {
-            animation-name: rootFadeIn;
-            mix-blend-mode: normal;
-        }
-
-        @keyframes rootFadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.995); }
-        }
-        @keyframes rootFadeIn {
-            from { opacity: 0; transform: scale(1.005); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* Dedicated Theme Transition: Clean container surface fade, NEVER on * */
         html.theme-transitioning body,
         html.theme-transitioning header,
         html.theme-transitioning #page-content,
-        html.theme-transitioning footer {
-            transition: background-color 260ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        html.theme-transitioning footer,
+        html.theme-transitioning nav,
+        html.theme-transitioning aside {
+            transition: background-color 260ms cubic-bezier(0.2, 0.8, 0.2, 1), 
+                        border-color 260ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
         }
 
         /* -------------------------------------------------------------
-         * 2. 3D Spatial Depth & Cinematic Page Navigation
+         * 2. High-Performance 3D Spatial Stage & Instant Morph
          * ------------------------------------------------------------- */
         #page-stage {
             perspective: 1200px;
-            perspective-origin: center top;
+            perspective-origin: 50% 20%;
             transform-style: preserve-3d;
+            backface-visibility: hidden;
         }
 
         .page-3d-in {
-            animation: page3DEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: page3DEnter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
             will-change: transform, opacity;
         }
 
         .page-3d-out {
-            animation: page3DExit 160ms cubic-bezier(0.25, 1, 0.5, 1) both;
+            animation: page3DExit 90ms cubic-bezier(0.25, 1, 0.5, 1) both;
             will-change: transform, opacity;
         }
 
         @keyframes page3DEnter {
             0% {
                 opacity: 0;
-                transform: translate3d(0, 16px, -24px) scale(0.99);
+                transform: translate3d(0, 10px, -15px) scale(0.993);
             }
             100% {
                 opacity: 1;
@@ -103,7 +78,7 @@
             }
             100% {
                 opacity: 0;
-                transform: translate3d(0, -10px, -16px) scale(0.99);
+                transform: translate3d(0, -6px, -10px) scale(0.995);
             }
         }
 
@@ -427,10 +402,13 @@
     </header>
 
     <!-- Main Content Area with 3D Spatial Stage -->
-    <div id="page-stage" class="flex-grow flex flex-col">
+    <div id="page-stage" class="flex-grow flex flex-col relative">
         <main id="page-content" class="flex-grow page-3d-in">
             @yield('content')
         </main>
+        <div id="page-scripts-container" class="hidden">
+            @stack('scripts')
+        </div>
     </div>
 
     <!-- Toast Notification -->
@@ -734,15 +712,23 @@
             // exactly one icon is rendered at all times per theme with zero delay or flicker.
         }
 
-        // Client-Side Seamless SPA Navigator (Removes Reload, Smooth Transition)
-        window.HuenicsNavigator = {
-            progressBar: null,
+        // =========================================================================
+        // High-Speed Client-Side SPA Engine (0ms Instant Transitions & Preload)
+        // =========================================================================
+        window.HuenicsSPA = {
+            cache: new Map(), // url -> { title, contentHtml, scriptsHtml, timestamp }
+            scrollHistory: new Map(), // url -> scrollY
             isNavigating: false,
+            progressBar: null,
+            progressTimer: null,
 
             init() {
                 this.progressBar = document.getElementById('page-progress-bar');
 
-                // Intercept internal link clicks
+                // 1. Cache current initial page immediately
+                this.cacheCurrentPage();
+
+                // 2. Intercept internal link clicks
                 document.addEventListener('click', (e) => {
                     const link = e.target.closest('a');
                     if (!link) return;
@@ -750,7 +736,7 @@
                     const href = link.getAttribute('href');
                     if (!href) return;
 
-                    // Exclude non-navigation or external targets
+                    // Exclude special / non-SPA anchors
                     if (
                         href.startsWith('#') ||
                         href.startsWith('javascript:') ||
@@ -780,129 +766,253 @@
                         e.preventDefault();
                         this.navigate(targetUrl.href, true);
                     } catch (err) {
-                        // Fallback to normal navigation
+                        // Fallback
                     }
                 });
 
-                // Handle Back/Forward history buttons
+                // 3. Hover / Touch Prefetching for 0ms Instant Click Response
+                const prefetchHandler = (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+                    const href = link.getAttribute('href');
+                    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || link.getAttribute('target') === '_blank') return;
+                    try {
+                        const targetUrl = new URL(link.href, window.location.origin);
+                        if (targetUrl.origin === window.location.origin) {
+                            this.prefetch(targetUrl.href);
+                        }
+                    } catch (_) {}
+                };
+                document.addEventListener('pointerenter', prefetchHandler, { capture: true, passive: true });
+                document.addEventListener('touchstart', prefetchHandler, { capture: true, passive: true });
+
+                // 4. Intercept GET Search & Filter Forms
+                document.addEventListener('submit', (e) => {
+                    const form = e.target;
+                    if (form.method && form.method.toUpperCase() === 'GET') {
+                        const action = form.getAttribute('action') || window.location.href;
+                        try {
+                            const targetUrl = new URL(action, window.location.origin);
+                            if (targetUrl.origin === window.location.origin && form.getAttribute('target') !== '_blank') {
+                                e.preventDefault();
+                                const formData = new FormData(form);
+                                const params = new URLSearchParams(formData);
+                                targetUrl.search = params.toString();
+                                this.navigate(targetUrl.href, true);
+                            }
+                        } catch (_) {}
+                    }
+                });
+
+                // 5. Handle Back/Forward History with Instant Cache Restoration
                 window.addEventListener('popstate', () => {
                     this.navigate(window.location.href, false);
                 });
+
+                // 6. Warm-up prefetch for primary navigation pages on idle
+                if ('requestIdleCallback' in window) {
+                    window.requestIdleCallback(() => this.warmup());
+                } else {
+                    setTimeout(() => this.warmup(), 300);
+                }
+            },
+
+            warmup() {
+                const primaryRoutes = [
+                    '{{ route('customer.home') }}',
+                    '{{ route('customer.about') }}',
+                    '{{ route('customer.products') }}',
+                    '{{ route('customer.quotation-builder') }}'
+                ];
+                primaryRoutes.forEach(url => {
+                    if (url !== window.location.href) {
+                        this.prefetch(url);
+                    }
+                });
+            },
+
+            cacheCurrentPage() {
+                const contentEl = document.getElementById('page-content');
+                const scriptsEl = document.getElementById('page-scripts-container');
+                if (contentEl) {
+                    this.cache.set(this.normalizeUrl(window.location.href), {
+                        title: document.title,
+                        contentHtml: contentEl.innerHTML,
+                        scriptsHtml: scriptsEl ? scriptsEl.innerHTML : '',
+                        timestamp: Date.now()
+                    });
+                }
+            },
+
+            async prefetch(url) {
+                const normalized = this.normalizeUrl(url);
+                if (this.cache.has(normalized)) return;
+
+                try {
+                    const res = await fetch(normalized, {
+                        headers: { 'X-Requested-With': 'Huenics-SPA', 'Accept': 'text/html' }
+                    });
+                    if (!res.ok) return;
+                    const html = await res.text();
+                    this.storeInCache(normalized, html);
+                } catch (_) {}
+            },
+
+            normalizeUrl(url) {
+                const u = new URL(url, window.location.origin);
+                u.hash = '';
+                return u.href;
+            },
+
+            storeInCache(url, html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const contentEl = doc.getElementById('page-content');
+                const scriptsEl = doc.getElementById('page-scripts-container');
+                const title = doc.querySelector('title')?.textContent || document.title;
+
+                if (contentEl) {
+                    this.cache.set(url, {
+                        title: title,
+                        contentHtml: contentEl.innerHTML,
+                        scriptsHtml: scriptsEl ? scriptsEl.innerHTML : '',
+                        timestamp: Date.now()
+                    });
+                }
             },
 
             async navigate(url, pushState = true) {
                 if (this.isNavigating) return;
                 this.isNavigating = true;
 
-                this.startProgress();
+                const normalizedUrl = this.normalizeUrl(url);
+                const currentUrl = this.normalizeUrl(window.location.href);
 
-                try {
-                    const response = await fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'Huenics-SPA',
-                            'Accept': 'text/html'
-                        }
-                    });
+                // Save current scroll position
+                this.scrollHistory.set(currentUrl, window.scrollY);
 
-                    if (!response.ok) {
-                        window.location.href = url;
-                        return;
-                    }
+                // Optimistic instant active navbar link update
+                const targetPath = new URL(normalizedUrl).pathname;
+                this.updateActiveNavLinks(targetPath);
 
-                    const html = await response.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    const newContent = doc.getElementById('page-content');
-                    const newTitle = doc.querySelector('title')?.textContent || document.title;
-
-                    if (!newContent) {
-                        window.location.href = url;
-                        return;
-                    }
-
-                    const currentContent = document.getElementById('page-content');
-
-                    if (currentContent) {
-                        currentContent.classList.remove('page-3d-in');
-                        currentContent.classList.add('page-3d-out');
-                    }
-
-                    await new Promise(resolve => setTimeout(resolve, 130));
-
-                    document.title = newTitle;
-
-                    if (currentContent) {
-                        currentContent.innerHTML = newContent.innerHTML;
-                        currentContent.classList.remove('page-3d-out');
-                        void currentContent.offsetWidth; // Force reflow
-                        currentContent.classList.add('page-3d-in');
-                    }
-
-                    if (pushState) {
-                        window.history.pushState({}, '', url);
-                    }
-
-                    // Update active desktop & mobile navbar links
-                    const targetPath = new URL(url, window.location.origin).pathname;
-                    this.updateActiveNavLinks(targetPath);
-
-                    // Re-evaluate page scripts
-                    this.reexecuteScripts(currentContent);
-
-                    // Re-initialize cart badge
-                    if (window.CartManager) {
-                        window.CartManager.updateNavBadge();
-                    }
-
-                    // Re-initialize 3D physics & Lucide vector icons
-                    if (window.Huenics3D) {
-                        window.Huenics3D.init();
-                    }
-                    if (window.lucide) {
-                        lucide.createIcons();
-                    }
-
-                    // Close mobile drawer if open
-                    const mobileMenu = document.getElementById('mobile-menu');
-                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-                        mobileMenu.classList.add('hidden');
-                    }
-
-                    // Instant scroll to top
-                    window.scrollTo({ top: 0, behavior: 'instant' });
-
-                    // Dispatch page-loaded event for any interactive widgets
-                    document.dispatchEvent(new CustomEvent('huenics:page-loaded', { detail: { url } }));
-
-                } catch (err) {
-                    console.error('SPA Navigation error:', err);
-                    window.location.href = url;
-                } finally {
-                    this.finishProgress();
-                    this.isNavigating = false;
+                // Close mobile drawer if open
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
                 }
+
+                const currentContent = document.getElementById('page-content');
+                const currentScripts = document.getElementById('page-scripts-container');
+
+                // Check in-memory cache
+                let pageData = this.cache.get(normalizedUrl);
+
+                if (!pageData) {
+                    this.startProgress();
+                    try {
+                        const response = await fetch(normalizedUrl, {
+                            headers: { 'X-Requested-With': 'Huenics-SPA', 'Accept': 'text/html' }
+                        });
+                        if (!response.ok) {
+                            window.location.href = url;
+                            return;
+                        }
+                        const html = await response.text();
+                        this.storeInCache(normalizedUrl, html);
+                        pageData = this.cache.get(normalizedUrl);
+                    } catch (err) {
+                        window.location.href = url;
+                        return;
+                    } finally {
+                        this.finishProgress();
+                    }
+                }
+
+                if (!pageData || !currentContent) {
+                    window.location.href = url;
+                    return;
+                }
+
+                // Smooth 3D spatial exit
+                currentContent.classList.remove('page-3d-in');
+                currentContent.classList.add('page-3d-out');
+
+                await new Promise(resolve => setTimeout(resolve, 80));
+
+                // Swap DOM & Title
+                document.title = pageData.title;
+                currentContent.innerHTML = pageData.contentHtml;
+                if (currentScripts && pageData.scriptsHtml) {
+                    currentScripts.innerHTML = pageData.scriptsHtml;
+                }
+
+                if (pushState) {
+                    window.history.pushState({}, '', url);
+                }
+
+                // Restore scroll or scroll top
+                const savedScroll = !pushState ? (this.scrollHistory.get(normalizedUrl) || 0) : 0;
+                window.scrollTo({ top: savedScroll, behavior: 'instant' });
+
+                // Enter 3D animation
+                currentContent.classList.remove('page-3d-out');
+                void currentContent.offsetWidth; // Force reflow
+                currentContent.classList.add('page-3d-in');
+
+                // Execute scripts
+                this.executeScripts(currentContent);
+                if (currentScripts) {
+                    this.executeScripts(currentScripts);
+                }
+
+                // Re-bind interactive system utilities
+                if (window.CartManager) {
+                    window.CartManager.updateNavBadge();
+                }
+                if (window.Huenics3D) {
+                    window.Huenics3D.init();
+                }
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+
+                // Dispatch page-loaded event
+                document.dispatchEvent(new CustomEvent('huenics:page-loaded', { detail: { url: normalizedUrl } }));
+
+                this.isNavigating = false;
+            },
+
+            executeScripts(container) {
+                if (!container) return;
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.textContent = oldScript.textContent;
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
             },
 
             startProgress() {
                 if (!this.progressBar) return;
+                clearTimeout(this.progressTimer);
                 this.progressBar.style.transition = 'none';
                 this.progressBar.style.transform = 'translateX(-100%)';
                 this.progressBar.style.opacity = '1';
                 void this.progressBar.offsetWidth;
-                this.progressBar.style.transition = 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms';
-                this.progressBar.style.transform = 'translateX(-25%)';
+                this.progressBar.style.transition = 'transform 200ms ease-out, opacity 100ms';
+                this.progressBar.style.transform = 'translateX(-30%)';
             },
 
             finishProgress() {
                 if (!this.progressBar) return;
                 this.progressBar.style.transform = 'translateX(0%)';
-                setTimeout(() => {
+                this.progressTimer = setTimeout(() => {
                     this.progressBar.style.opacity = '0';
                     setTimeout(() => {
                         this.progressBar.style.transform = 'translateX(-100%)';
-                    }, 200);
-                }, 140);
+                    }, 150);
+                }, 100);
             },
 
             updateActiveNavLinks(currentPath) {
@@ -931,19 +1041,11 @@
                         link.className = 'flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
                     }
                 });
-            },
-
-            reexecuteScripts(container) {
-                if (!container) return;
-                const scripts = container.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.textContent = oldScript.textContent;
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
             }
         };
+
+        // Backwards-compatible alias for any existing code calling HuenicsNavigator
+        window.HuenicsNavigator = window.HuenicsSPA;
 
         // Global Uniform Modal Controller for Customer Portal
         window.HuenicsModal = {
@@ -1154,12 +1256,10 @@
             CartManager.updateNavBadge();
             updateThemeIcons();
             HuenicsModal.init();
-            HuenicsNavigator.init();
+            HuenicsSPA.init();
             if (window.Huenics3D) Huenics3D.init();
             if (window.lucide) lucide.createIcons();
         });
     </script>
-
-    @stack('scripts')
 </body>
 </html>

@@ -201,20 +201,20 @@
 
 @push('scripts')
 <script>
-    function adjustQty(inputId, delta) {
+    window.adjustQty = function(inputId, delta) {
         const input = document.getElementById(inputId);
         if (!input) return;
         let val = parseInt(input.value) || 1;
         val = Math.max(1, val + delta);
         input.value = val;
-    }
+    };
 
-    function addProductToQuote(product, qty) {
+    window.addProductToQuote = function(product, qty) {
         CartManager.addItem(product, qty);
-        updateFloatingCartBar();
-    }
+        window.updateFloatingCartBar();
+    };
 
-    function updateFloatingCartBar() {
+    window.updateFloatingCartBar = function() {
         const cart = CartManager.getCart();
         const bar = document.getElementById('floating-cart-bar');
         const countEl = document.getElementById('floating-cart-count');
@@ -223,7 +223,7 @@
 
         if (cart.length > 0) {
             const totalQty = cart.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
-            countEl.textContent = totalQty;
+            if (countEl) countEl.textContent = totalQty;
             if (bar.classList.contains('hidden')) {
                 bar.classList.remove('hidden');
                 bar.classList.add('animate-pop-in');
@@ -232,10 +232,13 @@
             bar.classList.add('hidden');
             bar.classList.remove('animate-pop-in');
         }
-    }
+    };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        updateFloatingCartBar();
-    });
+    document.addEventListener('DOMContentLoaded', window.updateFloatingCartBar);
+    document.addEventListener('huenics:page-loaded', window.updateFloatingCartBar);
+    // Immediate invocation if dynamically loaded
+    if (document.readyState !== 'loading') {
+        window.updateFloatingCartBar();
+    }
 </script>
 @endpush

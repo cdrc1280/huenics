@@ -561,13 +561,23 @@
         return (parseFloat(amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    // Expose builder functions globally for inline events
+    window.addProductRow = addProductRow;
+    window.onProductSelect = onProductSelect;
+    window.updateItemField = updateItemField;
+    window.deleteRow = deleteRow;
+    window.clearAllItems = clearAllItems;
+    window.initBuilder = initBuilder;
+
     document.addEventListener('DOMContentLoaded', () => {
-        initBuilder();
+        if (document.getElementById('items-tbody')) initBuilder();
     });
     document.addEventListener('huenics:page-loaded', () => {
-        if (document.getElementById('items-tbody')) {
-            initBuilder();
-        }
+        if (document.getElementById('items-tbody')) initBuilder();
     });
+    // Immediate init if injected via SPA
+    if (document.readyState !== 'loading' && document.getElementById('items-tbody')) {
+        initBuilder();
+    }
 </script>
 @endpush
