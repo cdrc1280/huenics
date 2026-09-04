@@ -96,6 +96,17 @@ class SalesOverviewWidget extends BaseWidget
         }
     }
 
+    protected function getColumns(): int | array | null
+    {
+        return [
+            'default' => 1,
+            'sm' => 2,
+            'md' => 3,
+            'lg' => 3,
+            'xl' => 3,
+        ];
+    }
+
     protected function getStats(): array
     {
         [$startDate, $endDate, $periodLabel] = $this->getDateRange();
@@ -189,15 +200,15 @@ class SalesOverviewWidget extends BaseWidget
         });
 
         $periodPrefix = match ($this->periodType) {
-            'days'  => 'Today / Selected Day',
-            'weeks' => 'This Week',
-            'years' => 'This Year',
-            default => 'This Month',
+            'days'  => 'Selected Day',
+            'weeks' => 'Selected Week',
+            'years' => 'Selected Year',
+            default => 'Selected Month',
         };
 
         return [
-            Stat::make("Quotations ({$periodLabel})", $data['totalQuotations'])
-                ->description($periodPrefix)
+            Stat::make('Total Quotations', $data['totalQuotations'])
+                ->description("{$periodPrefix} • {$periodLabel}")
                 ->descriptionIcon('heroicon-m-document-text')
                 ->color('info')
                 ->extraAttributes(['title' => "Total customer quotations created during {$periodLabel}"]),
@@ -208,28 +219,28 @@ class SalesOverviewWidget extends BaseWidget
                 ->color('success')
                 ->extraAttributes(['title' => "Quotations converted into confirmed Purchase Orders during {$periodLabel} ({$data['winRate']}% conversion rate)"]),
 
-            Stat::make("Revenue ({$periodLabel})", '₱' . number_format($data['totalRevenue'], 2))
-                ->description("Profit: ₱" . number_format($data['totalProfit'], 2))
-                ->descriptionIcon('heroicon-m-currency-dollar')
+            Stat::make('Total Gross Revenue', '₱' . number_format($data['totalRevenue'], 2))
+                ->description("Net Profit: ₱" . number_format($data['totalProfit'], 2))
+                ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary')
                 ->extraAttributes(['title' => "Gross sales revenue & realized gross profit for confirmed orders during {$periodLabel}"]),
 
             Stat::make('Warranties Expiring Soon', $data['expiringSoon'])
-                ->description('Within 30 days')
+                ->description('Within 30 Days')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($data['expiringSoon'] > 0 ? 'warning' : 'success')
                 ->extraAttributes(['title' => 'Active warranties with 30 or fewer days remaining before expiration']),
 
             Stat::make('Overdue Deliveries', $data['overdueDeliveries'])
-                ->description('Past expected delivery date')
+                ->description('Past Delivery Date')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($data['overdueDeliveries'] > 0 ? 'danger' : 'success')
                 ->extraAttributes(['title' => 'Confirmed Purchase Orders exceeding expected delivery date']),
 
             Stat::make('Avg. Order Value', '₱' . number_format($data['avgOrderValue'], 2))
                 ->description($data['pendingApprovalCount'] > 0
-                    ? "{$data['pendingApprovalCount']} PO(s) pending approval"
-                    : 'No pending approvals')
+                    ? "{$data['pendingApprovalCount']} PO(s) Pending Approval"
+                    : 'All Orders Processed')
                 ->descriptionIcon($data['pendingApprovalCount'] > 0 ? 'heroicon-m-inbox-arrow-down' : 'heroicon-m-check-circle')
                 ->color($data['pendingApprovalCount'] > 0 ? 'warning' : 'success')
                 ->extraAttributes(['title' => "Average order value per confirmed PO during {$periodLabel}. Shows count of POs awaiting approval."]),

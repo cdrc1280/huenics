@@ -77,38 +77,41 @@ class SalesDashboard extends Page implements HasTable, HasForms
                             'sm' => 12,
                             'md' => 12,
                             'lg' => 12,
-                        ])->schema([
-                                    Select::make('selectedAgentId')
-                                        ->label('Filter by S.E.')
-                                        ->options(function ($get) {
-                                            $q = User::whereIn('role', [
-                                                User::ROLE_SALES_EXECUTIVE,
-                                                User::ROLE_ADMIN,
-                                                User::ROLE_OPERATIONS_MANAGER,
-                                                User::ROLE_CEO,
-                                            ]);
-                                            if ((bool) $get('filterInhouse')) {
-                                                $q->where('is_owner', true);
-                                            }
-                                            return $q->pluck('name', 'id');
-                                        })
-                                        ->placeholder('All Sales Executives')
-                                        ->searchable()
-                                        ->live()
-                                        ->disabled(fn($get) => (bool) $get('filterInhouse'))
-                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 8, 'lg' => 8]),
+                        ])
+                            ->extraAttributes(['class' => 'gap-y-6'])
+                            ->schema([
+                                Select::make('selectedAgentId')
+                                    ->label('Filter by S.E.')
+                                    ->options(function ($get) {
+                                        $q = User::whereIn('role', [
+                                            User::ROLE_SALES_EXECUTIVE,
+                                            User::ROLE_ADMIN,
+                                            User::ROLE_OPERATIONS_MANAGER,
+                                            User::ROLE_CEO,
+                                        ]);
+                                        if ((bool) $get('filterInhouse')) {
+                                            $q->where('is_owner', true);
+                                        }
+                                        return $q->pluck('name', 'id');
+                                    })
+                                    ->placeholder('All Sales Executives')
+                                    ->searchable()
+                                    ->live()
+                                    ->disabled(fn($get) => (bool) $get('filterInhouse'))
+                                    ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 8, 'lg' => 8]),
 
-                                    Toggle::make('filterInhouse')
-                                        ->label('Inhouse (Owner)')
-                                        ->helperText('Filter by owner accounts')
-                                        ->inline(true)
-                                        ->live()
-                                        ->afterStateUpdated(function ($state, callable $set) {
-                                            if ($state) {
-                                                $set('selectedAgentId', null);
-                                            }
-                                        })
-                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
+                                Toggle::make('filterInhouse')
+                                    ->label('Inhouse (Owner)')
+                                    ->helperText('Filter by owner accounts')
+                                    ->inline(true)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        if ($state) {
+                                            $set('selectedAgentId', null);
+                                        }
+                                    })
+                                    ->extraAttributes(['class' => 'sm:pt-7 flex items-center'])
+                                    ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
                                     ToggleButtons::make('periodType')
                                         ->label('Filter Granularity')
@@ -408,6 +411,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                     ->label('Sales Achieved')
                     ->money('PHP')
                     ->sortable()
+                    ->alignEnd()
                     ->state(fn(User $record) => (float) ($record->period_achieved ?? 0))
                     ->color(fn($state) => (float) $state > 0 ? 'success' : 'gray')
                     ->weight('bold')
@@ -417,6 +421,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                     ->label('Realized Profit')
                     ->money('PHP')
                     ->sortable()
+                    ->alignEnd()
                     ->state(fn(User $record) => (float) ($record->period_profit ?? 0))
                     ->color(fn($state) => (float) $state > 0 ? 'primary' : 'gray')
                     ->tooltip(fn(User $record): string => "Realized net gross profit during {$periodLabel}: ₱" . number_format((float) ($record->period_profit ?? 0), 2)),
@@ -435,6 +440,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
                 TextColumn::make('win_rate')
                     ->label('Win Rate')
+                    ->alignCenter()
                     ->state(function (User $record): string {
                         $quotes = (int) ($record->period_quotations ?? 0);
                         $pos = (int) ($record->period_pos ?? 0);

@@ -14,7 +14,7 @@ class SalesRevenueChartWidget extends ChartWidget
 {
     protected static ?int $sort = 2;
     protected int | string | array $columnSpan = 'full';
-    protected ?string $maxHeight = '280px';
+    protected ?string $maxHeight = '320px';
 
     public string $periodType = 'month';
     public ?string $selectedDate = null;
@@ -196,5 +196,57 @@ class SalesRevenueChartWidget extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                    'labels' => [
+                        'padding' => 20,
+                        'usePointStyle' => true,
+                        'pointStyle' => 'circle',
+                        'font' => [
+                            'size' => 12,
+                            'weight' => '500',
+                        ],
+                    ],
+                ],
+                'tooltip' => [
+                    'padding' => 12,
+                    'cornerRadius' => 8,
+                ],
+            ],
+            'layout' => [
+                'padding' => [
+                    'top' => 16,
+                    'bottom' => 12,
+                    'left' => 12,
+                    'right' => 16,
+                ],
+            ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => [
+                        'padding' => 8,
+                    ],
+                    'grid' => [
+                        'color' => 'rgba(156, 163, 175, 0.1)',
+                    ],
+                ],
+                'x' => [
+                    'ticks' => [
+                        'padding' => 8,
+                    ],
+                    'grid' => [
+                        'display' => false,
+                    ],
+                ],
+            ],
+        ];
     }
 }

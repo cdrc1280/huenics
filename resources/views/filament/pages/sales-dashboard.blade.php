@@ -1,23 +1,23 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div class="space-y-8 sm:space-y-10 pb-8">
         {{-- 1. Sales Performance Filters Section at the very top --}}
-        <div>
+        <section aria-label="Sales Performance Filters" class="w-full">
             {{ $this->form }}
-        </div>
+        </section>
 
         {{-- 2. Sales Overview KPI Stat Cards --}}
-        <div>
+        <section aria-label="Sales Overview KPIs" class="w-full">
             @livewire(\App\Filament\Widgets\SalesOverviewWidget::class, $this->getWidgetData(), key('sales-overview-widget'))
-        </div>
+        </section>
 
         {{-- 3. Revenue & Pipeline Trend Chart --}}
-        <div>
+        <section aria-label="Monthly Revenue and Quotation Trend" class="w-full">
             @livewire(\App\Filament\Widgets\SalesRevenueChartWidget::class, $this->getWidgetData(), key('sales-revenue-chart-widget'))
-        </div>
+        </section>
 
         {{-- 4. Sales Leaderboard Rankings Table --}}
-        <div>
+        <section aria-label="Sales Leaderboard" class="w-full">
             {{ $this->table }}
-        </div>
+        </section>
     </div>
 </x-filament-panels::page>
