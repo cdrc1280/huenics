@@ -23,24 +23,39 @@ class ExportUnofficialQuotationPdf
 
         $dompdf = new Dompdf($options);
 
-        // Ensure defaults for calculations
+        // Ensure defaults for calculations matching reference Vendors Agreement Form
         $items = $quotationData['items'] ?? [];
         $subtotal = 0.0;
+        $subtotalUndiscounted = 0.0;
+
         foreach ($items as &$item) {
             $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 1);
-            $price = (float) ($item['unit_price'] ?? 0);
-            $lineTotal = isset($item['line_total']) ? (float) $item['line_total'] : round($qty * $price, 2);
+            $unitPrice = (float) ($item['unit_price'] ?? 0);
+            $discPrice = isset($item['discounted_price']) && (float) $item['discounted_price'] > 0
+                ? (float) $item['discounted_price']
+                : ($unitPrice > 0 ? round($unitPrice * 0.90, 2) : 0);
+
+            $lineTotal = isset($item['line_total']) && (float) $item['line_total'] > 0
+                ? (float) $item['line_total']
+                : round($qty * $discPrice, 2);
+
             $item['quantity'] = $qty;
-            $item['unit_price'] = $price;
+            $item['unit_price'] = $unitPrice;
+            $item['discounted_price'] = $discPrice;
             $item['line_total'] = $lineTotal;
+
             $subtotal += $lineTotal;
+            $subtotalUndiscounted += round($qty * $unitPrice, 2);
         }
         unset($item);
 
         $quotationData['items'] = $items;
         $quotationData['subtotal'] = round($subtotal, 2);
+        $quotationData['subtotal_undiscounted'] = round($subtotalUndiscounted, 2);
+        $quotationData['total_amount'] = round($subtotalUndiscounted, 2);
+        $quotationData['negotiated_amount'] = round($subtotal, 2);
         $quotationData['vat_amount'] = round($subtotal * 0.12, 2);
-        $quotationData['grand_total'] = round($subtotal + $quotationData['vat_amount'], 2);
+        $quotationData['grand_total'] = round($subtotal, 2);
 
         $html = View::make('pdf.unofficial-quotation-template', [
             'quote' => $quotationData,

@@ -3,434 +3,571 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Bill of Quantities &amp; RFQ - {{ $quote['quotation_number'] ?? 'RFQ-INQUIRY' }}</title>
+    <title>Vendors Agreement Form - {{ $quote['quotation_number'] ?? 'HISI-QUOTATION' }}</title>
     <style>
         @page {
-            margin: 25px 30px;
+            margin: 10mm 12mm 8mm 12mm;
+            size: A4 portrait;
         }
 
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            color: #1e293b;
-            line-height: 1.4;
+            font-size: 8.5px;
+            color: #111827;
+            line-height: 1.25;
             margin: 0;
             padding: 0;
+            background: #fff;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Top Header */
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
-        .header-table td {
-            vertical-align: top;
-        }
-
-        .company-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #0f172a;
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-        }
-
-        .company-subtitle {
-            font-size: 9px;
-            color: #64748b;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .company-meta {
-            font-size: 9.5px;
-            color: #475569;
-            margin-top: 4px;
-            line-height: 1.35;
-        }
-
-        .estimate-badge-box {
-            text-align: right;
-        }
-
-        .unofficial-badge {
+        .logo-bracket {
             display: inline-block;
-            background-color: #eff6ff;
-            border: 1.5px solid #214fe0;
-            color: #214fe0;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
+            border: 2px solid #1e3a8a;
+            padding: 2px 7px;
+            font-weight: 900;
+            font-size: 22px;
+            color: #1e3a8a;
+            letter-spacing: 2px;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1;
+        }
+
+        .company-header-text {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e3a8a;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
+            line-height: 1.1;
         }
 
-        .ref-number {
-            font-size: 13px;
-            font-weight: bold;
-            color: #0f172a;
-            margin-top: 6px;
-        }
-
-        .ref-date {
-            font-size: 10px;
-            color: #64748b;
+        .company-tagline {
+            font-size: 9.5px;
+            color: #3b82f6;
+            font-weight: 700;
             margin-top: 2px;
         }
 
-        /* Notice Banner */
-        .disclaimer-box {
-            background-color: #f8fafc;
-            border-left: 4px solid #f59e0b;
-            border-top: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 8px 12px;
-            margin-bottom: 15px;
-            border-radius: 2px;
-        }
-
-        .disclaimer-title {
-            font-weight: bold;
-            color: #b45309;
-            font-size: 9.5px;
+        .vendors-banner {
+            background-color: #1e285a;
+            color: #ffffff;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: 0.75px;
             text-transform: uppercase;
-            margin-bottom: 2px;
         }
 
-        .disclaimer-text {
-            font-size: 9px;
-            color: #475569;
-            line-height: 1.3;
-        }
-
-        /* Customer & Project Info Grid */
-        .info-table {
+        /* Customer & Project Details */
+        .meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            font-size: 9px;
+            margin-bottom: 6px;
         }
 
-        .info-table th {
-            background-color: #f1f5f9;
-            color: #334155;
-            font-size: 9.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: left;
-            padding: 5px 8px;
-            border-bottom: 1px solid #cbd5e1;
+        .meta-table td {
+            padding: 1.5px 0;
+            vertical-align: bottom;
         }
 
-        .info-table td {
-            padding: 4px 8px;
-            font-size: 10px;
-            color: #334155;
-            vertical-align: top;
+        .meta-label {
+            font-weight: bold;
+            color: #000;
+            white-space: nowrap;
         }
 
-        .info-label {
-            font-weight: 600;
-            color: #475569;
-            width: 18%;
-        }
-
-        .info-val {
-            color: #0f172a;
-            width: 32%;
+        .meta-val-underlined {
+            border-bottom: 1px solid #000;
+            padding: 1px 4px;
+            color: #111;
         }
 
         /* Line Items Table */
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            border: 1px solid #000;
+            margin-top: 4px;
         }
 
         .items-table th {
-            background-color: #214fe0;
-            color: #ffffff;
-            font-size: 9.5px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 6px 8px;
-            border: 1px solid #214fe0;
-            text-align: left;
+            border: 1px solid #000;
+            background-color: #ffffff;
+            font-weight: bold;
+            font-size: 8.5px;
+            padding: 3px 2px;
+            text-align: center;
+            color: #000;
         }
 
         .items-table td {
-            padding: 6px 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 10px;
-            vertical-align: middle;
+            border: 1px solid #000;
+            padding: 3px 4px;
+            font-size: 8.5px;
+            vertical-align: top;
+            color: #111;
         }
 
-        .items-table tr:nth-child(even) td {
-            background-color: #f8fafc;
+        .item-thumb {
+            max-height: 32px;
+            max-width: 48px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .font-bold {
+        .total-amount-row td {
+            border: 1px solid #000;
             font-weight: bold;
+            font-size: 8.5px;
+            padding: 2.5px 6px;
         }
 
-        /* Totals Table */
-        .totals-wrapper {
-            width: 100%;
-            margin-bottom: 18px;
-        }
-
-        .totals-table {
-            width: 48%;
-            float: right;
-            border-collapse: collapse;
-        }
-
-        .totals-table td {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 10px;
-        }
-
-        .totals-table tr.grand-total td {
-            background-color: #214fe0;
-            color: #ffffff;
+        .negotiated-amount-row td {
+            border: 1px solid #000;
             font-weight: bold;
-            font-size: 12px;
-            border-color: #214fe0;
+            font-size: 9px;
+            padding: 2.5px 6px;
         }
 
-        .clear {
-            clear: both;
+        .price-disclaimer {
+            font-size: 7.5px;
+            font-weight: bold;
+            margin-top: 2px;
+            margin-bottom: 4px;
+            color: #111;
         }
 
-        /* Terms & Conditions */
-        .terms-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 10px 12px;
-            border-radius: 4px;
-            margin-top: 10px;
+        /* Terms and Conditions */
+        .terms-container {
+            margin-top: 4px;
+            font-size: 8px;
         }
 
         .terms-title {
             font-weight: bold;
-            color: #0f172a;
-            font-size: 10px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
+            font-size: 8.5px;
+            text-decoration: underline;
+            margin-bottom: 2px;
         }
 
-        .terms-list {
-            margin: 0;
-            padding-left: 14px;
-            font-size: 9px;
-            color: #475569;
+        .terms-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            font-size: 8px;
+        }
+
+        .terms-table td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: middle;
+        }
+
+        .terms-table .term-label {
+            font-weight: bold;
+            width: 16%;
+            background-color: #ffffff;
+        }
+
+        /* Notes Box */
+        .notes-box {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            font-size: 7.5px;
             line-height: 1.35;
         }
 
-        /* Footer */
-        .footer {
-            margin-top: 25px;
-            border-top: 1px dashed #cbd5e1;
-            padding-top: 8px;
+        /* Signatures & Warranty */
+        .sig-warranty-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 3px;
+        }
+
+        .sig-warranty-table td {
+            vertical-align: top;
+        }
+
+        .warranty-box {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            font-size: 6.8px;
+            line-height: 1.28;
+        }
+
+        .warranty-void-box {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            margin-top: 2.5px;
             text-align: center;
-            font-size: 8.5px;
-            color: #94a3b8;
+        }
+
+        /* Two-Column Footer */
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-top: 4px;
+            font-size: 7.5px;
+        }
+
+        .footer-table td {
+            padding: 2.5px 6px;
+            vertical-align: top;
+        }
+
+        .footer-header {
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 0.5px solid #666;
+            margin-bottom: 2px;
+            padding-bottom: 1px;
+        }
+
+        /* Browser Print Controls */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+
+        .check-box-checked {
+            display: inline-block;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .check-box-empty {
+            display: inline-block;
+            color: #555;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Header with Authentic HISI Logo from PDF -->
+    @if (!empty($isPrintView))
+        <div class="no-print" style="position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 99999; font-family: system-ui, -apple-system, sans-serif;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: #2563eb; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;">
+                    HUENICS INDUSTRIAL SALES
+                </div>
+                <span style="font-weight: 600; font-size: 13px;">Official Quotation (Vendors Agreement Form) &bull; Ref: {{ $quote['quotation_number'] ?? 'HISI-QUOTATION' }}</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Print Quotation
+                </button>
+                <a href="{{ route('customer.quotation.download-pdf') }}" style="background: #059669; color: white; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download PDF
+                </a>
+                <button onclick="window.close()" style="background: #334155; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">
+                    Close
+                </button>
+            </div>
+        </div>
+        <div class="no-print" style="height: 52px;"></div>
+        <script>
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    window.print();
+                }, 400);
+            });
+        </script>
+    @endif
+
+    <!-- 1. Header: Logo & Vendors Agreement Banner -->
     <table class="header-table">
         <tr>
-            <td style="width: 58%;">
-                <table style="width: 100%; border-collapse: collapse;">
+            <td style="vertical-align: middle;">
+                <table style="border-collapse: collapse; width: auto;">
                     <tr>
-                        <td style="width: 52px; vertical-align: middle; border: none; padding: 0;">
-                            <div
-                                style="border-left: 2.5px solid #214fe0; border-right: 2.5px solid #214fe0; padding: 3px 2px; text-align: center; background-color: #f0f4ff;">
-                                <div
-                                    style="font-size: 15px; font-weight: 900; color: #214fe0; letter-spacing: 1px; line-height: 1;">
-                                    HISI</div>
-                                <div style="font-size: 5px; font-weight: bold; color: #1e3a8a; margin-top: 2px;">Colors
-                                    &bull; Tech</div>
-                            </div>
+                        <td style="vertical-align: middle;">
+                            <div class="logo-bracket">[ HISI ]</div>
                         </td>
-                        <td style="vertical-align: middle; border: none; padding: 0 0 0 10px;">
-                            <div class="company-title">Huenics Industrial Sales Inc.</div>
-                            <div class="company-subtitle" style="color: #214fe0; font-weight: bold;">Colors &bull;
-                                Techniques &bull; Technology</div>
+                        <td style="padding-left: 8px; vertical-align: middle;">
+                            <div class="company-header-text">HUENICS INDUSTRIAL SALES INC.</div>
+                            <div class="company-tagline">Colors &bull; Techniques &bull; Technology</div>
                         </td>
                     </tr>
                 </table>
-                <div class="company-meta" style="margin-top: 6px;">
-                    Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila<br>
-                    Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205<br>
-                    Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com
-                </div>
             </td>
-            <td style="width: 42%;" class="estimate-badge-box">
-                <div class="unofficial-badge">Bill of Quantities &amp; RFQ</div>
-                <div class="ref-number">Ref: {{ $quote['quotation_number'] ?? 'RFQ-' . date('Ymd-His') }}</div>
-                <div class="ref-date">Generated:
-                    {{ isset($quote['quotation_date']) ? date('F d, Y', strtotime($quote['quotation_date'])) : now()->format('F d, Y') }}
+            <td style="width: 36%; vertical-align: top; text-align: right;">
+                <div class="vendors-banner">
+                    VENDORS AGREEMENT FORM
                 </div>
-                <div class="ref-date">Inquiry Status: Pending Sales Review</div>
             </td>
         </tr>
     </table>
 
-    <!-- Disclaimer Banner -->
-    <div class="disclaimer-box">
-        <div class="disclaimer-title">Bill of Quantities / Technical Project Inquiry</div>
-        <div class="disclaimer-text">
-            This document specifies item quantities, technical specifications, and project scope for official quotation
-            evaluation. To protect trade margins and project volume tiers, commercial pricing and delivery timelines are
-            officially computed and issued by Huenics Industrial Sales Inc. upon direct customer inquiry.
-        </div>
-    </div>
-
-    <!-- Customer & Project Info -->
-    <table class="info-table">
+    <!-- 2. Customer & Project Meta Table (Underlined format matching reference PDF) -->
+    <table class="meta-table">
         <tr>
-            <th colspan="2">Customer Details</th>
-            <th colspan="2">Project & Delivery Details</th>
+            <td class="meta-label" style="width: 14%;">Quotation No.</td>
+            <td class="meta-val-underlined" style="width: 50%; font-weight: bold;">
+                {{ $quote['quotation_number'] ?? ('26' . date('md') . ' - P') }}
+            </td>
+            <td class="meta-label" style="width: 8%; text-align: right; padding-right: 6px;">Date</td>
+            <td class="meta-val-underlined" style="width: 28%; text-align: center;">
+                {{ isset($quote['quotation_date']) ? date('m/d/y', strtotime($quote['quotation_date'])) : date('m/d/y') }}
+            </td>
         </tr>
         <tr>
-            <td class="info-label">Customer Name:</td>
-            <td class="info-val">{{ $quote['customer_name'] ?? 'Walk-in Client' }}</td>
-            <td class="info-label">Project Name:</td>
-            <td class="info-val">{{ $quote['project_name'] ?? 'General Procurement' }}</td>
+            <td class="meta-label">Customer Name</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['customer_name'] ?? 'Walk-in Client' }}
+            </td>
         </tr>
         <tr>
-            <td class="info-label">Company:</td>
-            <td class="info-val">{{ $quote['customer_company'] ?? 'Individual / Direct Buyer' }}</td>
-            <td class="info-label">Location / Site:</td>
-            <td class="info-val">{{ $quote['project_location'] ?? 'Metro Manila' }}</td>
+            <td class="meta-label">Company</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['customer_company'] ?? 'Direct Technical Buyer' }}
+            </td>
         </tr>
         <tr>
-            <td class="info-label">Contact Phone:</td>
-            <td class="info-val">{{ $quote['phone_no'] ?? 'N/A' }}</td>
-            <td class="info-label">Email:</td>
-            <td class="info-val">{{ $quote['email'] ?? 'N/A' }}</td>
+            <td class="meta-label">Address</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['customer_address'] ?? ($quote['project_location'] ?? 'Metro Manila') }}
+            </td>
+        </tr>
+        <tr>
+            <td class="meta-label">For Project</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['project_name'] ?? 'General Procurement Project' }}
+            </td>
+        </tr>
+        <tr>
+            <td class="meta-label">Project Location</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['project_location'] ?? 'Metro Manila' }}
+            </td>
+        </tr>
+        <tr>
+            <td class="meta-label">Phone No.</td>
+            <td colspan="3" class="meta-val-underlined">
+                {{ $quote['phone_no'] ?? 'N/A' }}
+            </td>
         </tr>
     </table>
 
-    <!-- Line Items Table -->
+    <!-- 3. Line Items Table (Exact Columns: Item Code, Description, References from Client, Qty, Unit, Unit Price, Discounted Price, Total) -->
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 5%;" class="text-center">#</th>
-                <th style="width: 20%;">Item Code / SKU</th>
-                <th style="width: 10%;" class="text-center">Image</th>
-                <th style="width: 49%;">Product Description</th>
-                <th style="width: 8%;" class="text-center">Qty</th>
-                <th style="width: 8%;" class="text-center">Unit</th>
+                <th style="width: 14%;">Item Code</th>
+                <th style="width: 32%;">Product Description</th>
+                <th style="width: 12%;">References from Client</th>
+                <th style="width: 6%;">Qty</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 10%;">Unit Price</th>
+                <th style="width: 10%;">Discounted Price</th>
+                <th style="width: 10%;">Total</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($quote['items'] ?? [] as $index => $item)
+            @forelse($quote['items'] ?? [] as $item)
                 @php
                     $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
-                    $prodImg = $prod?->base64_image;
+                    $prodImg = $item['base64_image'] ?? $prod?->base64_image;
+                    $qty = (float) ($item['quantity'] ?? ($item['qty'] ?? 1));
+                    $unitPrice = (float) ($item['unit_price'] ?? 0);
+                    $discPrice = (float) ($item['discounted_price'] ?? ($unitPrice > 0 ? round($unitPrice * 0.90, 2) : 0));
+                    $lineTotal = (float) ($item['line_total'] ?? round($qty * $discPrice, 2));
                 @endphp
                 <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="font-bold">{{ $item['item_code'] ?? ($item['sku'] ?? 'GEN-ITEM') }}</td>
-                    <td class="text-center" style="vertical-align: middle; padding: 2px;">
+                    <td style="font-weight: bold;">{{ $item['item_code'] ?? ($item['sku'] ?? 'GEN-ITEM') }}</td>
+                    <td>
+                        <div>{{ $item['description'] ?? ($item['canonical_name'] ?? 'Product Line Item') }}</div>
+                        <div style="font-size: 7.5px; color: #555; margin-top: 1px;">Warranty: 2 yrs</div>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; padding: 2px;">
                         @if ($prodImg)
-                            <img src="{{ $prodImg }}"
-                                style="max-height: 32px; max-width: 40px; object-fit: contain;">
+                            <img src="{{ $prodImg }}" class="item-thumb" alt="Ref">
                         @else
-                            <span style="color: #94a3b8; font-size: 8px;">—</span>
+                            <span style="color: #9ca3af; font-size: 7.5px;">—</span>
                         @endif
                     </td>
-                    <td>{{ $item['description'] ?? ($item['canonical_name'] ?? 'Product Line Item') }}</td>
-                    <td class="text-center font-bold">{{ number_format($item['quantity'] ?? ($item['qty'] ?? 1), 0) }}
-                    </td>
-                    <td class="text-center">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
+                    <td style="text-align: center; font-weight: bold;">{{ number_format($qty, 0) }}</td>
+                    <td style="text-align: center;">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
+                    <td style="text-align: right;">{{ $unitPrice > 0 ? number_format($unitPrice, 2) : '—' }}</td>
+                    <td style="text-align: right;">{{ $discPrice > 0 ? number_format($discPrice, 2) : '—' }}</td>
+                    <td style="text-align: right; font-weight: bold;">{{ $lineTotal > 0 ? number_format($lineTotal, 2) : '—' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center" style="padding: 15px; color: #64748b;">No line items added to
-                        this quotation request.</td>
+                    <td colspan="8" style="text-align: center; padding: 12px; color: #6b7280;">No line items added to this quotation.</td>
                 </tr>
             @endforelse
+
+            <!-- Bottom Totals Matching Reference PDF -->
+            <tr class="total-amount-row">
+                <td colspan="7" style="text-align: right;">Total Amount:</td>
+                <td style="text-align: right;">
+                    {{ number_format($quote['total_amount'] ?? ($quote['subtotal_undiscounted'] ?? ($quote['subtotal'] ?? 0)), 2) }}
+                </td>
+            </tr>
+            <tr class="negotiated-amount-row">
+                <td colspan="7" style="text-align: right; font-weight: 800;">Negotiated Amount:</td>
+                <td style="text-align: right; font-weight: 800; color: #b91c1c;">
+                    {{ number_format($quote['negotiated_amount'] ?? ($quote['grand_total'] ?? ($quote['subtotal'] ?? 0)), 2) }}
+                </td>
+            </tr>
         </tbody>
     </table>
 
-    <!-- Totals Table -->
-    <div class="totals-wrapper">
-        <table class="totals-table">
+    <div class="price-disclaimer">
+        Prices are subject to change without prior notice. (VAT INC.)
+    </div>
+
+    <!-- 4. Terms and Conditions (Exact Checkboxes from Reference PDF) -->
+    <div class="terms-container">
+        <div class="terms-title">Terms and Conditions</div>
+        <table class="terms-table">
             <tr>
-                <td style="width: 55%;"><strong>Total Line Items:</strong></td>
-                <td style="width: 45%;" class="text-right font-bold">{{ count($quote['items'] ?? []) }} item(s)</td>
+                <td class="term-label">Validity</td>
+                <td colspan="3">15 days</td>
             </tr>
             <tr>
-                <td><strong>Tax Classification:</strong></td>
-                <td class="text-right font-bold">12% BIR VAT-Inclusive</td>
+                <td class="term-label">Stock Availability</td>
+                <td style="width: 42%;">
+                    <span class="check-box-checked">&#10004;</span> Stock
+                </td>
+                <td colspan="2">
+                    <span class="check-box-checked">&#10004;</span> Non-Stock / Special Items / Indent Order
+                </td>
             </tr>
             <tr>
-                <td><strong>Inquiry Scope:</strong></td>
-                <td class="text-right font-bold" style="color: #214fe0;">Technical Scope Review</td>
+                <td class="term-label">Terms Of Delivery</td>
+                <td>
+                    <span class="check-box-empty">[ &nbsp; ]</span> 4-7 days &nbsp;&nbsp;&nbsp;&nbsp;
+                    <span class="check-box-empty">[ &nbsp; ]</span> 10-15 days
+                </td>
+                <td colspan="2">
+                    <span class="check-box-checked">&#10004;</span> 30-45days
+                </td>
             </tr>
-            <tr class="grand-total">
-                <td><strong>INQUIRY STATUS:</strong></td>
-                <td class="text-right">Pending Technical Evaluation</td>
+            <tr>
+                <td class="term-label">Payment Terms</td>
+                <td>
+                    <span class="check-box-checked">&#10004;</span> 50% DP, BAL. COD PDC 30 Days
+                </td>
+                <td colspan="2">
+                    <span class="check-box-empty">[ &nbsp; ]</span> PDC 30 Days / Approved Terms
+                </td>
+            </tr>
+            <tr>
+                <td class="term-label">Remarks</td>
+                <td>
+                    <span class="check-box-empty">[ &nbsp; ]</span> Serve as an Official P.O.
+                </td>
+                <td colspan="2">
+                    <span class="check-box-checked">&#10004;</span> Non- Returnable/ Non- Cancealable
+                </td>
             </tr>
         </table>
-        <div class="clear"></div>
     </div>
 
-    @if (!empty($quote['notes']))
-        <div
-            style="margin-bottom: 12px; font-size: 9.5px; background: #fff; border: 1px solid #e2e8f0; padding: 6px 10px;">
-            <strong>Customer Notes / Remarks:</strong> {{ $quote['notes'] }}
-        </div>
-    @endif
-
-    <!-- Terms & Instructions -->
-    <div class="terms-box">
-        <div class="terms-title">Standard Terms & Conditions (Per Official Vendors Agreement):</div>
-        <ol class="terms-list">
-            <li><strong>Official Conversion:</strong> To convert this estimate into an official binding Quotation /
-                Purchase Order, present reference number ({{ $quote['quotation_number'] ?? 'UNOFF-ESTIMATE' }}) or
-                email <strong>huenicsindustrialsales@gmail.com</strong> / CS: <strong>+63 968 8500720</strong>.</li>
-            <li><strong>Pricing:</strong> All prices are in Philippine Pesos (PHP) inclusive of 12% VAT (VAT INC.).
-                Prices are subject to change without prior notice.</li>
-            <li><strong>Free Delivery Policy:</strong> Minimum amount of order should be <strong>Php 20,000.00
-                    above</strong> for Free Delivery within Metro Manila. Outside Metro Manila shipment cost will be
-                applied.</li>
-            <li><strong>Return & Exchange Policy:</strong> Return & exchange of items must be within <strong>7 days upon
-                    delivery</strong> with complete accessories, packaging, and sales invoice/warranty slip. Physical
-                damage is not covered.</li>
-            <li><strong>Warranty Terms:</strong> 1–2 Years limited warranty w/o physical damage. 1 mo. outright
-                replacement for defective units (subject to stock availability); after 30 days subject to
-                repair/replacement in 2-5 working days.</li>
-        </ol>
+    <!-- 5. NOTES Box (Exact 5 Bullets from Reference PDF) -->
+    <div class="notes-box">
+        <strong style="color: #b91c1c;">NOTES:</strong><br>
+        * Minimum amount of order should be Php 20,000.00 above for Free Delivery within Metro Manila. Outside Metro Manila Shipment cost will be applied.<br>
+        * Return &amp; Exchange of Items should be within 7 days upon delivery.<br>
+        * Gate fees or any other entrance fees not included. Additional charges shall be applied for deliveries before or after office hour.<br>
+        * Please inspect item before installation. Complaints will not be entertained after items have been installed.<br>
+        * Special order, sale/phase out and non-regular items are not allowed for return.
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        Huenics Industrial Sales Inc. (HISI) &bull; Colors &bull; Techniques &bull; Technology &bull; Telefax: (02)
-        8561-6836 &bull; CS: +63 968 8500720
+    <!-- 6. Agreement & Signatures + How To Claim The Warranty (Two Columns) -->
+    <div style="font-size: 7.8px; font-weight: bold; margin-bottom: 2px;">
+        I/We hereby agree and accept the Terms and Conditions written above on this form.
     </div>
+
+    <table class="sig-warranty-table">
+        <tr>
+            <td style="width: 58%; padding-right: 12px;">
+                <div style="margin-bottom: 10px; font-size: 8px;">
+                    Customer's Name over Signature: ___________________________________
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: top;">
+                            <div style="font-size: 7.5px; color: #444; margin-bottom: 14px;">Prepared by</div>
+                            <div style="border-bottom: 1px solid #000; width: 140px; text-align: center; padding-bottom: 1px; font-weight: bold; font-size: 8px;">
+                                Emmanuel Joshua Serrano
+                            </div>
+                        </td>
+                        <td style="width: 50%; vertical-align: top;">
+                            <div style="font-size: 7.5px; color: #444; margin-bottom: 14px;">Approved by</div>
+                            <div style="border-bottom: 1px solid #000; width: 140px; text-align: center; padding-bottom: 1px; font-weight: bold; font-size: 8px;">
+                                Mila S. De Guzman
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+            <td style="width: 42%;">
+                <div class="warranty-box">
+                    <div style="text-align: center; font-weight: bold; border-bottom: 1px solid #000; margin-bottom: 2px; padding-bottom: 1px; font-size: 7.2px;">
+                        How To Claim The Warranty
+                    </div>
+                    <u>&nbsp;&nbsp;1&nbsp;&nbsp;</u>Yr. Limited warranty w/o physical damage<br>
+                    * 7 days item change policy provided that it must be in good Condition w/ complete accessories, packaging. Any form of Physical damage is not covered by 7 days replacement. Present items with sales invoice or warranty slip- upon checking by our Service /Technicians.<br>
+                    * 1 mo. Outright replacement (depends on stock availability) if item/unit is found to be defective warranty slip- upon checking by our Service /Technicians.<br>
+                    * Item/Units are found defective after 30 days are subject For repair or replacement. 2-5 working days:
+
+                    <div class="warranty-void-box">
+                        <div style="font-weight: bold; font-size: 6.8px;">THE WARRANTY IS VOID IF THE PRODUCT IS:</div>
+                        <div style="font-size: 6.2px; color: #111;">
+                            *Corroded due to moisture/dirt &bull; *Improperly used or mishandled<br>
+                            *Items w/ dark spot, damaged, scratched and dented.
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 7. Footer Box (Customer Service No. on left, Office Add on right) -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 45%; border-right: 1px solid #000;">
+                <div class="footer-header">Customer Service No.</div>
+                Customer Service No.: +63 968 8500720<br>
+                Technical Service No.: +63 965 6287205<br>
+                Email : crm.huenics777@gmail.com
+            </td>
+            <td style="width: 55%;">
+                <div class="footer-header">Office Add</div>
+                916 Avida Towers Intima Zulueta St.Brgy.678 Zone 74 dist V 1007 Paco NCR, City of Manila First District Philippines, Manila<br>
+                Telefax No.:(02) 8561-6836 &bull; Email: huenicsindustrialsales@gmail.com
+            </td>
+        </tr>
+    </table>
 
 </body>
 

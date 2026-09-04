@@ -185,6 +185,14 @@
 
                             <div class="sm:col-span-2">
                                 <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    Company / Office Address
+                                </label>
+                                <input type="text" name="customer_address" placeholder="e.g. 2F Starmall Annex, Alabang-Zapote Road, corner Doña Manuela Ave., Las Piñas" title="Company Address"
+                                       class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-[#161f38] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#161f38]">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                                     Special Notes / Delivery Instructions
                                 </label>
                                 <textarea name="notes" rows="2" placeholder="e.g. Staggered delivery required. Schedule 40 pipes must include manufacturer test certificates." title="Special Notes or Delivery Instructions"
@@ -201,10 +209,10 @@
                     <div class="bg-slate-900 dark:bg-[#0c1220] text-white border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
                         <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">
-                                Procurement Summary
+                                Quotation Summary
                             </h3>
                             <span class="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
-                                Bill of Quantities
+                                Vendors Agreement Form
                             </span>
                         </div>
 
@@ -221,10 +229,10 @@
 
                             <div class="pt-3 border-t border-slate-800 flex justify-between items-baseline">
                                 <div>
-                                    <div class="text-xs uppercase font-extrabold text-slate-400">Inquiry Scope:</div>
-                                    <div class="text-[10px] text-slate-500">(Direct Technical Review)</div>
+                                    <div class="text-xs uppercase font-extrabold text-slate-400">Quotation Format:</div>
+                                    <div class="text-[10px] text-slate-500">(Official Agreement PDF)</div>
                                 </div>
-                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Ready for Review</span>
+                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Ready for Export</span>
                             </div>
                         </div>
 
@@ -232,40 +240,27 @@
                         <div class="bg-slate-800/80 dark:bg-[#161f38]/80 rounded-xl p-3.5 border border-slate-700 text-[11px] text-slate-400 leading-relaxed">
                             <div class="flex items-center gap-1.5 text-blue-400 font-bold mb-1">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>Technical Specification Notice</span>
+                                <span>Official Quotation Generator</span>
                             </div>
-                            Item specifications, delivery timelines, and official quotations are reviewed and issued directly by Huenics sales engineers for your bill of quantities. Submit your request below or download the itemized BOQ.
+                            Generate, print, or download your official Huenics Vendors Agreement Form quotation instantly. Your itemized specifications and volume schedules are formatted per company standards.
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="space-y-2.5 pt-2">
-                            <!-- Primary Official Request Button -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Download PDF Button -->
                             <button type="submit" 
-                                    onclick="document.getElementById('form-action').value='request_quotation'"
-                                    class="w-full bg-emerald-600 hover:bg-emerald-500 btn-interactive text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                                <span>Request Official Quotation (Encode)</span>
-                            </button>
-
-                            <button type="submit" 
-                                    onclick="document.getElementById('form-action').value='download_pdf'"
-                                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 btn-interactive text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                    onclick="document.getElementById('quotation-form').removeAttribute('target'); document.getElementById('form-action').value='download_pdf'"
+                                    class="w-full bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] btn-interactive text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>Download Itemized BOQ PDF</span>
+                                <span>Download Quotation (PDF)</span>
                             </button>
 
+                            <!-- Print Quotation Button (Opens print dialog in new tab) -->
                             <button type="submit" 
-                                    onclick="document.getElementById('form-action').value='preview_pdf'"
-                                    class="w-full bg-slate-800 hover:bg-slate-700 btn-interactive text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                <span>Preview BOQ in New Tab</span>
-                            </button>
-
-                            <button type="submit" 
-                                    onclick="document.getElementById('form-action').value='view'"
-                                    class="w-full bg-transparent hover:bg-slate-800 btn-interactive text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                <span>View Web Summary &amp; Print</span>
+                                    onclick="document.getElementById('quotation-form').setAttribute('target', '_blank'); document.getElementById('form-action').value='print_quotation'"
+                                    class="w-full bg-slate-800 hover:bg-slate-700 active:scale-[0.98] btn-interactive text-slate-100 border border-slate-700 font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                <span>Print Quotation</span>
                             </button>
                         </div>
                     </div>

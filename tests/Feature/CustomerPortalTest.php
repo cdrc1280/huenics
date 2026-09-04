@@ -294,38 +294,50 @@ class CustomerPortalTest extends TestCase
         $response->assertSee('class="flex items-center gap-2 sm:gap-3 shrink-0"', false);
     }
 
-    public function test_customer_can_request_official_quotation_without_sales_agent_id_error(): void
+    public function test_customer_can_download_and_print_official_quotation_vendors_agreement(): void
     {
         $payload = [
-            'customer_name'    => 'Cedric James Leala',
-            'customer_company' => 'TESDA',
-            'email'            => 'cedricjamesleala128@gmail.com',
-            'phone_no'         => '09388542688',
-            'project_name'     => 'Customer Web Inquiry',
-            'project_location' => 'Metro Manila',
-            'notes'            => 'Urgent formal quotation requested.',
+            'customer_name'    => 'Engr. Ronald Rey Sandoval',
+            'customer_company' => 'MGS CONSTRUCTION, INC.',
+            'customer_address' => '2F Starmall Annex, Alabang-Zapote Road, Las Piñas',
+            'email'            => 'procurement@mgsconstruction.ph',
+            'phone_no'         => '0906-144-2553',
+            'project_name'     => 'Palanza Tower',
+            'project_location' => 'Palanza St. corner Guirayan st., Dona Imelda, Q.C',
+            'notes'            => 'Special indent order items included.',
             'items' => [
                 [
-                    'item_code'   => 'TEST-PIPE-01',
-                    'description' => '1-1/4" PVC Pipe Sch 40',
+                    'item_code'   => 'HISI-JF-2240-7W',
+                    'description' => 'Led Downlight C.O.B Citizen Japan 3500k Warmwhite 7w',
                     'quantity'    => 10,
                     'unit'        => 'pcs',
-                    'unit_price'  => 1880.56,
+                    'unit_price'  => 1950.00,
                 ],
             ],
-            'action' => 'request_quotation',
+            'action' => 'download_pdf',
         ];
 
-        $response = $this->post('/quotation/generate-unofficial', $payload);
+        // 1. Test direct PDF download
+        $pdfResponse = $this->post('/quotation/generate-unofficial', $payload);
+        $pdfResponse->assertStatus(200);
+        $this->assertEquals('application/pdf', $pdfResponse->headers->get('Content-Type'));
+        $this->assertStringContainsString('attachment;', $pdfResponse->headers->get('Content-Disposition'));
 
-        $response->assertStatus(200);
-        $response->assertSee('Cedric James Leala');
-        $response->assertSee('TESDA');
+        // 2. Test direct Print Quotation view (Vendors Agreement Form)
+        $payload['action'] = 'print_quotation';
+        $printResponse = $this->post('/quotation/generate-unofficial', $payload);
+        $printResponse->assertStatus(200);
+        $printResponse->assertSee('VENDORS AGREEMENT FORM');
+        $printResponse->assertSee('HUENICS INDUSTRIAL SALES INC.');
+        $printResponse->assertSee('Engr. Ronald Rey Sandoval');
+        $printResponse->assertSee('MGS CONSTRUCTION, INC.');
+        $printResponse->assertSee('Palanza Tower');
+        $printResponse->assertSee('HISI-JF-2240-7W');
+        $printResponse->assertSee('window.print()', false);
 
-        $this->assertDatabaseHas('quotations', [
-            'customer_name'    => 'Cedric James Leala',
-            'customer_company' => 'TESDA',
-            'status'           => 'pending',
+        // 3. Verify no unsolicited quotation record was inserted into the database
+        $this->assertDatabaseMissing('quotations', [
+            'customer_name' => 'Engr. Ronald Rey Sandoval',
         ]);
     }
 }

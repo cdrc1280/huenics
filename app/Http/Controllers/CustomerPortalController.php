@@ -132,6 +132,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'customer_name'    => 'required|string|max:150',
             'customer_company' => 'required|string|max:150',
+            'customer_address' => 'nullable|string|max:255',
             'email'            => 'nullable|email|max:150',
             'phone_no'         => 'required|string|max:50',
             'project_name'     => 'nullable|string|max:150',
@@ -144,135 +145,108 @@ class CustomerPortalController extends Controller implements HasMiddleware
             'items.*.unit_price'  => 'nullable|numeric|min:0',
             'items.*.unit'        => 'nullable|string|max:20',
             'items.*.item_code'   => 'nullable|string|max:50',
-            'action'              => 'nullable|string|in:download_pdf,preview_pdf,view,encode,request_quotation',
+            'action'              => 'nullable|string|in:download_pdf,preview_pdf,print,print_quotation,view',
         ]);
 
         $subtotal = 0.0;
+        $subtotalUndiscounted = 0.0;
         $items = [];
 
         foreach ($validated['items'] as $index => $item) {
             $qty = (float) ($item['quantity'] ?? 1);
-            $price = (float) ($item['unit_price'] ?? 0);
-            $lineTotal = round($qty * $price, 2);
-            $subtotal += $lineTotal;
-
             $productId = !empty($item['product_id']) ? (int) $item['product_id'] : null;
             $product = $productId ? Product::find($productId) : null;
-            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('ITM-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
+
+            $unitPrice = (float) ($item['unit_price'] ?? 0);
+            if ($unitPrice <= 0 && $product) {
+                $unitPrice = (float) ($product->default_price ?: $product->selling_price ?: 0);
+            }
+
+            // Standard trade discount from list price (matches reference PDF 10% volume schedule)
+            $discountedPrice = $product && (float) $product->selling_price > 0 && (float) $product->selling_price < $unitPrice
+                ? (float) $product->selling_price
+                : ($unitPrice > 0 ? round($unitPrice * 0.90, 2) : 0);
+
+            if ($unitPrice <= 0) {
+                $unitPrice = 0.0;
+                $discountedPrice = 0.0;
+            }
+
+            $lineTotal = round($qty * $discountedPrice, 2);
+            $undiscountedTotal = round($qty * $unitPrice, 2);
+
+            $subtotal += $lineTotal;
+            $subtotalUndiscounted += $undiscountedTotal;
+
+            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('HISI-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
             $desc = $item['description'] ?: ($product?->canonical_name ?? 'Product Line Item');
 
             $items[] = [
-                'product_id'   => $productId,
-                'item_code'    => $itemCode,
-                'description'  => $desc,
-                'quantity'     => $qty,
-                'unit'         => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
-                'unit_price'   => $price,
-                'line_total'   => $lineTotal,
-                'base64_image' => $product?->base64_image,
+                'product_id'       => $productId,
+                'item_code'        => $itemCode,
+                'description'      => $desc,
+                'quantity'         => $qty,
+                'unit'             => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
+                'unit_price'       => $unitPrice,
+                'discounted_price' => $discountedPrice,
+                'line_total'       => $lineTotal,
+                'base64_image'     => $product?->base64_image,
             ];
         }
 
         $vatAmount = round($subtotal * 0.12, 2);
-        $grandTotal = round($subtotal + $vatAmount, 2);
+        $grandTotal = round($subtotal, 2);
 
-        $action = $request->input('action', 'view');
-        $isEncoded = false;
-
-        if (in_array($action, ['request_quotation', 'encode'], true)) {
-            $refNumber = 'QTN-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-
-            // Default to an inhouse sales agent (e.g. Owner or Admin) if available
-            $defaultAgentId = User::where('is_owner', true)->value('id')
-                ?? User::whereIn('role', [
-                    User::ROLE_ADMIN,
-                    User::ROLE_OPERATIONS_MANAGER,
-                    User::ROLE_SALES_EXECUTIVE,
-                ])->value('id');
-
-            $quotation = Quotation::create([
-                'quotation_number' => $refNumber,
-                'sales_agent_id'   => $defaultAgentId,
-                'customer_name'    => $validated['customer_name'],
-                'customer_company' => $validated['customer_company'],
-                'phone_no'         => $validated['phone_no'],
-                'project_name'     => $validated['project_name'] ?: 'Customer Web Inquiry',
-                'project_location' => $validated['project_location'] ?: 'Metro Manila',
-                'quotation_date'   => now()->toDateString(),
-                'valid_until'      => now()->addDays(30)->toDateString(),
-                'total_amount'     => $grandTotal,
-                'status'           => Quotation::STATUS_PENDING,
-                'notes'            => ($validated['notes'] ?? '') . "\n[Received via Online Quotation Portal. Email: " . ($validated['email'] ?? 'N/A') . " | Tel: {$validated['phone_no']}]",
-            ]);
-
-            foreach ($items as $idx => $line) {
-                $baseCost = round((float) $line['unit_price'] * 0.7, 2);
-                $quotation->lineItems()->create([
-                    'line_no'          => $idx + 1,
-                    'item_code'        => $line['item_code'],
-                    'product_id'       => $line['product_id'],
-                    'description'      => $line['description'],
-                    'qty'              => $line['quantity'],
-                    'unit'             => $line['unit'],
-                    'unit_price'       => $line['unit_price'],
-                    'line_total'       => $line['line_total'],
-                    'base_cost'        => $baseCost,
-                    'gross_profit'     => round($line['line_total'] - ($line['quantity'] * $baseCost), 2),
-                ]);
-            }
-
-            $isEncoded = true;
-
-            // Attempt mail alert if mail driver configured
-            try {
-                $salesEmail = 'huenicsindustrialsales@gmail.com';
-                $customerEmail = $validated['email'] ?? null;
-                $mailBody = "New Formal Quotation Request #{$refNumber}\n\nCustomer: {$validated['customer_name']}\nCompany: {$validated['customer_company']}\nPhone: {$validated['phone_no']}\nEmail: " . ($customerEmail ?? 'N/A') . "\nPricing: Official Quote Required (Customer Inquiry)\nItems: " . count($items) . "\n\nPlease review this in the Admin Panel under Quotations.";
-
-                @mail($salesEmail, "New Quotation Request: {$refNumber} - {$validated['customer_company']}", $mailBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
-
-                if ($customerEmail) {
-                    $ackBody = "Dear {$validated['customer_name']},\n\nThank you for requesting a quotation from Huenics Industrial Sales Inc.\nYour official inquiry reference is #{$refNumber}.\n\nItems: " . count($items) . " line item(s)\nPricing Determination: Official Quote Upon Technical Sales Review\nOur technical sales team will review your project requirements and contact you shortly at {$validated['phone_no']}.\n\nHuenics Industrial Sales Inc.\nTel. #8561 6836 | CS: +63 968 8500720";
-                    @mail($customerEmail, "Huenics Quotation Request Confirmation #{$refNumber}", $ackBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
-                }
-            } catch (\Throwable $e) {
-                // Non-blocking
-            }
-        } else {
-            $refNumber = 'UNOFF-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-        }
+        // Reference number format matching Huenics Vendors Agreement Form (e.g. 260904-P)
+        $refNumber = date('ymd') . strtoupper(substr(uniqid(), -3)) . ' - P';
 
         $quoteData = [
-            'quotation_number' => $refNumber,
-            'customer_name'    => $validated['customer_name'] ?? 'Walk-in Client',
-            'customer_company' => $validated['customer_company'],
-            'email'            => !empty($validated['email']) ? $validated['email'] : 'N/A',
-            'phone_no'         => $validated['phone_no'],
-            'project_name'     => !empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement',
-            'project_location' => !empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
-            'quotation_date'   => now()->format('Y-m-d'),
-            'valid_until'      => now()->addDays(30)->format('Y-m-d'),
-            'notes'            => $validated['notes'] ?? '',
-            'items'            => $items,
-            'subtotal'         => $subtotal,
-            'vat_amount'       => $vatAmount,
-            'grand_total'      => $grandTotal,
-            'is_encoded'       => $isEncoded,
+            'quotation_number'      => $refNumber,
+            'customer_name'         => $validated['customer_name'] ?? 'Walk-in Client',
+            'customer_company'      => $validated['customer_company'],
+            'customer_address'      => $validated['customer_address'] ?? ($validated['project_location'] ?? 'Metro Manila'),
+            'email'                 => !empty($validated['email']) ? $validated['email'] : 'N/A',
+            'phone_no'              => $validated['phone_no'],
+            'project_name'          => !empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement Project',
+            'project_location'      => !empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
+            'quotation_date'        => now()->format('Y-m-d'),
+            'valid_until'           => now()->addDays(15)->format('Y-m-d'),
+            'notes'                 => $validated['notes'] ?? '',
+            'items'                 => $items,
+            'subtotal'              => $subtotal,
+            'subtotal_undiscounted' => $subtotalUndiscounted,
+            'total_amount'          => $subtotalUndiscounted,
+            'negotiated_amount'     => $subtotal,
+            'vat_amount'            => $vatAmount,
+            'grand_total'           => $grandTotal,
+            'is_encoded'            => false,
         ];
 
         // Store last generated quotation in session for quick re-downloads
         session(['last_unofficial_quote' => $quoteData]);
 
+        $action = $request->input('action', 'download_pdf');
+
         if ($action === 'download_pdf') {
             return $this->pdfExporter->downloadResponse($quoteData);
         }
 
-        if ($action === 'preview_pdf') {
-            return $this->pdfExporter->previewResponse($quoteData);
+        if (in_array($action, ['print', 'print_quotation', 'preview_pdf'], true)) {
+            return response()->view('pdf.unofficial-quotation-template', [
+                'quote'        => $quoteData,
+                'isPrintView'  => true,
+            ]);
         }
 
-        return view('customer.quotation-success', [
-            'quote' => $quoteData,
+        if ($action === 'view') {
+            return view('customer.quotation-success', [
+                'quote' => $quoteData,
+            ]);
+        }
+
+        return response()->view('pdf.unofficial-quotation-template', [
+            'quote'        => $quoteData,
+            'isPrintView'  => true,
         ]);
     }
 
