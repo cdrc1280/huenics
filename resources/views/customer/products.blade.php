@@ -134,7 +134,7 @@
                                    value="1" 
                                    min="1" 
                                    step="1" 
-                                   class="w-12 text-center text-xs font-bold py-1.5 border-x border-slate-300 dark:border-slate-700 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white">
+                                   class="w-12 text-center text-xs font-bold font-mono tabular-nums py-1.5 border-x border-slate-300 dark:border-slate-700 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white">
                             <button type="button" 
                                     onclick="adjustQty('qty-{{ $product->id }}', 1)"
                                     class="px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">
@@ -181,10 +181,10 @@
             </div>
             <div>
                 <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span id="floating-cart-count">0</span> items in Quotation
+                    <span id="floating-cart-count" class="font-mono tabular-nums">0</span> items in Quotation
                 </div>
                 <div class="text-[11px] text-slate-400">
-                    Est. Subtotal: <span id="floating-cart-subtotal" class="text-amber-400 font-bold">₱ 0.00</span>
+                    Est. Subtotal: <span id="floating-cart-subtotal" class="text-amber-400 font-bold font-mono tabular-nums">₱ 0.00</span>
                 </div>
             </div>
         </div>

@@ -59,15 +59,15 @@
                 <!-- Company Stats -->
                 <div class="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-slate-200 dark:border-slate-800">
                     <div class="text-center lg:text-left" title="Total active products in our catalog">
-                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa]">{{ number_format($totalProductsCount) }}+</div>
+                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">{{ number_format($totalProductsCount) }}+</div>
                         <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Active Products</div>
                     </div>
                     <div class="text-center lg:text-left" title="Different categories of supplies we offer">
-                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa]">{{ $categories->count() }}</div>
+                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">{{ $categories->count() }}</div>
                         <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Product Categories</div>
                     </div>
                     <div class="text-center lg:text-left" title="Years serving the industry">
-                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa]">{{ $yearsInBusiness }}</div>
+                        <div class="text-2xl sm:text-3xl font-black text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">{{ $yearsInBusiness }}</div>
                         <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Years in Business</div>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
                             @foreach($featuredProducts->take(2) as $prod)
                             <div class="flex justify-between items-center text-xs font-medium">
                                 <span class="truncate pr-2 font-semibold text-slate-800 dark:text-slate-200" title="{{ $prod->canonical_name }}">{{ $prod->canonical_name }}</span>
-                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black whitespace-nowrap">₱ {{ number_format($prod->display_price ?? ($prod->selling_price ?: $prod->default_price), 2) }}</span>
+                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black whitespace-nowrap font-mono tabular-nums">₱ {{ number_format($prod->display_price ?? ($prod->selling_price ?: $prod->default_price), 2) }}</span>
                             </div>
                             @endforeach
                         </div>
@@ -192,7 +192,7 @@
 
                     <div class="flex items-center gap-2">
                         <input type="number" id="qty-{{ $product->id }}" value="1" min="1" step="1" 
-                               class="w-16 text-center text-xs font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f38] text-slate-900 dark:text-white rounded-lg py-2 focus:ring-2 focus:ring-[#214fe0] focus:outline-none">
+                               class="w-16 text-center text-xs font-bold font-mono tabular-nums border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f38] text-slate-900 dark:text-white rounded-lg py-2 focus:ring-2 focus:ring-[#214fe0] focus:outline-none">
                         <button type="button" 
                                 onclick="addProductToQuote({{ json_encode($product) }}, document.getElementById('qty-{{ $product->id }}').value)"
                                 class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] text-white text-xs font-bold py-2.5 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
@@ -212,161 +212,172 @@
     </div>
 </section>
 
-<!-- Three Strategic Pillars -->
-<section class="py-16 bg-slate-100 dark:bg-[#070b14] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-2xl mx-auto mb-12">
-            <span class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">The Huenics Advantage</span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
-                Colors &bull; Techniques &bull; Technology
-            </h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 font-medium italic">
-                "Focus on Pursuing Quality & Speed of Delivery."
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Right Color -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl font-bold">
-                    <i class="fa-solid fa-palette"></i>
-                </div>
-                <span class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Our Unique Feature</span>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Right Color</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    In commercial and industrial illumination, color is everything. Huenics LED Technology achieves exacting color temperatures and high CRI rendering—allowing customers to achieve the best possible illumination.
-                </p>
-            </div>
-
-            <!-- Utilizing Techniques -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center text-xl font-bold">
-                    <i class="fa-solid fa-gears"></i>
-                </div>
-                <span class="text-[11px] font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">Our Passion</span>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Utilizing Techniques</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    The moment the client speaks, we listen. Huenics products are designed to the customer's greatest advantage through the continuous development of optical and engineering techniques.
-                </p>
-            </div>
-
-            <!-- Stand Out Technology -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl font-bold">
-                    <i class="fa-solid fa-microchip"></i>
-                </div>
-                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Our Pride</span>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Stand Out Technology</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Efficiency draws in customers and ensures repeat partnership. Becoming the option of choice for customers interested in value engineering and creating an ideal brightest atmosphere.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Lighting Clinic & Technical Services -->
-<section class="py-16 bg-white dark:bg-[#0a0e1a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] dark:from-[#0d1b4a] dark:via-[#0a1334] dark:to-[#050b1d] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden border border-transparent dark:border-blue-900/40">
-            <!-- Diagonal pinstripe overlay from brand styling -->
-            <div class="absolute inset-0 pointer-events-none opacity-10" style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);"></div>
-
-            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div class="lg:col-span-6 space-y-4">
-                    <span class="inline-flex items-center gap-1.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                        <i class="fa-solid fa-wrench"></i> Specialized Engineering Services &bull; Enercon
-                    </span>
-                    <h2 class="text-2xl sm:text-4xl font-black tracking-tight">
-                        LIGHTING CLINIC <span class="text-amber-400">&bull;</span> Enercon
-                    </h2>
-                    <p class="text-blue-200 text-xs sm:text-sm font-bold uppercase tracking-wider">
-                        Energy Conservation &bull; Repair &bull; Upgrade &bull; Retrofit
-                    </p>
-                    <p class="text-slate-200 text-xs sm:text-sm leading-relaxed">
-                        Our Enercon program provides comprehensive energy management and cost analysis in lighting. Extend fixture life, reduce replacement costs, and improve luminous efficacy across your facilities.
-                    </p>
-                    <div class="pt-2">
-                        <a href="{{ route('customer.about') }}" class="inline-flex items-center gap-2 text-xs font-extrabold text-amber-300 hover:text-white transition">
-                            <span>Learn more about Lighting Clinic</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur p-4 rounded-xl border border-white/15 dark:border-blue-800/40 space-y-1.5 text-center sm:text-left">
-                        <div class="text-amber-300 font-extrabold text-xs uppercase flex items-center gap-1.5">
-                            <i class="fa-solid fa-screwdriver-wrench"></i> We Repair
-                        </div>
-                        <p class="text-[11px] text-slate-200 leading-snug">
-                            Downlights, Tracklights, Highbays, and more as long as major parts exist.
-                        </p>
-                    </div>
-                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur p-4 rounded-xl border border-white/15 dark:border-blue-800/40 space-y-1.5 text-center sm:text-left">
-                        <div class="text-emerald-300 font-extrabold text-xs uppercase flex items-center gap-1.5">
-                            <i class="fa-solid fa-bolt"></i> We Upgrade
-                        </div>
-                        <p class="text-[11px] text-slate-200 leading-snug">
-                            Upgrade existing LED lights into high quality Citizen LED C.O.B chips.
-                        </p>
-                    </div>
-                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur p-4 rounded-xl border border-white/15 dark:border-blue-800/40 space-y-1.5 text-center sm:text-left">
-                        <div class="text-blue-300 font-extrabold text-xs uppercase flex items-center gap-1.5">
-                            <i class="fa-solid fa-arrows-rotate"></i> We Retrofit
-                        </div>
-                        <p class="text-[11px] text-slate-200 leading-snug">
-                            Retrofit old or traditional fixtures to modern high-efficiency LED.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Why Choose Huenics Section -->
+<!-- System-Engineered Illumination & Procurement Bento Grid -->
 <section class="py-16 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-2xl mx-auto mb-12">
-            <span class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">Our Commitments</span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
-                Built for Quality, Speed & Dependability
+        <div class="max-w-3xl mb-12">
+            <span class="inline-flex items-center gap-2 text-xs font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa] uppercase">
+                <span class="w-2 h-2 rounded-full bg-[#214fe0] dark:bg-[#60a5fa]"></span>
+                System-Engineered Architecture
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-2">
+                Optical Engineering Rigor. Direct Commercial Assurance.
             </h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                Providing innovative and reliable quality products that go beyond expectations.
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2.5 font-normal leading-relaxed">
+                Huenics bridges Japanese precision optoelectronics with auditable commercial procurement: official BIR documentation, dedicated site logistics, and factory-level hardware guarantees.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-[#161f38] text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center text-xl font-bold border border-blue-100 dark:border-slate-700">
-                    <i class="fa-solid fa-receipt"></i>
+        <!-- Asymmetrical Bento Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Cell 1: Photometric Accuracy & Citizen Japan C.O.B (7 cols) -->
+            <div class="lg:col-span-7 bento-surface rounded-3xl p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] border border-blue-200 dark:border-blue-900/60">
+                            <i class="fa-solid fa-microchip"></i> Optical Engineering Standard
+                        </span>
+                        <span class="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                            Citizen Japan C.O.B
+                        </span>
+                    </div>
+
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                        Color Consistency &amp; Photometric Accuracy
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed">
+                        In commercial facilities and retail architecture, color rendering is mission-critical. Huenics fixtures leverage genuine Citizen Japan Chip-on-Board LED engines to ensure tight MacAdam ellipse color binning, high CRI spectrum fidelity, and long-term lumen maintenance without chromatic drift.
+                    </p>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">VAT Inclusive Invoicing</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    All prices are VAT Inclusive (VAT INC.). Full commercial documentation with Sales Invoices (SI) and official vendor agreements.
-                </p>
+
+                <!-- Contextual Technical Data Rail -->
+                <div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Color Fidelity</div>
+                        <div class="text-lg font-black font-mono tabular-nums text-[#214fe0] dark:text-[#60a5fa] mt-0.5">Ra &ge; 90</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">High CRI spectrum</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Efficacy</div>
+                        <div class="text-lg font-black font-mono tabular-nums text-[#214fe0] dark:text-[#60a5fa] mt-0.5">120 lm/W</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Luminous output</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Driver Efficiency</div>
+                        <div class="text-lg font-black font-mono tabular-nums text-[#214fe0] dark:text-[#60a5fa] mt-0.5">PF &gt; 0.95</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Power factor rated</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lifespan</div>
+                        <div class="text-lg font-black font-mono tabular-nums text-[#214fe0] dark:text-[#60a5fa] mt-0.5">50,000h</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">L70 lumen rating</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-[#161f38] text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl font-bold border border-emerald-100 dark:border-slate-700">
-                    <i class="fa-solid fa-truck-fast"></i>
+            <!-- Cell 2: Lighting Clinic & Enercon Lab (5 cols) -->
+            <div class="lg:col-span-5 bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] dark:from-[#0d1b4a] dark:via-[#0a1334] dark:to-[#050b1d] text-white rounded-3xl p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden border border-blue-600/30 dark:border-blue-900/40 shadow-xl">
+                <div class="absolute inset-0 pointer-events-none opacity-10" style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);"></div>
+
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                            <i class="fa-solid fa-wrench"></i> Lighting Clinic &bull; Enercon
+                        </span>
+                        <a href="{{ route('customer.about') }}" class="text-xs font-bold text-amber-300 hover:text-white transition-colors flex items-center gap-1">
+                            <span>Diagnostic Lab</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+
+                    <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        Component Repair &amp; Retrofit Lab
+                    </h3>
+                    <p class="text-xs text-blue-100 mt-2.5 leading-relaxed">
+                        Dedicated hardware engineering program designed to maximize asset lifecycle, cut operational expenses, and minimize electronic waste.
+                    </p>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Free Metro Manila Delivery (₱20k+)</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Minimum order of Php 20,000.00 and above enjoys Free Delivery within Metro Manila. Outside Metro Manila shipment cost applied.
-                </p>
+
+                <div class="relative z-10 mt-6 space-y-2.5">
+                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur px-4 py-2.5 rounded-xl border border-white/15 dark:border-blue-800/40 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-screwdriver-wrench text-amber-300 text-xs"></i>
+                            <span class="text-xs font-bold text-white">Component Repair</span>
+                        </div>
+                        <span class="text-[10px] text-blue-200 font-medium">Downlights, Tracklights, Highbays</span>
+                    </div>
+                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur px-4 py-2.5 rounded-xl border border-white/15 dark:border-blue-800/40 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-bolt text-emerald-300 text-xs"></i>
+                            <span class="text-xs font-bold text-white">C.O.B Engine Upgrade</span>
+                        </div>
+                        <span class="text-[10px] text-blue-200 font-medium">Citizen LED array conversions</span>
+                    </div>
+                    <div class="bg-white/10 dark:bg-[#111c38]/90 backdrop-blur px-4 py-2.5 rounded-xl border border-white/15 dark:border-blue-800/40 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-arrows-rotate text-blue-300 text-xs"></i>
+                            <span class="text-xs font-bold text-white">Fixture Retrofitting</span>
+                        </div>
+                        <span class="text-[10px] text-blue-200 font-medium">Legacy to high-efficacy LED</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-[#161f38] text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl font-bold border border-amber-100 dark:border-slate-700">
-                    <i class="fa-solid fa-shield-halved"></i>
+            <!-- Cell 3: 12% BIR Official VAT Invoicing (4 cols) -->
+            <div class="lg:col-span-4 bento-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
+                <div>
+                    <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center text-lg font-bold border border-blue-100 dark:border-blue-900/60 mb-4">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                        12% BIR Official VAT Invoicing
+                    </h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                        Full corporate accounting compliance with serialized Bureau of Internal Revenue (BIR) Sales Invoices (SI), Official Receipts, and itemized delivery documentation for straightforward auditable creditable withholding.
+                    </p>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Official Product Warranty</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    1 to 2 Years limited warranty w/o physical damage. 7 days item change policy and 1 mo. outright defective replacement.
-                </p>
+                <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                    <span class="font-semibold text-slate-500 dark:text-slate-400">Pricing Basis</span>
+                    <span class="font-mono tabular-nums font-bold text-[#214fe0] dark:text-[#60a5fa]">100% VAT Inclusive</span>
+                </div>
+            </div>
+
+            <!-- Cell 4: Metro Manila Free Delivery (4 cols) -->
+            <div class="lg:col-span-4 bento-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
+                <div>
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-bold border border-emerald-100 dark:border-emerald-900/60 mb-4">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                        Metro Manila Jobsite Logistics
+                    </h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                        Complimentary dedicated site delivery across Metro Manila for wholesale and project purchase orders valued at <strong class="font-mono tabular-nums text-slate-900 dark:text-white">₱ 20,000.00</strong> and above. Coordinated directly with your site engineers.
+                    </p>
+                </div>
+                <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                    <span class="font-semibold text-slate-500 dark:text-slate-400">Free Freight Threshold</span>
+                    <span class="font-mono tabular-nums font-bold text-emerald-600 dark:text-emerald-400">&ge; ₱ 20,000.00</span>
+                </div>
+            </div>
+
+            <!-- Cell 5: Hardware Assurance & Warranty (4 cols) -->
+            <div class="lg:col-span-4 bento-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
+                <div>
+                    <div class="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-bold border border-amber-100 dark:border-amber-900/60 mb-4">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                        Hardware Assurance &amp; Swap Window
+                    </h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                        1 to 2 Years manufacturer hardware warranty without physical alteration. Standard 7-day model swap window for project spec changes and 30-day outright replacement for verified factory defects.
+                    </p>
+                </div>
+                <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                    <span class="font-semibold text-slate-500 dark:text-slate-400">Standard Coverage</span>
+                    <span class="font-mono tabular-nums font-bold text-amber-600 dark:text-amber-400">1 – 2 Years Active</span>
+                </div>
             </div>
         </div>
     </div>

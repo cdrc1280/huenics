@@ -206,12 +206,12 @@
                         <div class="space-y-3 text-xs">
                             <div class="flex justify-between text-slate-300">
                                 <span>Net Vatable Subtotal:</span>
-                                <span id="summary-subtotal" class="font-bold text-white text-sm">₱ 0.00</span>
+                                <span id="summary-subtotal" class="font-bold text-white text-sm font-mono tabular-nums">₱ 0.00</span>
                             </div>
 
                             <div class="flex justify-between text-slate-300">
                                 <span>12% Value Added Tax (VAT):</span>
-                                <span id="summary-vat" class="font-bold text-amber-400 text-sm">₱ 0.00</span>
+                                <span id="summary-vat" class="font-bold text-amber-400 text-sm font-mono tabular-nums">₱ 0.00</span>
                             </div>
 
                             <div class="pt-3 border-t border-slate-800 flex justify-between items-baseline">
@@ -219,7 +219,7 @@
                                     <div class="text-xs uppercase font-extrabold text-slate-400">Estimated Total:</div>
                                     <div class="text-[10px] text-slate-500">(VAT-Inclusive)</div>
                                 </div>
-                                <span id="summary-grand-total" class="font-black text-xl text-[#60a5fa]">₱ 0.00</span>
+                                <span id="summary-grand-total" class="font-black text-xl text-[#60a5fa] font-mono tabular-nums">₱ 0.00</span>
                             </div>
                         </div>
 
@@ -318,7 +318,7 @@
 
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="text-right">
-                        <div class="text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">₱ {{ number_format($catProd->display_price ?? ($catProd->selling_price ?: $catProd->default_price ?: 0), 2) }}</div>
+                        <div class="text-xs font-bold text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">₱ {{ number_format($catProd->display_price ?? ($catProd->selling_price ?: $catProd->default_price ?: 0), 2) }}</div>
                     </div>
                     <button type="button" 
                             onclick="insertCatalogItem({{ json_encode($catProd) }})"
@@ -419,15 +419,15 @@
                     <input type="number" name="items[${index}][quantity]" value="${item.quantity}" min="0.01" step="any" required
                            onchange="updateItemField(${index}, 'quantity', this.value)"
                            oninput="updateItemField(${index}, 'quantity', this.value)"
-                           class="w-20 text-center px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
+                           class="w-20 text-center px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
                 </td>
                 <td class="py-2.5 px-3 text-right">
                     <input type="number" name="items[${index}][unit_price]" value="${item.unit_price}" min="0" step="0.01" required
                            onchange="updateItemField(${index}, 'unit_price', this.value)"
                            oninput="updateItemField(${index}, 'unit_price', this.value)"
-                           class="w-24 text-right px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
+                           class="w-24 text-right px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
                 </td>
-                <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white font-mono tabular-nums">
                     ₱ ${formatMoney(lineTotal)}
                 </td>
                 <td class="py-2.5 px-3 text-center">

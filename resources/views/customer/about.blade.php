@@ -55,12 +55,12 @@
                         <div class="text-[10px] text-slate-500 dark:text-slate-400">Exacting Color Temp</div>
                     </div>
                     <div class="bg-slate-50 dark:bg-[#111827] p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-                        <div class="text-xl font-black text-[#214fe0] dark:text-[#60a5fa]">1–2 Yrs</div>
+                        <div class="text-xl font-black text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">1–2 Yrs</div>
                         <div class="text-[11px] font-bold text-slate-900 dark:text-slate-200 mt-1">Warranty</div>
                         <div class="text-[10px] text-slate-500 dark:text-slate-400">Limited Warranty</div>
                     </div>
                     <div class="bg-slate-50 dark:bg-[#111827] p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-                        <div class="text-xl font-black text-[#214fe0] dark:text-[#60a5fa]">₱20,000+</div>
+                        <div class="text-xl font-black text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">₱ 20,000+</div>
                         <div class="text-[11px] font-bold text-slate-900 dark:text-slate-200 mt-1">Free Delivery</div>
                         <div class="text-[10px] text-slate-500 dark:text-slate-400">Metro Manila</div>
                     </div>

@@ -44,6 +44,21 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Native View Transitions & Smooth Navigation */
+        @view-transition {
+            navigation: auto;
+        }
+        ::view-transition-old(root) {
+            animation: 120ms ease-out both fadeOut;
+        }
+        ::view-transition-new(root) {
+            animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both fadeIn;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
         /* Spring & Inertia Micro-Interactions */
         * {
             scroll-behavior: smooth;
@@ -70,6 +85,10 @@
         @keyframes badgeBounce {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.3); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
         .animate-fade-in-up {
@@ -112,6 +131,35 @@
             transform: translateY(-3px);
         }
 
+        /* High-Precision Tabular Numbers for Pricing & Specs */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Tactile Bento Surface */
+        .bento-surface {
+            background-color: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        }
+        .dark .bento-surface {
+            background-color: #111827;
+            border: 1px solid rgba(30, 41, 59, 0.9);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Skeleton Shimmer States */
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, rgba(226,232,240,0.6) 25%, rgba(241,245,249,0.9) 50%, rgba(226,232,240,0.6) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .dark .skeleton-shimmer {
+            background: linear-gradient(90deg, rgba(30,41,59,0.6) 25%, rgba(51,65,85,0.9) 50%, rgba(30,41,59,0.6) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
         /* Glassmorphism Panels */
         .glass-panel {
             background: rgba(255, 255, 255, 0.88);
@@ -122,6 +170,16 @@
             background: rgba(11, 15, 25, 0.88);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Accessibility: Strict prefers-reduced-motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         /* Bulletproof single-icon display per theme */

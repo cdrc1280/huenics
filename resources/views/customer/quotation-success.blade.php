@@ -67,8 +67,9 @@
                 </div>
 
                 <div class="text-left sm:text-right space-y-1.5">
-                    <span class="inline-block bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 font-bold text-xs px-3 py-1 rounded-md uppercase tracking-wider print:bg-amber-100 print:text-amber-900">
-                        ★ Unofficial Quotation Estimate
+                    <span class="inline-flex items-center bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 font-bold text-xs px-3 py-1 rounded-md uppercase tracking-wider print:bg-amber-100 print:text-amber-900">
+                        <i class="fa-solid fa-file-invoice mr-1.5 text-amber-700 dark:text-amber-400"></i>
+                        <span>Unofficial Quotation Estimate</span>
                     </span>
                     <div class="text-sm font-bold font-mono text-slate-900 dark:text-white print:text-slate-900">
                         {{ $quote['quotation_number'] }}
@@ -155,10 +156,10 @@
                             <td class="py-2.5 px-3 text-center text-slate-400 dark:text-slate-500 font-bold">{{ $index + 1 }}</td>
                             <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300 print:text-slate-700">{{ $item['item_code'] }}</td>
                             <td class="py-2.5 px-3 font-medium text-slate-900 dark:text-white print:text-slate-900">{{ $item['description'] }}</td>
-                            <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200 print:text-slate-800">{{ number_format($item['quantity'], 0) }}</td>
+                            <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">{{ number_format($item['quantity'], 0) }}</td>
                             <td class="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400 print:text-slate-600">{{ $item['unit'] }}</td>
-                            <td class="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 print:text-slate-700">₱ {{ number_format($item['unit_price'], 2) }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white print:text-slate-900">₱ {{ number_format($item['line_total'], 2) }}</td>
+                            <td class="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-mono tabular-nums print:text-slate-700">₱ {{ number_format($item['unit_price'], 2) }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white font-mono tabular-nums print:text-slate-900">₱ {{ number_format($item['line_total'], 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -170,15 +171,15 @@
                 <div class="w-full sm:w-80 bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-xs print:bg-slate-50 print:border-slate-200">
                     <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
                         <span>Net Vatable Sales:</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-200 print:text-slate-800">₱ {{ number_format($quote['subtotal'], 2) }}</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">₱ {{ number_format($quote['subtotal'], 2) }}</span>
                     </div>
                     <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
                         <span>12% Philippine VAT:</span>
-                        <span class="font-bold text-amber-700 dark:text-amber-400 print:text-amber-700">₱ {{ number_format($quote['vat_amount'], 2) }}</span>
+                        <span class="font-bold text-amber-700 dark:text-amber-400 font-mono tabular-nums print:text-amber-700">₱ {{ number_format($quote['vat_amount'], 2) }}</span>
                     </div>
                     <div class="pt-2 border-t border-slate-300 dark:border-slate-700 flex justify-between items-baseline font-bold text-slate-900 dark:text-white text-sm print:border-slate-300 print:text-slate-900">
                         <span>ESTIMATED GRAND TOTAL:</span>
-                        <span class="text-[#214fe0] dark:text-[#60a5fa] text-base font-black print:text-blue-600">₱ {{ number_format($quote['grand_total'], 2) }}</span>
+                        <span class="text-[#214fe0] dark:text-[#60a5fa] text-base font-black font-mono tabular-nums print:text-blue-600">₱ {{ number_format($quote['grand_total'], 2) }}</span>
                     </div>
                 </div>
             </div>
