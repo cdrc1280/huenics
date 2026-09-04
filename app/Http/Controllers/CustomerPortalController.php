@@ -140,7 +140,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
             'items.*.product_id'  => 'nullable|integer',
             'items.*.description' => 'required|string|max:255',
             'items.*.quantity'    => 'required|numeric|min:0.01',
-            'items.*.unit_price'  => 'required|numeric|min:0',
+            'items.*.unit_price'  => 'nullable|numeric|min:0',
             'items.*.unit'        => 'nullable|string|max:20',
             'items.*.item_code'   => 'nullable|string|max:50',
             'action'              => 'nullable|string|in:download_pdf,preview_pdf,view,encode,request_quotation',
@@ -216,12 +216,12 @@ class CustomerPortalController extends Controller implements HasMiddleware
             try {
                 $salesEmail = 'huenicsindustrialsales@gmail.com';
                 $customerEmail = $validated['email'] ?? null;
-                $mailBody = "New Formal Quotation Request #{$refNumber}\n\nCustomer: {$validated['customer_name']}\nCompany: {$validated['customer_company']}\nPhone: {$validated['phone_no']}\nEmail: " . ($customerEmail ?? 'N/A') . "\nEst. Total: ₱" . number_format($grandTotal, 2) . "\nItems: " . count($items) . "\n\nPlease review this in the Admin Panel under Quotations.";
+                $mailBody = "New Formal Quotation Request #{$refNumber}\n\nCustomer: {$validated['customer_name']}\nCompany: {$validated['customer_company']}\nPhone: {$validated['phone_no']}\nEmail: " . ($customerEmail ?? 'N/A') . "\nPricing: Official Quote Required (Customer Inquiry)\nItems: " . count($items) . "\n\nPlease review this in the Admin Panel under Quotations.";
 
                 @mail($salesEmail, "New Quotation Request: {$refNumber} - {$validated['customer_company']}", $mailBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
 
                 if ($customerEmail) {
-                    $ackBody = "Dear {$validated['customer_name']},\n\nThank you for requesting a quotation from Huenics Industrial Sales Inc.\nYour official inquiry reference is #{$refNumber}.\n\nEstimated Total: ₱" . number_format($grandTotal, 2) . " (VAT Inc.)\nOur technical sales team will review your project requirements and contact you shortly at {$validated['phone_no']}.\n\nHuenics Industrial Sales Inc.\nTel. #8561 6836 | CS: +63 968 8500720";
+                    $ackBody = "Dear {$validated['customer_name']},\n\nThank you for requesting a quotation from Huenics Industrial Sales Inc.\nYour official inquiry reference is #{$refNumber}.\n\nItems: " . count($items) . " line item(s)\nPricing Determination: Official Quote Upon Technical Sales Review\nOur technical sales team will review your project requirements and contact you shortly at {$validated['phone_no']}.\n\nHuenics Industrial Sales Inc.\nTel. #8561 6836 | CS: +63 968 8500720";
                     @mail($customerEmail, "Huenics Quotation Request Confirmation #{$refNumber}", $ackBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
                 }
             } catch (\Throwable $e) {

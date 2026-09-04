@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Unofficial Quotation - {{ $quote['quotation_number'] ?? 'UNOFF-ESTIMATE' }}</title>
+    <title>Bill of Quantities &amp; RFQ - {{ $quote['quotation_number'] ?? 'RFQ-INQUIRY' }}</title>
     <style>
         @page {
             margin: 25px 30px;
@@ -245,19 +245,19 @@
                 </div>
             </td>
             <td style="width: 42%;" class="estimate-badge-box">
-                <div class="unofficial-badge">★ Unofficial Quotation Estimate</div>
-                <div class="ref-number">Ref: {{ $quote['quotation_number'] ?? 'UNOFF-'.date('Ymd-His') }}</div>
+                <div class="unofficial-badge">★ Bill of Quantities &amp; RFQ</div>
+                <div class="ref-number">Ref: {{ $quote['quotation_number'] ?? 'RFQ-'.date('Ymd-His') }}</div>
                 <div class="ref-date">Generated: {{ isset($quote['quotation_date']) ? date('F d, Y', strtotime($quote['quotation_date'])) : now()->format('F d, Y') }}</div>
-                <div class="ref-date">Estimate Validity: 30 Days</div>
+                <div class="ref-date">Inquiry Status: Pending Sales Review</div>
             </td>
         </tr>
     </table>
 
     <!-- Disclaimer Banner -->
     <div class="disclaimer-box">
-        <div class="disclaimer-title">Preliminary Customer Estimate (Non-Binding)</div>
+        <div class="disclaimer-title">Bill of Quantities / Project Inquiry (Pricing Upon Request)</div>
         <div class="disclaimer-text">
-            This document is a customer-generated online estimate. Prices, taxes (12% VAT), and line totals are simulated based on current catalog rates. Official confirmation, formal purchase orders, delivery terms, and negotiated volume discounts are subject to final review and issuance of an official Huenics Quotation (QT) by an authorized sales executive.
+            This document specifies item quantities, technical specifications, and project scope for official quotation evaluation. To protect trade margins and project volume tiers, commercial pricing and delivery timelines are officially computed and issued by Huenics Industrial Sales Inc. upon direct customer inquiry.
         </div>
     </div>
 
@@ -291,14 +291,13 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 4%;" class="text-center">#</th>
-                <th style="width: 14%;">Item Code / SKU</th>
+                <th style="width: 5%;" class="text-center">#</th>
+                <th style="width: 18%;">Item Code / SKU</th>
                 <th style="width: 10%;" class="text-center">Image</th>
-                <th style="width: 32%;">Product Description</th>
+                <th style="width: 38%;">Product Description</th>
                 <th style="width: 7%;" class="text-center">Qty</th>
                 <th style="width: 7%;" class="text-center">Unit</th>
-                <th style="width: 13%;" class="text-right">Unit Price (₱)</th>
-                <th style="width: 13%;" class="text-right">Line Total (₱)</th>
+                <th style="width: 15%;" class="text-center">Commercial Pricing</th>
             </tr>
         </thead>
         <tbody>
@@ -320,12 +319,11 @@
                 <td>{{ $item['description'] ?? ($item['canonical_name'] ?? 'Product Line Item') }}</td>
                 <td class="text-center font-bold">{{ number_format($item['quantity'] ?? $item['qty'] ?? 1, 0) }}</td>
                 <td class="text-center">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
-                <td class="text-right">{{ number_format($item['unit_price'] ?? 0, 2) }}</td>
-                <td class="text-right font-bold">{{ number_format($item['line_total'] ?? 0, 2) }}</td>
+                <td class="text-center" style="color: #214fe0; font-weight: bold; font-size: 9.5px;">Quote Upon Request</td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="text-center" style="padding: 15px; color: #64748b;">No line items added to this quotation estimate.</td>
+                <td colspan="7" class="text-center" style="padding: 15px; color: #64748b;">No line items added to this quotation request.</td>
             </tr>
             @endforelse
         </tbody>
@@ -335,16 +333,20 @@
     <div class="totals-wrapper">
         <table class="totals-table">
             <tr>
-                <td style="width: 55%;"><strong>Net Vatable Sales (Subtotal):</strong></td>
-                <td style="width: 45%;" class="text-right font-bold">₱ {{ number_format($quote['subtotal'] ?? 0, 2) }}</td>
+                <td style="width: 55%;"><strong>Total Line Items:</strong></td>
+                <td style="width: 45%;" class="text-right font-bold">{{ count($quote['items'] ?? []) }} item(s)</td>
             </tr>
             <tr>
-                <td><strong>12% Philippine VAT:</strong></td>
-                <td class="text-right font-bold">₱ {{ number_format($quote['vat_amount'] ?? 0, 2) }}</td>
+                <td><strong>Tax Classification:</strong></td>
+                <td class="text-right font-bold">12% BIR VAT-Inclusive</td>
+            </tr>
+            <tr>
+                <td><strong>Commercial Pricing:</strong></td>
+                <td class="text-right font-bold" style="color: #b45309;">Official Quote Upon Inquiry</td>
             </tr>
             <tr class="grand-total">
-                <td><strong>ESTIMATED GRAND TOTAL:</strong></td>
-                <td class="text-right">₱ {{ number_format($quote['grand_total'] ?? 0, 2) }}</td>
+                <td><strong>PRICING STATUS:</strong></td>
+                <td class="text-right">Awaiting Sales Review</td>
             </tr>
         </table>
         <div class="clear"></div>

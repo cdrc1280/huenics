@@ -94,16 +94,18 @@
                             @foreach($featuredProducts->take(2) as $prod)
                             <div class="flex justify-between items-center text-xs font-medium">
                                 <span class="truncate pr-2 font-semibold text-slate-800 dark:text-slate-200" title="{{ $prod->canonical_name }}">{{ $prod->canonical_name }}</span>
-                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black whitespace-nowrap font-mono tabular-nums">₱ {{ number_format($prod->display_price ?? ($prod->selling_price ?: $prod->default_price), 2) }}</span>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-100/60 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    <i class="fa-solid fa-file-invoice text-[9px]"></i> Quote Upon Request
+                                </span>
                             </div>
                             @endforeach
                         </div>
 
                         <div class="bg-slate-50 dark:bg-[#161f38] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-                            <div class="text-xs text-slate-600 dark:text-slate-300">Build your project BOQ estimate and download an immediate formal PDF quotation.</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-300">Assemble your project BOQ and submit for formal pricing or export an itemized request.</div>
                             <div class="flex justify-between text-slate-900 dark:text-slate-200 font-bold text-xs pt-2 border-t border-slate-200 dark:border-slate-700">
-                                <span>Official Pricing</span>
-                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black">12% VAT Included</span>
+                                <span>Commercial Terms:</span>
+                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black">Quote Upon Inquiry</span>
                             </div>
                         </div>
 

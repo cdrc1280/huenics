@@ -184,14 +184,14 @@
                     <span id="floating-cart-count" class="font-mono tabular-nums">0</span> items in Quotation
                 </div>
                 <div class="text-[11px] text-slate-400">
-                    Est. Subtotal: <span id="floating-cart-subtotal" class="text-amber-400 font-bold font-mono tabular-nums">₱ 0.00</span>
+                    Pricing Status: <span class="text-amber-400 font-bold">Quote Upon Inquiry</span>
                 </div>
             </div>
         </div>
 
         <a href="{{ route('customer.quotation-builder') }}" 
            class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl btn-interactive transition flex items-center gap-2 shadow-sm">
-            <span>Review & Generate PDF</span>
+            <span>Review &amp; Request Quote</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
         </a>
     </div>
@@ -217,15 +217,12 @@
         const cart = CartManager.getCart();
         const bar = document.getElementById('floating-cart-bar');
         const countEl = document.getElementById('floating-cart-count');
-        const subtotalEl = document.getElementById('floating-cart-subtotal');
 
         if (!bar) return;
 
         if (cart.length > 0) {
             const totalQty = cart.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
-            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.line_total) || 0), 0);
             countEl.textContent = totalQty;
-            subtotalEl.textContent = '₱ ' + subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             if (bar.classList.contains('hidden')) {
                 bar.classList.remove('hidden');
                 bar.classList.add('animate-pop-in');

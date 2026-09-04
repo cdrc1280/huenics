@@ -67,9 +67,9 @@
                 </div>
 
                 <div class="text-left sm:text-right space-y-1.5">
-                    <span class="inline-flex items-center bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 font-bold text-xs px-3 py-1 rounded-md uppercase tracking-wider print:bg-amber-100 print:text-amber-900">
-                        <i class="fa-solid fa-file-invoice mr-1.5 text-amber-700 dark:text-amber-400"></i>
-                        <span>Unofficial Quotation Estimate</span>
+                    <span class="inline-flex items-center bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60 font-bold text-xs px-3 py-1 rounded-md uppercase tracking-wider print:bg-blue-100 print:text-blue-900">
+                        <i class="fa-solid fa-file-invoice-dollar mr-1.5 text-blue-700 dark:text-blue-400"></i>
+                        <span>Bill of Quantities (BOQ) &amp; RFQ</span>
                     </span>
                     <div class="text-sm font-bold font-mono text-slate-900 dark:text-white print:text-slate-900">
                         {{ $quote['quotation_number'] }}
@@ -84,10 +84,10 @@
             </div>
 
             <!-- Disclaimer Notice -->
-            <div class="bg-amber-50/80 dark:bg-[#1f1a0e] border-l-4 border-amber-500 p-4 rounded-r-lg text-xs text-slate-700 dark:text-slate-300 space-y-1 print:bg-amber-50/80 print:text-slate-700">
-                <div class="font-bold text-amber-900 dark:text-amber-400 uppercase print:text-amber-900">Notice to Customer / Estimator:</div>
+            <div class="bg-blue-50/80 dark:bg-[#0c1b3a] border-l-4 border-[#214fe0] p-4 rounded-r-lg text-xs text-slate-700 dark:text-slate-300 space-y-1 print:bg-blue-50/80 print:text-slate-700">
+                <div class="font-bold text-blue-900 dark:text-blue-400 uppercase print:text-blue-900">Notice to Estimator / Client:</div>
                 <p class="leading-relaxed text-[11px] text-slate-600 dark:text-slate-400 print:text-slate-600">
-                    This document is an automated customer estimate for preliminary budgeting and procurement planning. Final material availability, formal contract pricing, delivery commitments, and terms are subject to official review and approval by an authorized Huenics sales representative upon submission of a formal Purchase Order (PO).
+                    Commercial pricing, contract terms, volume tier discounts, and jobsite logistics are finalized directly by our sales engineering desk. This itemized specification sheet serves as your official procurement inquiry record. To obtain your formal price quotation, submit this inquiry or reach out directly to Huenics sales support.
                 </p>
             </div>
 
@@ -146,8 +146,7 @@
                             <th class="py-2.5 px-3">Description</th>
                             <th class="py-2.5 px-3 w-16 text-center">Qty</th>
                             <th class="py-2.5 px-3 w-16 text-center">Unit</th>
-                            <th class="py-2.5 px-3 w-28 text-right">Unit Price (₱)</th>
-                            <th class="py-2.5 px-3 w-32 text-right">Line Total (₱)</th>
+                            <th class="py-2.5 px-3 text-center">Commercial Pricing</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 print:divide-slate-200">
@@ -158,28 +157,35 @@
                             <td class="py-2.5 px-3 font-medium text-slate-900 dark:text-white print:text-slate-900">{{ $item['description'] }}</td>
                             <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">{{ number_format($item['quantity'], 0) }}</td>
                             <td class="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400 print:text-slate-600">{{ $item['unit'] }}</td>
-                            <td class="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-mono tabular-nums print:text-slate-700">₱ {{ number_format($item['unit_price'], 2) }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white font-mono tabular-nums print:text-slate-900">₱ {{ number_format($item['line_total'], 2) }}</td>
+                            <td class="py-2.5 px-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full whitespace-nowrap print:border-blue-300 print:text-[#214fe0]">
+                                    <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Quote Upon Request
+                                </span>
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
 
-            <!-- Totals & VAT Breakdown -->
+            <!-- Procurement Summary Box -->
             <div class="flex justify-end">
-                <div class="w-full sm:w-80 bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-xs print:bg-slate-50 print:border-slate-200">
+                <div class="w-full sm:w-96 bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-xs print:bg-slate-50 print:border-slate-200">
                     <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
-                        <span>Net Vatable Sales:</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">₱ {{ number_format($quote['subtotal'], 2) }}</span>
+                        <span>Total Line Items:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">{{ count($quote['items'] ?? []) }} item(s)</span>
                     </div>
                     <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
-                        <span>12% Philippine VAT:</span>
-                        <span class="font-bold text-amber-700 dark:text-amber-400 font-mono tabular-nums print:text-amber-700">₱ {{ number_format($quote['vat_amount'], 2) }}</span>
+                        <span>Tax Classification:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 print:text-slate-800">12% BIR VAT-Inclusive</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
+                        <span>Commercial Pricing:</span>
+                        <span class="font-bold text-amber-600 dark:text-amber-400 print:text-amber-700">Official Quote Upon Inquiry</span>
                     </div>
                     <div class="pt-2 border-t border-slate-300 dark:border-slate-700 flex justify-between items-baseline font-bold text-slate-900 dark:text-white text-sm print:border-slate-300 print:text-slate-900">
-                        <span>ESTIMATED GRAND TOTAL:</span>
-                        <span class="text-[#214fe0] dark:text-[#60a5fa] text-base font-black font-mono tabular-nums print:text-blue-600">₱ {{ number_format($quote['grand_total'], 2) }}</span>
+                        <span>INQUIRY STATUS:</span>
+                        <span class="text-[#214fe0] dark:text-[#60a5fa] text-xs font-black uppercase tracking-wider print:text-[#214fe0]">Pending Sales Review</span>
                     </div>
                 </div>
             </div>

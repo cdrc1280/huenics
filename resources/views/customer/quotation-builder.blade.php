@@ -19,7 +19,7 @@
                     Commercial Quotation & BOQ Builder
                 </h1>
                 <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl font-normal">
-                    Assemble line items, specify project details, calculate automated 12% Philippine VAT, and export a ready-to-print or downloadable PDF estimate.
+                    Assemble line items, specify project specifications, and submit for formal commercial quotation or download your itemized Bill of Quantities (BOQ).
                 </p>
             </div>
             <a href="{{ route('customer.products') }}" 
@@ -52,7 +52,7 @@
                                     <i class="fa-solid fa-list-check text-[#214fe0] dark:text-[#60a5fa]"></i>
                                     <span>Selected Line Items</span>
                                 </h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Edit quantities or unit prices directly in the table.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Specify quantities and project materials. Official pricing is provided upon review by our sales engineering desk.</p>
                             </div>
 
                             <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -77,11 +77,10 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-[#161f38] text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
                                         <th class="py-3 px-3 w-10 text-center">#</th>
-                                        <th class="py-3 px-3 min-w-[200px]">Product / Description</th>
-                                        <th class="py-3 px-3 w-20 text-center">Unit</th>
+                                        <th class="py-3 px-3 min-w-[220px]">Product / Description</th>
+                                        <th class="py-3 px-3 w-24 text-center">Unit</th>
                                         <th class="py-3 px-3 w-24 text-center">Qty</th>
-                                        <th class="py-3 px-3 w-28 text-right">Unit Price (₱)</th>
-                                        <th class="py-3 px-3 w-28 text-right">Line Total (₱)</th>
+                                        <th class="py-3 px-3 text-center">Commercial Pricing</th>
                                         <th class="py-3 px-3 w-10 text-center"></th>
                                     </tr>
                                 </thead>
@@ -192,44 +191,49 @@
                 <!-- Right Column (4 cols): Summary & Actions -->
                 <div class="lg:col-span-4 space-y-6 sticky top-24">
                     
-                    <!-- Calculation Card -->
+                    <!-- Procurement Summary Card -->
                     <div class="bg-slate-900 dark:bg-[#0c1220] text-white border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
                         <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">
-                                Quotation Summary
+                                Procurement Summary
                             </h3>
-                            <span class="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
-                                Philippine VAT 12%
+                            <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
+                                Quote Upon Inquiry
                             </span>
                         </div>
 
                         <div class="space-y-3 text-xs">
                             <div class="flex justify-between text-slate-300">
-                                <span>Net Vatable Subtotal:</span>
-                                <span id="summary-subtotal" class="font-bold text-white text-sm font-mono tabular-nums">₱ 0.00</span>
+                                <span>Selected Line Items:</span>
+                                <span id="summary-items-count" class="font-bold text-white text-sm font-mono tabular-nums">0 items</span>
                             </div>
 
                             <div class="flex justify-between text-slate-300">
-                                <span>12% Value Added Tax (VAT):</span>
-                                <span id="summary-vat" class="font-bold text-amber-400 text-sm font-mono tabular-nums">₱ 0.00</span>
+                                <span>Commercial Pricing:</span>
+                                <span class="font-bold text-amber-400 text-xs">Official Quote Upon Inquiry</span>
+                            </div>
+
+                            <div class="flex justify-between text-slate-300">
+                                <span>Tax Classification:</span>
+                                <span class="font-bold text-slate-200 text-xs">12% BIR VAT-Inclusive (Official SI)</span>
                             </div>
 
                             <div class="pt-3 border-t border-slate-800 flex justify-between items-baseline">
                                 <div>
-                                    <div class="text-xs uppercase font-extrabold text-slate-400">Estimated Total:</div>
-                                    <div class="text-[10px] text-slate-500">(VAT-Inclusive)</div>
+                                    <div class="text-xs uppercase font-extrabold text-slate-400">Pricing Schedule:</div>
+                                    <div class="text-[10px] text-slate-500">(Direct Sales Inquiry)</div>
                                 </div>
-                                <span id="summary-grand-total" class="font-black text-xl text-[#60a5fa] font-mono tabular-nums">₱ 0.00</span>
+                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Awaiting Inquiry</span>
                             </div>
                         </div>
 
                         <!-- Notice Box -->
                         <div class="bg-slate-800/80 dark:bg-[#161f38]/80 rounded-xl p-3.5 border border-slate-700 text-[11px] text-slate-400 leading-relaxed">
                             <div class="flex items-center gap-1.5 text-amber-400 font-bold mb-1">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                <span>Unofficial Estimation</span>
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <span>Commercial Pricing Notice</span>
                             </div>
-                            This preliminary estimate is generated based on current list pricing. Formal project discounts and delivery commitments will be finalized by Huenics sales upon official PO conversion.
+                            Official project pricing, volume tier discounts, and delivery schedules are calculated and issued by Huenics sales executives upon inquiry. Submit your request below or download an itemized BOQ.
                         </div>
 
                         <!-- Action Buttons -->
@@ -246,21 +250,21 @@
                                     onclick="document.getElementById('form-action').value='download_pdf'"
                                     class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 btn-interactive text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <i class="fa-solid fa-file-pdf text-base"></i>
-                                <span>Download Estimate PDF</span>
+                                <span>Download Itemized BOQ PDF</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='preview_pdf'"
                                     class="w-full bg-slate-800 hover:bg-slate-700 btn-interactive text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs">
                                 <i class="fa-solid fa-eye"></i>
-                                <span>Preview PDF in New Tab</span>
+                                <span>Preview BOQ in New Tab</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='view'"
                                     class="w-full bg-transparent hover:bg-slate-800 btn-interactive text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-desktop"></i>
-                                <span>View Web Summary & Print</span>
+                                <span>View Web Summary &amp; Print</span>
                             </button>
                         </div>
                     </div>
@@ -318,7 +322,9 @@
 
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="text-right">
-                        <div class="text-xs font-bold text-[#214fe0] dark:text-[#60a5fa] font-mono tabular-nums">₱ {{ number_format($catProd->display_price ?? ($catProd->selling_price ?: $catProd->default_price ?: 0), 2) }}</div>
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            <i class="fa-solid fa-file-invoice-dollar text-[9px]"></i> Quote Upon Request
+                        </span>
                     </div>
                     <button type="button" 
                             onclick="insertCatalogItem({{ json_encode($catProd) }})"
@@ -355,7 +361,6 @@
         if (currentItems.length === 0) {
             const defaultDbItem = @json($catalogProducts->first());
             if (defaultDbItem) {
-                const unitPrice = parseFloat(defaultDbItem.display_price || defaultDbItem.selling_price || defaultDbItem.default_price || 0);
                 const initQty = 10;
                 currentItems.push({
                     id: defaultDbItem.id || null,
@@ -363,8 +368,8 @@
                     description: defaultDbItem.canonical_name,
                     quantity: initQty,
                     unit: defaultDbItem.unit_default || 'pcs',
-                    unit_price: unitPrice,
-                    line_total: parseFloat((initQty * unitPrice).toFixed(2))
+                    unit_price: 0,
+                    line_total: 0
                 });
                 CartManager.saveCart(currentItems);
             }
@@ -392,12 +397,9 @@
         emptyState.classList.add('hidden');
         countEl.textContent = `${currentItems.length} item(s) selected`;
 
-        let subtotal = 0;
-
         currentItems.forEach((item, index) => {
-            const lineTotal = parseFloat((parseFloat(item.quantity || 1) * parseFloat(item.unit_price || 0)).toFixed(2));
-            item.line_total = lineTotal;
-            subtotal += lineTotal;
+            item.unit_price = 0;
+            item.line_total = 0;
 
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50 dark:hover:bg-[#161f38]/60 transition border-b border-slate-100 dark:border-slate-800';
@@ -421,14 +423,11 @@
                            oninput="updateItemField(${index}, 'quantity', this.value)"
                            class="w-20 text-center px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
                 </td>
-                <td class="py-2.5 px-3 text-right">
-                    <input type="number" name="items[${index}][unit_price]" value="${item.unit_price}" min="0" step="0.01" required
-                           onchange="updateItemField(${index}, 'unit_price', this.value)"
-                           oninput="updateItemField(${index}, 'unit_price', this.value)"
-                           class="w-24 text-right px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
-                </td>
-                <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white font-mono tabular-nums">
-                    ₱ ${formatMoney(lineTotal)}
+                <td class="py-2.5 px-3 text-center">
+                    <input type="hidden" name="items[${index}][unit_price]" value="0">
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-1 rounded-full whitespace-nowrap">
+                        <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Quote Upon Request
+                    </span>
                 </td>
                 <td class="py-2.5 px-3 text-center">
                     <button type="button" onclick="deleteRow(${index})" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition p-1" title="Remove item">
@@ -439,7 +438,7 @@
             tbody.appendChild(tr);
         });
 
-        updateSummaryTotals(subtotal);
+        updateSummaryTotals(currentItems.length);
         CartManager.saveCart(currentItems);
     }
 
@@ -449,7 +448,7 @@
         if (field === 'quantity') {
             currentItems[index].quantity = parseFloat(value) || 0;
         } else if (field === 'unit_price') {
-            currentItems[index].unit_price = parseFloat(value) || 0;
+            currentItems[index].unit_price = 0;
         } else {
             currentItems[index][field] = value;
         }
@@ -463,7 +462,7 @@
 
         HuenicsModal.confirm({
             title: 'Remove Line Item?',
-            message: `Are you sure you want to remove "${itemName}" from this quotation estimate?`,
+            message: `Are you sure you want to remove "${itemName}" from this quotation request?`,
             icon: 'fa-solid fa-trash-can',
             type: 'danger',
             confirmText: 'Remove Item',
@@ -481,7 +480,7 @@
 
         HuenicsModal.confirm({
             title: 'Clear All Line Items?',
-            message: 'Are you sure you want to clear all items from this quotation? This will reset your table and recalculate estimated project totals to zero.',
+            message: 'Are you sure you want to clear all items from this quotation request? This will reset your table.',
             icon: 'fa-solid fa-trash-can',
             type: 'danger',
             confirmText: 'Clear All Items',
@@ -497,11 +496,11 @@
     function addCustomRow() {
         currentItems.push({
             item_code: 'CUSTOM-' + Date.now().toString().slice(-4),
-            description: 'Custom Material Line Item / Fee',
+            description: 'Custom Material Line Item / Spec',
             quantity: 1,
             unit: 'lot',
-            unit_price: 1000.00,
-            line_total: 1000.00
+            unit_price: 0,
+            line_total: 0
         });
         renderRows();
     }
@@ -513,21 +512,19 @@
             description: product.canonical_name,
             quantity: 1,
             unit: product.unit_default || 'pcs',
-            unit_price: parseFloat(product.display_price || product.selling_price || product.default_price || 0),
-            line_total: parseFloat(product.display_price || product.selling_price || product.default_price || 0)
+            unit_price: 0,
+            line_total: 0
         });
         closeAddCatalogModal();
         renderRows();
         showToast('Catalog Item Added', `"${product.canonical_name}" added to quotation.`);
     }
 
-    function updateSummaryTotals(subtotal) {
-        const vat = subtotal * 0.12;
-        const grandTotal = subtotal + vat;
-
-        document.getElementById('summary-subtotal').textContent = '₱ ' + formatMoney(subtotal);
-        document.getElementById('summary-vat').textContent = '₱ ' + formatMoney(vat);
-        document.getElementById('summary-grand-total').textContent = '₱ ' + formatMoney(grandTotal);
+    function updateSummaryTotals(count) {
+        const countEl = document.getElementById('summary-items-count');
+        if (countEl) {
+            countEl.textContent = `${count} item(s)`;
+        }
     }
 
     function formatMoney(amount) {
