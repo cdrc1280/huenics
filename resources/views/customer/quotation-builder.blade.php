@@ -76,7 +76,6 @@
                                         <th class="py-3 px-3 min-w-[220px]">Product / Description</th>
                                         <th class="py-3 px-3 w-24 text-center">Unit</th>
                                         <th class="py-3 px-3 w-24 text-center">Qty</th>
-                                        <th class="py-3 px-3 text-center">Commercial Pricing</th>
                                         <th class="py-3 px-3 w-10 text-center"></th>
                                     </tr>
                                 </thead>
@@ -91,7 +90,6 @@
                                         </td>
                                         <td class="py-4 px-3 text-center"><div class="h-5 w-14 rounded bg-slate-200/70 dark:bg-slate-700/70 mx-auto"></div></td>
                                         <td class="py-4 px-3 text-center"><div class="h-7 w-16 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 mx-auto"></div></td>
-                                        <td class="py-4 px-3 text-center"><div class="h-5 w-24 rounded-full bg-blue-100/70 dark:bg-blue-950/70 mx-auto"></div></td>
                                         <td class="py-4 px-3 text-center"><div class="h-6 w-6 rounded bg-slate-200/60 dark:bg-slate-700/60 mx-auto"></div></td>
                                     </tr>
                                     @endfor
@@ -205,8 +203,8 @@
                             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">
                                 Procurement Summary
                             </h3>
-                            <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
-                                Quote Upon Inquiry
+                            <span class="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
+                                Bill of Quantities
                             </span>
                         </div>
 
@@ -217,31 +215,26 @@
                             </div>
 
                             <div class="flex justify-between text-slate-300">
-                                <span>Commercial Pricing:</span>
-                                <span class="font-bold text-amber-400 text-xs">Official Quote Upon Inquiry</span>
-                            </div>
-
-                            <div class="flex justify-between text-slate-300">
-                                <span>Tax Classification:</span>
-                                <span class="font-bold text-slate-200 text-xs">12% BIR VAT-Inclusive (Official SI)</span>
+                                <span>Tax Documentation:</span>
+                                <span class="font-bold text-slate-200 text-xs">12% BIR VAT Sales Invoice (SI)</span>
                             </div>
 
                             <div class="pt-3 border-t border-slate-800 flex justify-between items-baseline">
                                 <div>
-                                    <div class="text-xs uppercase font-extrabold text-slate-400">Pricing Schedule:</div>
-                                    <div class="text-[10px] text-slate-500">(Direct Sales Inquiry)</div>
+                                    <div class="text-xs uppercase font-extrabold text-slate-400">Inquiry Scope:</div>
+                                    <div class="text-[10px] text-slate-500">(Direct Technical Review)</div>
                                 </div>
-                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Awaiting Inquiry</span>
+                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Ready for Review</span>
                             </div>
                         </div>
 
                         <!-- Notice Box -->
                         <div class="bg-slate-800/80 dark:bg-[#161f38]/80 rounded-xl p-3.5 border border-slate-700 text-[11px] text-slate-400 leading-relaxed">
-                            <div class="flex items-center gap-1.5 text-amber-400 font-bold mb-1">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <span>Commercial Pricing Notice</span>
+                            <div class="flex items-center gap-1.5 text-blue-400 font-bold mb-1">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span>Technical Specification Notice</span>
                             </div>
-                            Official project pricing, volume tier discounts, and delivery schedules are calculated and issued by Huenics sales executives upon inquiry. Submit your request below or download an itemized BOQ.
+                            Item specifications, delivery timelines, and official quotations are reviewed and issued directly by Huenics sales engineers for your bill of quantities. Submit your request below or download the itemized BOQ.
                         </div>
 
                         <!-- Action Buttons -->
@@ -437,16 +430,11 @@
                     </select>
                 </td>
                 <td class="py-2.5 px-3 text-center">
+                    <input type="hidden" name="items[${index}][unit_price]" value="0">
                     <input type="number" name="items[${index}][quantity]" value="${item.quantity}" min="0.01" step="any" required
                            onchange="updateItemField(${index}, 'quantity', this.value)"
                            oninput="updateItemField(${index}, 'quantity', this.value)"
                            class="w-20 text-center px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38]">
-                </td>
-                <td class="py-2.5 px-3 text-center">
-                    <input type="hidden" name="items[${index}][unit_price]" value="0">
-                    <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-1 rounded-full whitespace-nowrap">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Quote Upon Request
-                    </span>
                 </td>
                 <td class="py-2.5 px-3 text-center">
                     <button type="button" onclick="deleteRow(${index})" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition p-1" title="Remove item">

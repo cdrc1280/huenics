@@ -298,7 +298,7 @@
 
     <!-- Disclaimer Banner -->
     <div class="disclaimer-box">
-        <div class="disclaimer-title">Bill of Quantities / Project Inquiry (Pricing Upon Request)</div>
+        <div class="disclaimer-title">Bill of Quantities / Technical Project Inquiry</div>
         <div class="disclaimer-text">
             This document specifies item quantities, technical specifications, and project scope for official quotation
             evaluation. To protect trade margins and project volume tiers, commercial pricing and delivery timelines are
@@ -337,12 +337,11 @@
         <thead>
             <tr>
                 <th style="width: 5%;" class="text-center">#</th>
-                <th style="width: 18%;">Item Code / SKU</th>
+                <th style="width: 20%;">Item Code / SKU</th>
                 <th style="width: 10%;" class="text-center">Image</th>
-                <th style="width: 38%;">Product Description</th>
-                <th style="width: 7%;" class="text-center">Qty</th>
-                <th style="width: 7%;" class="text-center">Unit</th>
-                <th style="width: 15%;" class="text-center">Commercial Pricing</th>
+                <th style="width: 49%;">Product Description</th>
+                <th style="width: 8%;" class="text-center">Qty</th>
+                <th style="width: 8%;" class="text-center">Unit</th>
             </tr>
         </thead>
         <tbody>
@@ -366,12 +365,10 @@
                     <td class="text-center font-bold">{{ number_format($item['quantity'] ?? ($item['qty'] ?? 1), 0) }}
                     </td>
                     <td class="text-center">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
-                    <td class="text-center" style="color: #214fe0; font-weight: bold; font-size: 9.5px;">Quote Upon
-                        Request</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center" style="padding: 15px; color: #64748b;">No line items added to
+                    <td colspan="6" class="text-center" style="padding: 15px; color: #64748b;">No line items added to
                         this quotation request.</td>
                 </tr>
             @endforelse
@@ -390,12 +387,12 @@
                 <td class="text-right font-bold">12% BIR VAT-Inclusive</td>
             </tr>
             <tr>
-                <td><strong>Commercial Pricing:</strong></td>
-                <td class="text-right font-bold" style="color: #b45309;">Official Quote Upon Inquiry</td>
+                <td><strong>Inquiry Scope:</strong></td>
+                <td class="text-right font-bold" style="color: #214fe0;">Technical Scope Review</td>
             </tr>
             <tr class="grand-total">
-                <td><strong>PRICING STATUS:</strong></td>
-                <td class="text-right">Awaiting Sales Review</td>
+                <td><strong>INQUIRY STATUS:</strong></td>
+                <td class="text-right">Pending Technical Evaluation</td>
             </tr>
         </table>
         <div class="clear"></div>

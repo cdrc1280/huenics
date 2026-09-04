@@ -168,15 +168,7 @@
                     </p>
                 </div>
 
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
-                    <!-- Price Hidden -> Quote on Request -->
-                    <div class="flex justify-between items-center py-0.5">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Pricing:</span>
-                        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full shadow-xs">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Quote Upon Request
-                        </span>
-                    </div>
-
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80">
                     <div class="flex items-center gap-2">
                         <div class="flex items-center border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden bg-slate-50 dark:bg-[#161f38] shrink-0">
                             <button type="button" 
@@ -239,7 +231,7 @@
                     <span id="floating-cart-count" class="font-mono tabular-nums">0</span> items in Quotation
                 </div>
                 <div class="text-[11px] text-slate-400">
-                    Pricing Status: <span class="text-amber-400 font-bold">Quote Upon Inquiry</span>
+                    Bill of Quantities / Project Inquiry
                 </div>
             </div>
         </div>

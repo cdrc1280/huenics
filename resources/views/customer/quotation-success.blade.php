@@ -146,7 +146,6 @@
                             <th class="py-2.5 px-3">Description</th>
                             <th class="py-2.5 px-3 w-16 text-center">Qty</th>
                             <th class="py-2.5 px-3 w-16 text-center">Unit</th>
-                            <th class="py-2.5 px-3 text-center">Commercial Pricing</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 print:divide-slate-200">
@@ -157,11 +156,6 @@
                             <td class="py-2.5 px-3 font-medium text-slate-900 dark:text-white print:text-slate-900">{{ $item['description'] }}</td>
                             <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums print:text-slate-800">{{ number_format($item['quantity'], 0) }}</td>
                             <td class="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400 print:text-slate-600">{{ $item['unit'] }}</td>
-                            <td class="py-2.5 px-3 text-center">
-                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full whitespace-nowrap print:border-blue-300 print:text-[#214fe0]">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Quote Upon Request
-                                </span>
-                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -178,10 +172,6 @@
                     <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
                         <span>Tax Classification:</span>
                         <span class="font-bold text-slate-800 dark:text-slate-200 print:text-slate-800">12% BIR VAT-Inclusive</span>
-                    </div>
-                    <div class="flex justify-between text-slate-600 dark:text-slate-400 print:text-slate-600">
-                        <span>Commercial Pricing:</span>
-                        <span class="font-bold text-amber-600 dark:text-amber-400 print:text-amber-700">Official Quote Upon Inquiry</span>
                     </div>
                     <div class="pt-2 border-t border-slate-300 dark:border-slate-700 flex justify-between items-baseline font-bold text-slate-900 dark:text-white text-sm print:border-slate-300 print:text-slate-900">
                         <span>INQUIRY STATUS:</span>

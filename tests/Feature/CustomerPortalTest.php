@@ -190,11 +190,11 @@ class CustomerPortalTest extends TestCase
             'description' => 'Real-time database product verification test.',
         ]);
 
-        // 2. Product must appear in /products catalog from DB with Quote Upon Request
+        // 2. Product must appear in /products catalog from DB without raw pricing labels
         $response = $this->get('/products?search=' . $uniqueSku);
         $response->assertStatus(200);
         $response->assertSee($dbProduct->canonical_name);
-        $response->assertSee('Quote Upon Request');
+        $response->assertDontSee('Pricing:');
 
         // 3. Product must appear in Quotation Builder catalog modal from DB
         \Illuminate\Support\Facades\Cache::flush();
@@ -212,7 +212,7 @@ class CustomerPortalTest extends TestCase
         $updatedResponse = $this->get('/products?search=' . $uniqueSku);
         $updatedResponse->assertStatus(200);
         $updatedResponse->assertSee('Updated DB Luminaire ' . $uniqueSku);
-        $updatedResponse->assertSee('Quote Upon Request');
+        $updatedResponse->assertDontSee('Pricing:');
 
         // 5. Inactivate product in DB, verify it disappears from customer catalog
         \Illuminate\Support\Facades\Cache::flush();

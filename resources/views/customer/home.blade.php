@@ -95,7 +95,7 @@
                             <div class="flex justify-between items-center text-xs font-medium">
                                 <span class="truncate pr-2 font-semibold text-slate-800 dark:text-slate-200" title="{{ $prod->canonical_name }}">{{ $prod->canonical_name }}</span>
                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-100/60 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Quote Upon Request
+                                    {{ $prod->category?->name ?? 'Industrial Supply' }}
                                 </span>
                             </div>
                             @endforeach
@@ -104,8 +104,8 @@
                         <div class="bg-slate-50 dark:bg-[#161f38] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5">
                             <div class="text-xs text-slate-600 dark:text-slate-300">Assemble your project BOQ and submit for formal pricing or export an itemized request.</div>
                             <div class="flex justify-between text-slate-900 dark:text-slate-200 font-bold text-xs pt-2 border-t border-slate-200 dark:border-slate-700">
-                                <span>Commercial Terms:</span>
-                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black">Quote Upon Inquiry</span>
+                                <span>Inquiry Scope:</span>
+                                <span class="text-[#214fe0] dark:text-[#60a5fa] font-black">Direct Technical Review</span>
                             </div>
                         </div>
 
@@ -185,13 +185,6 @@
                 </div>
 
                 <div class="pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Pricing:</span>
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full shadow-xs">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Quote Upon Request
-                        </span>
-                    </div>
-
                     <div class="flex items-center gap-2">
                         <input type="number" id="qty-{{ $product->id }}" value="1" min="1" step="1" 
                                class="w-16 text-center text-xs font-bold font-mono tabular-nums border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f38] text-slate-900 dark:text-white rounded-lg py-2 focus:ring-2 focus:ring-[#214fe0] focus:outline-none">
@@ -339,7 +332,7 @@
                     </p>
                 </div>
                 <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
-                    <span class="font-semibold text-slate-500 dark:text-slate-400">Pricing Basis</span>
+                    <span class="font-semibold text-slate-500 dark:text-slate-400">Invoicing Basis</span>
                     <span class="font-mono tabular-nums font-bold text-[#214fe0] dark:text-[#60a5fa]">100% VAT Inclusive</span>
                 </div>
             </div>
