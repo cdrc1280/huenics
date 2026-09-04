@@ -289,8 +289,8 @@ class ProductResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
-                static::getAddStockAction(),
                 ActionGroup::make([
+                    static::getAddStockAction(),
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
                     RestoreAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed()),

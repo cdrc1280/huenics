@@ -5,7 +5,9 @@ namespace App\Filament\Widgets;
 use App\Filament\Pages\ReviewQueuePage;
 use App\Models\Document;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Tables;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
@@ -79,11 +81,13 @@ class RecentDocumentsWidget extends BaseWidget
                     ->since(),
             ])
             ->actions([
-                Action::make('verify')
-                    ->label('Review')
-                    ->icon('heroicon-o-eye')
-                    ->color('warning')
-                    ->url(fn(Document $record): string => ReviewQueuePage::getUrl(['document_id' => $record->id])),
-            ]);
+                ActionGroup::make([
+                    Action::make('verify')
+                        ->label('Review')
+                        ->icon('heroicon-o-eye')
+                        ->color('warning')
+                        ->url(fn(Document $record): string => ReviewQueuePage::getUrl(['document_id' => $record->id])),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns);
     }
 }

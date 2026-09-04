@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -146,7 +147,7 @@ class RoleResource extends Resource
                         ->requiresConfirmation()
                         ->hidden(fn(Role $record): bool => $record->is_system),
                 ]),
-            ])
+            ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

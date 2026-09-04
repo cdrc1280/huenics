@@ -18,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -145,7 +146,7 @@ class UserResource extends Resource
                     RestoreAction::make()->requiresConfirmation()->visible(fn(User $record): bool => $record->trashed()),
                     ForceDeleteAction::make()->requiresConfirmation()->visible(fn(User $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
-            ])
+            ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),

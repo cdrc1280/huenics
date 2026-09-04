@@ -15,6 +15,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Vendor;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Resources\Resource;
@@ -203,18 +204,20 @@ class ActivityLogResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                Action::make('view_diff')
-                    ->label('Inspect')
-                    ->icon('heroicon-o-eye')
-                    ->color('info')
-                    ->modalHeading(fn(AuditLog $record): string => "Audit Inspection — " . $record->subject_type_label)
-                    ->modalDescription(fn(AuditLog $record): string => $record->subject_identifier . ($record->description ? ' • ' . $record->description : ''))
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Close')
-                    ->modalWidth('3xl')
-                    ->modalContent(fn(AuditLog $record): HtmlString => new HtmlString(
-                        view('filament.modals.activity-log-diff', ['record' => $record])->render()
-                    )),
+                ActionGroup::make([
+                    Action::make('view_diff')
+                        ->label('Inspect')
+                        ->icon('heroicon-o-eye')
+                        ->color('info')
+                        ->modalHeading(fn(AuditLog $record): string => "Audit Inspection — " . $record->subject_type_label)
+                        ->modalDescription(fn(AuditLog $record): string => $record->subject_identifier . ($record->description ? ' • ' . $record->description : ''))
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Close')
+                        ->modalWidth('3xl')
+                        ->modalContent(fn(AuditLog $record): HtmlString => new HtmlString(
+                            view('filament.modals.activity-log-diff', ['record' => $record])->render()
+                        )),
+                ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
