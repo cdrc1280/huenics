@@ -92,9 +92,10 @@ class QuotationResource extends Resource
                             User::ROLE_SALES_EXECUTIVE,
                             User::ROLE_ADMIN,
                             User::ROLE_OPERATIONS_MANAGER,
+                            User::ROLE_CEO,
                         ])->pluck('name', 'id'))
+                        ->placeholder('Select Sales Executive / Inhouse')
                         ->default(fn() => auth()->id())
-                        ->required()
                         ->searchable(),
 
                     TextInput::make('customer_name')

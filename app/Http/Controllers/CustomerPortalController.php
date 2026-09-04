@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationLineItem;
+use App\Models\User;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -180,8 +181,18 @@ class CustomerPortalController extends Controller implements HasMiddleware
 
         if (in_array($action, ['request_quotation', 'encode'], true)) {
             $refNumber = 'QTN-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+            // Default to an inhouse sales agent (e.g. Owner or Admin) if available
+            $defaultAgentId = User::where('is_owner', true)->value('id')
+                ?? User::whereIn('role', [
+                    User::ROLE_ADMIN,
+                    User::ROLE_OPERATIONS_MANAGER,
+                    User::ROLE_SALES_EXECUTIVE,
+                ])->value('id');
+
             $quotation = Quotation::create([
                 'quotation_number' => $refNumber,
+                'sales_agent_id'   => $defaultAgentId,
                 'customer_name'    => $validated['customer_name'],
                 'customer_company' => $validated['customer_company'],
                 'phone_no'         => $validated['phone_no'],

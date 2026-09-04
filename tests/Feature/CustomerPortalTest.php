@@ -293,4 +293,39 @@ class CustomerPortalTest extends TestCase
         // Verify logo and right-actions are marked shrink-0 so they never get squashed
         $response->assertSee('class="flex items-center gap-2 sm:gap-3 shrink-0"', false);
     }
+
+    public function test_customer_can_request_official_quotation_without_sales_agent_id_error(): void
+    {
+        $payload = [
+            'customer_name'    => 'Cedric James Leala',
+            'customer_company' => 'TESDA',
+            'email'            => 'cedricjamesleala128@gmail.com',
+            'phone_no'         => '09388542688',
+            'project_name'     => 'Customer Web Inquiry',
+            'project_location' => 'Metro Manila',
+            'notes'            => 'Urgent formal quotation requested.',
+            'items' => [
+                [
+                    'item_code'   => 'TEST-PIPE-01',
+                    'description' => '1-1/4" PVC Pipe Sch 40',
+                    'quantity'    => 10,
+                    'unit'        => 'pcs',
+                    'unit_price'  => 1880.56,
+                ],
+            ],
+            'action' => 'request_quotation',
+        ];
+
+        $response = $this->post('/quotation/generate-unofficial', $payload);
+
+        $response->assertStatus(200);
+        $response->assertSee('Cedric James Leala');
+        $response->assertSee('TESDA');
+
+        $this->assertDatabaseHas('quotations', [
+            'customer_name'    => 'Cedric James Leala',
+            'customer_company' => 'TESDA',
+            'status'           => 'pending',
+        ]);
+    }
 }
