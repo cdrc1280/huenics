@@ -245,7 +245,7 @@
                 </div>
             </td>
             <td style="width: 42%;" class="estimate-badge-box">
-                <div class="unofficial-badge">★ Bill of Quantities &amp; RFQ</div>
+                <div class="unofficial-badge">Bill of Quantities &amp; RFQ</div>
                 <div class="ref-number">Ref: {{ $quote['quotation_number'] ?? 'RFQ-'.date('Ymd-His') }}</div>
                 <div class="ref-date">Generated: {{ isset($quote['quotation_date']) ? date('F d, Y', strtotime($quote['quotation_date'])) : now()->format('F d, Y') }}</div>
                 <div class="ref-date">Inquiry Status: Pending Sales Review</div>

@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Hero Section (PDF Design: Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="relative bg-white dark:bg-[#070b14] overflow-hidden py-14 lg:py-20 border-b border-slate-200 dark:border-slate-800/80 hisi-geometric-accent transition-colors duration-200">
+<section class="relative bg-white dark:bg-[#070b14] ambient-mesh-hero overflow-hidden py-14 lg:py-20 border-b border-slate-200 dark:border-slate-800/80 hisi-geometric-accent transition-colors duration-200">
     <!-- PDF Inspired Diagonal Stripes & Corner Geometry -->
     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-600/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none -z-0"></div>
     <div class="absolute -bottom-10 -left-10 w-80 h-80 pointer-events-none opacity-40 dark:opacity-20 -z-0" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.07), rgba(33, 79, 224, 0.07) 3px, transparent 3px, transparent 12px);"></div>

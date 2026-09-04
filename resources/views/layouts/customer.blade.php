@@ -25,38 +25,47 @@
     <style>
         [x-cloak] { display: none !important; }
         
-        /* Smooth View Transitions API (Modern SPA-grade feel) */
+        /* View Transitions API (Modern SPA & Theme Waves) */
         @view-transition {
             navigation: auto;
         }
         ::view-transition-old(root) {
-            animation: 120ms ease-out both fade-out;
+            animation: 160ms cubic-bezier(0.16, 1, 0.3, 1) both pageFadeOut;
         }
         ::view-transition-new(root) {
-            animation: 240ms cubic-bezier(0.16, 1, 0.3, 1) both slide-up;
+            animation: 260ms cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
         }
-        @keyframes fade-out {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        @keyframes pageFadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.99); }
         }
-        @keyframes slide-up {
-            from { opacity: 0; transform: translateY(8px); }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Native View Transitions & Smooth Navigation */
-        @view-transition {
-            navigation: auto;
+        /* Circular Reveal Transition for Theme Toggle */
+        html.theme-transitioning::view-transition-old(root),
+        html.theme-transitioning::view-transition-new(root) {
+            animation: none !important;
+            mix-blend-mode: normal !important;
         }
-        ::view-transition-old(root) {
-            animation: 120ms ease-out both fadeOut;
+        html.theme-transitioning::view-transition-new(root) {
+            z-index: 9999 !important;
         }
-        ::view-transition-new(root) {
-            animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both fadeIn;
+        html.theme-transitioning::view-transition-old(root) {
+            z-index: 1 !important;
         }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+
+        /* Fallback Smooth Theme Transition */
+        html.theme-transition,
+        html.theme-transition *,
+        html.theme-transition *::before,
+        html.theme-transition *::after {
+            transition: background-color 320ms cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 320ms cubic-bezier(0.16, 1, 0.3, 1),
+                        color 320ms cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
         /* Spring & Inertia Micro-Interactions */
@@ -66,7 +75,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(12px);
+                transform: translateY(14px);
             }
             to {
                 opacity: 1;
@@ -91,6 +100,32 @@
             100% { background-position: 200% 0; }
         }
 
+        /* Uniform Staggered Entrance Animations */
+        .page-transition-wrapper {
+            animation: uniformPageEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+            will-change: opacity, transform;
+        }
+        .page-transition-exit {
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 120ms ease-out, transform 120ms ease-out;
+        }
+        @keyframes uniformPageEnter {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-1 { animation: fadeInUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.03s both; }
+        .stagger-2 { animation: fadeInUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+        .stagger-3 { animation: fadeInUp 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+        .stagger-4 { animation: fadeInUp 0.50s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+
         .animate-fade-in-up {
             animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
@@ -104,6 +139,21 @@
             animation: badgeBounce 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* Dribbble-Grade Ambient Radial Light Meshes */
+        .ambient-mesh-hero {
+            background-image: 
+                radial-gradient(at 15% 15%, rgba(33, 79, 224, 0.07) 0px, transparent 55%),
+                radial-gradient(at 85% 25%, rgba(96, 165, 250, 0.05) 0px, transparent 50%),
+                radial-gradient(at 50% 80%, rgba(33, 79, 224, 0.03) 0px, transparent 60%);
+        }
+        .dark .ambient-mesh-hero {
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(33, 79, 224, 0.16) 0px, transparent 60%),
+                radial-gradient(at 80% 20%, rgba(96, 165, 250, 0.10) 0px, transparent 55%),
+                radial-gradient(at 50% 90%, rgba(14, 165, 233, 0.06) 0px, transparent 60%);
+        }
+
+        /* Dribbble-Grade Card & Button Physics */
         .card-interactive {
             transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
                         box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -140,7 +190,7 @@
         .bento-surface {
             background-color: #ffffff;
             border: 1px solid rgba(226, 232, 240, 0.9);
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
         }
         .dark .bento-surface {
             background-color: #111827;
@@ -182,7 +232,13 @@
             }
         }
 
-        /* Bulletproof single-icon display per theme */
+        /* Bulletproof single-icon display per theme with smooth rotation */
+        #theme-toggle {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s, border-color 0.2s;
+        }
+        #theme-toggle:active {
+            transform: scale(0.92) rotate(15deg);
+        }
         html.dark #theme-icon-sun { display: inline-block !important; }
         html.dark #theme-icon-moon { display: none !important; }
         html:not(.dark) #theme-icon-sun { display: none !important; }
@@ -190,6 +246,9 @@
     </style>
 </head>
 <body class="flex min-h-full flex-col font-sans bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Top SPA Progress Loading Bar -->
+    <div id="page-progress-bar" class="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#214fe0] via-[#60a5fa] to-[#3b82f6] shadow-[0_0_10px_rgba(33,79,224,0.7)] z-50 pointer-events-none transition-all duration-200 ease-out opacity-0 -translate-x-full"></div>
 
     <!-- Top Banner (PDF Royal Blue in Light / Deep Obsidian Navy in Dark) -->
     <div class="bg-[#1a42be] dark:bg-[#091129] text-white text-xs py-2 px-3 sm:px-4 border-b border-blue-900/40 dark:border-blue-950 transition-colors duration-200">
@@ -256,7 +315,7 @@
                     <!-- Theme Toggle Button -->
                     <button type="button" 
                             id="theme-toggle"
-                            onclick="toggleDarkMode()" 
+                            onclick="toggleDarkMode(event)" 
                             class="p-2 rounded-xl text-slate-600 dark:text-amber-300 hover:text-slate-900 dark:hover:text-amber-200 bg-white dark:bg-[#161f38] hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 shadow-sm flex items-center justify-center w-9 h-9" 
                             title="Toggle Light / Dark Theme"
                             aria-label="Toggle Theme">
@@ -298,8 +357,8 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow">
+    <!-- Main Content Area with Uniform Page Transition -->
+    <main id="page-content" class="flex-grow page-transition-wrapper">
         @yield('content')
     </main>
 
@@ -569,16 +628,272 @@
             }, 3000);
         }
 
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
-            updateThemeIcons();
+        function toggleDarkMode(event) {
+            const hasViewTransition = document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (!hasViewTransition) {
+                document.documentElement.classList.add('theme-transition');
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
+                updateThemeIcons();
+                setTimeout(() => {
+                    document.documentElement.classList.remove('theme-transition');
+                }, 350);
+                return;
+            }
+
+            document.documentElement.classList.add('theme-transitioning');
+
+            const x = event && typeof event.clientX === 'number' ? event.clientX : window.innerWidth / 2;
+            const y = event && typeof event.clientY === 'number' ? event.clientY : 40;
+            const maxRadius = Math.hypot(
+                Math.max(x, window.innerWidth - x),
+                Math.max(y, window.innerHeight - y)
+            );
+
+            const transition = document.startViewTransition(() => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('huenics_theme', isDark ? 'dark' : 'light');
+                updateThemeIcons();
+            });
+
+            transition.ready.then(() => {
+                const animation = document.documentElement.animate(
+                    {
+                        clipPath: [
+                            `circle(0px at ${x}px ${y}px)`,
+                            `circle(${maxRadius}px at ${x}px ${y}px)`
+                        ]
+                    },
+                    {
+                        duration: 420,
+                        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                        pseudoElement: '::view-transition-new(root)'
+                    }
+                );
+
+                animation.finished.finally(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                });
+            }).catch(() => {
+                document.documentElement.classList.remove('theme-transitioning');
+            });
         }
 
         function updateThemeIcons() {
             // Strict CSS rules (html.dark #theme-icon-sun / html:not(.dark) #theme-icon-moon) guarantee
             // exactly one icon is rendered at all times per theme with zero delay or flicker.
         }
+
+        // Client-Side Seamless SPA Navigator (Removes Reload, Smooth Transition)
+        window.HuenicsNavigator = {
+            progressBar: null,
+            isNavigating: false,
+
+            init() {
+                this.progressBar = document.getElementById('page-progress-bar');
+
+                // Intercept internal link clicks
+                document.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    const href = link.getAttribute('href');
+                    if (!href) return;
+
+                    // Exclude non-navigation or external targets
+                    if (
+                        href.startsWith('#') ||
+                        href.startsWith('javascript:') ||
+                        href.startsWith('mailto:') ||
+                        href.startsWith('tel:') ||
+                        link.hasAttribute('download') ||
+                        link.getAttribute('target') === '_blank' ||
+                        link.getAttribute('data-no-spa') !== null ||
+                        e.ctrlKey || e.metaKey || e.shiftKey || e.altKey ||
+                        e.button !== 0
+                    ) {
+                        return;
+                    }
+
+                    try {
+                        const targetUrl = new URL(link.href, window.location.origin);
+                        if (targetUrl.origin !== window.location.origin) return;
+
+                        // Same URL navigation
+                        if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) {
+                            if (targetUrl.hash) return;
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            return;
+                        }
+
+                        e.preventDefault();
+                        this.navigate(targetUrl.href, true);
+                    } catch (err) {
+                        // Fallback to normal navigation
+                    }
+                });
+
+                // Handle Back/Forward history buttons
+                window.addEventListener('popstate', () => {
+                    this.navigate(window.location.href, false);
+                });
+            },
+
+            async navigate(url, pushState = true) {
+                if (this.isNavigating) return;
+                this.isNavigating = true;
+
+                this.startProgress();
+
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'Huenics-SPA',
+                            'Accept': 'text/html'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newContent = doc.getElementById('page-content');
+                    const newTitle = doc.querySelector('title')?.textContent || document.title;
+
+                    if (!newContent) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    const currentContent = document.getElementById('page-content');
+
+                    const swapDom = () => {
+                        document.title = newTitle;
+
+                        if (currentContent) {
+                            currentContent.innerHTML = newContent.innerHTML;
+                            currentContent.classList.remove('page-transition-wrapper', 'page-transition-exit');
+                            void currentContent.offsetWidth; // Force reflow
+                            currentContent.classList.add('page-transition-wrapper');
+                        }
+
+                        if (pushState) {
+                            window.history.pushState({}, '', url);
+                        }
+
+                        // Update active desktop & mobile navbar links
+                        const targetPath = new URL(url, window.location.origin).pathname;
+                        this.updateActiveNavLinks(targetPath);
+
+                        // Re-evaluate page scripts
+                        this.reexecuteScripts(currentContent);
+
+                        // Re-initialize cart badge
+                        if (window.CartManager) {
+                            window.CartManager.updateNavBadge();
+                        }
+
+                        // Close mobile drawer if open
+                        const mobileMenu = document.getElementById('mobile-menu');
+                        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+
+                        // Smooth scroll to top
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+
+                        // Dispatch page-loaded event for any interactive widgets
+                        document.dispatchEvent(new CustomEvent('huenics:page-loaded', { detail: { url } }));
+                    };
+
+                    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        document.startViewTransition(() => swapDom());
+                    } else {
+                        if (currentContent) {
+                            currentContent.classList.add('page-transition-exit');
+                            setTimeout(() => {
+                                swapDom();
+                            }, 100);
+                        } else {
+                            swapDom();
+                        }
+                    }
+                } catch (err) {
+                    console.error('SPA Navigation error:', err);
+                    window.location.href = url;
+                } finally {
+                    this.finishProgress();
+                    this.isNavigating = false;
+                }
+            },
+
+            startProgress() {
+                if (!this.progressBar) return;
+                this.progressBar.style.transition = 'none';
+                this.progressBar.style.transform = 'translateX(-100%)';
+                this.progressBar.style.opacity = '1';
+                void this.progressBar.offsetWidth;
+                this.progressBar.style.transition = 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms';
+                this.progressBar.style.transform = 'translateX(-25%)';
+            },
+
+            finishProgress() {
+                if (!this.progressBar) return;
+                this.progressBar.style.transform = 'translateX(0%)';
+                setTimeout(() => {
+                    this.progressBar.style.opacity = '0';
+                    setTimeout(() => {
+                        this.progressBar.style.transform = 'translateX(-100%)';
+                    }, 200);
+                }, 140);
+            },
+
+            updateActiveNavLinks(currentPath) {
+                // Desktop navbar links
+                const desktopLinks = document.querySelectorAll('header nav a');
+                desktopLinks.forEach(link => {
+                    const linkPath = new URL(link.href, window.location.origin).pathname;
+                    const isActive = linkPath === currentPath;
+
+                    if (isActive) {
+                        link.className = 'hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap text-[#214fe0] dark:text-[#60a5fa] font-bold border-b-2 border-[#214fe0] dark:border-[#3b82f6] pb-1';
+                    } else {
+                        link.className = 'hover:text-[#214fe0] dark:hover:text-[#60a5fa] transition whitespace-nowrap';
+                    }
+                });
+
+                // Mobile drawer links
+                const mobileLinks = document.querySelectorAll('#mobile-menu a');
+                mobileLinks.forEach(link => {
+                    const linkPath = new URL(link.href, window.location.origin).pathname;
+                    const isActive = linkPath === currentPath;
+
+                    if (isActive) {
+                        link.className = 'flex items-center px-3 py-2.5 rounded-lg font-semibold text-sm bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-[#60a5fa]';
+                    } else {
+                        link.className = 'flex items-center px-3 py-2.5 rounded-lg font-medium text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
+                    }
+                });
+            },
+
+            reexecuteScripts(container) {
+                if (!container) return;
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.textContent = oldScript.textContent;
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+            }
+        };
 
         // Global Uniform Modal Controller for Customer Portal
         window.HuenicsModal = {
@@ -734,11 +1049,12 @@
             }
         };
 
-        // Initialize badge, theme icon, and modal on load
+        // Initialize badge, theme icon, modal, and SPA navigator on load
         document.addEventListener('DOMContentLoaded', () => {
             CartManager.updateNavBadge();
             updateThemeIcons();
             HuenicsModal.init();
+            HuenicsNavigator.init();
         });
     </script>
 

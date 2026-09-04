@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Header Banner (PDF Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="bg-white dark:bg-[#070b14] py-12 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
+<section class="bg-white dark:bg-[#070b14] ambient-mesh-hero py-12 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
     <!-- Diagonal Stripes Accent -->
     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none"></div>
     <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25 dark:opacity-15" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>

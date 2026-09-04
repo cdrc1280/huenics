@@ -98,6 +98,19 @@ class AdminPanelProvider extends PanelProvider
                                 height: 0.875rem !important;
                                 margin-right: 0.25rem !important;
                             }
+                        /* Standardize section, widget, and card rhythm across all dashboard & resource pages */
+                        .fi-page-content-wrapper > div > * + * {
+                            margin-top: 1.5rem;
+                        }
+                        .fi-section,
+                        .fi-fo-section,
+                        .fi-ta-ctn,
+                        .fi-wi-widget > div {
+                            border-radius: 0.75rem !important;
+                        }
+                        .fi-section-content,
+                        .fi-fo-section-content {
+                            padding: 1.5rem !important;
                         }
                     </style>
                 ')

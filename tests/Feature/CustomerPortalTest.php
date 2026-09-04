@@ -247,12 +247,13 @@ class CustomerPortalTest extends TestCase
         $productsResponse->assertSee('dark:bg-[#070b14]', false);
         $productsResponse->assertSee('dark:border-slate-800', false);
 
-        // 4. Quotation builder renders with dark theme
+        // 4. Quotation builder renders with dark theme and inline product controls
         $builderResponse = $this->get('/quotation/builder');
         $builderResponse->assertStatus(200);
         $builderResponse->assertSee('dark:bg-[#070b14]', false);
         $builderResponse->assertSee('dark:bg-[#111827]', false);
-        $builderResponse->assertSee('catalog-modal', false);
+        $builderResponse->assertSee('items-tbody', false);
+        $builderResponse->assertSee('addProductRow', false);
     }
 
     public function test_uniform_customer_modal_is_rendered_and_no_native_dialogs_used(): void

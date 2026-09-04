@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Header Banner (PDF Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="bg-white dark:bg-[#070b14] py-10 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
+<section class="bg-white dark:bg-[#070b14] ambient-mesh-hero py-10 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
     <!-- Diagonal Stripes Accent -->
     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none"></div>
     <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25 dark:opacity-15" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
@@ -57,16 +57,10 @@
 
                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <button type="button" 
-                                        onclick="openAddCatalogModal()" 
-                                        class="flex-1 sm:flex-initial bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] hover:bg-blue-100 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800/60 text-xs font-bold px-3 py-2 rounded-lg btn-interactive transition flex items-center justify-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-cart-plus"></i>
-                                    <span>Add from Catalog</span>
-                                </button>
-                                <button type="button" 
-                                        onclick="addCustomRow()" 
-                                        class="flex-1 sm:flex-initial bg-slate-100 dark:bg-[#1a2440] text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-bold px-3 py-2 rounded-lg btn-interactive transition flex items-center justify-center gap-1.5">
+                                        onclick="addProductRow()" 
+                                        class="flex-1 sm:flex-initial bg-[#214fe0] hover:bg-[#1a42be] text-white text-xs font-bold px-3.5 py-2 rounded-lg btn-interactive transition flex items-center justify-center gap-1.5 shadow-sm">
                                     <i class="fa-solid fa-plus"></i>
-                                    <span>Add Custom Item</span>
+                                    <span>Add Product</span>
                                 </button>
                             </div>
                         </div>
@@ -100,11 +94,8 @@
                                 Add products from our catalog or enter custom line items to compute your project totals.
                             </p>
                             <div class="mt-4 flex justify-center gap-3">
-                                <button type="button" onclick="openAddCatalogModal()" class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
-                                    <i class="fa-solid fa-boxes-stacked mr-1"></i> Browse Catalog
-                                </button>
-                                <button type="button" onclick="addCustomRow()" class="bg-slate-100 dark:bg-[#1a2440] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs px-4 py-2 rounded-lg transition border border-slate-300 dark:border-slate-700">
-                                    <i class="fa-solid fa-pen-to-square mr-1"></i> Add Custom Row
+                                <button type="button" onclick="addProductRow()" class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plus"></i> Add Product
                                 </button>
                             </div>
                         </div>
@@ -285,94 +276,65 @@
     </div>
 </section>
 
-<!-- Modal: Add from Catalog -->
-<div id="catalog-modal" class="fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-200">
-    <div class="bg-white dark:bg-[#111827] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <!-- Top Geometric Accent Bar -->
-        <div class="h-1.5 w-full bg-gradient-to-r from-[#214fe0] via-blue-500 to-[#1a42be]"></div>
-
-        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-[#161f38]">
-            <div>
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">Select Item From Catalog</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Pick any product from the Huenics master catalog.</p>
-            </div>
-            <button type="button" onclick="closeAddCatalogModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-        </div>
-
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800">
-            <input type="text" id="catalog-search-input" onkeyup="filterCatalogModal()" placeholder="Search by name, SKU, or category..." 
-                   class="w-full px-3.5 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500">
-        </div>
-
-        <div class="overflow-y-auto p-4 space-y-2 divide-y divide-slate-100 dark:divide-slate-800 flex-grow" id="catalog-list">
-            @forelse($catalogProducts as $catProd)
-            <div class="catalog-item pt-2 pb-2 flex items-center justify-between gap-4" 
-                 data-search="{{ strtolower($catProd->canonical_name . ' ' . $catProd->sku . ' ' . $catProd->category) }}">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-xs text-slate-900 dark:text-white">{{ $catProd->canonical_name }}</span>
-                        <span class="bg-slate-100 dark:bg-[#161f38] text-slate-600 dark:text-slate-400 border border-transparent dark:border-slate-700 text-[10px] px-2 py-0.5 rounded font-mono">{{ $catProd->sku ?: 'SKU-00' }}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Category: {{ $catProd->category ?: 'General' }} &bull; Unit: {{ $catProd->unit_default ?: 'pcs' }}
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3 shrink-0">
-                    <div class="text-right">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <i class="fa-solid fa-file-invoice-dollar text-[9px]"></i> Quote Upon Request
-                        </span>
-                    </div>
-                    <button type="button" 
-                            onclick="insertCatalogItem({{ json_encode($catProd) }})"
-                            class="bg-[#214fe0] hover:bg-[#1a42be] text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
-                        Select
-                    </button>
-                </div>
-            </div>
-            @empty
-            <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">
-                No catalog items currently available.
-            </div>
-            @endforelse
-        </div>
-
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#161f38] flex justify-end">
-            <button type="button" onclick="closeAddCatalogModal()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs px-4 py-2 rounded-lg transition">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
+    // Master database catalog products passed from controller
+    const catalogProducts = @json($catalogProducts);
+
     // State management for builder rows
     let currentItems = [];
+
+    function escapeHtml(string) {
+        return String(string || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
 
     function initBuilder() {
         currentItems = CartManager.getCart();
         
-        // If empty, initialize with the first authentic item from the database catalog
+        // If empty, initialize with the first item from the authentic DB catalog
         if (currentItems.length === 0) {
-            const defaultDbItem = @json($catalogProducts->first());
-            if (defaultDbItem) {
-                const initQty = 10;
+            if (catalogProducts && catalogProducts.length > 0) {
+                const defaultDbItem = catalogProducts[0];
                 currentItems.push({
-                    id: defaultDbItem.id || null,
+                    product_id: defaultDbItem.id,
                     item_code: defaultDbItem.sku || defaultDbItem.product_code || 'HISI-PROD',
                     description: defaultDbItem.canonical_name,
-                    quantity: initQty,
+                    quantity: 10,
                     unit: defaultDbItem.unit_default || 'pcs',
                     unit_price: 0,
                     line_total: 0
                 });
                 CartManager.saveCart(currentItems);
             }
+        } else {
+            // Reconcile items to ensure valid product_id and DB unit
+            currentItems.forEach(item => {
+                let matched = null;
+                if (item.product_id) {
+                    matched = catalogProducts.find(p => String(p.id) === String(item.product_id));
+                } else if (item.description) {
+                    matched = catalogProducts.find(p => p.canonical_name === item.description);
+                }
+
+                if (matched) {
+                    item.product_id = matched.id;
+                    item.item_code = matched.sku || matched.product_code || item.item_code;
+                    item.description = matched.canonical_name;
+                    item.unit = matched.unit_default || 'pcs';
+                } else if (catalogProducts && catalogProducts.length > 0 && !item.product_id) {
+                    item.product_id = catalogProducts[0].id;
+                    item.item_code = catalogProducts[0].sku || catalogProducts[0].product_code || 'HISI-PROD';
+                    item.description = catalogProducts[0].canonical_name;
+                    item.unit = catalogProducts[0].unit_default || 'pcs';
+                }
+            });
+            CartManager.saveCart(currentItems);
         }
 
         renderRows();
@@ -406,16 +368,24 @@
             tr.innerHTML = `
                 <td class="py-2.5 px-3 text-center text-slate-400 dark:text-slate-500 font-bold">${index + 1}</td>
                 <td class="py-2.5 px-3">
+                    <input type="hidden" name="items[${index}][product_id]" value="${item.product_id || ''}">
                     <input type="hidden" name="items[${index}][item_code]" value="${escapeHtml(item.item_code || '')}">
-                    <input type="text" name="items[${index}][description]" value="${escapeHtml(item.description || '')}" required
-                           onchange="updateItemField(${index}, 'description', this.value)"
-                           placeholder="Item description"
-                           class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white">
+                    <input type="hidden" name="items[${index}][description]" value="${escapeHtml(item.description || '')}">
+                    <select required onchange="onProductSelect(${index}, this.value)"
+                            class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white">
+                        <option value="" disabled ${!item.product_id ? 'selected' : ''}>-- Select Product --</option>
+                        ${catalogProducts.map(p => `
+                            <option value="${p.id}" ${item.product_id == p.id ? 'selected' : ''}>
+                                ${escapeHtml(p.canonical_name)} (${escapeHtml(p.sku || p.product_code || 'HISI')})
+                            </option>
+                        `).join('')}
+                    </select>
                 </td>
                 <td class="py-2.5 px-3 text-center">
-                    <input type="text" name="items[${index}][unit]" value="${escapeHtml(item.unit || 'pcs')}"
-                           onchange="updateItemField(${index}, 'unit', this.value)"
-                           class="w-16 text-center px-1.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#161f38] text-slate-900 dark:text-white">
+                    <input type="hidden" name="items[${index}][unit]" value="${escapeHtml(item.unit || 'pcs')}">
+                    <select disabled class="w-24 text-center px-1.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded text-xs bg-slate-100 dark:bg-[#161f38] text-slate-700 dark:text-slate-300 font-bold cursor-not-allowed opacity-90">
+                        <option value="${escapeHtml(item.unit || 'pcs')}" selected>${escapeHtml(item.unit || 'pcs')}</option>
+                    </select>
                 </td>
                 <td class="py-2.5 px-3 text-center">
                     <input type="number" name="items[${index}][quantity]" value="${item.quantity}" min="0.01" step="any" required
@@ -440,6 +410,37 @@
 
         updateSummaryTotals(currentItems.length);
         CartManager.saveCart(currentItems);
+    }
+
+    function addProductRow() {
+        if (!catalogProducts || catalogProducts.length === 0) {
+            showToast('Notice', 'No catalog products available.');
+            return;
+        }
+        const prod = catalogProducts[0];
+        currentItems.push({
+            product_id: prod.id,
+            item_code: prod.sku || prod.product_code || 'HISI-PROD',
+            description: prod.canonical_name,
+            quantity: 1,
+            unit: prod.unit_default || 'pcs',
+            unit_price: 0,
+            line_total: 0
+        });
+        renderRows();
+        showToast('Product Added', `Added "${prod.canonical_name}" to quotation.`);
+    }
+
+    function onProductSelect(index, productId) {
+        const prod = catalogProducts.find(p => String(p.id) === String(productId));
+        if (!prod || !currentItems[index]) return;
+
+        currentItems[index].product_id = prod.id;
+        currentItems[index].item_code = prod.sku || prod.product_code || 'HISI-PROD';
+        currentItems[index].description = prod.canonical_name;
+        currentItems[index].unit = prod.unit_default || 'pcs';
+
+        renderRows();
     }
 
     function updateItemField(index, field, value) {
@@ -493,33 +494,6 @@
         });
     }
 
-    function addCustomRow() {
-        currentItems.push({
-            item_code: 'CUSTOM-' + Date.now().toString().slice(-4),
-            description: 'Custom Material Line Item / Spec',
-            quantity: 1,
-            unit: 'lot',
-            unit_price: 0,
-            line_total: 0
-        });
-        renderRows();
-    }
-
-    function insertCatalogItem(product) {
-        currentItems.push({
-            id: product.id,
-            item_code: product.sku || product.product_code || ('ITM-' + Date.now().toString().slice(-4)),
-            description: product.canonical_name,
-            quantity: 1,
-            unit: product.unit_default || 'pcs',
-            unit_price: 0,
-            line_total: 0
-        });
-        closeAddCatalogModal();
-        renderRows();
-        showToast('Catalog Item Added', `"${product.canonical_name}" added to quotation.`);
-    }
-
     function updateSummaryTotals(count) {
         const countEl = document.getElementById('summary-items-count');
         if (countEl) {
@@ -531,39 +505,13 @@
         return (parseFloat(amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function escapeHtml(string) {
-        return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    // Modal helpers
-    function openAddCatalogModal() {
-        const modal = document.getElementById('catalog-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.getElementById('catalog-search-input').focus();
-    }
-
-    function closeAddCatalogModal() {
-        const modal = document.getElementById('catalog-modal');
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }
-
-    function filterCatalogModal() {
-        const query = document.getElementById('catalog-search-input').value.toLowerCase();
-        const items = document.querySelectorAll('.catalog-item');
-        items.forEach(item => {
-            const text = item.getAttribute('data-search') || '';
-            if (text.includes(query)) {
-                item.classList.remove('hidden');
-            } else {
-                item.classList.add('hidden');
-            }
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         initBuilder();
+    });
+    document.addEventListener('huenics:page-loaded', () => {
+        if (document.getElementById('items-tbody')) {
+            initBuilder();
+        }
     });
 </script>
 @endpush

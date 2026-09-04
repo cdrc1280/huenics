@@ -96,19 +96,19 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         ->searchable()
                                         ->live()
                                         ->disabled(fn($get) => (bool) $get('filterInhouse'))
-                                        ->columnSpan(['default' => 12, 'sm' => 7, 'md' => 7, 'lg' => 7]),
+                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 8, 'lg' => 8]),
 
                                     Toggle::make('filterInhouse')
                                         ->label('Inhouse (Owner)')
                                         ->helperText('Filter by owner accounts')
-                                        ->inline(false)
+                                        ->inline(true)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set) {
                                             if ($state) {
                                                 $set('selectedAgentId', null);
                                             }
                                         })
-                                        ->columnSpan(['default' => 12, 'sm' => 5, 'md' => 5, 'lg' => 5]),
+                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
                                     ToggleButtons::make('periodType')
                                         ->label('Filter Granularity')
@@ -133,14 +133,14 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         ->default('month')
                                         ->grouped()
                                         ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
+                                        ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
 
                                     DatePicker::make('selectedDate')
                                         ->label('Select Day')
                                         ->default(now()->toDateString())
                                         ->visible(fn($get) => $get('periodType') === 'days')
                                         ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
+                                        ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
 
                                     Select::make('selectedWeek')
                                         ->label('Select Week')
@@ -157,7 +157,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         ->default((int) now()->weekOfYear)
                                         ->visible(fn($get) => $get('periodType') === 'weeks')
                                         ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
+                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
                                     Select::make('selectedMonth')
                                         ->label('Month')
@@ -178,7 +178,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         ->default((int) now()->month)
                                         ->visible(fn($get) => $get('periodType') === 'month')
                                         ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
+                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
                                     Select::make('selectedYear')
                                         ->label('Year')
@@ -193,8 +193,8 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
                                         ->live()
                                         ->columnSpan(fn($get) => $get('periodType') === 'years'
-                                            ? ['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]
-                                            : ['default' => 12, 'sm' => 4, 'md' => 2, 'lg' => 2]),
+                                            ? ['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]
+                                            : ['default' => 12, 'sm' => 2, 'md' => 2, 'lg' => 2]),
                                 ]),
                     ]),
             ]);
