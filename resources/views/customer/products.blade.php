@@ -30,33 +30,82 @@
 </section>
 
 <!-- Filter & Search Bar -->
-<section class="bg-white dark:bg-[#0b0f19] border-b border-slate-200 dark:border-slate-800 py-6 sticky top-16 sm:top-20 z-30 shadow-sm transition-colors duration-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <form method="GET" action="{{ route('customer.products') }}" class="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <!-- Search Input -->
-            <div class="relative w-full md:max-w-md">
-                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+<section class="bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 py-4 sm:py-5 sticky top-16 sm:top-20 z-30 shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3.5">
+        <!-- Row 1: Prominent Search Input + Catalog Status & Clear Action -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <form method="GET" action="{{ route('customer.products') }}" class="relative w-full sm:max-w-lg">
+                @if(!empty($selectedCategory) && $selectedCategory !== 'all')
+                    <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                @endif
+                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" 
+                       id="product-search-input"
                        name="search" 
                        value="{{ $search }}" 
                        placeholder="Search products by SKU, name, or keywords..."
-                       class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#214fe0] focus:outline-none bg-slate-50 dark:bg-[#161f38] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500">
-            </div>
+                       class="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm border border-slate-300 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-[#214fe0] focus:border-[#214fe0] focus:outline-none bg-slate-50 dark:bg-[#12192b] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all shadow-inner">
+                @if(!empty($search))
+                    <a href="{{ route('customer.products', ['category' => $selectedCategory]) }}" 
+                       title="Clear search keyword" 
+                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                @endif
+            </form>
 
-            <!-- Category Filter -->
-            <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <div class="flex items-center justify-between sm:justify-end gap-3 text-xs text-slate-500 dark:text-slate-400 shrink-0">
+                <span class="inline-flex items-center gap-1.5 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $products->total() ?? count($products) }}</span>
+                    <span>products found</span>
+                </span>
+
+                @if(!empty($search) || (!empty($selectedCategory) && $selectedCategory !== 'all'))
+                    <span class="text-slate-300 dark:text-slate-700">|</span>
+                    <a href="{{ route('customer.products') }}" 
+                       class="text-xs font-bold text-[#214fe0] dark:text-[#60a5fa] hover:underline inline-flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Reset All</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        <!-- Row 2: Fluid Category Navigation Rail (No Ugly Scrollbar, Smooth Mousewheel & Arrows) -->
+        <div class="relative flex items-center group/cat-rail">
+            <!-- Left Chevron for Desktop Scroll -->
+            <button type="button" 
+                    id="cat-scroll-left"
+                    aria-label="Scroll categories left"
+                    class="hidden md:flex absolute -left-2 z-20 w-7 h-7 rounded-full bg-white dark:bg-[#161f38] shadow-md border border-slate-200 dark:border-slate-700 items-center justify-center text-slate-600 dark:text-slate-300 hover:text-[#214fe0] dark:hover:text-white transition-opacity opacity-0 group-hover/cat-rail:opacity-100 disabled:opacity-0 focus:opacity-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+
+            <!-- Categories Scroll Container -->
+            <div id="category-pills-rail" 
+                 class="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 w-full no-scrollbar select-none"
+                 style="scrollbar-width: none; -ms-overflow-style: none;">
                 <a href="{{ route('customer.products', ['search' => $search]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition {{ empty($selectedCategory) || $selectedCategory === 'all' ? 'bg-[#214fe0] text-white shadow-sm' : 'bg-slate-100 dark:bg-[#161f38] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
+                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 shrink-0 {{ empty($selectedCategory) || $selectedCategory === 'all' ? 'bg-[#214fe0] text-white shadow-md shadow-blue-500/25' : 'bg-slate-100 dark:bg-[#141d33] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-slate-700/60' }}">
                     All Categories
                 </a>
                 @foreach($categories as $category)
                     <a href="{{ route('customer.products', ['category' => $category, 'search' => $search]) }}" 
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition border border-slate-200 dark:border-slate-700 {{ $selectedCategory === $category ? 'bg-[#214fe0] text-white border-[#214fe0] shadow-sm' : 'bg-slate-50 dark:bg-[#161f38] text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-[#214fe0] dark:hover:text-white' }}">
+                       class="px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all duration-150 shrink-0 border {{ $selectedCategory === $category ? 'bg-[#214fe0] text-white border-[#214fe0] font-bold shadow-md shadow-blue-500/25' : 'bg-slate-50 dark:bg-[#141d33] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/70 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-500/50 hover:text-[#214fe0] dark:hover:text-white font-medium' }}">
                         {{ $category }}
                     </a>
                 @endforeach
             </div>
-        </form>
+
+            <!-- Right Chevron for Desktop Scroll -->
+            <button type="button" 
+                    id="cat-scroll-right"
+                    aria-label="Scroll categories right"
+                    class="hidden md:flex absolute -right-2 z-20 w-7 h-7 rounded-full bg-white dark:bg-[#161f38] shadow-md border border-slate-200 dark:border-slate-700 items-center justify-center text-slate-600 dark:text-slate-300 hover:text-[#214fe0] dark:hover:text-white transition-opacity opacity-0 group-hover/cat-rail:opacity-100 focus:opacity-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
     </div>
 </section>
 
@@ -271,18 +320,56 @@
         });
     }
 
+    // Fluid Category Navigation Rail (Mousewheel + Chevron Controls)
+    function initCategoryRail() {
+        const rail = document.getElementById('category-pills-rail');
+        const btnLeft = document.getElementById('cat-scroll-left');
+        const btnRight = document.getElementById('cat-scroll-right');
+
+        if (!rail) return;
+
+        // Horizontal mousewheel scrolling
+        rail.addEventListener('wheel', function(e) {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                rail.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        // Chevron click controls
+        if (btnLeft) {
+            btnLeft.addEventListener('click', function() {
+                rail.scrollBy({ left: -280, behavior: 'smooth' });
+            });
+        }
+        if (btnRight) {
+            btnRight.addEventListener('click', function() {
+                rail.scrollBy({ left: 280, behavior: 'smooth' });
+            });
+        }
+
+        // Auto-center active category pill
+        const activePill = rail.querySelector('.bg-\\[\\#214fe0\\]');
+        if (activePill && typeof activePill.scrollIntoView === 'function') {
+            activePill.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         window.updateFloatingCartBar();
         window.hideProductsSkeleton();
+        initCategoryRail();
     });
     document.addEventListener('huenics:page-loaded', function() {
         window.updateFloatingCartBar();
         window.hideProductsSkeleton();
+        initCategoryRail();
     });
     // Immediate invocation if dynamically loaded
     if (document.readyState !== 'loading') {
         window.updateFloatingCartBar();
         window.hideProductsSkeleton();
+        initCategoryRail();
     }
 </script>
 @endpush

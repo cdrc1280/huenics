@@ -113,92 +113,92 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                     ->extraAttributes(['class' => 'sm:pt-7 flex items-center'])
                                     ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
-                                    ToggleButtons::make('periodType')
-                                        ->label('Filter Granularity')
-                                        ->options([
-                                            'days' => 'Days',
-                                            'weeks' => 'Weeks',
-                                            'month' => 'Month',
-                                            'years' => 'Years',
-                                        ])
-                                        ->icons([
-                                            'days' => 'heroicon-m-calendar',
-                                            'weeks' => 'heroicon-m-calendar-days',
-                                            'month' => 'heroicon-m-chart-bar',
-                                            'years' => 'heroicon-m-presentation-chart-line',
-                                        ])
-                                        ->colors([
-                                            'days' => 'info',
-                                            'weeks' => 'warning',
-                                            'month' => 'primary',
-                                            'years' => 'success',
-                                        ])
-                                        ->default('month')
-                                        ->grouped()
-                                        ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
+                                ToggleButtons::make('periodType')
+                                    ->label('Filter Granularity')
+                                    ->options([
+                                        'days' => 'Days',
+                                        'weeks' => 'Weeks',
+                                        'month' => 'Month',
+                                        'years' => 'Years',
+                                    ])
+                                    ->icons([
+                                        'days' => 'heroicon-m-calendar',
+                                        'weeks' => 'heroicon-m-calendar-days',
+                                        'month' => 'heroicon-m-chart-bar',
+                                        'years' => 'heroicon-m-presentation-chart-line',
+                                    ])
+                                    ->colors([
+                                        'days' => 'info',
+                                        'weeks' => 'warning',
+                                        'month' => 'primary',
+                                        'years' => 'success',
+                                    ])
+                                    ->default('month')
+                                    ->grouped()
+                                    ->live()
+                                    ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
 
-                                    DatePicker::make('selectedDate')
-                                        ->label('Select Day')
-                                        ->default(now()->toDateString())
-                                        ->visible(fn($get) => $get('periodType') === 'days')
-                                        ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
+                                DatePicker::make('selectedDate')
+                                    ->label('Select Day')
+                                    ->default(now()->toDateString())
+                                    ->visible(fn($get) => $get('periodType') === 'days')
+                                    ->live()
+                                    ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
 
-                                    Select::make('selectedWeek')
-                                        ->label('Select Week')
-                                        ->options(function ($get) {
-                                            $year = (int) ($get('selectedYear') ?: now()->year);
-                                            $weeks = [];
-                                            for ($w = 1; $w <= 52; $w++) {
-                                                $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
-                                                $wEnd = $wStart->copy()->endOfWeek();
-                                                $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
-                                            }
-                                            return $weeks;
-                                        })
-                                        ->default((int) now()->weekOfYear)
-                                        ->visible(fn($get) => $get('periodType') === 'weeks')
-                                        ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
+                                Select::make('selectedWeek')
+                                    ->label('Select Week')
+                                    ->options(function ($get) {
+                                        $year = (int) ($get('selectedYear') ?: now()->year);
+                                        $weeks = [];
+                                        for ($w = 1; $w <= 52; $w++) {
+                                            $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
+                                            $wEnd = $wStart->copy()->endOfWeek();
+                                            $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
+                                        }
+                                        return $weeks;
+                                    })
+                                    ->default((int) now()->weekOfYear)
+                                    ->visible(fn($get) => $get('periodType') === 'weeks')
+                                    ->live()
+                                    ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
-                                    Select::make('selectedMonth')
-                                        ->label('Month')
-                                        ->options([
-                                            1 => 'January',
-                                            2 => 'February',
-                                            3 => 'March',
-                                            4 => 'April',
-                                            5 => 'May',
-                                            6 => 'June',
-                                            7 => 'July',
-                                            8 => 'August',
-                                            9 => 'September',
-                                            10 => 'October',
-                                            11 => 'November',
-                                            12 => 'December',
-                                        ])
-                                        ->default((int) now()->month)
-                                        ->visible(fn($get) => $get('periodType') === 'month')
-                                        ->live()
-                                        ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
+                                Select::make('selectedMonth')
+                                    ->label('Month')
+                                    ->options([
+                                        1 => 'January',
+                                        2 => 'February',
+                                        3 => 'March',
+                                        4 => 'April',
+                                        5 => 'May',
+                                        6 => 'June',
+                                        7 => 'July',
+                                        8 => 'August',
+                                        9 => 'September',
+                                        10 => 'October',
+                                        11 => 'November',
+                                        12 => 'December',
+                                    ])
+                                    ->default((int) now()->month)
+                                    ->visible(fn($get) => $get('periodType') === 'month')
+                                    ->live()
+                                    ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
-                                    Select::make('selectedYear')
-                                        ->label('Year')
-                                        ->options(function () {
-                                            $years = [];
-                                            for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
-                                                $years[$y] = (string) $y;
-                                            }
-                                            return $years;
-                                        })
-                                        ->default((int) now()->year)
-                                        ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
-                                        ->live()
-                                        ->columnSpan(fn($get) => $get('periodType') === 'years'
-                                            ? ['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]
-                                            : ['default' => 12, 'sm' => 2, 'md' => 2, 'lg' => 2]),
-                                ]),
+                                Select::make('selectedYear')
+                                    ->label('Year')
+                                    ->options(function () {
+                                        $years = [];
+                                        for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
+                                            $years[$y] = (string) $y;
+                                        }
+                                        return $years;
+                                    })
+                                    ->default((int) now()->year)
+                                    ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
+                                    ->live()
+                                    ->columnSpan(fn($get) => $get('periodType') === 'years'
+                                        ? ['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]
+                                        : ['default' => 12, 'sm' => 2, 'md' => 2, 'lg' => 2]),
+                            ]),
                     ]),
             ]);
     }

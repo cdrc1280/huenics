@@ -304,6 +304,17 @@
             -webkit-backdrop-filter: blur(12px);
         }
 
+        /* Zero-Scrollbar & Fluid Category Rail Utilities */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         /* Accessibility: Strict prefers-reduced-motion support */
         @media (prefers-reduced-motion: reduce) {
             *, ::before, ::after {

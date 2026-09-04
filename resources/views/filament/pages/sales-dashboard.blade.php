@@ -1,7 +1,7 @@
 <x-filament-panels::page>
-    <div class="space-y-8 sm:space-y-10 pb-8">
+    <div class="space-y-8 pb-8 sm:space-y-10">
         {{-- 1. Sales Performance Filters Section at the very top --}}
-        <section aria-label="Sales Performance Filters" class="w-full">
+        <section aria-label="Sales Performance Filters" class="mb-2 w-full">
             {{ $this->form }}
         </section>
 
