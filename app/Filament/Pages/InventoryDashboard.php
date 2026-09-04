@@ -31,11 +31,11 @@ class InventoryDashboard extends Page implements HasTable, HasForms
     use InteractsWithForms;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-archive-box';
-    protected static \UnitEnum|string|null $navigationGroup = 'Inventory & Operations';
+    protected static \UnitEnum|string|null $navigationGroup = 'Dashboards & Analytics';
     protected static ?string $navigationLabel = 'Inventory & Stock Analytics';
     protected static ?string $title = 'Inventory Management';
     protected string $view = 'filament.pages.inventory-dashboard';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {

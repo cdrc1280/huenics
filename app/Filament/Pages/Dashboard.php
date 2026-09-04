@@ -11,6 +11,9 @@ use Filament\Pages\Dashboard as BaseDashboard;
 class Dashboard extends BaseDashboard
 {
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-home';
+    protected static \UnitEnum|string|null $navigationGroup = 'Dashboards & Analytics';
+    protected static ?string $navigationLabel = 'Main Dashboard';
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $title = 'Dashboard';
 

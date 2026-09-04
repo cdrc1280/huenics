@@ -36,9 +36,9 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->navigationGroups([
+                'Dashboards & Analytics',
                 'Sales & Order Lifecycle',
-                'Inventory & Operations',
-                'Reports & Analytics',
+                'Financial Operations',
                 'Master Data & Registry',
                 'System Administration',
             ])
