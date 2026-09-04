@@ -178,9 +178,25 @@
                 <div id="luminaire-ambient-halo" class="w-72 h-72 sm:w-96 sm:h-96 lg:w-[440px] lg:h-[440px] rounded-full absolute pointer-events-none -z-0 blur-3xl transition-all duration-700 opacity-80"
                      style="background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(37, 99, 235, 0.15) 50%, transparent 75%);"></div>
 
+                <!-- Clean Mobile Chip Strip: eliminates collisions and overlaps on small viewports (<640px) -->
+                <div class="flex sm:hidden items-center justify-center flex-wrap gap-1.5 mb-3 w-full px-2">
+                    <span class="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 rounded-full shadow-sm border border-amber-300/30 whitespace-nowrap">
+                        <i data-lucide="star" class="w-2.5 h-2.5 text-amber-100"></i>
+                        <span>20% OFF Volume</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-2.5 py-0.5 rounded-full shadow-sm text-[10px] font-bold whitespace-nowrap">
+                        <i data-lucide="file-check-2" class="w-2.5 h-2.5 text-blue-500"></i>
+                        <span>12% BIR VAT</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-2.5 py-0.5 rounded-full shadow-sm text-[10px] font-bold whitespace-nowrap">
+                        <i data-lucide="truck" class="w-2.5 h-2.5 text-emerald-500"></i>
+                        <span>Free Freight &ge; &#8369;20k</span>
+                    </span>
+                </div>
+
                 <!-- 3D Spatial Perspective Stage -->
                 <div id="hero-3d-stage" 
-                     class="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[420px] aspect-square rounded-full border border-slate-700/50 dark:border-slate-800/80 flex items-center justify-center bg-gradient-to-b from-slate-900/60 via-[#0b1120]/80 to-[#060913]/95 backdrop-blur-md card-3d shadow-2xl select-none"
+                     class="relative w-full max-w-[300px] xs:max-w-[340px] sm:max-w-[420px] aspect-square rounded-full border border-slate-700/50 dark:border-slate-800/80 flex items-center justify-center bg-gradient-to-b from-slate-900/60 via-[#0b1120]/80 to-[#060913]/95 backdrop-blur-md card-3d shadow-2xl select-none"
                      data-3d-tilt data-max-tilt="10">
                     
                     <div class="glare-sheen"></div>
@@ -194,63 +210,63 @@
                         
                         <!-- Center Hotspot Click-to-Toggle Overlay -->
                         <div id="luminaire-center-toggle" 
-                             class="absolute w-36 h-36 rounded-full cursor-pointer z-20 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+                             class="absolute w-32 h-32 sm:w-36 sm:h-36 rounded-full cursor-pointer z-20 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
                              title="Click to Toggle Light Bulb ON / OFF">
                             <span class="sr-only">Toggle Light Bulb</span>
                         </div>
 
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
-                        <div id="luminaire-tech-tag" class="absolute bottom-3 sm:bottom-4 inset-x-0 mx-auto w-fit bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center gap-1.5 transition-all duration-300 pointer-events-none z-20">
-                            <span id="luminaire-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center gap-1.5 transition-all duration-300 pointer-events-none z-20">
+                            <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span id="luminaire-status-text">EDISON ST64 • 3000K WARM • CRI 95+</span>
                         </div>
                     </div>
 
-                    <!-- Floating Badge 1: 20% OFF Contractor Volume (Top-Right Pill) -->
-                    <div class="absolute -top-2 sm:-top-4 right-0 sm:right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 flex items-center gap-1 sm:gap-1.5 badge-bounce z-30 pointer-events-auto whitespace-nowrap"
+                    <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only) -->
+                    <div class="hidden sm:flex absolute -top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 items-center gap-1.5 badge-bounce z-30 pointer-events-auto whitespace-nowrap"
                          data-3d-depth style="--depth: 45;">
-                        <i data-lucide="star" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-100"></i>
+                        <i data-lucide="star" class="w-3.5 h-3.5 text-amber-100"></i>
                         <span>20% OFF Contractor Volume</span>
                     </div>
 
-                    <!-- Floating Badge 2: 12% BIR VAT Invoicing (Top-Left Pill) -->
-                    <div class="absolute left-0 sm:-left-4 top-3 sm:top-1/4 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 sm:gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
+                    <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only) -->
+                    <div class="hidden sm:flex absolute -left-4 top-1/4 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
                          data-3d-depth style="--depth: 35;">
-                        <i data-lucide="file-check-2" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-blue-500"></i>
+                        <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-blue-500"></i>
                         <span>12% BIR VAT Invoicing</span>
                     </div>
 
-                    <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Bottom-Right Pill - Separate Quadrant) -->
-                    <div class="absolute -bottom-2 sm:-bottom-3 right-0 sm:right-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full shadow-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 sm:gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
+                    <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only) -->
+                    <div class="hidden sm:flex absolute -bottom-3 right-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3.5 py-1.5 rounded-full shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
                          data-3d-depth style="--depth: 40;">
-                        <i data-lucide="truck" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-500"></i>
+                        <i data-lucide="truck" class="w-3.5 h-3.5 text-emerald-500"></i>
                         <span>Free Freight &ge; &#8369; 20,000</span>
                     </div>
                 </div>
 
                 <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Smooth Bulb Animation") -->
-                <div class="mt-5 sm:mt-6 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[420px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1.5 sm:gap-2 z-20">
+                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[420px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
                     <!-- Power Switch (ON / OFF) -->
                     <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
-                            class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer whitespace-nowrap">
-                        <i data-lucide="power" class="w-3.5 h-3.5"></i>
-                        <span id="luminaire-power-label">LIGHT: ON</span>
+                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
+                        <i data-lucide="power" class="w-3 sm:w-3.5 h-3 sm:h-3.5"></i>
+                        <span id="luminaire-power-label"><span class="hidden sm:inline">LIGHT: </span>ON</span>
                     </button>
 
                     <!-- Kelvin CCT Selector (3000K / 4000K / 6500K) -->
-                    <div class="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
+                    <div class="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60 shrink-0">
                         <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
-                                class="cct-btn px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
+                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
                                 title="3000K Warm White (Architectural Amber)">
                             3000K
                         </button>
                         <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
-                                class="cct-btn px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
+                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
                                 title="4000K Neutral White (Commercial Natural)">
                             4000K
                         </button>
                         <button type="button" onclick="window.setLuminaireCCT('6500K', this)" 
-                                class="cct-btn px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
+                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
                                 title="6500K Daylight (Industrial High-Output)">
                             6500K
                         </button>
@@ -258,9 +274,9 @@
 
                     <!-- Cool Interactive Surge / Pulse Animation Button -->
                     <button type="button" onclick="window.triggerLuminaireSurge()"
-                            class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
                             title="Trigger High-Voltage Photonic Ignition Animation">
-                        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <i data-lucide="zap" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400"></i>
                         <span>Surge</span>
                     </button>
                 </div>
@@ -269,44 +285,44 @@
         </div>
 
         <!-- Hero Bottom Trust Bar (Antixor 4-Point Icon Strip) -->
-        <div class="mt-14 pt-8 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-slate-700 dark:text-slate-300">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/60">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        <div class="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 text-slate-700 dark:text-slate-300">
+            <div class="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-0 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 sm:bg-transparent dark:sm:bg-transparent border border-slate-200/50 dark:border-slate-800/50 sm:border-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/60">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 </div>
-                <div>
-                    <div class="text-xs font-bold text-slate-900 dark:text-white">Direct Factory Importer</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Zero distributor markups</div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900/60">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <div class="text-xs font-bold text-slate-900 dark:text-white">BIR 12% VAT Compliant</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Official serialized SI &amp; DR</div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Direct Factory Importer</div>
+                    <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">Zero distributor markups</div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-900/60">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-0 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 sm:bg-transparent dark:sm:bg-transparent border border-slate-200/50 dark:border-slate-800/50 sm:border-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900/60">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div>
-                    <div class="text-xs font-bold text-slate-900 dark:text-white">24/7 Digital Estimation</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Instant PDF download</div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-900 dark:text-white truncate">BIR 12% VAT Compliant</div>
+                    <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">Official serialized SI &amp; DR</div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900/60">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div class="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-0 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 sm:bg-transparent dark:sm:bg-transparent border border-slate-200/50 dark:border-slate-800/50 sm:border-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-900/60">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div>
-                    <div class="text-xs font-bold text-slate-900 dark:text-white">Jobsite Delivery Fleet</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Coordinated site dispatch</div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-900 dark:text-white truncate">24/7 Digital Estimation</div>
+                    <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">Instant PDF download</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-0 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 sm:bg-transparent dark:sm:bg-transparent border border-slate-200/50 dark:border-slate-800/50 sm:border-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900/60">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Jobsite Delivery Fleet</div>
+                    <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">Coordinated site dispatch</div>
                 </div>
             </div>
         </div>
@@ -414,7 +430,7 @@
         </div>
 
         <!-- Filter Pill Tabs (Interactive JS Filter) -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-8 no-scrollbar">
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-8 no-scrollbar pr-8 sm:pr-0 select-none" style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;">
             <button type="button" 
                     onclick="filterFleetCategory('all', this)"
                     class="fleet-filter-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 bg-[#214fe0] text-white shadow-md">

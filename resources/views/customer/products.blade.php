@@ -84,8 +84,8 @@
 
             <!-- Categories Scroll Container -->
             <div id="category-pills-rail" 
-                 class="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 w-full no-scrollbar select-none"
-                 style="scrollbar-width: none; -ms-overflow-style: none;">
+                 class="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 w-full no-scrollbar select-none pr-8 sm:pr-0"
+                 style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;">
                 <a href="{{ route('customer.products', ['search' => $search]) }}" 
                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 shrink-0 {{ empty($selectedCategory) || $selectedCategory === 'all' ? 'bg-[#214fe0] text-white shadow-md shadow-blue-500/25' : 'bg-slate-100 dark:bg-[#141d33] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-slate-700/60' }}">
                     All Categories
@@ -110,7 +110,7 @@
 </section>
 
 <!-- Products Grid -->
-<section class="py-12 bg-slate-50 dark:bg-[#070b14] transition-colors duration-200">
+<section class="pt-8 sm:pt-12 pb-32 sm:pb-36 bg-slate-50 dark:bg-[#070b14] transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Active Filter Indicator -->
@@ -226,26 +226,27 @@
 </section>
 
 <!-- Floating Cart Action Bar -->
-<div id="floating-cart-bar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-xl px-4 hidden">
-    <div class="bg-slate-900/95 dark:bg-[#0c1322]/95 backdrop-blur text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 dark:border-slate-800 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-[#214fe0] text-white flex items-center justify-center font-bold">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+<div id="floating-cart-bar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-xl px-3 sm:px-4 hidden pointer-events-none">
+    <div class="pointer-events-auto bg-slate-900/95 dark:bg-[#0c1322]/95 backdrop-blur-md text-white px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl shadow-2xl border border-slate-700/80 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-4">
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#214fe0] text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
-            <div>
-                <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span id="floating-cart-count" class="font-mono tabular-nums">0</span> items in Quotation
+            <div class="min-w-0">
+                <div class="text-xs font-bold text-white flex items-center gap-1 truncate">
+                    <span id="floating-cart-count" class="font-mono tabular-nums font-black text-blue-400">0</span>
+                    <span class="truncate">items in Quote</span>
                 </div>
-                <div class="text-[11px] text-slate-400">
+                <div class="text-[10px] sm:text-[11px] text-slate-400 hidden xs:block truncate">
                     Bill of Quantities / Project Inquiry
                 </div>
             </div>
         </div>
 
         <a href="{{ route('customer.quotation-builder') }}" 
-           class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl btn-interactive transition flex items-center gap-2 shadow-sm">
-            <span>Review &amp; Request Quote</span>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+           class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-[11px] sm:text-xs px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl btn-interactive transition flex items-center gap-1.5 sm:gap-2 shadow-sm shrink-0 whitespace-nowrap">
+            <span><span class="hidden sm:inline">Review &amp; </span>Request Quote</span>
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
     </div>
 </div>

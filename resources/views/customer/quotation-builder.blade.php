@@ -68,7 +68,7 @@
                         </div>
 
                         <!-- Items Table -->
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
                             <table class="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-[#161f38] text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
@@ -203,7 +203,7 @@
                 </div>
 
                 <!-- Right Column (4 cols): Summary & Actions -->
-                <div class="lg:col-span-4 space-y-6 sticky top-24">
+                <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
                     
                     <!-- Procurement Summary Card -->
                     <div class="bg-slate-900 dark:bg-[#0c1220] text-white border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
