@@ -30,10 +30,10 @@
             navigation: auto;
         }
         ::view-transition-old(root) {
-            animation: 100ms ease-out both fade-out;
+            animation: 120ms ease-out both fade-out;
         }
         ::view-transition-new(root) {
-            animation: 220ms cubic-bezier(0.16, 1, 0.3, 1) both slide-up;
+            animation: 240ms cubic-bezier(0.16, 1, 0.3, 1) both slide-up;
         }
         @keyframes fade-out {
             from { opacity: 1; }
@@ -48,6 +48,60 @@
         * {
             scroll-behavior: smooth;
         }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            70% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes badgeBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out both;
+        }
+        .animate-pop-in {
+            animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .badge-bounce {
+            animation: badgeBounce 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card-interactive {
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        border-color 0.28s ease;
+            will-change: transform, box-shadow;
+        }
+        .card-interactive:hover {
+            transform: translateY(-4px);
+        }
+
+        .btn-interactive {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-interactive:active {
+            transform: scale(0.97);
+        }
+
         .transition-spring {
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -322,11 +376,11 @@
                 </div>
             </div>
 
-            <!-- Global Support Network Partners (Page 7) -->
+            <!-- Global Component & Technology Alliances -->
             <div class="mt-10 pt-6 border-t border-slate-800/80">
                 <div class="text-center sm:text-left mb-3">
                     <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        Global Support Network & Technology Partners
+                        Global Component & Technology Alliances
                     </span>
                 </div>
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-400">
@@ -414,6 +468,9 @@
                     if (totalItems > 0) {
                         badge.textContent = totalItems;
                         badge.classList.remove('hidden');
+                        badge.classList.remove('badge-bounce');
+                        void badge.offsetWidth;
+                        badge.classList.add('badge-bounce');
                     } else {
                         badge.classList.add('hidden');
                     }

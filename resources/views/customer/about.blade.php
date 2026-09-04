@@ -10,9 +10,9 @@
     <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-30 dark:opacity-20" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-3xl space-y-3">
+        <div class="max-w-3xl space-y-3 animate-fade-in-up">
             <div class="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] border border-blue-200 dark:border-blue-800/60 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
-                <i class="fa-solid fa-lightbulb"></i> Company Profile &bull; HISI (Page 2)
+                <i class="fa-solid fa-lightbulb"></i> Company Profile &bull; HISI Engineering
             </div>
             <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-950 dark:text-white">
                 About Huenics Industrial Sales Inc.
@@ -27,7 +27,7 @@
     </div>
 </section>
 
-<!-- About Us Story & Origin (Page 2 & 3) -->
+<!-- About Us Story & Heritage -->
 <section class="py-16 bg-white dark:bg-[#0a0e1a] transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -67,9 +67,9 @@
                 </div>
             </div>
 
-            <!-- Our Unique Feature, Passion & Pride (Page 4) -->
+            <!-- Core Capabilities: Color, Techniques, Technology -->
             <div class="lg:col-span-6 space-y-4">
-                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-[#3b82f6] transition shadow-sm">
+                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 card-interactive hover:border-blue-300 dark:hover:border-[#3b82f6] shadow-sm">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg font-bold shrink-0">
                             <i class="fa-solid fa-palette"></i>
@@ -84,7 +84,7 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-[#3b82f6] transition shadow-sm">
+                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 card-interactive hover:border-blue-300 dark:hover:border-[#3b82f6] shadow-sm">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center text-lg font-bold shrink-0">
                             <i class="fa-solid fa-gears"></i>
@@ -99,7 +99,7 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-[#3b82f6] transition shadow-sm">
+                <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 card-interactive hover:border-blue-300 dark:hover:border-[#3b82f6] shadow-sm">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold shrink-0">
                             <i class="fa-solid fa-microchip"></i>
@@ -118,50 +118,50 @@
     </div>
 </section>
 
-<!-- Goals & Guiding Principles (Pages 5 & 6) -->
+<!-- Goals & Guiding Principles -->
 <section class="py-16 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <!-- Goals (Page 5) -->
+            <!-- Strategic Performance Goals -->
             <div class="lg:col-span-5 space-y-6">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">What Drives Us</span>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
-                        Our GOALS!
+                        Our Strategic Goals
                     </h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Five bedrock metrics that guide our service execution.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center font-black text-sm">Q</div>
                         <div>
                             <div class="text-sm font-bold text-slate-900 dark:text-white">Quality</div>
                             <div class="text-[11px] text-slate-500 dark:text-slate-400">Unmatched precision</div>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-sm">S</div>
                         <div>
                             <div class="text-sm font-bold text-slate-900 dark:text-white">Speed</div>
                             <div class="text-[11px] text-slate-500 dark:text-slate-400">Prompt fulfillment</div>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-sm">D</div>
                         <div>
                             <div class="text-sm font-bold text-slate-900 dark:text-white">Dependable</div>
                             <div class="text-[11px] text-slate-500 dark:text-slate-400">Consistent execution</div>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-sm">F</div>
                         <div>
                             <div class="text-sm font-bold text-slate-900 dark:text-white">Flexibility</div>
                             <div class="text-[11px] text-slate-500 dark:text-slate-400">Custom indent orders</div>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3 sm:col-span-2">
+                    <div class="bg-white dark:bg-[#111827] p-4 rounded-xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm flex items-center gap-3 sm:col-span-2">
                         <div class="w-10 h-10 rounded-lg bg-slate-900 dark:bg-blue-600 text-white flex items-center justify-center font-black text-sm">C</div>
                         <div>
                             <div class="text-sm font-bold text-slate-900 dark:text-white">Cost</div>
@@ -171,7 +171,7 @@
                 </div>
             </div>
 
-            <!-- Guiding Principles (Page 6) -->
+            <!-- Guiding Principles -->
             <div class="lg:col-span-7 space-y-6">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">Company Culture</span>
@@ -210,13 +210,13 @@
     </div>
 </section>
 
-<!-- Lighting Clinic (Pages 24, 25, 26) -->
+<!-- Lighting Clinic & Technical Maintenance -->
 <section class="py-16 bg-white dark:bg-[#0a0e1a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 dark:from-[#0c1636] dark:via-[#091129] dark:to-[#050b1d] text-white rounded-3xl p-8 sm:p-12 shadow-2xl overflow-hidden relative border border-transparent dark:border-blue-900/40">
             <div class="max-w-3xl space-y-4 relative z-10">
                 <span class="inline-flex items-center gap-1.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    <i class="fa-solid fa-wrench"></i> Value-Added Services
+                    <i class="fa-solid fa-wrench"></i> Specialized Engineering Services
                 </span>
                 <h2 class="text-2xl sm:text-4xl font-black tracking-tight">
                     LIGHTING CLINIC <span class="text-amber-400">&bull;</span> Enercon
@@ -229,7 +229,7 @@
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2">
+                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2 card-interactive">
                         <div class="text-amber-400 font-extrabold text-sm uppercase flex items-center gap-1.5">
                             <i class="fa-solid fa-screwdriver-wrench"></i> We Repair
                         </div>
@@ -238,7 +238,7 @@
                         </p>
                     </div>
 
-                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2">
+                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2 card-interactive">
                         <div class="text-emerald-400 font-extrabold text-sm uppercase flex items-center gap-1.5">
                             <i class="fa-solid fa-bolt"></i> We Upgrade
                         </div>
@@ -247,7 +247,7 @@
                         </p>
                     </div>
 
-                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2">
+                    <div class="bg-slate-800/80 dark:bg-[#111c3a]/90 p-5 rounded-2xl border border-slate-700 dark:border-blue-800/40 space-y-2 card-interactive">
                         <div class="text-blue-400 font-extrabold text-sm uppercase flex items-center gap-1.5">
                             <i class="fa-solid fa-arrows-rotate"></i> We Retrofit
                         </div>
@@ -261,7 +261,7 @@
     </div>
 </section>
 
-<!-- Global Support Network (Page 7) -->
+<!-- Global Support Network -->
 <section class="py-16 bg-slate-50 dark:bg-[#070b14] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-10">
@@ -275,7 +275,7 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">LED Solutions</div>
                 <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
                     <div>Citizen <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">(Micro HumanTech Japan)</span></div>
@@ -284,7 +284,7 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Thermal & Optical</div>
                 <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
                     <div>Khatod Optical Solutions</div>
@@ -293,7 +293,7 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Driver Solutions</div>
                 <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
                     <div>Philips LED Driver</div>
@@ -303,7 +303,7 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Holders & Connectors</div>
                 <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
                     <div>Molex</div>
@@ -314,15 +314,15 @@
     </div>
 </section>
 
-<!-- Corporate Details & Contact Card (Page 7) -->
+<!-- Corporate Details & Contact Card -->
 <section class="py-16 bg-white dark:bg-[#0a0e1a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] dark:from-[#0f216b] dark:via-[#0b1742] dark:to-[#070e24] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-transparent dark:border-blue-900/50">
-            <!-- Diagonal pinstripes from PDF -->
+            <!-- Diagonal pinstripes from brand styling -->
             <div class="absolute inset-0 pointer-events-none opacity-10" style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);"></div>
 
             <div class="lg:col-span-7 space-y-4 relative z-10">
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Head Office & Inquiries &bull; Page 7</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Head Office & Commercial Desk</span>
                 <h2 class="text-2xl sm:text-3xl font-black tracking-tight">
                     Partner With Huenics Industrial Sales Inc.
                 </h2>
@@ -353,12 +353,12 @@
 
             <div class="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center relative z-10">
                 <a href="{{ route('customer.quotation-builder') }}" 
-                   class="inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center shadow-lg">
+                   class="inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center shadow-lg active:scale-[0.98]">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Generate Instant Unofficial Estimate</span>
+                    <span>Generate Instant Quotation Estimate</span>
                 </a>
                 <a href="{{ route('customer.products') }}" 
-                   class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center">
+                   class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 font-bold py-3.5 px-6 rounded-xl transition text-sm text-center active:scale-[0.98]">
                     <i class="fa-solid fa-box-open"></i>
                     <span>Explore Products Catalog</span>
                 </a>

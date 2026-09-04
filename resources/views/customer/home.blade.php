@@ -11,17 +11,17 @@
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left animate-fade-in-up">
                 <!-- Tagline Badge -->
                 <div class="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 text-[#214fe0] dark:text-[#60a5fa] px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-[#214fe0] dark:bg-[#3b82f6] animate-pulse"></span>
                     Direct Importer & Wholesale Engineering Supplier &bull; HISI
                 </div>
                 
-                <!-- Main Title from PDF Cover -->
+                <!-- Main Title -->
                 <div class="space-y-2">
                     <div class="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                        Company Profile &bull; Product Catalog
+                        Commercial Engineering &bull; Industrial Lighting
                     </div>
                     <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-950 dark:text-white leading-[1.12]">
                         Colors &bull; Techniques <br class="hidden sm:inline">
@@ -31,7 +31,7 @@
                     </h1>
                 </div>
 
-                <!-- Slogan from Page 3 -->
+                <!-- Brand Motto -->
                 <div class="p-3.5 bg-blue-50/80 dark:bg-[#111827]/90 border-l-4 border-[#214fe0] dark:border-[#3b82f6] rounded-r-lg max-w-xl mx-auto lg:mx-0 shadow-sm">
                     <p class="text-xs sm:text-sm font-extrabold text-blue-950 dark:text-blue-200 italic">
                         "Focus on Pursuing Quality & Speed of Delivery."
@@ -45,12 +45,12 @@
                 <!-- Actions -->
                 <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
                     <a href="{{ route('customer.quotation-builder') }}" 
-                       class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-600/25 dark:shadow-[0_0_20px_rgba(33,79,224,0.35)] transition transform hover:-translate-y-0.5 text-sm sm:text-base">
+                       class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-600/25 dark:shadow-[0_0_20px_rgba(33,79,224,0.35)] transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] text-sm sm:text-base">
                         <i class="fa-solid fa-file-signature"></i>
                         <span>Generate Instant Quotation (PDF)</span>
                     </a>
                     <a href="{{ route('customer.products') }}" 
-                       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white dark:bg-[#111827] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-700 hover:border-[#214fe0] dark:hover:border-[#3b82f6] font-bold px-6 py-3.5 rounded-xl transition text-sm sm:text-base shadow-sm">
+                       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white dark:bg-[#111827] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-700 hover:border-[#214fe0] dark:hover:border-[#3b82f6] font-bold px-6 py-3.5 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] text-sm sm:text-base shadow-sm">
                         <i class="fa-solid fa-boxes-stacked text-[#214fe0] dark:text-[#60a5fa]"></i>
                         <span>Browse Product Catalog</span>
                     </a>
@@ -212,7 +212,7 @@
     </div>
 </section>
 
-<!-- Three Core Pillars (Page 4) -->
+<!-- Three Strategic Pillars -->
 <section class="py-16 bg-slate-100 dark:bg-[#070b14] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-12">
@@ -227,7 +227,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Right Color -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl font-bold">
                     <i class="fa-solid fa-palette"></i>
                 </div>
@@ -239,7 +239,7 @@
             </div>
 
             <!-- Utilizing Techniques -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] flex items-center justify-center text-xl font-bold">
                     <i class="fa-solid fa-gears"></i>
                 </div>
@@ -251,7 +251,7 @@
             </div>
 
             <!-- Stand Out Technology -->
-            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div class="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 card-interactive shadow-sm space-y-3">
                 <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl font-bold">
                     <i class="fa-solid fa-microchip"></i>
                 </div>
@@ -265,17 +265,17 @@
     </div>
 </section>
 
-<!-- Lighting Clinic & Value-Added Services (Pages 24-26) -->
+<!-- Lighting Clinic & Technical Services -->
 <section class="py-16 bg-white dark:bg-[#0a0e1a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] dark:from-[#0d1b4a] dark:via-[#0a1334] dark:to-[#050b1d] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden border border-transparent dark:border-blue-900/40">
-            <!-- Diagonal pinstripe overlay from PDF -->
+            <!-- Diagonal pinstripe overlay from brand styling -->
             <div class="absolute inset-0 pointer-events-none opacity-10" style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);"></div>
 
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div class="lg:col-span-6 space-y-4">
                     <span class="inline-flex items-center gap-1.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                        <i class="fa-solid fa-wrench"></i> Value-Added Services &bull; Pages 24-26
+                        <i class="fa-solid fa-wrench"></i> Specialized Engineering Services &bull; Enercon
                     </span>
                     <h2 class="text-2xl sm:text-4xl font-black tracking-tight">
                         LIGHTING CLINIC <span class="text-amber-400">&bull;</span> Enercon

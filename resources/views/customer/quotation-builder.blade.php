@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Header Banner (PDF Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="bg-white dark:bg-[#070b14] py-10 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200">
+<section class="bg-white dark:bg-[#070b14] py-10 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
     <!-- Diagonal Stripes Accent -->
     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none"></div>
     <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25 dark:opacity-15" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
@@ -23,7 +23,7 @@
                 </p>
             </div>
             <a href="{{ route('customer.products') }}" 
-               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm dark:shadow-[0_0_15px_rgba(33,79,224,0.3)] transition">
+               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm dark:shadow-[0_0_15px_rgba(33,79,224,0.3)] btn-interactive transition">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add More From Catalog</span>
             </a>
@@ -58,13 +58,13 @@
                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <button type="button" 
                                         onclick="openAddCatalogModal()" 
-                                        class="flex-1 sm:flex-initial bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] hover:bg-blue-100 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800/60 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm">
+                                        class="flex-1 sm:flex-initial bg-blue-50 dark:bg-blue-950/70 text-[#214fe0] dark:text-[#60a5fa] hover:bg-blue-100 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800/60 text-xs font-bold px-3 py-2 rounded-lg btn-interactive transition flex items-center justify-center gap-1.5 shadow-sm">
                                     <i class="fa-solid fa-cart-plus"></i>
                                     <span>Add from Catalog</span>
                                 </button>
                                 <button type="button" 
                                         onclick="addCustomRow()" 
-                                        class="flex-1 sm:flex-initial bg-slate-100 dark:bg-[#1a2440] text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                                        class="flex-1 sm:flex-initial bg-slate-100 dark:bg-[#1a2440] text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-bold px-3 py-2 rounded-lg btn-interactive transition flex items-center justify-center gap-1.5">
                                     <i class="fa-solid fa-plus"></i>
                                     <span>Add Custom Item</span>
                                 </button>
@@ -237,28 +237,28 @@
                             <!-- Primary Official Request Button -->
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='request_quotation'"
-                                    class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                    class="w-full bg-emerald-600 hover:bg-emerald-500 btn-interactive text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <i class="fa-solid fa-paper-plane text-base"></i>
                                 <span>Request Official Quotation (Encode)</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='download_pdf'"
-                                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.98] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 btn-interactive text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <i class="fa-solid fa-file-pdf text-base"></i>
                                 <span>Download Estimate PDF</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='preview_pdf'"
-                                    class="w-full bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs">
+                                    class="w-full bg-slate-800 hover:bg-slate-700 btn-interactive text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs">
                                 <i class="fa-solid fa-eye"></i>
                                 <span>Preview PDF in New Tab</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='view'"
-                                    class="w-full bg-transparent hover:bg-slate-800 active:scale-[0.98] text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
+                                    class="w-full bg-transparent hover:bg-slate-800 btn-interactive text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-desktop"></i>
                                 <span>View Web Summary & Print</span>
                             </button>

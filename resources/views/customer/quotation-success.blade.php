@@ -7,7 +7,7 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         <!-- Success Alert / Action Banner (Hidden on Print) -->
-        <div class="print:hidden bg-white dark:bg-[#111827] border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors">
+        <div class="print:hidden bg-white dark:bg-[#111827] border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors animate-fade-in-up">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl font-bold shrink-0">
                     <i class="fa-solid fa-circle-check"></i>
@@ -25,19 +25,19 @@
 
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
                 <a href="{{ route('customer.quotation.download-pdf', ['payload' => base64_encode(json_encode($quote))]) }}" 
-                   class="flex-1 md:flex-initial bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
+                   class="flex-1 md:flex-initial bg-[#214fe0] hover:bg-[#1a42be] btn-interactive text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
                     <i class="fa-solid fa-file-pdf"></i>
                     <span>Download PDF</span>
                 </a>
 
                 <button type="button" onclick="window.print()" 
-                        class="flex-1 md:flex-initial bg-slate-800 dark:bg-[#161f38] hover:bg-slate-700 dark:hover:bg-slate-700 text-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-transparent dark:border-slate-700">
+                        class="flex-1 md:flex-initial bg-slate-800 dark:bg-[#161f38] hover:bg-slate-700 dark:hover:bg-slate-700 btn-interactive text-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-transparent dark:border-slate-700">
                     <i class="fa-solid fa-print"></i>
                     <span>Print</span>
                 </button>
 
                 <a href="{{ route('customer.quotation-builder') }}" 
-                   class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700">
+                   class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 btn-interactive text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>New Estimate</span>
                 </a>
@@ -45,7 +45,7 @@
         </div>
 
         <!-- Printable Document Container -->
-        <div class="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 sm:p-12 shadow-lg space-y-8 transition-colors print:bg-white print:text-slate-900 print:border-none print:shadow-none print:p-0">
+        <div class="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 sm:p-12 shadow-lg space-y-8 transition-colors animate-fade-in print:bg-white print:text-slate-900 print:border-none print:shadow-none print:p-0">
             
             <!-- Document Header with PDF HISI Logo -->
             <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 dark:border-slate-800 pb-6 print:border-slate-200">

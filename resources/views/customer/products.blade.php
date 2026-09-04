@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Header Banner (PDF Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="bg-white dark:bg-[#070b14] py-12 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200">
+<section class="bg-white dark:bg-[#070b14] py-12 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
     <!-- Diagonal Stripes Accent -->
     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none"></div>
     <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25 dark:opacity-15" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
@@ -21,7 +21,7 @@
                 </p>
             </div>
             <a href="{{ route('customer.quotation-builder') }}" 
-               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md dark:shadow-[0_0_15px_rgba(33,79,224,0.3)] transition shrink-0">
+               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md dark:shadow-[0_0_15px_rgba(33,79,224,0.3)] btn-interactive shrink-0">
                 <i class="fa-solid fa-file-signature"></i>
                 <span>Open Quotation Builder</span>
             </a>
@@ -82,7 +82,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($products as $product)
-            <div class="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-slate-800 hover:border-[#214fe0] dark:hover:border-[#3b82f6] rounded-2xl p-4 shadow-sm hover:shadow-xl dark:hover:shadow-[0_12px_30px_rgba(33,79,224,0.18)] hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col justify-between group">
+            <div class="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-slate-800 hover:border-[#214fe0] dark:hover:border-[#3b82f6] rounded-2xl p-4 shadow-sm hover:shadow-xl dark:hover:shadow-[0_12px_30px_rgba(33,79,224,0.18)] card-interactive flex flex-col justify-between group">
                 <div>
                     <!-- Product Image Container -->
                     <div class="relative w-full h-44 bg-slate-100/90 dark:bg-[#161f38]/90 rounded-xl overflow-hidden mb-3 flex items-center justify-center border border-slate-200/70 dark:border-slate-800/80 group-hover:border-blue-300 dark:group-hover:border-blue-600 transition-colors">
@@ -144,7 +144,7 @@
 
                         <button type="button" 
                                 onclick="addProductToQuote({{ json_encode($product) }}, document.getElementById('qty-{{ $product->id }}').value)"
-                                class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] text-white text-xs font-bold py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
+                                class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] btn-interactive text-white text-xs font-bold py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
                             <i class="fa-solid fa-cart-plus text-xs"></i>
                             <span>Add to Quote</span>
                         </button>
@@ -190,7 +190,7 @@
         </div>
 
         <a href="{{ route('customer.quotation-builder') }}" 
-           class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+           class="bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold text-xs px-4 py-2.5 rounded-xl btn-interactive transition flex items-center gap-2 shadow-sm">
             <span>Review & Generate PDF</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
         </a>
@@ -226,9 +226,13 @@
             const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.line_total) || 0), 0);
             countEl.textContent = totalQty;
             subtotalEl.textContent = '₱ ' + subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            bar.classList.remove('hidden');
+            if (bar.classList.contains('hidden')) {
+                bar.classList.remove('hidden');
+                bar.classList.add('animate-pop-in');
+            }
         } else {
             bar.classList.add('hidden');
+            bar.classList.remove('animate-pop-in');
         }
     }
 

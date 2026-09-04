@@ -289,4 +289,65 @@ class SalesDashboardTest extends TestCase
             ->assertSee('₱950,000.03')
             ->assertSee('₱285,000.01');
     }
+
+    public function test_sales_revenue_chart_widget_adapts_to_granularity_and_agent_filters(): void
+    {
+        $this->actingAs($this->admin);
+
+        PurchaseOrder::create([
+            'po_number' => 'PO-CHART-TEST',
+            'order_date' => '2026-08-15',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Chart Customer',
+            'order_amount' => 175000.00,
+            'realized_profit' => 52500.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        Quotation::create([
+            'quotation_number' => 'HISI-Q-CHART-TEST',
+            'quotation_date' => '2026-08-14',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Chart Customer',
+            'total_amount' => 250000.00,
+            'status' => Quotation::STATUS_APPROVED,
+        ]);
+
+        // Test ChartWidget with month view
+        $chart = Livewire::test(\App\Filament\Widgets\SalesRevenueChartWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 8,
+            'selectedAgentId' => $this->salesRep->id,
+        ])
+            ->assertSuccessful();
+
+        $this->assertStringContainsString('August 2026', $chart->instance()->getHeading());
+        $this->assertStringContainsString('Sales Executive One', $chart->instance()->getDescription());
+
+        // Test dispatching filter update to week view
+        $chart->dispatch('salesFilterUpdated', [
+            'periodType' => 'weeks',
+            'selectedYear' => 2026,
+            'selectedWeek' => 33,
+            'selectedAgentId' => $this->salesRep->id,
+            'filterInhouse' => false,
+        ]);
+
+        $this->assertStringContainsString('Week 33 (2026)', $chart->instance()->getHeading());
+
+        // Test dispatching inhouse filter
+        $chart->dispatch('salesFilterUpdated', [
+            'periodType' => 'years',
+            'selectedYear' => 2026,
+            'selectedAgentId' => null,
+            'filterInhouse' => true,
+        ]);
+
+        $this->assertStringContainsString('Annual Revenue & Quotation Trend — 2026', $chart->instance()->getHeading());
+        $this->assertStringContainsString('Inhouse / Owner Accounts', $chart->instance()->getDescription());
+    }
 }

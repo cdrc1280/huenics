@@ -252,7 +252,9 @@ class SalesDashboard extends Page implements HasTable, HasForms
     {
         return [
             'agentId' => $this->filterData['selectedAgentId'] ?? null,
+            'selectedAgentId' => $this->filterData['selectedAgentId'] ?? null,
             'isInhouse' => (bool) ($this->filterData['filterInhouse'] ?? false),
+            'filterInhouse' => (bool) ($this->filterData['filterInhouse'] ?? false),
             'periodType' => $this->filterData['periodType'] ?? 'month',
             'selectedDate' => $this->filterData['selectedDate'] ?? now()->toDateString(),
             'selectedWeek' => (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear),
@@ -331,10 +333,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
     protected function getHeaderWidgets(): array
     {
-        return [
-            SalesOverviewWidget::class,
-            SalesRevenueChartWidget::class,
-        ];
+        return [];
     }
 
     public function table(Table $table): Table

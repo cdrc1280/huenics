@@ -50,8 +50,16 @@
     </style>
 
     <div class="space-y-6">
+        {{-- 1. Sales Performance Filters Section at the very top --}}
         {{ $this->form }}
 
+        {{-- 2. Sales Overview KPI Stat Cards --}}
+        @livewire(\App\Filament\Widgets\SalesOverviewWidget::class, $this->getWidgetData(), key('sales-overview-widget'))
+
+        {{-- 3. Revenue & Pipeline Trend Chart --}}
+        @livewire(\App\Filament\Widgets\SalesRevenueChartWidget::class, $this->getWidgetData(), key('sales-revenue-chart-widget'))
+
+        {{-- 4. Sales Leaderboard Rankings Table --}}
         {{ $this->table }}
     </div>
 </x-filament-panels::page>
