@@ -37,6 +37,20 @@ class ActivityLogResource extends Resource
     protected static ?int $navigationSort = 2;
     protected static ?string $slug = 'activity-logs';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $commercialTypes = [
+            Transaction::class,
+            PurchaseOrder::class,
+            Quotation::class,
+            SalesInvoice::class,
+            DeliveryReceipt::class,
+        ];
+
+        return parent::getEloquentQuery()
+            ->whereIn('auditable_type', $commercialTypes);
+    }
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->canViewActivityLogs() ?? false;

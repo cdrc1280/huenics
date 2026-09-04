@@ -140,17 +140,17 @@
 
                             <div>
                                 <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Company / Contractor Name
+                                    Company / Contractor Name <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="customer_company" placeholder="e.g. MGS Construction & Supply Corp." title="Company or Contractor Name"
+                                <input type="text" name="customer_company" required placeholder="e.g. MGS Construction & Supply Corp." title="Company or Contractor Name"
                                        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-[#161f38] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#161f38]">
                             </div>
 
                             <div>
                                 <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Contact Phone / Mobile
+                                    Contact Phone / Mobile <span class="text-red-500">*</span>
                                 </label>
-                                <input type="tel" name="phone_no" placeholder="e.g. 0917-123-4567 / (02) 8987-6543" title="Contact Phone Number" pattern="^[0-9\-\+\(\)\s]*$"
+                                <input type="tel" name="phone_no" required placeholder="e.g. 0917-123-4567 / (02) 8987-6543" title="Contact Phone Number" pattern="^[0-9\-\+\(\)\s]*$"
                                        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-[#161f38] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#161f38]">
                             </div>
 
@@ -234,23 +234,31 @@
 
                         <!-- Action Buttons -->
                         <div class="space-y-2.5 pt-2">
+                            <!-- Primary Official Request Button -->
+                            <button type="submit" 
+                                    onclick="document.getElementById('form-action').value='request_quotation'"
+                                    class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-paper-plane text-base"></i>
+                                <span>Request Official Quotation (Encode)</span>
+                            </button>
+
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='download_pdf'"
-                                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.98] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <i class="fa-solid fa-file-pdf text-base"></i>
-                                <span>Download Unofficial PDF</span>
+                                <span>Download Estimate PDF</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='preview_pdf'"
-                                    class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-xs">
+                                    class="w-full bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-200 border border-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs">
                                 <i class="fa-solid fa-eye"></i>
                                 <span>Preview PDF in New Tab</span>
                             </button>
 
                             <button type="submit" 
                                     onclick="document.getElementById('form-action').value='view'"
-                                    class="w-full bg-transparent hover:bg-slate-800 text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
+                                    class="w-full bg-transparent hover:bg-slate-800 active:scale-[0.98] text-slate-300 hover:text-white font-medium py-2 px-4 rounded-xl transition text-xs flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-desktop"></i>
                                 <span>View Web Summary & Print</span>
                             </button>

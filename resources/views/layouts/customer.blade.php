@@ -24,14 +24,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Smooth View Transitions API (Modern SPA-grade feel) */
+        @view-transition {
+            navigation: auto;
+        }
+        ::view-transition-old(root) {
+            animation: 100ms ease-out both fade-out;
+        }
+        ::view-transition-new(root) {
+            animation: 220ms cubic-bezier(0.16, 1, 0.3, 1) both slide-up;
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Spring & Inertia Micro-Interactions */
+        * {
+            scroll-behavior: smooth;
+        }
+        .transition-spring {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hover-lift {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Glassmorphism Panels */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .dark .glass-panel {
-            background: rgba(17, 24, 39, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(11, 15, 25, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
+
         /* Bulletproof single-icon display per theme */
         html.dark #theme-icon-sun { display: inline-block !important; }
         html.dark #theme-icon-moon { display: none !important; }

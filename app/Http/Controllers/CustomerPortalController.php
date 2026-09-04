@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Quotation;
+use App\Models\QuotationLineItem;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -52,7 +54,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $categories = $this->getActiveCategories();
 
         $totalProductsCount = Product::query()->where('is_active', true)->count();
-        $yearsInBusiness = date('Y') - 2008;
+        $yearsInBusiness = 4;
 
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,
@@ -128,19 +130,20 @@ class CustomerPortalController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'customer_name'    => 'required|string|max:150',
-            'customer_company' => 'nullable|string|max:150',
+            'customer_company' => 'required|string|max:150',
             'email'            => 'nullable|email|max:150',
-            'phone_no'         => 'nullable|string|max:50',
+            'phone_no'         => 'required|string|max:50',
             'project_name'     => 'nullable|string|max:150',
             'project_location' => 'nullable|string|max:255',
             'notes'            => 'nullable|string|max:1000',
             'items'            => 'required|array|min:1',
+            'items.*.product_id'  => 'nullable|integer',
             'items.*.description' => 'required|string|max:255',
             'items.*.quantity'    => 'required|numeric|min:0.01',
             'items.*.unit_price'  => 'required|numeric|min:0',
             'items.*.unit'        => 'nullable|string|max:20',
             'items.*.item_code'   => 'nullable|string|max:50',
-            'action'              => 'nullable|string|in:download_pdf,preview_pdf,view',
+            'action'              => 'nullable|string|in:download_pdf,preview_pdf,view,encode,request_quotation',
         ]);
 
         $subtotal = 0.0;
@@ -152,27 +155,88 @@ class CustomerPortalController extends Controller implements HasMiddleware
             $lineTotal = round($qty * $price, 2);
             $subtotal += $lineTotal;
 
+            $productId = !empty($item['product_id']) ? (int) $item['product_id'] : null;
+            $product = $productId ? Product::find($productId) : null;
+            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('ITM-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
+            $desc = $item['description'] ?: ($product?->canonical_name ?? 'Product Line Item');
+
             $items[] = [
-                'item_code'   => $item['item_code'] ?? ('ITM-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)),
-                'description' => $item['description'],
-                'quantity'    => $qty,
-                'unit'        => $item['unit'] ?? 'pcs',
-                'unit_price'  => $price,
-                'line_total'  => $lineTotal,
+                'product_id'   => $productId,
+                'item_code'    => $itemCode,
+                'description'  => $desc,
+                'quantity'     => $qty,
+                'unit'         => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
+                'unit_price'   => $price,
+                'line_total'   => $lineTotal,
+                'base64_image' => $product?->base64_image,
             ];
         }
 
         $vatAmount = round($subtotal * 0.12, 2);
         $grandTotal = round($subtotal + $vatAmount, 2);
 
-        $refNumber = 'UNOFF-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        $action = $request->input('action', 'view');
+        $isEncoded = false;
+
+        if (in_array($action, ['request_quotation', 'encode'], true)) {
+            $refNumber = 'QTN-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $quotation = Quotation::create([
+                'quotation_number' => $refNumber,
+                'customer_name'    => $validated['customer_name'],
+                'customer_company' => $validated['customer_company'],
+                'phone_no'         => $validated['phone_no'],
+                'project_name'     => $validated['project_name'] ?: 'Customer Web Inquiry',
+                'project_location' => $validated['project_location'] ?: 'Metro Manila',
+                'quotation_date'   => now()->toDateString(),
+                'valid_until'      => now()->addDays(30)->toDateString(),
+                'total_amount'     => $grandTotal,
+                'status'           => Quotation::STATUS_PENDING,
+                'notes'            => ($validated['notes'] ?? '') . "\n[Received via Online Quotation Portal. Email: " . ($validated['email'] ?? 'N/A') . " | Tel: {$validated['phone_no']}]",
+            ]);
+
+            foreach ($items as $idx => $line) {
+                $baseCost = round((float) $line['unit_price'] * 0.7, 2);
+                $quotation->lineItems()->create([
+                    'line_no'          => $idx + 1,
+                    'item_code'        => $line['item_code'],
+                    'product_id'       => $line['product_id'],
+                    'description'      => $line['description'],
+                    'qty'              => $line['quantity'],
+                    'unit'             => $line['unit'],
+                    'unit_price'       => $line['unit_price'],
+                    'line_total'       => $line['line_total'],
+                    'base_cost'        => $baseCost,
+                    'gross_profit'     => round($line['line_total'] - ($line['quantity'] * $baseCost), 2),
+                ]);
+            }
+
+            $isEncoded = true;
+
+            // Attempt mail alert if mail driver configured
+            try {
+                $salesEmail = 'huenicsindustrialsales@gmail.com';
+                $customerEmail = $validated['email'] ?? null;
+                $mailBody = "New Formal Quotation Request #{$refNumber}\n\nCustomer: {$validated['customer_name']}\nCompany: {$validated['customer_company']}\nPhone: {$validated['phone_no']}\nEmail: " . ($customerEmail ?? 'N/A') . "\nEst. Total: ₱" . number_format($grandTotal, 2) . "\nItems: " . count($items) . "\n\nPlease review this in the Admin Panel under Quotations.";
+
+                @mail($salesEmail, "New Quotation Request: {$refNumber} - {$validated['customer_company']}", $mailBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
+
+                if ($customerEmail) {
+                    $ackBody = "Dear {$validated['customer_name']},\n\nThank you for requesting a quotation from Huenics Industrial Sales Inc.\nYour official inquiry reference is #{$refNumber}.\n\nEstimated Total: ₱" . number_format($grandTotal, 2) . " (VAT Inc.)\nOur technical sales team will review your project requirements and contact you shortly at {$validated['phone_no']}.\n\nHuenics Industrial Sales Inc.\nTel. #8561 6836 | CS: +63 968 8500720";
+                    @mail($customerEmail, "Huenics Quotation Request Confirmation #{$refNumber}", $ackBody, "From: " . (config('mail.from.address') ?: 'info@huenics.com'));
+                }
+            } catch (\Throwable $e) {
+                // Non-blocking
+            }
+        } else {
+            $refNumber = 'UNOFF-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        }
 
         $quoteData = [
             'quotation_number' => $refNumber,
             'customer_name'    => $validated['customer_name'] ?? 'Walk-in Client',
-            'customer_company' => !empty($validated['customer_company']) ? $validated['customer_company'] : 'Individual / Direct Buyer',
+            'customer_company' => $validated['customer_company'],
             'email'            => !empty($validated['email']) ? $validated['email'] : 'N/A',
-            'phone_no'         => !empty($validated['phone_no']) ? $validated['phone_no'] : 'N/A',
+            'phone_no'         => $validated['phone_no'],
             'project_name'     => !empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement',
             'project_location' => !empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
             'quotation_date'   => now()->format('Y-m-d'),
@@ -182,12 +246,11 @@ class CustomerPortalController extends Controller implements HasMiddleware
             'subtotal'         => $subtotal,
             'vat_amount'       => $vatAmount,
             'grand_total'      => $grandTotal,
+            'is_encoded'       => $isEncoded,
         ];
 
         // Store last generated quotation in session for quick re-downloads
         session(['last_unofficial_quote' => $quoteData]);
-
-        $action = $request->input('action', 'view');
 
         if ($action === 'download_pdf') {
             return $this->pdfExporter->downloadResponse($quoteData);

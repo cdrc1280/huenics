@@ -23,6 +23,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -253,7 +254,23 @@ class QuotationResource extends Resource
                                         }
                                     }
                                 })
-                                ->columnSpan(6),
+                                ->columnSpan(5),
+
+                            Placeholder::make('product_image_preview')
+                                ->label('Photo')
+                                ->content(function ($get) {
+                                    $pId = $get('product_id');
+                                    if (!$pId) {
+                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    }
+                                    $product = Product::find($pId);
+                                    $url = $product?->image_url;
+                                    if (!$url) {
+                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    }
+                                    return new \Illuminate\Support\HtmlString('<img src="' . e($url) . '" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
+                                })
+                                ->columnSpan(1),
 
                             TextInput::make('qty')
                                 ->label('Qty')

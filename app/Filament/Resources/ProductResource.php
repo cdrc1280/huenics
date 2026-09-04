@@ -17,6 +17,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -134,12 +135,64 @@ class ProductResource extends Resource
                         Toggle::make('is_composite')
                             ->label('Composite Modular BOM Product')
                             ->helperText('Enable for modular products assembled from sub-components (e.g. LED Tracklight with COB/Driver).')
-                            ->default(false),
+                            ->default(false)
+                            ->live(),
 
                         Toggle::make('is_active')
                             ->label('Active in Catalog')
                             ->default(true),
                     ])->columnSpanFull(),
+
+                Section::make('Modular Bill of Materials (BOM) & Parts')
+                    ->description('Configure dynamic sub-components and modular parts for this product (e.g., LED COB, Driver, Housing, Optics).')
+                    ->icon('heroicon-o-puzzle-piece')
+                    ->visible(fn($get) => (bool) $get('is_composite'))
+                    ->schema([
+                        Repeater::make('components')
+                            ->relationship('components')
+                            ->label('Sub-Components & Parts')
+                            ->schema([
+                                TextInput::make('component_group')
+                                    ->label('Part Group / Category')
+                                    ->placeholder('e.g. LED COB, LED Driver, Optics, Housing')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->columnSpan(['default' => 12, 'sm' => 3]),
+
+                                TextInput::make('option_name')
+                                    ->label('Part Name / Specification')
+                                    ->placeholder('e.g. Citizen COB 3000K, Meanwell 700mA')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->columnSpan(['default' => 12, 'sm' => 3]),
+
+                                Select::make('component_product_id')
+                                    ->label('Catalog Part (Optional)')
+                                    ->options(fn() => Product::pluck('canonical_name', 'id'))
+                                    ->searchable()
+                                    ->nullable()
+                                    ->columnSpan(['default' => 12, 'sm' => 3]),
+
+                                TextInput::make('additional_cost')
+                                    ->label('Additional Cost (₱)')
+                                    ->numeric()
+                                    ->prefix('₱')
+                                    ->default(0.00)
+                                    ->columnSpan(['default' => 12, 'sm' => 2]),
+
+                                Toggle::make('is_default')
+                                    ->label('Default')
+                                    ->inline(false)
+                                    ->default(false)
+                                    ->columnSpan(['default' => 12, 'sm' => 1]),
+                            ])
+                            ->columns(12)
+                            ->defaultItems(0)
+                            ->addActionLabel('+ Add Part / Sub-Component')
+                            ->reorderable()
+                            ->cloneable(),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

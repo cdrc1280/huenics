@@ -698,6 +698,11 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             return false;
         }
 
+        // Purchase Orders are strictly read-only in the review queue
+        if ($this->currentDocument->document_type === Document::TYPE_PURCHASE_ORDER) {
+            return true;
+        }
+
         $user = auth()->user();
         if (!$user) {
             return true;
@@ -894,9 +899,9 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
     }
 
-    public function updatedEditableItems(): void
+    public function recalculateAllFigures(): void
     {
-        // Dynamically recompute lines when user edits qty or unit price or discounted price
+        $subtotal = 0.0;
         foreach ($this->editableItems as $index => $item) {
             $qty = isset($item['qty']) ? (float) $item['qty'] : 0.0;
             $unitPrice = isset($item['unit_price']) ? (float) $item['unit_price'] : 0.0;
@@ -906,7 +911,28 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $this->editableItems[$index]['computed_total'] = $computed;
             $this->editableItems[$index]['printed_total'] = $computed;
             $this->editableItems[$index]['total_mismatch'] = false;
+            $subtotal += $computed;
         }
+
+        $this->printedSubtotal = round($subtotal, 2);
+        $this->printedVat = round($subtotal * 0.12, 2);
+        $this->printedTotal = round($this->printedSubtotal + $this->printedVat, 2);
+
+        if ($this->currentDocument && $this->currentDocument->totals) {
+            $this->currentDocument->totals->update([
+                'printed_subtotal' => $this->printedSubtotal,
+                'printed_vat' => $this->printedVat,
+                'printed_total' => $this->printedTotal,
+                'computed_subtotal' => $this->printedSubtotal,
+                'computed_vat' => $this->printedVat,
+                'computed_grand_total' => $this->printedTotal,
+            ]);
+        }
+    }
+
+    public function updatedEditableItems(): void
+    {
+        $this->recalculateAllFigures();
     }
 
     public function addLineItem(): void
@@ -927,6 +953,8 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             'total_mismatch' => false,
             'product_id' => null,
         ];
+
+        $this->recalculateAllFigures();
     }
 
     public function cloneLineItem(int $index): void
@@ -938,7 +966,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
             array_splice($this->editableItems, $index + 1, 0, [$item]);
             $this->reindexLineNumbers();
-            $this->updatedEditableItems();
+            $this->recalculateAllFigures();
         }
     }
 
@@ -1003,6 +1031,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             unset($this->editableItems[$index]);
             $this->editableItems = array_values($this->editableItems);
             $this->reindexLineNumbers();
+            $this->recalculateAllFigures();
         }
     }
 
@@ -1250,6 +1279,15 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public function getUnitOptionsProperty(): array
     {
         return \App\Enums\UnitOfMeasure::options();
+    }
+
+    public function getProductThumbnailsProperty(): array
+    {
+        return \Illuminate\Support\Facades\Cache::remember('lookup_product_thumbnails', 120, function () {
+            return Product::all(['id', 'image_path'])->mapWithKeys(function ($p) {
+                return [$p->id => $p->image_url];
+            })->toArray();
+        });
     }
 }
 

@@ -153,18 +153,27 @@
         <!-- Featured Products Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($featuredProducts as $product)
-            <div class="bg-white dark:bg-[#111827] border-2 border-slate-200 dark:border-slate-800 hover:border-[#214fe0] dark:hover:border-[#3b82f6] rounded-xl p-5 hover:shadow-lg dark:hover:shadow-[0_0_25px_rgba(59,130,246,0.2)] transition group flex flex-col justify-between">
+            <div class="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-slate-800 hover:border-[#214fe0] dark:hover:border-[#3b82f6] rounded-2xl p-4.5 hover:shadow-xl dark:hover:shadow-[0_12px_30px_rgba(33,79,224,0.18)] hover:-translate-y-1.5 transition-all duration-300 ease-out group flex flex-col justify-between">
                 <div>
-                    <div class="flex justify-between items-start gap-2 mb-3">
-                        <span class="hisi-pill-badge">
+                    <!-- Product Image Container -->
+                    <div class="relative w-full h-44 bg-slate-100/90 dark:bg-[#161f38]/90 rounded-xl overflow-hidden mb-3.5 flex items-center justify-center border border-slate-200/70 dark:border-slate-800/80 group-hover:border-blue-300 dark:group-hover:border-blue-600 transition-colors">
+                        @if($product->image_url)
+                            <img src="{{ $product->image_url }}" alt="{{ $product->canonical_name }}" loading="lazy" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300 ease-out">
+                        @else
+                            <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                                <i class="fa-solid fa-lightbulb text-3xl opacity-50 mb-1.5 group-hover:text-[#214fe0] dark:group-hover:text-[#60a5fa] transition-colors"></i>
+                                <span class="text-[10px] font-bold tracking-wider uppercase font-mono">{{ $product->category ?: 'Lighting' }}</span>
+                            </div>
+                        @endif
+                        <span class="absolute top-2.5 left-2.5 hisi-pill-badge shadow-sm">
                             {{ strtoupper($product->category ?: 'General Supplies') }}
                         </span>
-                        <span class="text-xs font-mono text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-[#161f38] px-2 py-0.5 rounded">
+                        <span class="absolute top-2.5 right-2.5 text-[10px] font-mono text-slate-600 dark:text-slate-300 font-bold bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur px-2 py-0.5 rounded shadow-sm border border-slate-200/60 dark:border-slate-700/60">
                             {{ $product->sku ?: $product->product_code ?: 'SKU-00' }}
                         </span>
                     </div>
 
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-[#214fe0] dark:group-hover:text-[#60a5fa] transition mb-2">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-[#214fe0] dark:group-hover:text-[#60a5fa] transition mb-1.5">
                         {{ $product->canonical_name }}
                     </h3>
 
@@ -173,15 +182,12 @@
                     </p>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div class="flex justify-between items-baseline mb-3">
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Catalog Price:</span>
-                        <div class="text-right">
-                            <span class="text-base font-black text-[#214fe0] dark:text-[#60a5fa]">
-                                ₱ {{ number_format($product->display_price ?? ($product->selling_price ?: $product->default_price), 2) }}
-                            </span>
-                            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-normal"> / {{ $product->unit_default ?: 'pcs' }}</span>
-                        </div>
+                <div class="pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Pricing:</span>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#214fe0] dark:text-[#60a5fa] bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 rounded-full shadow-xs">
+                            <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Quote Upon Request
+                        </span>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -189,8 +195,8 @@
                                class="w-16 text-center text-xs font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f38] text-slate-900 dark:text-white rounded-lg py-2 focus:ring-2 focus:ring-[#214fe0] focus:outline-none">
                         <button type="button" 
                                 onclick="addProductToQuote({{ json_encode($product) }}, document.getElementById('qty-{{ $product->id }}').value)"
-                                class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] text-white text-xs font-bold py-2.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
-                            <i class="fa-solid fa-plus text-xs"></i>
+                                class="flex-1 bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] text-white text-xs font-bold py-2.5 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm dark:shadow-[0_0_12px_rgba(33,79,224,0.3)]">
+                            <i class="fa-solid fa-cart-plus text-xs"></i>
                             <span>Add to Quote</span>
                         </button>
                     </div>

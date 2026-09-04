@@ -26,6 +26,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -323,7 +324,23 @@ class PurchaseOrderResource extends Resource
                                         }
                                     }
                                 })
-                                ->columnSpan(6),
+                                ->columnSpan(5),
+
+                            Placeholder::make('product_image_preview')
+                                ->label('Photo')
+                                ->content(function ($get) {
+                                    $pId = $get('product_id');
+                                    if (!$pId) {
+                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    }
+                                    $product = Product::find($pId);
+                                    $url = $product?->image_url;
+                                    if (!$url) {
+                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    }
+                                    return new \Illuminate\Support\HtmlString('<img src="' . e($url) . '" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
+                                })
+                                ->columnSpan(1),
 
                             TextInput::make('qty')
                                 ->label('Qty')
@@ -647,11 +664,12 @@ class PurchaseOrderResource extends Resource
     public static function getLinkToQuotationAction(): Action
     {
         return Action::make('link_to_quotation')
-            ->label(fn(PurchaseOrder $record): string => $record->quotation_id ? 'Change Linked Quotation' : 'Link to Approved Quotation')
+            ->label(fn(?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'Change Linked Quotation' : 'Link to Approved Quotation')
             ->icon('heroicon-m-link')
-            ->color(fn(PurchaseOrder $record): string => $record->quotation_id ? 'gray' : 'info')
-            ->tooltip(fn(PurchaseOrder $record): string => $record->quotation ? "Currently linked to Quotation {$record->quotation->quotation_number}. Click to change or unlink." : 'Link this PO to an approved quotation')
-            ->modalHeading(fn(PurchaseOrder $record): string => "Link PO #{$record->po_number} to Approved Quotation")
+            ->color(fn(?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'gray' : 'info')
+            ->visible(fn(?PurchaseOrder $record): bool => !($record && $record->quotation_id && !$record->hasLineItemDiscrepancies()))
+            ->tooltip(fn(?PurchaseOrder $record): string => ($record && $record->quotation) ? "Currently linked to Quotation {$record->quotation->quotation_number}. Click to change or unlink." : 'Link this PO to an approved quotation')
+            ->modalHeading(fn(?PurchaseOrder $record): string => "Link PO #" . ($record?->po_number ?? '') . " to Approved Quotation")
             ->modalDescription('Select an approved quotation to link to this purchase order. This connects the quotation and PO, allows line-item cross-verification, and fills missing customer details.')
             ->modalSubmitActionLabel('Save Link')
             ->form([

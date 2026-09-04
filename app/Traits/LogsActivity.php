@@ -96,7 +96,16 @@ trait LogsActivity
 
     protected static function shouldLogActivity(string $event): bool
     {
-        return true;
+        // Restrict logging strictly to commercial transaction models to prevent database bloat
+        $allowedTransactionModels = [
+            \App\Models\Transaction::class,
+            \App\Models\PurchaseOrder::class,
+            \App\Models\Quotation::class,
+            \App\Models\SalesInvoice::class,
+            \App\Models\DeliveryReceipt::class,
+        ];
+
+        return in_array(static::class, $allowedTransactionModels, true);
     }
 
     protected static function getActivitySubjectIdentifier(Model $model): string

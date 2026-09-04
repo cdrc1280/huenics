@@ -3,10 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\SalesOverviewWidget;
+use App\Filament\Widgets\SalesRevenueChartWidget;
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\Services\ExportExecutiveReportPdf;
 use BackedEnum;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -75,124 +78,124 @@ class SalesDashboard extends Page implements HasTable, HasForms
                             'md' => 12,
                             'lg' => 12,
                         ])->schema([
-                            Select::make('selectedAgentId')
-                                ->label('Filter by S.E.')
-                                ->options(function ($get) {
-                                    $q = User::whereIn('role', [
-                                        User::ROLE_SALES_EXECUTIVE,
-                                        User::ROLE_ADMIN,
-                                        User::ROLE_OPERATIONS_MANAGER,
-                                        User::ROLE_CEO,
-                                    ]);
-                                    if ((bool) $get('filterInhouse')) {
-                                        $q->where('is_owner', true);
-                                    }
-                                    return $q->pluck('name', 'id');
-                                })
-                                ->placeholder('All Sales Executives')
-                                ->searchable()
-                                ->live()
-                                ->disabled(fn($get) => (bool) $get('filterInhouse'))
-                                ->columnSpan(['default' => 12, 'sm' => 7, 'md' => 7, 'lg' => 7]),
+                                    Select::make('selectedAgentId')
+                                        ->label('Filter by S.E.')
+                                        ->options(function ($get) {
+                                            $q = User::whereIn('role', [
+                                                User::ROLE_SALES_EXECUTIVE,
+                                                User::ROLE_ADMIN,
+                                                User::ROLE_OPERATIONS_MANAGER,
+                                                User::ROLE_CEO,
+                                            ]);
+                                            if ((bool) $get('filterInhouse')) {
+                                                $q->where('is_owner', true);
+                                            }
+                                            return $q->pluck('name', 'id');
+                                        })
+                                        ->placeholder('All Sales Executives')
+                                        ->searchable()
+                                        ->live()
+                                        ->disabled(fn($get) => (bool) $get('filterInhouse'))
+                                        ->columnSpan(['default' => 12, 'sm' => 7, 'md' => 7, 'lg' => 7]),
 
-                            Toggle::make('filterInhouse')
-                                ->label('Inhouse (Owner)')
-                                ->helperText('Filter by owner accounts')
-                                ->inline(false)
-                                ->live()
-                                ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state) {
-                                        $set('selectedAgentId', null);
-                                    }
-                                })
-                                ->columnSpan(['default' => 12, 'sm' => 5, 'md' => 5, 'lg' => 5]),
+                                    Toggle::make('filterInhouse')
+                                        ->label('Inhouse (Owner)')
+                                        ->helperText('Filter by owner accounts')
+                                        ->inline(false)
+                                        ->live()
+                                        ->afterStateUpdated(function ($state, callable $set) {
+                                            if ($state) {
+                                                $set('selectedAgentId', null);
+                                            }
+                                        })
+                                        ->columnSpan(['default' => 12, 'sm' => 5, 'md' => 5, 'lg' => 5]),
 
-                            ToggleButtons::make('periodType')
-                                ->label('Filter Granularity')
-                                ->options([
-                                    'days' => 'Days',
-                                    'weeks' => 'Weeks',
-                                    'month' => 'Month',
-                                    'years' => 'Years',
-                                ])
-                                ->icons([
-                                    'days' => 'heroicon-m-calendar',
-                                    'weeks' => 'heroicon-m-calendar-days',
-                                    'month' => 'heroicon-m-chart-bar',
-                                    'years' => 'heroicon-m-presentation-chart-line',
-                                ])
-                                ->colors([
-                                    'days' => 'info',
-                                    'weeks' => 'warning',
-                                    'month' => 'primary',
-                                    'years' => 'success',
-                                ])
-                                ->default('month')
-                                ->grouped()
-                                ->live()
-                                ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
+                                    ToggleButtons::make('periodType')
+                                        ->label('Filter Granularity')
+                                        ->options([
+                                            'days' => 'Days',
+                                            'weeks' => 'Weeks',
+                                            'month' => 'Month',
+                                            'years' => 'Years',
+                                        ])
+                                        ->icons([
+                                            'days' => 'heroicon-m-calendar',
+                                            'weeks' => 'heroicon-m-calendar-days',
+                                            'month' => 'heroicon-m-chart-bar',
+                                            'years' => 'heroicon-m-presentation-chart-line',
+                                        ])
+                                        ->colors([
+                                            'days' => 'info',
+                                            'weeks' => 'warning',
+                                            'month' => 'primary',
+                                            'years' => 'success',
+                                        ])
+                                        ->default('month')
+                                        ->grouped()
+                                        ->live()
+                                        ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
 
-                            DatePicker::make('selectedDate')
-                                ->label('Select Day')
-                                ->default(now()->toDateString())
-                                ->visible(fn($get) => $get('periodType') === 'days')
-                                ->live()
-                                ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
+                                    DatePicker::make('selectedDate')
+                                        ->label('Select Day')
+                                        ->default(now()->toDateString())
+                                        ->visible(fn($get) => $get('periodType') === 'days')
+                                        ->live()
+                                        ->columnSpan(['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]),
 
-                            Select::make('selectedWeek')
-                                ->label('Select Week')
-                                ->options(function ($get) {
-                                    $year = (int) ($get('selectedYear') ?: now()->year);
-                                    $weeks = [];
-                                    for ($w = 1; $w <= 52; $w++) {
-                                        $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
-                                        $wEnd = $wStart->copy()->endOfWeek();
-                                        $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
-                                    }
-                                    return $weeks;
-                                })
-                                ->default((int) now()->weekOfYear)
-                                ->visible(fn($get) => $get('periodType') === 'weeks')
-                                ->live()
-                                ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
+                                    Select::make('selectedWeek')
+                                        ->label('Select Week')
+                                        ->options(function ($get) {
+                                            $year = (int) ($get('selectedYear') ?: now()->year);
+                                            $weeks = [];
+                                            for ($w = 1; $w <= 52; $w++) {
+                                                $wStart = Carbon::now()->setISODate($year, $w)->startOfWeek();
+                                                $wEnd = $wStart->copy()->endOfWeek();
+                                                $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
+                                            }
+                                            return $weeks;
+                                        })
+                                        ->default((int) now()->weekOfYear)
+                                        ->visible(fn($get) => $get('periodType') === 'weeks')
+                                        ->live()
+                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
 
-                            Select::make('selectedMonth')
-                                ->label('Month')
-                                ->options([
-                                    1 => 'January',
-                                    2 => 'February',
-                                    3 => 'March',
-                                    4 => 'April',
-                                    5 => 'May',
-                                    6 => 'June',
-                                    7 => 'July',
-                                    8 => 'August',
-                                    9 => 'September',
-                                    10 => 'October',
-                                    11 => 'November',
-                                    12 => 'December',
-                                ])
-                                ->default((int) now()->month)
-                                ->visible(fn($get) => $get('periodType') === 'month')
-                                ->live()
-                                ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
+                                    Select::make('selectedMonth')
+                                        ->label('Month')
+                                        ->options([
+                                            1 => 'January',
+                                            2 => 'February',
+                                            3 => 'March',
+                                            4 => 'April',
+                                            5 => 'May',
+                                            6 => 'June',
+                                            7 => 'July',
+                                            8 => 'August',
+                                            9 => 'September',
+                                            10 => 'October',
+                                            11 => 'November',
+                                            12 => 'December',
+                                        ])
+                                        ->default((int) now()->month)
+                                        ->visible(fn($get) => $get('periodType') === 'month')
+                                        ->live()
+                                        ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 4, 'lg' => 4]),
 
-                            Select::make('selectedYear')
-                                ->label('Year')
-                                ->options(function () {
-                                    $years = [];
-                                    for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
-                                        $years[$y] = (string) $y;
-                                    }
-                                    return $years;
-                                })
-                                ->default((int) now()->year)
-                                ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
-                                ->live()
-                                ->columnSpan(fn($get) => $get('periodType') === 'years' 
-                                    ? ['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]
-                                    : ['default' => 12, 'sm' => 4, 'md' => 2, 'lg' => 2]),
-                        ]),
+                                    Select::make('selectedYear')
+                                        ->label('Year')
+                                        ->options(function () {
+                                            $years = [];
+                                            for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
+                                                $years[$y] = (string) $y;
+                                            }
+                                            return $years;
+                                        })
+                                        ->default((int) now()->year)
+                                        ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
+                                        ->live()
+                                        ->columnSpan(fn($get) => $get('periodType') === 'years'
+                                            ? ['default' => 12, 'sm' => 12, 'md' => 6, 'lg' => 6]
+                                            : ['default' => 12, 'sm' => 4, 'md' => 2, 'lg' => 2]),
+                                ]),
                     ]),
             ]);
     }
@@ -265,10 +268,72 @@ class SalesDashboard extends Page implements HasTable, HasForms
         $this->dispatch('salesFilterUpdated', filterData: $this->filterData);
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('downloadExecutiveReport')
+                ->label('Download Executive Report (PDF)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('primary')
+                ->tooltip('Download formal corporate executive sales & performance summary PDF')
+                ->action(function (ExportExecutiveReportPdf $service) {
+                    return $service->downloadResponse($this->filterData);
+                }),
+
+            Action::make('exportLeaderboardCsv')
+                ->label('Export Leaderboard (CSV)')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->tooltip('Download sales executive rankings and KPIs as CSV spreadsheet')
+                ->action(function (ExportExecutiveReportPdf $service) {
+                    $data = $service->buildReportData($this->filterData);
+                    $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $data['periodLabel']);
+                    $filename = 'sales-leaderboard-' . strtolower($periodLabel) . '-' . date('Ymd') . '.csv';
+
+                    return response()->streamDownload(function () use ($data) {
+                        $handle = fopen('php://output', 'w');
+                        fputs($handle, "\xEF\xBB\xBF");
+
+                        fputcsv($handle, ['Rank', 'Sales Executive', 'Account Type', 'Sales Achieved (PHP)', 'Realized Profit (PHP)', 'Quotations Count', 'POs Won', 'Win Rate']);
+
+                        foreach ($data['leaderboard'] as $idx => $row) {
+                            fputcsv($handle, [
+                                $idx + 1,
+                                $row['name'],
+                                $row['role_label'],
+                                number_format($row['sales_achieved'], 2, '.', ''),
+                                number_format($row['profit'], 2, '.', ''),
+                                $row['quotations'],
+                                $row['pos'],
+                                $row['win_rate'],
+                            ]);
+                        }
+
+                        fputcsv($handle, []);
+                        fputcsv($handle, [
+                            'TOTALS',
+                            '',
+                            '',
+                            number_format($data['kpis']['total_sales'], 2, '.', ''),
+                            number_format($data['kpis']['total_profit'], 2, '.', ''),
+                            $data['kpis']['total_quotations'],
+                            $data['kpis']['total_pos'],
+                            $data['kpis']['win_rate'] . '%',
+                        ]);
+
+                        fclose($handle);
+                    }, $filename, [
+                        'Content-Type' => 'text/csv',
+                    ]);
+                }),
+        ];
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
             SalesOverviewWidget::class,
+            SalesRevenueChartWidget::class,
         ];
     }
 

@@ -14,10 +14,11 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-slate-900 dark:text-white">
-                        Unofficial Quotation Generated Successfully!
+                        {{ !empty($quote['is_encoded']) ? 'Official Quotation Request Received & Encoded!' : 'Unofficial Quotation Generated Successfully!' }}
                     </h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Reference Number: <span class="font-mono font-bold text-slate-900 dark:text-slate-200">{{ $quote['quotation_number'] }}</span> &bull; Valid for 30 days
+                        Reference Number: <span class="font-mono font-bold text-slate-900 dark:text-slate-200">{{ $quote['quotation_number'] }}</span> &bull; 
+                        {{ !empty($quote['is_encoded']) ? 'Logged in system for sales review' : 'Valid for 30 days' }}
                     </p>
                 </div>
             </div>
@@ -38,7 +39,7 @@
                 <a href="{{ route('customer.quotation-builder') }}" 
                    class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Edit Estimate</span>
+                    <span>New Estimate</span>
                 </a>
             </div>
         </div>

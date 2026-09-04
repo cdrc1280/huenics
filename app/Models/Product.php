@@ -133,6 +133,10 @@ class Product extends Model
             return $this->image_path;
         }
 
+        if (file_exists(public_path($this->image_path))) {
+            return asset($this->image_path);
+        }
+
         return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image_path);
     }
 
@@ -145,16 +149,21 @@ class Product extends Model
         $fullPath = null;
         if (file_exists($this->image_path)) {
             $fullPath = $this->image_path;
-        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->image_path)) {
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($this->image_path);
+        } elseif (file_exists(public_path($this->image_path))) {
+            $fullPath = public_path($this->image_path);
         } elseif (file_exists(public_path('storage/' . $this->image_path))) {
             $fullPath = public_path('storage/' . $this->image_path);
+        } elseif (file_exists(storage_path('app/public/' . $this->image_path))) {
+            $fullPath = storage_path('app/public/' . $this->image_path);
+        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->image_path)) {
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($this->image_path);
         }
 
         if ($fullPath && file_exists($fullPath)) {
-            $type = pathinfo($fullPath, PATHINFO_EXTENSION);
+            $type = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            if ($type === 'jpg') $type = 'jpeg';
             $data = @file_get_contents($fullPath);
-            if ($data !== false) {
+            if ($data !== false && !empty($data)) {
                 return 'data:image/' . $type . ';base64,' . base64_encode($data);
             }
         }

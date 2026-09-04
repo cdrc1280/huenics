@@ -43,84 +43,111 @@ class ActivityLogTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $product = Product::create([
-            'canonical_name' => 'Heavy Duty Angle Valve 1/2"',
-            'unit_default' => 'pcs',
-            'default_price' => 450.00,
-            'is_huenics_owned' => true,
+        $quotation = Quotation::create([
+            'quotation_number' => 'QTN-2026-0099',
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Acme Corporation',
+            'quotation_date' => now()->toDateString(),
+            'total_amount' => 15000.00,
+            'status' => Quotation::STATUS_PENDING,
         ]);
 
-        $log = AuditLog::where('auditable_type', Product::class)
-            ->where('auditable_id', $product->id)
+        $log = AuditLog::where('auditable_type', Quotation::class)
+            ->where('auditable_id', $quotation->id)
             ->where('event', AuditLog::EVENT_CREATED)
             ->first();
 
         $this->assertNotNull($log);
         $this->assertEquals($this->admin->id, $log->user_id);
-        $this->assertStringContainsString('Created Product', $log->description);
-        $this->assertEquals('Heavy Duty Angle Valve 1/2"', $log->new_value['canonical_name']);
+        $this->assertStringContainsString('Created Quotation', $log->description);
+        $this->assertEquals('Acme Corporation', $log->new_value['customer_name']);
     }
 
     public function test_model_update_tracks_exact_attribute_diff(): void
     {
         $this->actingAs($this->admin);
 
-        $product = Product::create([
-            'canonical_name' => 'GI Elbow 1"',
-            'unit_default' => 'pcs',
-            'default_price' => 120.00,
+        $quotation = Quotation::create([
+            'quotation_number' => 'QTN-2026-0100',
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Initial Client',
+            'quotation_date' => now()->toDateString(),
+            'total_amount' => 10000.00,
+            'status' => Quotation::STATUS_PENDING,
         ]);
 
-        // Update the product
-        $product->update([
-            'default_price' => 145.50,
-            'unit_default' => 'box',
+        // Update the quotation
+        $quotation->update([
+            'customer_name' => 'Updated Client Corp',
+            'total_amount' => 12500.00,
         ]);
 
-        $log = AuditLog::where('auditable_type', Product::class)
-            ->where('auditable_id', $product->id)
+        $log = AuditLog::where('auditable_type', Quotation::class)
+            ->where('auditable_id', $quotation->id)
             ->where('event', AuditLog::EVENT_UPDATED)
             ->latest('id')
             ->first();
 
         $this->assertNotNull($log);
         $this->assertEquals($this->admin->id, $log->user_id);
-        $this->assertArrayHasKey('default_price', $log->old_value);
-        $this->assertArrayHasKey('default_price', $log->new_value);
-        $this->assertEquals(145.50, $log->new_value['default_price']);
+        $this->assertArrayHasKey('customer_name', $log->old_value);
+        $this->assertArrayHasKey('customer_name', $log->new_value);
+        $this->assertEquals('Updated Client Corp', $log->new_value['customer_name']);
     }
 
     public function test_model_soft_delete_and_restore_are_logged(): void
     {
         $this->actingAs($this->admin);
 
-        $product = Product::create([
-            'canonical_name' => 'Teflon Tape 3/4"',
-            'unit_default' => 'rolls',
-            'default_price' => 35.00,
+        $quotation = Quotation::create([
+            'quotation_number' => 'QTN-2026-0101',
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Client To Delete',
+            'quotation_date' => now()->toDateString(),
+            'total_amount' => 5000.00,
+            'status' => Quotation::STATUS_PENDING,
         ]);
 
         // Delete
-        $product->delete();
+        $quotation->delete();
 
-        $deleteLog = AuditLog::where('auditable_type', Product::class)
-            ->where('auditable_id', $product->id)
+        $deleteLog = AuditLog::where('auditable_type', Quotation::class)
+            ->where('auditable_id', $quotation->id)
             ->where('event', AuditLog::EVENT_DELETED)
             ->first();
 
         $this->assertNotNull($deleteLog);
-        $this->assertStringContainsString('Deleted Product', $deleteLog->description);
+        $this->assertStringContainsString('Deleted Quotation', $deleteLog->description);
 
         // Restore
-        $product->restore();
+        $quotation->restore();
 
-        $restoreLog = AuditLog::where('auditable_type', Product::class)
-            ->where('auditable_id', $product->id)
+        $restoreLog = AuditLog::where('auditable_type', Quotation::class)
+            ->where('auditable_id', $quotation->id)
             ->where('event', AuditLog::EVENT_RESTORED)
             ->first();
 
         $this->assertNotNull($restoreLog);
-        $this->assertStringContainsString('Restored Product', $restoreLog->description);
+        $this->assertStringContainsString('Restored Quotation', $restoreLog->description);
+    }
+
+    public function test_non_transaction_models_do_not_bloat_activity_logs(): void
+    {
+        $this->actingAs($this->admin);
+
+        $product = Product::create([
+            'canonical_name' => 'Excluded Product From Audit',
+            'unit_default' => 'pcs',
+            'default_price' => 200.00,
+            'is_huenics_owned' => true,
+        ]);
+
+        $log = AuditLog::where('auditable_type', Product::class)
+            ->where('auditable_id', $product->id)
+            ->first();
+
+        // Non-transaction model creation must not produce audit logs
+        $this->assertNull($log);
     }
 
     public function test_authentication_events_are_logged(): void

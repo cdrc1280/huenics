@@ -752,29 +752,20 @@
 
                                     <x-slot name="headerEnd">
                                         @if (!$this->isReadOnly)
-                                            <x-filament::dropdown placement="bottom-end">
-                                                <x-slot name="trigger">
-                                                    <x-filament::icon-button icon="heroicon-m-ellipsis-vertical" color="gray" size="sm"
-                                                        tooltip="Item Actions" label="Actions" />
-                                                </x-slot>
+                                            <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                                <x-filament::icon-button wire:click="cloneLineItem({{ $index }})"
+                                                    icon="heroicon-m-document-duplicate" color="gray" size="sm"
+                                                    tooltip="Duplicate Item" label="Duplicate" />
 
-                                                <x-filament::dropdown.list>
-                                                    <x-filament::dropdown.list.item wire:click="cloneLineItem({{ $index }})"
-                                                        icon="heroicon-m-document-duplicate" color="info">
-                                                        Duplicate Item
-                                                    </x-filament::dropdown.list.item>
-
-                                                    <x-filament::dropdown.list.item wire:click="removeLineItem({{ $index }})"
-                                                        icon="heroicon-m-trash" color="danger">
-                                                        Delete Item
-                                                    </x-filament::dropdown.list.item>
-                                                </x-filament::dropdown.list>
-                                            </x-filament::dropdown>
+                                                <x-filament::icon-button wire:click="removeLineItem({{ $index }})"
+                                                    icon="heroicon-m-trash" color="danger" size="sm"
+                                                    tooltip="Delete Line Item" label="Delete" />
+                                            </div>
                                         @endif
                                     </x-slot>
 
-                                    {{-- ROW 1: Product Identification (1:3:8 proportion) --}}
-                                    <div style="display: grid; grid-template-columns: 60px 180px 1fr; gap: 0.875rem; align-items: start; margin-bottom: 0.75rem;">
+                                    {{-- ROW 1: Product Identification (1:3:8:auto proportion) --}}
+                                    <div style="display: grid; grid-template-columns: 60px 180px 1fr auto; gap: 0.875rem; align-items: end; margin-bottom: 0.75rem;">
                                         <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">#</label>
                                             <x-filament::input.wrapper size="sm">
@@ -818,6 +809,20 @@
                                                     @endforeach
                                                 </x-filament::input.select>
                                             </x-filament::input.wrapper>
+                                        </div>
+
+                                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Photo</label>
+                                            @php
+                                                $thumbUrl = !empty($item['product_id']) ? ($this->productThumbnails[$item['product_id']] ?? null) : null;
+                                            @endphp
+                                            <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 0.375rem; border: 1px solid rgba(148, 163, 184, 0.3); background-color: rgba(248, 250, 252, 0.5); overflow: hidden;" title="Product Image Preview">
+                                                @if($thumbUrl)
+                                                    <img src="{{ $thumbUrl }}" alt="Product" style="width: 100%; height: 100%; object-fit: contain;">
+                                                @else
+                                                    <x-filament::icon icon="heroicon-o-photo" class="h-4 w-4 text-gray-400" />
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
 
