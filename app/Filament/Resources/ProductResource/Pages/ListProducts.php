@@ -25,33 +25,41 @@ class ListProducts extends ListRecords
                 ->label('Download Template')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->url(route('products.download-template'))
+                ->url(route('products.download-template-excel'))
                 ->openUrlInNewTab(false)
-                ->tooltip('Download sample CSV import template matching PRICELIST 2024'),
+                ->tooltip('Download sample Excel (.xlsx) import template matching PRICELIST structure'),
 
             Actions\Action::make('export_csv')
-                ->label('Export Catalog')
+                ->label('Export Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->url(route('products.export-csv'))
+                ->url(route('products.export-excel'))
                 ->openUrlInNewTab(false)
-                ->tooltip('Export entire products catalog to CSV format'),
+                ->tooltip('Export entire products catalog to Excel (.xlsx) format'),
 
             Actions\Action::make('import_csv')
-                ->label('Import CSV')
+                ->label('Import Excel / CSV')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('primary')
-                ->modalHeading('Import Products Catalog from CSV')
-                ->modalDescription('Upload a CSV file containing product records matching the PRICELIST 2024 structure. Existing products can be updated automatically.')
+                ->modalHeading('Import Products Catalog (Excel / CSV)')
+                ->modalDescription('Upload an Excel (.xlsx, .xls) or CSV (.csv) file containing product records matching the PRICELIST structure. Existing products can be updated automatically.')
                 ->modalSubmitActionLabel('Start Import')
                 ->form([
-                    FileUpload::make('csv_file')
-                        ->label('Pricelist CSV File')
+                    FileUpload::make('file')
+                        ->label('Product Catalog File (.xlsx, .xls, .csv)')
                         ->disk('local')
                         ->directory('temp-imports')
-                        ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel', 'text/x-csv'])
+                        ->acceptedFileTypes([
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.ms-excel',
+                            'application/octet-stream',
+                            'text/csv',
+                            'text/plain',
+                            'application/csv',
+                            'text/x-csv',
+                        ])
                         ->required()
-                        ->helperText('Upload .csv file matching the PRICELIST 2024 columns (CODE, WATTAGE, DESCRIPTION, VOLTAGE, COLOR, PRICE, UNIT).'),
+                        ->helperText('Upload an Excel (.xlsx, .xls) or CSV (.csv) file matching the PRICELIST columns (CODE, WATTAGE, DESCRIPTION, VOLTAGE, COLOR, PRICE, UNIT).'),
 
                     Toggle::make('update_existing')
                         ->label('Update Existing Products')
@@ -60,12 +68,16 @@ class ListProducts extends ListRecords
                 ])
                 ->action(function (array $data): void {
                     $disk = Storage::disk('local');
-                    $filePath = $disk->path($data['csv_file']);
+                    $fileKey = $data['file'] ?? $data['csv_file'] ?? null;
+                    if (!$fileKey) {
+                        return;
+                    }
+                    $filePath = $disk->path($fileKey);
                     $updateExisting = (bool) ($data['update_existing'] ?? true);
 
                     try {
                         $service = app(ProductImportExportService::class);
-                        $result = $service->importCsv($filePath, $updateExisting);
+                        $result = $service->importFile($filePath, $updateExisting);
 
                         $msg = "Imported {$result['imported']} new product(s), updated {$result['updated']} product(s).";
                         if (!empty($result['errors'])) {

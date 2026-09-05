@@ -162,7 +162,23 @@ Route::middleware(['web', 'auth'])->group(function () {
         ]);
     })->name('sales-invoices.export-pdf');
 
-    // Products Catalog CSV Export & Template Download
+    // Products Catalog Excel & CSV Export & Template Download
+    Route::get('/products/export-excel', function () {
+        $excel = app(\App\Services\ProductImportExportService::class)->exportExcel();
+        return response($excel, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-' . date('Ymd-His') . '.xlsx"',
+        ]);
+    })->name('products.export-excel');
+
+    Route::get('/products/download-template-excel', function () {
+        $template = app(\App\Services\ProductImportExportService::class)->generateSampleExcelTemplate();
+        return response($template, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="huenics-product-import-template.xlsx"',
+        ]);
+    })->name('products.download-template-excel');
+
     Route::get('/products/export-csv', function () {
         $csv = app(\App\Services\ProductImportExportService::class)->exportCsv();
         return response($csv, 200, [

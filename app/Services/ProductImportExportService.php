@@ -7,6 +7,9 @@ use App\Models\Product;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Reader\XLSX\Reader as XlsxReader;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 
 class ProductImportExportService
 {
@@ -180,18 +183,113 @@ class ProductImportExportService
     }
 
     /**
-     * Import products from an uploaded CSV file.
-     * Supports flexible column mapping and category group headers.
+     * Determine whether the given file path is an XLSX spreadsheet.
+     * Checks file extension as well as ZIP magic bytes (PK\x03\x04).
      */
-    public function importCsv(string $filePath, bool $updateExisting = true): array
+    protected function isXlsxFile(string $filePath): bool
     {
-        if (!file_exists($filePath) || !is_readable($filePath)) {
-            throw new \InvalidArgumentException("CSV file does not exist or is not readable: {$filePath}");
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xlsx', 'xlsm', 'xltx'], true)) {
+            return true;
         }
 
+        if (file_exists($filePath) && is_readable($filePath) && filesize($filePath) >= 4) {
+            $handle = @fopen($filePath, 'rb');
+            if ($handle) {
+                $magicBytes = fread($handle, 4);
+                fclose($handle);
+                if ($magicBytes === "PK\x03\x04") {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Stream rows from an Excel (.xlsx) or delimited text (.csv) file.
+     * Yields normalized string arrays with empty strings for nulls.
+     *
+     * @return \Generator<int, array<int, string>>
+     */
+    protected function iterateRowsFromFile(string $filePath): \Generator
+    {
+        if ($this->isXlsxFile($filePath)) {
+            $reader = new XlsxReader();
+            $reader->open($filePath);
+
+            foreach ($reader->getSheetIterator() as $sheet) {
+                foreach ($sheet->getRowIterator() as $row) {
+                    $cells = $row->toArray();
+                    $normalized = array_map(function ($val) {
+                        if ($val === null) {
+                            return '';
+                        }
+                        if ($val instanceof \DateTimeInterface) {
+                            return $val->format('Y-m-d');
+                        }
+                        return trim((string) $val);
+                    }, $cells);
+
+                    yield $normalized;
+                }
+                // Process the first worksheet as the catalog source
+                break;
+            }
+
+            $reader->close();
+            return;
+        }
+
+        // Delimited plain text / CSV stream
         $handle = fopen($filePath, 'r');
         if (!$handle) {
-            throw new \RuntimeException("Failed to open CSV file: {$filePath}");
+            throw new \RuntimeException("Failed to open file for streaming: {$filePath}");
+        }
+
+        // Detect and strip UTF-8 BOM if present
+        $bom = fread($handle, 3);
+        if ($bom !== "\xEF\xBB\xBF") {
+            rewind($handle);
+        }
+
+        // Auto-detect delimiter from first row (comma, semicolon, or tab)
+        $firstLine = fgets($handle);
+        rewind($handle);
+        if ($bom === "\xEF\xBB\xBF") {
+            fread($handle, 3);
+        }
+
+        $delimiter = ',';
+        if ($firstLine !== false) {
+            $commaCount = substr_count($firstLine, ',');
+            $semicolonCount = substr_count($firstLine, ';');
+            $tabCount = substr_count($firstLine, "\t");
+
+            if ($semicolonCount > $commaCount && $semicolonCount > $tabCount) {
+                $delimiter = ';';
+            } elseif ($tabCount > $commaCount && $tabCount > $semicolonCount) {
+                $delimiter = "\t";
+            }
+        }
+
+        while (($row = fgetcsv($handle, 8192, $delimiter)) !== false) {
+            $normalized = array_map(fn($val) => trim((string) $val), $row);
+            yield $normalized;
+        }
+
+        fclose($handle);
+    }
+
+    /**
+     * Import products from an uploaded Excel (.xlsx, .xls) or CSV (.csv) file.
+     * Supports flexible column mapping and category group headers.
+     */
+    public function importFile(string $filePath, bool $updateExisting = true): array
+    {
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            throw new \InvalidArgumentException("Catalog file does not exist or is not readable: {$filePath}");
         }
 
         $importedCount = 0;
@@ -203,14 +301,11 @@ class ProductImportExportService
         $headerMap = null;
         $rowIndex = 0;
 
-        while (($row = fgetcsv($handle, 4096, ',')) !== false) {
+        foreach ($this->iterateRowsFromFile($filePath) as $trimmedRow) {
             $rowIndex++;
 
-            // Clean values
-            $trimmedRow = array_map('trim', $row);
-
             // Skip completely blank rows
-            if (empty(array_filter($trimmedRow))) {
+            if (empty(array_filter($trimmedRow, fn($v) => $v !== ''))) {
                 continue;
             }
 
@@ -225,8 +320,7 @@ class ProductImportExportService
 
             // Check if this row is a Category Section Header (e.g. "SMD LED STRIP LIGHT INDOOR" with empty other cells)
             $firstCell = strtoupper($trimmedRow[0] ?? '');
-            $secondCell = strtoupper($trimmedRow[1] ?? '');
-            $nonEmptyCount = count(array_filter($trimmedRow));
+            $nonEmptyCount = count(array_filter($trimmedRow, fn($v) => $v !== ''));
 
             if ($nonEmptyCount <= 2 && !empty($firstCell) && !str_starts_with($firstCell, 'HISI-') && !is_numeric(str_replace([',', '.'], '', $firstCell))) {
                 $currentCategory = $firstCell;
@@ -331,14 +425,193 @@ class ProductImportExportService
             }
         }
 
-        fclose($handle);
-
         return [
             'imported' => $importedCount,
             'updated'  => $updatedCount,
             'skipped'  => $skippedCount,
             'errors'   => $errors,
         ];
+    }
+
+    /**
+     * Import products from an uploaded CSV file (backwards compatibility).
+     */
+    public function importCsv(string $filePath, bool $updateExisting = true): array
+    {
+        return $this->importFile($filePath, $updateExisting);
+    }
+
+    /**
+     * Generate a sample Excel (.xlsx) import template matching PRICELIST 2024.
+     */
+    public function generateSampleExcelTemplate(): string
+    {
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_tmpl_') . '.xlsx';
+        $writer = new XlsxWriter();
+        $writer->openToFile($tempFile);
+
+        $writer->addRow(Row::fromValues([
+            'CATEGORY',
+            'PICTURE',
+            'CODE',
+            'CANONICAL_NAME',
+            'WATTAGE',
+            'DESCRIPTION',
+            'VOLTAGE',
+            'COLOR',
+            'PRICE',
+            'UNIT',
+        ]));
+
+        $samples = [
+            [
+                'SMD LED STRIP LIGHT INDOOR',
+                '',
+                'HISI-LS-9.6W',
+                'SMD LED Strip Light 9.6W/M Indoor',
+                '9.6W/M',
+                'SMD LED STRIPS SIZE 2835, 120PCS LED/M, IP20 INDOOR',
+                'DC12V',
+                '3000K/6000K',
+                '850.00',
+                'ROLL',
+            ],
+            [
+                'SMD LED STRIP LIGHT INDOOR',
+                '',
+                'HISI-LS-14.4W',
+                'SMD LED Strip Light 14.4W/M Indoor',
+                '14.4W/M',
+                'SMD LED STRIPS SIZE 5050, 60PCS LED/M, IP20 INDOOR',
+                'DC12V',
+                '3000K/6000K',
+                '950.00',
+                'ROLL',
+            ],
+            [
+                'COB LED STRIP LIGHT',
+                '',
+                'HISI-LS-COB-12W',
+                'LED COB Strip Light 12W/M Indoor',
+                '12W/M',
+                'LED COB STRIPS SIZE 5050, 60PCS LED/M, IP20 INDOOR',
+                'DC12V',
+                '3000K/6000K/4000K',
+                '1950.00',
+                'ROLL',
+            ],
+            [
+                'SMD LED STRIP LIGHT OUTDOOR',
+                '',
+                'HISI-LS-2835',
+                'SMD LED Strip Light 4.8W/M Outdoor',
+                '4.8W/M',
+                'SMD LED STRIPS SIZE 2835, 60PCS LED/M, IP20 OUTDOOR',
+                'DC12V',
+                '3000K/6000K',
+                '700.00',
+                'ROLL',
+            ],
+            [
+                'SMD LED STRIP LIGHT INDOOR 220V',
+                '',
+                'HISI-LS-8W',
+                'SMD LED Strip Light 8W/M 220V Indoor',
+                '8W/M',
+                'SMD LED STRIPS SIZE 5050, 60PCS LED/M, 220V INDOOR',
+                '220V',
+                '3000K/6000K',
+                '150.00',
+                'METER',
+            ],
+            [
+                'LED NEON FLEX',
+                '',
+                'HISI-LS-SC-NEON-',
+                'LED Neon Flex Single Color 9.6W/M 220V',
+                '9.6W/M',
+                'LED NEON FLEX SINGLE COLOR',
+                '220V',
+                '3000K/6000K',
+                '200.00',
+                'M',
+            ],
+            [
+                'SMD LED STRIP LIGHT ACCESSORIES',
+                '',
+                'HISI-PLUG',
+                'Power Cable for LED Striplight',
+                'XXX',
+                'POWER CABLE FOR LED STRIPLIGHT',
+                'XXX',
+                'XXX',
+                '250.00',
+                'SET',
+            ],
+        ];
+
+        foreach ($samples as $sample) {
+            $writer->addRow(Row::fromValues($sample));
+        }
+
+        $writer->close();
+
+        $content = file_get_contents($tempFile);
+        @unlink($tempFile);
+
+        return $content;
+    }
+
+    /**
+     * Export products into Excel (.xlsx) format matching the reference pricelist.
+     */
+    public function exportExcel(?iterable $products = null): string
+    {
+        $products = $products ?: Product::with('inventoryItem')->orderBy('category')->orderBy('product_code')->get();
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_export_') . '.xlsx';
+        $writer = new XlsxWriter();
+        $writer->openToFile($tempFile);
+
+        $writer->addRow(Row::fromValues([
+            'CATEGORY',
+            'PICTURE',
+            'CODE',
+            'CANONICAL_NAME',
+            'WATTAGE',
+            'DESCRIPTION',
+            'VOLTAGE',
+            'COLOR',
+            'PRICE',
+            'UNIT',
+            'STOCK_ON_HAND',
+        ]));
+
+        foreach ($products as $product) {
+            $priceFormatted = number_format((float) ($product->selling_price ?: $product->default_price), 2, '.', '');
+            $unit = strtoupper($product->unit_default ?: 'pcs');
+
+            $writer->addRow(Row::fromValues([
+                $product->category ?: 'General',
+                $product->image_path ?: '',
+                $product->product_code ?: '',
+                $product->canonical_name ?: '',
+                $product->wattage ?: '',
+                $product->description ?: '',
+                $product->voltage ?: '',
+                $product->color_temperature ?: '',
+                $priceFormatted,
+                $unit,
+                $product->inventoryItem?->quantity_on_hand ?? 0,
+            ]));
+        }
+
+        $writer->close();
+
+        $content = file_get_contents($tempFile);
+        @unlink($tempFile);
+
+        return $content;
     }
 
     /**
