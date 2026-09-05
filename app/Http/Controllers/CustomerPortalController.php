@@ -61,12 +61,9 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $totalProductsCount = Product::query()->where('is_active', true)->count();
         $yearsInBusiness = CompanySetting::getYearsInBusiness();
 
-        $testimonials = Cache::remember('customer_portal_testimonials', 600, function () {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('testimonials')) {
-                return collect();
-            }
-            return Testimonial::active()->orderBy('sort_order')->orderBy('created_at', 'desc')->get();
-        });
+        $testimonials = \Illuminate\Support\Facades\Schema::hasTable('testimonials')
+            ? Testimonial::active()->orderBy('sort_order')->orderBy('created_at', 'desc')->get()
+            : collect();
 
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,

@@ -749,7 +749,7 @@
 <!-- ==========================================================================
      SECTION 7: CLIENT REVIEWS & CONTRACTOR TESTIMONIALS (Dynamic)
      ========================================================================== -->
-@if(isset($testimonials) && $testimonials->isNotEmpty())
+@if(!empty($testimonials) && count($testimonials) > 0)
 <section class="py-16 bg-[#070b14] text-white relative overflow-hidden border-b border-slate-800/80">
     <div class="absolute inset-0 pointer-events-none opacity-20" 
          style="background-image: radial-gradient(rgba(33, 79, 224, 0.25) 1px, transparent 1px); background-size: 32px 32px;"></div>
