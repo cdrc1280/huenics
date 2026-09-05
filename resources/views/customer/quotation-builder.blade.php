@@ -36,7 +36,20 @@
 <section class="py-10 bg-slate-50 dark:bg-[#070b14] transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <form id="quotation-form" method="POST" action="{{ route('customer.quotation.generate') }}" target="_blank">
+        @if(session('error'))
+            <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center gap-2.5 shadow-sm">
+                <svg class="w-5 h-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+        @if(session('success'))
+            <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2.5 shadow-sm">
+                <svg class="w-5 h-5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <form id="quotation-form" method="POST" action="{{ route('customer.quotation.generate') }}">
             @csrf
             <input type="hidden" name="action" id="form-action" value="view">
 
@@ -249,18 +262,10 @@
                         <div class="space-y-3 pt-2">
                             <!-- Download PDF Button -->
                             <button type="submit" 
-                                    onclick="document.getElementById('quotation-form').removeAttribute('target'); document.getElementById('form-action').value='download_pdf'"
+                                    onclick="document.getElementById('form-action').value='download_pdf'"
                                     class="w-full bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] btn-interactive text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>Download Quotation (PDF)</span>
-                            </button>
-
-                            <!-- Print Quotation Button (Opens print dialog in new tab) -->
-                            <button type="submit" 
-                                    onclick="document.getElementById('quotation-form').setAttribute('target', '_blank'); document.getElementById('form-action').value='print_quotation'"
-                                    class="w-full bg-slate-800 hover:bg-slate-700 active:scale-[0.98] btn-interactive text-slate-100 border border-slate-700 font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
-                                <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                <span>Print Quotation</span>
+                                <span>Submit Quotation & Download PDF</span>
                             </button>
                         </div>
                     </div>

@@ -64,7 +64,6 @@ class ListProducts extends ListRecords
                     Toggle::make('update_existing')
                         ->label('Update Existing Products')
                         ->helperText('When enabled, existing products matching Code or Name will be updated with the latest specifications and prices.')
-                        ->default(true),
                 ])
                 ->action(function (array $data): void {
                     $disk = Storage::disk('local');

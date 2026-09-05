@@ -27,6 +27,7 @@ class InventoryItem extends Model
         'inbound_date',
         'remarks',
         'last_counted_at',
+        'is_owned',
     ];
 
     protected function casts(): array
@@ -38,7 +39,23 @@ class InventoryItem extends Model
             'date_released'     => 'date',
             'inbound_date'      => 'date',
             'last_counted_at'   => 'datetime',
+            'is_owned'          => 'boolean',
         ];
+    }
+
+    public function scopeOwned($query)
+    {
+        return $query->where('is_owned', true);
+    }
+
+    public function scopeNotOwned($query)
+    {
+        return $query->where('is_owned', false);
+    }
+
+    public function getOwnershipStatusAttribute(): string
+    {
+        return $this->is_owned ? 'Owned' : 'Not Owned';
     }
 
     public function product(): BelongsTo

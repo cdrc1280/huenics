@@ -6,7 +6,6 @@ use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationLineItem;
-use App\Models\Testimonial;
 use App\Models\User;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
@@ -61,16 +60,11 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $totalProductsCount = Product::query()->where('is_active', true)->count();
         $yearsInBusiness = CompanySetting::getYearsInBusiness();
 
-        $testimonials = \Illuminate\Support\Facades\Schema::hasTable('testimonials')
-            ? Testimonial::active()->orderBy('sort_order')->orderBy('created_at', 'desc')->get()
-            : collect();
-
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,
             'categories'         => $categories,
             'totalProductsCount' => $totalProductsCount,
             'yearsInBusiness'    => $yearsInBusiness,
-            'testimonials'       => $testimonials,
         ]);
     }
 
@@ -138,6 +132,14 @@ class CustomerPortalController extends Controller implements HasMiddleware
      */
     public function generateUnofficial(Request $request)
     {
+        $clientIp = $request->ip() ?: '127.0.0.1';
+        $sanitizedIp = str_replace([':', '.'], '_', $clientIp);
+        $dailyIpKey = 'quotation_daily_ip_' . $sanitizedIp . '_' . date('Y-m-d');
+
+        if (Cache::has($dailyIpKey)) {
+            return back()->withInput()->with('error', 'Daily Submission Limit Reached: Only 1 quotation inquiry per day is permitted from your IP address. Our sales engineering team has already received your previous inquiry and is reviewing it. For urgent project bidding, please call us directly at (02) 8561-6836.');
+        }
+
         $validated = $request->validate([
             'customer_name'    => 'required|string|max:150',
             'customer_company' => 'required|string|max:150',
@@ -154,7 +156,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
             'items.*.unit_price'  => 'nullable|numeric|min:0',
             'items.*.unit'        => 'nullable|string|max:20',
             'items.*.item_code'   => 'nullable|string|max:50',
-            'action'              => 'nullable|string|in:download_pdf,preview_pdf,print,print_quotation,view',
+            'action'              => 'nullable|string|in:download_pdf,view',
         ]);
 
         $subtotal = 0.0;
@@ -231,21 +233,57 @@ class CustomerPortalController extends Controller implements HasMiddleware
             'is_encoded'            => false,
         ];
 
+        // Persist to admin side Quotations database
+        try {
+            $defaultSalesAgent = User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->first();
+
+            $adminQuotation = Quotation::create([
+                'quotation_number'      => $refNumber,
+                'sales_agent_id'        => $defaultSalesAgent?->id ?? null,
+                'customer_name'         => $quoteData['customer_name'],
+                'customer_company'      => $quoteData['customer_company'],
+                'customer_email'        => $validated['email'] ?? null,
+                'phone_no'              => $quoteData['phone_no'],
+                'project_name'          => $quoteData['project_name'],
+                'project_location'      => $quoteData['project_location'],
+                'total_amount'          => $quoteData['total_amount'],
+                'negotiated_amount'     => $quoteData['negotiated_amount'],
+                'status'                => Quotation::STATUS_PENDING,
+                'is_online_request'     => true,
+                'client_ip'             => $clientIp,
+                'quotation_date'        => $quoteData['quotation_date'],
+                'valid_until'           => $quoteData['valid_until'],
+                'notes'                 => ($quoteData['notes'] ? $quoteData['notes'] . " | " : "") . "Client IP: {$clientIp} (Online Quotation Builder)",
+                'is_official_po'        => false,
+            ]);
+
+            foreach ($items as $idx => $line) {
+                QuotationLineItem::create([
+                    'quotation_id'     => $adminQuotation->id,
+                    'line_no'          => $idx + 1,
+                    'item_code'        => $line['item_code'] ?? null,
+                    'product_id'       => $line['product_id'] ?? null,
+                    'description'      => $line['description'],
+                    'qty'              => $line['quantity'],
+                    'unit'             => $line['unit'],
+                    'unit_price'       => $line['unit_price'],
+                    'discounted_price' => $line['discounted_price'],
+                    'line_total'       => $line['line_total'],
+                ]);
+            }
+
+            // Enforce 1 submission per day per IP (cached until midnight)
+            $secondsUntilMidnight = max(60, now()->diffInSeconds(now()->endOfDay()));
+            Cache::put($dailyIpKey, true, $secondsUntilMidnight);
+            $quoteData['is_encoded'] = true;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Quotation admin sync warning: ' . $e->getMessage());
+        }
+
         // Store last generated quotation in session for quick re-downloads
         session(['last_unofficial_quote' => $quoteData]);
 
         $action = $request->input('action', 'download_pdf');
-
-        if ($action === 'download_pdf') {
-            return $this->pdfExporter->downloadResponse($quoteData);
-        }
-
-        if (in_array($action, ['print', 'print_quotation', 'preview_pdf'], true)) {
-            return response()->view('pdf.unofficial-quotation-template', [
-                'quote'        => $quoteData,
-                'isPrintView'  => true,
-            ]);
-        }
 
         if ($action === 'view') {
             return view('customer.quotation-success', [
@@ -253,10 +291,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
             ]);
         }
 
-        return response()->view('pdf.unofficial-quotation-template', [
-            'quote'        => $quoteData,
-            'isPrintView'  => true,
-        ]);
+        return $this->pdfExporter->downloadResponse($quoteData);
     }
 
     /**

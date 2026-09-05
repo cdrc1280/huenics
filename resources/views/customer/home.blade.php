@@ -173,7 +173,7 @@
             </div>
 
             <!-- Right Column: Interactive 3D Photonic Light Bulb Stage (Lighting Engineering Core) -->
-            <div class="lg:col-span-5 relative flex flex-col items-center justify-center w-full px-2 sm:px-0">
+            <div id="hero-stage-container" class="lg:col-span-5 relative flex flex-col items-center justify-center w-full px-2 sm:px-0">
                 <!-- Dynamic Backlight Halo (Reacts to Kelvin CCT and ON/OFF Power) -->
                 <div id="luminaire-ambient-halo" class="w-72 h-72 sm:w-96 sm:h-96 lg:w-[440px] lg:h-[440px] rounded-full absolute pointer-events-none -z-0 blur-3xl transition-all duration-700 opacity-80"
                      style="background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(37, 99, 235, 0.15) 50%, transparent 75%);"></div>
@@ -196,79 +196,87 @@
 
                 <!-- 3D Spatial Perspective Stage -->
                 <div id="hero-3d-stage" 
-                     class="relative w-full max-w-[300px] xs:max-w-[340px] sm:max-w-[420px] aspect-square rounded-full border border-slate-700/50 dark:border-slate-800/80 flex items-center justify-center bg-gradient-to-b from-slate-900/60 via-[#0b1120]/80 to-[#060913]/95 backdrop-blur-md card-3d shadow-2xl select-none"
-                     data-3d-tilt data-max-tilt="10">
+                     class="relative w-full max-w-[300px] xs:max-w-[340px] sm:max-w-[420px] aspect-square rounded-full border border-slate-700/50 dark:border-slate-800/80 flex items-center justify-center bg-gradient-to-b from-slate-900/60 via-[#0b1120]/80 to-[#060913]/95 backdrop-blur-md shadow-2xl select-none"
+                     style="transform-style: preserve-3d; will-change: transform;">
                     
-                    <div class="glare-sheen"></div>
+                    <div class="glare-sheen" style="transition: opacity 0.3s ease;"></div>
 
                     <!-- Subtle Studio Vignette Glow -->
                     <div class="absolute inset-0 rounded-full bg-radial from-blue-500/5 via-transparent to-black/40 pointer-events-none"></div>
 
                     <!-- Three.js 3D WebGL Light Bulb Canvas Container -->
-                    <div class="relative z-10 w-full h-full flex items-center justify-center">
-                        <canvas id="luminaire-3d-canvas" class="w-full h-full cursor-grab active:cursor-grabbing rounded-full" style="touch-action: none; width: 100%; height: 100%;"></canvas>
+                    <div class="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
+                        <canvas id="luminaire-3d-canvas" class="w-full h-full cursor-grab active:cursor-grabbing rounded-full pointer-events-auto" style="touch-action: none; width: 100%; height: 100%;"></canvas>
                         
-                        <!-- Center Hotspot Click-to-Toggle Overlay -->
+                        <!-- Center Hotspot Click-to-Toggle Overlay (Clean non-shifting hitbox) -->
                         <div id="luminaire-center-toggle" 
-                             class="absolute w-32 h-32 sm:w-36 sm:h-36 rounded-full cursor-pointer z-20 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-                             title="Click to Toggle Light Bulb ON / OFF">
-                            <span class="sr-only">Toggle Light Bulb</span>
+                             class="absolute w-32 h-32 sm:w-36 sm:h-36 rounded-full cursor-pointer z-20 flex items-center justify-center pointer-events-auto active:scale-95 transition-transform"
+                             title="Click to Toggle Citizen COB LED ON / OFF">
+                            <span class="sr-only">Toggle Citizen COB LED</span>
                         </div>
 
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
                         <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center gap-1.5 transition-all duration-300 pointer-events-none z-20">
                             <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span id="luminaire-status-text">EDISON ST64 • 3000K WARM • CRI 95+</span>
+                            <span id="luminaire-status-text">CITIZEN COB LED • CLU048 • 3000K • CRI 97+</span>
                         </div>
                     </div>
 
                     <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only) -->
-                    <div class="hidden sm:flex absolute -top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 items-center gap-1.5 badge-bounce z-30 pointer-events-auto whitespace-nowrap"
-                         data-3d-depth style="--depth: 45;">
+                    <div id="hero-badge-discount"
+                         class="hidden sm:flex absolute -top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-amber-500/30"
+                         style="will-change: transform;">
                         <i data-lucide="star" class="w-3.5 h-3.5 text-amber-100"></i>
                         <span>20% OFF Contractor Volume</span>
                     </div>
 
                     <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only) -->
-                    <div class="hidden sm:flex absolute -left-4 top-1/4 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
-                         data-3d-depth style="--depth: 35;">
+                    <div id="hero-badge-vat"
+                         class="hidden sm:flex absolute -left-4 top-1/4 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-blue-500/20"
+                         style="will-change: transform;">
                         <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-blue-500"></i>
                         <span>12% BIR VAT Invoicing</span>
                     </div>
 
                     <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only) -->
-                    <div class="hidden sm:flex absolute -bottom-3 right-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3.5 py-1.5 rounded-full shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap"
-                         data-3d-depth style="--depth: 40;">
+                    <div id="hero-badge-freight"
+                         class="hidden sm:flex absolute -bottom-3 right-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3.5 py-1.5 rounded-full shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-emerald-500/20"
+                         style="will-change: transform;">
                         <i data-lucide="truck" class="w-3.5 h-3.5 text-emerald-500"></i>
                         <span>Free Freight &ge; &#8369; 20,000</span>
                     </div>
                 </div>
 
-                <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Smooth Bulb Animation") -->
-                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[420px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
+                <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Citizen COB CCT Selection") -->
+                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
                     <!-- Power Switch (ON / OFF) -->
                     <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
-                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
+                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
                         <i data-lucide="power" class="w-3 sm:w-3.5 h-3 sm:h-3.5"></i>
-                        <span id="luminaire-power-label"><span class="hidden sm:inline">LIGHT: </span>ON</span>
+                        <span id="luminaire-power-label"><span class="hidden sm:inline">COB: </span>ON</span>
                     </button>
 
-                    <!-- Kelvin CCT Selector (3000K / 4000K / 6500K) -->
+                    <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
                     <div class="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60 shrink-0">
                         <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
-                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
+                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
                                 title="3000K Warm White (Architectural Amber)">
                             3000K
                         </button>
+                        <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
+                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
+                                title="3500K Neutral Warm (Hospitality Sunset)">
+                            3500K
+                        </button>
                         <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
-                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="4000K Neutral White (Commercial Natural)">
+                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
+                                title="4000K Natural White (Commercial Crisp)">
                             4000K
                         </button>
-                        <button type="button" onclick="window.setLuminaireCCT('6500K', this)" 
-                                class="cct-btn px-1.5 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="6500K Daylight (Industrial High-Output)">
-                            6500K
+                        <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
+                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
+                                title="5000K Cool White (Industrial Daylight)">
+                            5000K
                         </button>
                     </div>
 
@@ -471,12 +479,14 @@
                                 </span>
                             </div>
                         @endif
-                        <span class="absolute top-2.5 left-2.5 hisi-pill-badge shadow-sm">
-                            {{ strtoupper($product->category ?: 'Lighting') }}
-                        </span>
-                        <span class="absolute top-2.5 right-2.5 text-[10px] font-mono text-slate-600 dark:text-slate-300 font-bold bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur px-2 py-0.5 rounded shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-                            {{ $product->sku ?: $product->product_code ?: 'SKU-00' }}
-                        </span>
+                        <div class="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-2 z-10 pointer-events-none">
+                            <span class="hisi-pill-badge shadow-sm shrink min-w-0 max-w-[62%] !inline-flex items-center pointer-events-auto" title="{{ strtoupper($product->category ?: 'Lighting') }}">
+                                <span class="truncate">{{ strtoupper($product->category ?: 'Lighting') }}</span>
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-600 dark:text-slate-300 font-bold bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur px-2 py-0.5 rounded shadow-sm border border-slate-200/60 dark:border-slate-700/60 shrink-0 max-w-[38%] truncate pointer-events-auto" title="{{ $product->sku ?: $product->product_code ?: 'SKU-00' }}">
+                                {{ $product->sku ?: $product->product_code ?: 'SKU-00' }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Title -->
@@ -493,18 +503,6 @@
                         <span class="text-[10px] font-mono font-semibold bg-blue-50 dark:bg-blue-950/60 text-[#214fe0] dark:text-[#60a5fa] px-2 py-0.5 rounded">
                             Citizen Japan C.O.B
                         </span>
-                    </div>
-
-                    <!-- Price -->
-                    <div class="my-2.5">
-                        <div class="text-[10px] uppercase font-bold text-slate-400">Wholesale Rate:</div>
-                        <div class="text-base font-black font-mono tabular-nums text-slate-950 dark:text-white">
-                            @if($product->selling_price > 0)
-                                &#8369; {{ number_format($product->selling_price, 2) }}
-                            @else
-                                <span class="text-xs text-[#214fe0] dark:text-[#60a5fa]">Contractor Inquiry</span>
-                            @endif
-                        </div>
                     </div>
                 </div>
 
@@ -745,58 +743,6 @@
         </div>
     </div>
 </section>
-
-<!-- ==========================================================================
-     SECTION 7: CLIENT REVIEWS & CONTRACTOR TESTIMONIALS (Dynamic)
-     ========================================================================== -->
-@if(!empty($testimonials) && count($testimonials) > 0)
-<section class="py-16 bg-[#070b14] text-white relative overflow-hidden border-b border-slate-800/80">
-    <div class="absolute inset-0 pointer-events-none opacity-20" 
-         style="background-image: radial-gradient(rgba(33, 79, 224, 0.25) 1px, transparent 1px); background-size: 32px 32px;"></div>
-
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        @foreach($testimonials as $testimonial)
-            <div class="bg-gradient-to-br from-[#111827] via-[#0e1628] to-[#0a1020] border border-blue-600/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative mb-8 last:mb-0"
-                 data-3d-tilt data-max-tilt="5">
-                <div class="glare-sheen"></div>
-                
-                <!-- Stars -->
-                <div class="flex items-center gap-1 text-amber-400 mb-6">
-                    @for($i = 0; $i < ($testimonial->rating ?? 5); $i++)
-                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    @endfor
-                </div>
-
-                <!-- Quote Text -->
-                <blockquote class="text-base sm:text-xl font-medium text-slate-200 leading-relaxed italic mb-8">
-                    &ldquo;{{ $testimonial->quote }}&rdquo;
-                </blockquote>
-
-                <!-- Author Info -->
-                <div class="flex items-center justify-between border-t border-slate-800 pt-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md">
-                            {{ $testimonial->initials }}
-                        </div>
-                        <div>
-                            <div class="text-sm font-bold text-white">{{ $testimonial->client_name }}</div>
-                            <div class="text-xs text-slate-400">
-                                @if($testimonial->role_title){{ $testimonial->role_title }} &bull; @endif
-                                {{ $testimonial->company_name ?: ($testimonial->project_name ?: 'Verified Client') }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="hidden sm:flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>Verified Trade Partner</span>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</section>
-@endif
 
 <!-- ==========================================================================
      SECTION 8: COMMERCIAL INSTALLATIONS GALLERY (Antixor Fleet Gallery Bento)
@@ -1226,22 +1172,20 @@
     });
 
     /* =========================================================================
-     * HUENICS 3D PHOTONIC EDISON BULB ENGINE (Photorealistic Studio WebGL)
+     * HUENICS 3D CITIZEN LED COB ENGINE (Photorealistic Studio WebGL)
      * ========================================================================= */
     (function() {
-        let scene, camera, renderer, bulbGroup, glassMesh, filamentsGroup, stemGroup;
+        let scene, camera, renderer, cobGroup, phosphorMesh, damMesh, ceramicMesh, backplateMesh;
         let bloomSprite, particleSystem, shockwaveRing, corePointLight, ambientLight, keyLight, rimLight;
         let isPowerOn = true;
         let currentCCT = '3000K';
-        let targetRotX = 0.18, targetRotY = -0.36;
-        let currentRotX = 0.18, currentRotY = -0.36;
-        let isMouseOver = false;
+        let currentRotX = 0.20, currentRotY = -0.32;
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let surgeTime = 0;
         let isSurging = false;
         let isVisible = true;
-        let thermalPower = 1.0; // 0.0 (cold) to 1.0 (incandescent white-hot)
+        let thermalPower = 1.0; // 0.0 (off) to 1.0 (full lumen output)
         let flickerCounter = 0;
 
         const cctProfiles = {
@@ -1249,22 +1193,29 @@
                 hex: 0xff9e3b,
                 emissive: 0xff8c1a,
                 halo: 'radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(217, 119, 6, 0.18) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'EDISON ST64 • 3000K WARM • CRI 95+',
-                name: '3000K Warm White (High-CRI Architectural)'
+                badgeText: 'CITIZEN COB LED • CLU048 • 3000K • CRI 97+',
+                name: '3000K Warm White (Architectural Amber)'
+            },
+            '3500K': {
+                hex: 0xffb56c,
+                emissive: 0xffa550,
+                halo: 'radial-gradient(circle, rgba(251, 146, 60, 0.44) 0%, rgba(234, 88, 12, 0.17) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
+                badgeText: 'CITIZEN COB LED • CLU048 • 3500K • CRI 97+',
+                name: '3500K Neutral Warm (Hospitality Sunset)'
             },
             '4000K': {
-                hex: 0xfff1d6,
-                emissive: 0xffe2aa,
-                halo: 'radial-gradient(circle, rgba(254, 240, 138, 0.42) 0%, rgba(245, 158, 11, 0.16) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'EDISON ST64 • 4000K NEUTRAL • 12,500 LM',
-                name: '4000K Neutral White (Commercial Natural)'
+                hex: 0xffcaa2,
+                emissive: 0xffbf90,
+                halo: 'radial-gradient(circle, rgba(254, 215, 170, 0.42) 0%, rgba(245, 158, 11, 0.16) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
+                badgeText: 'CITIZEN COB LED • CLU048 • 4000K • CRI 95+',
+                name: '4000K Natural White (Commercial Crisp)'
             },
-            '6500K': {
-                hex: 0xd6e8ff,
-                emissive: 0x93c5fd,
-                halo: 'radial-gradient(circle, rgba(96, 165, 250, 0.48) 0%, rgba(37, 99, 235, 0.20) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'EDISON ST64 • 6500K DAYLIGHT • 13,200 LM',
-                name: '6500K Daylight White (Industrial High-Lumen)'
+            '5000K': {
+                hex: 0xfdf5f0,
+                emissive: 0xf0e6dc,
+                halo: 'radial-gradient(circle, rgba(224, 242, 254, 0.45) 0%, rgba(186, 230, 253, 0.18) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
+                badgeText: 'CITIZEN COB LED • CLU048 • 5000K • CRI 90+',
+                name: '5000K Cool White (Industrial Daylight)'
             }
         };
 
@@ -1379,171 +1330,152 @@
                 scene.environment = studioEnv;
             }
 
-            bulbGroup = new THREE.Group();
-            bulbGroup.position.set(0, 0.25, 0);
-            scene.add(bulbGroup);
+            cobGroup = new THREE.Group();
+            cobGroup.position.set(0, 0, 0);
+            scene.add(cobGroup);
 
             // =========================================================
-            // 1. AUTHENTIC ST64 EDISON GLASS ENVELOPE (CRYSTAL CLEAR)
+            // 1. CITIZEN ALUMINA CERAMIC SUBSTRATE BOARD (28mm x 28mm)
             // =========================================================
-            const bulbProfile = [
-                new THREE.Vector2(0.001, 2.36),   // Top sealed tip pip
-                new THREE.Vector2(0.35, 2.32),
-                new THREE.Vector2(0.85, 2.16),
-                new THREE.Vector2(1.35, 1.82),
-                new THREE.Vector2(1.78, 1.25),   // Widest dome equator
-                new THREE.Vector2(1.82, 0.65),
-                new THREE.Vector2(1.58, -0.05),  // Smooth taper
-                new THREE.Vector2(1.26, -0.72),
-                new THREE.Vector2(0.96, -1.35),  // Waist
-                new THREE.Vector2(0.76, -1.86),  // Neck transition
-                new THREE.Vector2(0.72, -2.08),  // Collar seat
-                new THREE.Vector2(0.68, -2.12)
-            ];
-            const glassGeo = new THREE.LatheGeometry(bulbProfile, 64);
-            const glassMat = new THREE.MeshPhysicalMaterial ? new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                transmission: 0.98,
-                opacity: 1.0,
-                transparent: true,
-                roughness: 0.03,
-                metalness: 0.05,
-                ior: 1.52,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.03,
-                reflectivity: 0.95,
-                side: THREE.FrontSide,
-                depthWrite: false
-            }) : new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.28,
-                roughness: 0.05,
-                metalness: 0.1
-            });
-            // Conditionally assign extended physical properties if supported by the runtime Three.js revision (r130+)
-            if ('thickness' in glassMat) glassMat.thickness = 0.65;
-            if ('specularIntensity' in glassMat) glassMat.specularIntensity = 1.0;
-            glassMesh = new THREE.Mesh(glassGeo, glassMat);
-            bulbGroup.add(glassMesh);
-
-            // =========================================================
-            // 2. CENTRAL GLASS MOUNT STEM, CANE & COPPER LEADS
-            // =========================================================
-            stemGroup = new THREE.Group();
-
-            // Borosilicate Fluted Flare Stem Seat
-            const flareGeo = new THREE.CylinderGeometry(0.12, 0.35, 1.15, 32);
-            const stemGlassMat = new THREE.MeshPhysicalMaterial ? new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                transmission: 0.94,
-                roughness: 0.08,
-                ior: 1.50,
-                transparent: true,
-                opacity: 0.85,
-                depthWrite: false
-            }) : new THREE.MeshStandardMaterial({
-                color: 0xf1f5f9,
-                transparent: true,
-                opacity: 0.65
-            });
-            const stemFlare = new THREE.Mesh(flareGeo, stemGlassMat);
-            stemFlare.position.set(0, -1.55, 0);
-            stemGroup.add(stemFlare);
-
-            // Glass Pinch Seal at Flare Apex
-            const pinchGeo = new THREE.BoxGeometry(0.32, 0.14, 0.08);
-            const pinchMesh = new THREE.Mesh(pinchGeo, stemGlassMat);
-            pinchMesh.position.set(0, -1.02, 0);
-            stemGroup.add(pinchMesh);
-
-            // Central Glass Support Cane / Rod
-            const caneGeo = new THREE.CylinderGeometry(0.042, 0.042, 1.52, 16);
-            const caneMesh = new THREE.Mesh(caneGeo, stemGlassMat);
-            caneMesh.position.set(0, -0.20, 0);
-            stemGroup.add(caneMesh);
-
-            // Top Glass Button Hub
-            const buttonGeo = new THREE.SphereGeometry(0.092, 16, 16);
-            const buttonMesh = new THREE.Mesh(buttonGeo, stemGlassMat);
-            buttonMesh.position.set(0, 0.56, 0);
-            stemGroup.add(buttonMesh);
-
-            // Dual Copper Lead-in Wires
-            const copperMat = new THREE.MeshStandardMaterial({
-                color: 0xca7c38,
-                metalness: 0.95,
-                roughness: 0.18
-            });
-            const leftLeadCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(-0.06, -1.6, 0),
-                new THREE.Vector3(-0.09, -1.0, 0),
-                new THREE.Vector3(-0.25, -0.42, 0)
-            ]);
-            const rightLeadCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(0.06, -1.6, 0),
-                new THREE.Vector3(0.09, -1.0, 0),
-                new THREE.Vector3(0.25, -0.42, 0)
-            ]);
-            const leadGeoL = new THREE.TubeGeometry(leftLeadCurve, 24, 0.022, 10, false);
-            const leadGeoR = new THREE.TubeGeometry(rightLeadCurve, 24, 0.022, 10, false);
-            stemGroup.add(new THREE.Mesh(leadGeoL, copperMat));
-            stemGroup.add(new THREE.Mesh(leadGeoR, copperMat));
-
-            // 4 Radial Molybdenum Wire Support Hooks (Holding Filament Apexes)
-            const molyMat = new THREE.MeshStandardMaterial({
-                color: 0x9ca3af,
-                metalness: 0.96,
-                roughness: 0.22
-            });
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2;
-                const hookCurve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(0, 0.56, 0),
-                    new THREE.Vector3(Math.cos(angle) * 0.22, 0.92, Math.sin(angle) * 0.22),
-                    new THREE.Vector3(Math.cos(angle) * 0.40, 1.28, Math.sin(angle) * 0.40)
-                ]);
-                const hookGeo = new THREE.TubeGeometry(hookCurve, 20, 0.012, 8, false);
-                stemGroup.add(new THREE.Mesh(hookGeo, molyMat));
-            }
-            bulbGroup.add(stemGroup);
-
-            // =========================================================
-            // 3. AUTHENTIC EDISON SQUIRREL-CAGE ZIG-ZAG FILAMENT
-            // =========================================================
-            filamentsGroup = new THREE.Group();
-            const hairpinPoints = [];
-            const totalPeaks = 4;
-            for (let i = 0; i < totalPeaks; i++) {
-                const angle1 = (i / totalPeaks) * Math.PI * 2;
-                const angleMid = ((i + 0.5) / totalPeaks) * Math.PI * 2;
-                
-                // Upper peak supported by hook
-                hairpinPoints.push(new THREE.Vector3(Math.cos(angle1) * 0.40, 1.28, Math.sin(angle1) * 0.40));
-                // Intermediate descending point
-                hairpinPoints.push(new THREE.Vector3(Math.cos((angle1 * 0.65 + angleMid * 0.35)) * 0.38, 0.45, Math.sin((angle1 * 0.65 + angleMid * 0.35)) * 0.38));
-                // Lower anchor loop
-                hairpinPoints.push(new THREE.Vector3(Math.cos(angleMid) * 0.28, -0.38, Math.sin(angleMid) * 0.28));
-                // Intermediate ascending point
-                const nextAngle = ((i + 1) / totalPeaks) * Math.PI * 2;
-                hairpinPoints.push(new THREE.Vector3(Math.cos((angleMid * 0.35 + nextAngle * 0.65)) * 0.38, 0.45, Math.sin((angleMid * 0.35 + nextAngle * 0.65)) * 0.38));
-            }
-            const hairpinCurve = new THREE.CatmullRomCurve3(hairpinPoints, true, 'centripetal', 0.4);
-            const filamentGeo = new THREE.TubeGeometry(hairpinCurve, 180, 0.022, 12, true);
-            
-            const filamentMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                emissive: cctProfiles[currentCCT].emissive,
-                emissiveIntensity: 6.5,
-                roughness: 0.12,
+            // Alumina ceramic substrate plate (High-dielectric off-white ceramic)
+            const ceramicGeo = new THREE.BoxGeometry(2.7, 2.7, 0.12);
+            const ceramicMat = new THREE.MeshStandardMaterial({
+                color: 0xf8fafc,
+                roughness: 0.35,
                 metalness: 0.05
             });
-            const filamentMesh = new THREE.Mesh(filamentGeo, filamentMat);
-            filamentsGroup.add(filamentMesh);
-            bulbGroup.add(filamentsGroup);
+            ceramicMesh = new THREE.Mesh(ceramicGeo, ceramicMat);
+            cobGroup.add(ceramicMesh);
+
+            // Aluminum Heat-Spreader Backing Plate (Thermal base)
+            const backplateGeo = new THREE.BoxGeometry(2.76, 2.76, 0.06);
+            const backplateMat = new THREE.MeshStandardMaterial({
+                color: 0x94a3b8,
+                metalness: 0.88,
+                roughness: 0.22
+            });
+            backplateMesh = new THREE.Mesh(backplateGeo, backplateMat);
+            backplateMesh.position.set(0, 0, -0.09);
+            cobGroup.add(backplateMesh);
+
+            // Corner Mounting Screw Relief Notches / Holes (4 corners)
+            const holeMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                metalness: 0.9,
+                roughness: 0.4
+            });
+            const holePositions = [
+                [-1.08, -1.08],
+                [1.08, -1.08],
+                [-1.08, 1.08],
+                [1.08, 1.08]
+            ];
+            holePositions.forEach(([hx, hy]) => {
+                const holeGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.14, 16);
+                const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+                holeMesh.rotation.x = Math.PI / 2;
+                holeMesh.position.set(hx, hy, 0);
+                cobGroup.add(holeMesh);
+
+                // Metallic screw ring rim
+                const ringGeo = new THREE.RingGeometry(0.14, 0.22, 16);
+                const ringMat = new THREE.MeshStandardMaterial({ color: 0xc4b5fd, metalness: 0.8, roughness: 0.3 });
+                const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                ringMesh.position.set(hx, hy, 0.062);
+                cobGroup.add(ringMesh);
+            });
+
+            // Citizen Polarity Notch (Chamfered Corner at Top-Left)
+            const notchGeo = new THREE.BoxGeometry(0.35, 0.35, 0.14);
+            const notchMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+            const notchMesh = new THREE.Mesh(notchGeo, notchMat);
+            notchMesh.position.set(-1.25, 1.25, 0);
+            notchMesh.rotation.z = Math.PI / 4;
+            cobGroup.add(notchMesh);
 
             // =========================================================
-            // 4. OPTICAL INCANDESCENT BLOOM SPRITE (NO MUDDY BALL!)
+            // 2. GOLD BONDING PADS & ELECTRICAL POLARITY TERMINALS
+            // =========================================================
+            const goldMat = new THREE.MeshStandardMaterial({
+                color: 0xeab308,
+                metalness: 0.94,
+                roughness: 0.18
+            });
+
+            // Positive Anode (+) Pad at Top-Right
+            const padPlusGeo = new THREE.BoxGeometry(0.42, 0.28, 0.02);
+            const padPlus = new THREE.Mesh(padPlusGeo, goldMat);
+            padPlus.position.set(0.95, 0.95, 0.065);
+            cobGroup.add(padPlus);
+
+            // Negative Cathode (-) Pad at Bottom-Left
+            const padMinusGeo = new THREE.BoxGeometry(0.42, 0.28, 0.02);
+            const padMinus = new THREE.Mesh(padMinusGeo, goldMat);
+            padMinus.position.set(-0.95, -0.95, 0.065);
+            cobGroup.add(padMinus);
+
+            // Polarity Markings (+) and (-)
+            const plusMarkGeo = new THREE.BoxGeometry(0.18, 0.04, 0.02);
+            const plusMark1 = new THREE.Mesh(plusMarkGeo, new THREE.MeshBasicMaterial({ color: 0x991b1b }));
+            plusMark1.position.set(0.95, 0.72, 0.066);
+            cobGroup.add(plusMark1);
+            const plusMark2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.02), new THREE.MeshBasicMaterial({ color: 0x991b1b }));
+            plusMark2.position.set(0.95, 0.72, 0.066);
+            cobGroup.add(plusMark2);
+
+            const minusMark = new THREE.Mesh(plusMarkGeo, new THREE.MeshBasicMaterial({ color: 0x1e3a8a }));
+            minusMark.position.set(-0.95, -0.72, 0.066);
+            cobGroup.add(minusMark);
+
+            // Laser Marking Strip: "CITIZEN CLU048"
+            const labelGeo = new THREE.PlaneGeometry(1.6, 0.22);
+            const labelCanvas = document.createElement('canvas');
+            labelCanvas.width = 256;
+            labelCanvas.height = 36;
+            const lCtx = labelCanvas.getContext('2d');
+            if (lCtx) {
+                lCtx.fillStyle = 'rgba(240, 240, 240, 0)';
+                lCtx.fillRect(0, 0, 256, 36);
+                lCtx.fillStyle = '#475569';
+                lCtx.font = 'bold 18px monospace';
+                lCtx.fillText('CITIZEN CLU048', 18, 24);
+            }
+            const labelTex = new THREE.CanvasTexture(labelCanvas);
+            const labelMat = new THREE.MeshBasicMaterial({ map: labelTex, transparent: true });
+            const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+            labelMesh.position.set(0, 1.15, 0.065);
+            cobGroup.add(labelMesh);
+
+            // =========================================================
+            // 3. CIRCULAR PHOSPHOR LIGHT EMITTING SURFACE (LES) & DAM RING
+            // =========================================================
+            // Silicone Retention Dam Ring (White resin boundary)
+            const damGeo = new THREE.TorusGeometry(0.88, 0.065, 16, 64);
+            const damMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.25,
+                metalness: 0.1
+            });
+            damMesh = new THREE.Mesh(damGeo, damMat);
+            damMesh.position.set(0, 0, 0.08);
+            cobGroup.add(damMesh);
+
+            // Central Circular Phosphor LES Disk
+            const phosphorGeo = new THREE.CylinderGeometry(0.86, 0.88, 0.08, 64);
+            const phosphorMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: cctProfiles[currentCCT].emissive,
+                emissiveIntensity: 5.5,
+                roughness: 0.2,
+                metalness: 0.05
+            });
+            phosphorMesh = new THREE.Mesh(phosphorGeo, phosphorMat);
+            phosphorMesh.rotation.x = Math.PI / 2;
+            phosphorMesh.position.set(0, 0, 0.07);
+            cobGroup.add(phosphorMesh);
+
+            // =========================================================
+            // 4. OPTICAL BLOOM SPRITE (FOCUSED PHOTON GLOW)
             // =========================================================
             const bloomTexture = createOpticalBloomTexture();
             const bloomMat = new THREE.SpriteMaterial({
@@ -1551,93 +1483,26 @@
                 blending: THREE.AdditiveBlending,
                 color: cctProfiles[currentCCT].hex,
                 transparent: true,
-                opacity: 0.85,
+                opacity: 0.88,
                 depthWrite: false
             });
             bloomSprite = new THREE.Sprite(bloomMat);
-            bloomSprite.position.set(0, 0.45, 0);
-            bloomSprite.scale.set(3.4, 4.0, 1.0);
-            bulbGroup.add(bloomSprite);
+            bloomSprite.position.set(0, 0, 0.25);
+            bloomSprite.scale.set(3.6, 3.6, 1.0);
+            cobGroup.add(bloomSprite);
 
             // =========================================================
-            // 5. CONTINUOUS HELICAL THREADED E27 BRASS BASE SOCKET
-            // =========================================================
-            const baseGroup = new THREE.Group();
-            
-            // Architectural Spun Brass Material
-            const brassMat = new THREE.MeshStandardMaterial({
-                color: 0xc99738,
-                metalness: 0.94,
-                roughness: 0.24
-            });
-
-            // Brass Sleeve Cylinder
-            const sleeveGeo = new THREE.CylinderGeometry(0.71, 0.71, 1.15, 48);
-            const sleeve = new THREE.Mesh(sleeveGeo, brassMat);
-            sleeve.position.set(0, -2.62, 0);
-            baseGroup.add(sleeve);
-
-            // Continuous Helical Screw Thread (4.2 Continuous Revolutions)
-            const helixPoints = [];
-            const threadTurns = 4.2;
-            const threadSteps = 140;
-            for (let i = 0; i <= threadSteps; i++) {
-                const t = i / threadSteps;
-                const angle = t * threadTurns * Math.PI * 2;
-                const r = 0.73;
-                const y = -2.08 - (t * 0.96);
-                helixPoints.push(new THREE.Vector3(Math.cos(angle) * r, y, Math.sin(angle) * r));
-            }
-            const helixCurve = new THREE.CatmullRomCurve3(helixPoints);
-            const helixGeo = new THREE.TubeGeometry(helixCurve, 140, 0.068, 16, false);
-            const helixMesh = new THREE.Mesh(helixGeo, brassMat);
-            baseGroup.add(helixMesh);
-
-            // Top Rolled Brass Collar Crimp Rim
-            const rimGeo = new THREE.TorusGeometry(0.735, 0.045, 16, 48);
-            const rim = new THREE.Mesh(rimGeo, brassMat);
-            rim.rotation.x = Math.PI / 2;
-            rim.position.set(0, -2.05, 0);
-            baseGroup.add(rim);
-
-            // Vitrite Black Ceramic Insulator at Base
-            const vitriteGeo = new THREE.CylinderGeometry(0.52, 0.60, 0.22, 36);
-            const vitriteMat = new THREE.MeshStandardMaterial({
-                color: 0x121316,
-                roughness: 0.82,
-                metalness: 0.15
-            });
-            const vitrite = new THREE.Mesh(vitriteGeo, vitriteMat);
-            vitrite.position.set(0, -3.22, 0);
-            baseGroup.add(vitrite);
-
-            // Contact Solder Pip
-            const pipGeo = new THREE.SphereGeometry(0.24, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
-            const pipMat = new THREE.MeshStandardMaterial({
-                color: 0x9ca3af,
-                metalness: 0.92,
-                roughness: 0.28
-            });
-            const pip = new THREE.Mesh(pipGeo, pipMat);
-            pip.rotation.x = Math.PI;
-            pip.position.set(0, -3.33, 0);
-            baseGroup.add(pip);
-
-            bulbGroup.add(baseGroup);
-
-            // =========================================================
-            // 6. ATMOSPHERIC DUST PARTICLES & SURGE SHOCKWAVE
+            // 5. ATMOSPHERIC DUST PARTICLES & SURGE SHOCKWAVE
             // =========================================================
             const particleCount = 42;
             const particleGeo = new THREE.BufferGeometry();
             const particlePos = new Float32Array(particleCount * 3);
             for (let i = 0; i < particleCount; i++) {
-                const r = 0.8 + Math.random() * 1.8;
+                const r = 0.4 + Math.random() * 1.6;
                 const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos((Math.random() * 2) - 1);
-                particlePos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-                particlePos[i * 3 + 1] = 0.5 + r * Math.cos(phi) * 0.9;
-                particlePos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+                particlePos[i * 3] = r * Math.cos(theta);
+                particlePos[i * 3 + 1] = r * Math.sin(theta);
+                particlePos[i * 3 + 2] = 0.2 + Math.random() * 1.5;
             }
             particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
             const particleMat = new THREE.PointsMaterial({
@@ -1648,10 +1513,10 @@
                 blending: THREE.AdditiveBlending
             });
             particleSystem = new THREE.Points(particleGeo, particleMat);
-            bulbGroup.add(particleSystem);
+            cobGroup.add(particleSystem);
 
             // Expanding Shockwave Surge Ring
-            const ringGeo = new THREE.RingGeometry(0.5, 0.75, 48);
+            const ringGeo = new THREE.RingGeometry(0.85, 1.05, 64);
             const ringMat = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 transparent: true,
@@ -1660,91 +1525,121 @@
                 blending: THREE.AdditiveBlending
             });
             shockwaveRing = new THREE.Mesh(ringGeo, ringMat);
-            shockwaveRing.rotation.x = Math.PI / 2;
-            shockwaveRing.position.set(0, 0.45, 0);
-            bulbGroup.add(shockwaveRing);
+            shockwaveRing.position.set(0, 0, 0.15);
+            cobGroup.add(shockwaveRing);
 
             // =========================================================
-            // 7. PHYSICS-BASED DYNAMIC LIGHTING
+            // 6. PHYSICS-BASED DYNAMIC LIGHTING
             // =========================================================
-            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 5.5, 16, 2.0);
-            corePointLight.position.set(0, 0.45, 0);
-            bulbGroup.add(corePointLight);
+            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 6.0, 16, 2.0);
+            corePointLight.position.set(0, 0, 0.85);
+            cobGroup.add(corePointLight);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
             scene.add(ambientLight);
 
-            keyLight = new THREE.DirectionalLight(0xffffff, 0.85);
-            keyLight.position.set(5, 7, 5);
+            keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
+            keyLight.position.set(5, 7, 6);
             scene.add(keyLight);
 
-            rimLight = new THREE.DirectionalLight(0x93c5fd, 0.55);
-            rimLight.position.set(-4, 3, -4);
+            rimLight = new THREE.DirectionalLight(0x93c5fd, 0.65);
+            rimLight.position.set(-4, 3, -3);
             scene.add(rimLight);
 
             // Initial 3D Isometric View
-            bulbGroup.rotation.x = 0.18;
-            bulbGroup.rotation.y = -0.36;
-            bulbGroup.rotation.z = -0.08;
+            cobGroup.rotation.x = 0.20;
+            cobGroup.rotation.y = -0.32;
+            cobGroup.rotation.z = -0.04;
 
             // =========================================================
-            // 8. INTERACTIVE MOUSE & TOUCH PHYSICS
+            // 8. UNIFIED SILKY DAMPED MOUSE & TOUCH PHYSICS ENGINE
             // =========================================================
-            const stageEl = document.getElementById('hero-3d-stage');
-            if (stageEl) {
-                stageEl.addEventListener('mousedown', (e) => {
-                    isDragging = true;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
+            const stageEl = document.getElementById('hero-3d-stage') || container;
+            const stageContainer = document.getElementById('hero-stage-container') || (stageEl ? stageEl.parentElement : container);
+            const glareSheen = stageEl ? stageEl.querySelector('.glare-sheen') : null;
+
+            const badgeDiscount = document.getElementById('hero-badge-discount');
+            const badgeVat = document.getElementById('hero-badge-vat');
+            const badgeFreight = document.getElementById('hero-badge-freight');
+
+            // Interactive Damping State Variables
+            let targetMouseX = 0, targetMouseY = 0;
+            let currentMouseX = 0, currentMouseY = 0;
+            let mouseInfluence = 0.0;
+            let isHoveringStage = false;
+            let stageRotX = 0, stageRotY = 0;
+
+            // Calculate normalized mouse coordinates [-1.0, 1.0] relative to stage center
+            function getStageNormalizedCoords(clientX, clientY) {
+                if (!stageEl) return { x: 0, y: 0, isDirect: false };
+                const rect = stageEl.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const halfW = rect.width / 2;
+                const halfH = rect.height / 2;
+                const x = Math.max(-1.0, Math.min(1.0, (clientX - centerX) / halfW));
+                const y = Math.max(-1.0, Math.min(1.0, (clientY - centerY) / halfH));
+                const distFromCenter = Math.sqrt(x * x + y * y);
+                // Hover threshold encompassing the circular stage and floating badges
+                const isDirect = distFromCenter <= 1.25;
+                return { x, y, isDirect };
+            }
+
+            if (stageContainer) {
+                stageContainer.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('#luminaire-center-toggle') || e.target.closest('#luminaire-3d-canvas') || e.target.closest('#hero-3d-stage')) {
+                        isDragging = true;
+                        previousMousePosition = { x: e.clientX, y: e.clientY };
+                    }
                 });
 
                 window.addEventListener('mouseup', () => {
                     isDragging = false;
                 });
 
-                stageEl.addEventListener('mousemove', (e) => {
+                stageContainer.addEventListener('mousemove', (e) => {
+                    const coords = getStageNormalizedCoords(e.clientX, e.clientY);
                     if (isDragging) {
                         const deltaX = e.clientX - previousMousePosition.x;
                         const deltaY = e.clientY - previousMousePosition.y;
-                        targetRotY += deltaX * 0.012;
-                        targetRotX += deltaY * 0.012;
+                        currentRotY += deltaX * 0.012;
+                        currentRotX += deltaY * 0.012;
                         previousMousePosition = { x: e.clientX, y: e.clientY };
-                        isMouseOver = true;
+                        isHoveringStage = true;
                     } else {
-                        const rect = stageEl.getBoundingClientRect();
-                        const x = (e.clientX - rect.left) / rect.width - 0.5;
-                        const y = (e.clientY - rect.top) / rect.height - 0.5;
-                        targetRotY = -0.36 + (x * 0.55);
-                        targetRotX = 0.18 + (-y * 0.45);
-                        isMouseOver = true;
+                        targetMouseX = coords.x;
+                        targetMouseY = coords.y;
+                        isHoveringStage = coords.isDirect;
                     }
                 });
 
-                stageEl.addEventListener('mouseleave', () => {
-                    isMouseOver = false;
+                stageContainer.addEventListener('mouseleave', () => {
+                    isHoveringStage = false;
                     isDragging = false;
                 });
 
-                stageEl.addEventListener('touchstart', (e) => {
+                // Touch physics for mobile/tablets
+                stageContainer.addEventListener('touchstart', (e) => {
                     if (e.touches.length > 0) {
                         isDragging = true;
                         previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                     }
                 }, { passive: true });
 
-                stageEl.addEventListener('touchmove', (e) => {
+                stageContainer.addEventListener('touchmove', (e) => {
                     if (e.touches.length > 0 && isDragging) {
                         const deltaX = e.touches[0].clientX - previousMousePosition.x;
                         const deltaY = e.touches[0].clientY - previousMousePosition.y;
-                        targetRotY += deltaX * 0.015;
-                        targetRotX += deltaY * 0.015;
+                        currentRotY += deltaX * 0.014;
+                        currentRotX += deltaY * 0.014;
                         previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                        isMouseOver = true;
+                        isHoveringStage = true;
                     }
                 }, { passive: true });
 
-                stageEl.addEventListener('touchend', () => {
+                stageContainer.addEventListener('touchend', () => {
                     isDragging = false;
-                    isMouseOver = false;
+                    isHoveringStage = false;
                 });
             }
 
@@ -1778,73 +1673,129 @@
             obs.observe(canvas);
 
             // =========================================================
-            // 9. ANIMATION LOOP WITH INCANDESCENT THERMAL PHYSICS
+            // 9. ANIMATION LOOP WITH LIQUID-SMOOTH INERTIAL PHYSICS
             // =========================================================
             let clock = new THREE.Clock();
             function animate() {
                 requestAnimationFrame(animate);
                 if (!isVisible) return;
 
-                const delta = clock.getDelta();
+                const delta = Math.min(clock.getDelta(), 0.1);
                 const time = clock.getElapsedTime();
 
-                // Gentle Gyroscopic Drift When Idle
-                if (!isMouseOver && !isDragging) {
-                    targetRotX = 0.18 + Math.sin(time * 0.5) * 0.08;
-                    targetRotY = -0.36 + Math.sin(time * 0.35) * 0.16;
+                // -----------------------------------------------------
+                // Continuous Exponential Smoothing (Zero Snapping / Jerk)
+                // -----------------------------------------------------
+                if (isHoveringStage && !isDragging) {
+                    mouseInfluence += (1.0 - mouseInfluence) * 0.08;
+                } else if (!isDragging) {
+                    mouseInfluence += (0.0 - mouseInfluence) * 0.035;
                 }
-                currentRotX += (targetRotX - currentRotX) * 0.07;
-                currentRotY += (targetRotY - currentRotY) * 0.07;
 
-                bulbGroup.rotation.x = currentRotX;
-                bulbGroup.rotation.y = currentRotY;
-                bulbGroup.rotation.z = -0.08 + Math.sin(time * 0.25) * 0.02;
+                currentMouseX += (targetMouseX - currentMouseX) * 0.07;
+                currentMouseY += (targetMouseY - currentMouseY) * 0.07;
 
-                // Incandescent Thermal Inertia (Heats up in ~250ms, cools down in ~450ms)
+                // -----------------------------------------------------
+                // 1. Citizen LED COB Model 3D Rotation Physics
+                // -----------------------------------------------------
+                if (!isDragging) {
+                    // Base resting perspective with elegant gentle gyroscopic breathing
+                    const idleRotX = 0.20 + Math.sin(time * 0.5) * 0.05;
+                    const idleRotY = -0.32 + Math.sin(time * 0.35) * 0.10;
+
+                    // Mouse-guided 3D tilt target (clean, ergonomic responsiveness)
+                    const hoverRotX = 0.20 + (-currentMouseY * 0.35);
+                    const hoverRotY = -0.32 + (currentMouseX * 0.45);
+
+                    // Continuous spring blend: eliminates boundary vibration
+                    const targetX = idleRotX * (1.0 - mouseInfluence) + hoverRotX * mouseInfluence;
+                    const targetY = idleRotY * (1.0 - mouseInfluence) + hoverRotY * mouseInfluence;
+
+                    currentRotX += (targetX - currentRotX) * 0.065;
+                    currentRotY += (targetY - currentRotY) * 0.065;
+                }
+
+                cobGroup.rotation.x = currentRotX;
+                cobGroup.rotation.y = currentRotY;
+                cobGroup.rotation.z = -0.04 + Math.sin(time * 0.25) * 0.015;
+
+                // -----------------------------------------------------
+                // 2. Silky Damped Circular Stage Micro-Tilt
+                // -----------------------------------------------------
+                if (stageEl) {
+                    const targetStageX = (-currentMouseY * 3.5) * mouseInfluence;
+                    const targetStageY = (currentMouseX * 4.5) * mouseInfluence;
+                    stageRotX += (targetStageX - stageRotX) * 0.065;
+                    stageRotY += (targetStageY - stageRotY) * 0.065;
+
+                    stageEl.style.transform = `perspective(1000px) rotateX(${stageRotX.toFixed(2)}deg) rotateY(${stageRotY.toFixed(2)}deg)`;
+                }
+
+                // -----------------------------------------------------
+                // 3. Dynamic Specular Glare Tracking
+                // -----------------------------------------------------
+                if (glareSheen) {
+                    const glareX = 50 + currentMouseX * 35;
+                    const glareY = 50 + currentMouseY * 35;
+                    glareSheen.style.opacity = (0.2 + mouseInfluence * 0.45).toFixed(2);
+                    glareSheen.style.background = `radial-gradient(circle at ${glareX.toFixed(1)}% ${glareY.toFixed(1)}%, rgba(255,255,255,0.22) 0%, transparent 60%)`;
+                }
+
+                // -----------------------------------------------------
+                // 4. Floating Depth Badges Damped Parallax
+                // -----------------------------------------------------
+                if (badgeDiscount) {
+                    const px = (currentMouseX * 18 * mouseInfluence).toFixed(1);
+                    const py = (currentMouseY * 18 * mouseInfluence).toFixed(1);
+                    badgeDiscount.style.transform = `translate3d(${px}px, ${py}px, 32px)`;
+                }
+                if (badgeVat) {
+                    const px = (currentMouseX * 14 * mouseInfluence).toFixed(1);
+                    const py = (currentMouseY * 14 * mouseInfluence).toFixed(1);
+                    badgeVat.style.transform = `translate3d(${px}px, ${py}px, 24px)`;
+                }
+                if (badgeFreight) {
+                    const px = (currentMouseX * 16 * mouseInfluence).toFixed(1);
+                    const py = (currentMouseY * 16 * mouseInfluence).toFixed(1);
+                    badgeFreight.style.transform = `translate3d(${px}px, ${py}px, 28px)`;
+                }
+
+                // LED Phosphor Electronic Response (Instant warm-up, phosphor decay curve)
                 if (isPowerOn) {
-                    thermalPower += (1.0 - thermalPower) * 0.12;
+                    thermalPower += (1.0 - thermalPower) * 0.16;
                 } else {
-                    thermalPower += (0.0 - thermalPower) * 0.06;
+                    thermalPower += (0.0 - thermalPower) * 0.08;
                 }
 
-                // Dynamic Color Interpolation Across Incandescent Thermal Curve
-                const coldColor = new THREE.Color(0x222226);
-                const cherryRed = new THREE.Color(0x991b1b);
-                const incandescentOrange = new THREE.Color(0xea580c);
+                // Dynamic Phosphor Color Emission
+                const coldPhosphor = new THREE.Color(0xf59e0b); // Unexcited yellow-amber phosphor
                 const targetColor = new THREE.Color(cctProfiles[currentCCT].hex);
 
                 let displayColor = new THREE.Color();
-                if (thermalPower < 0.2) {
-                    displayColor.copy(coldColor).lerp(cherryRed, thermalPower / 0.2);
-                } else if (thermalPower < 0.55) {
-                    displayColor.copy(cherryRed).lerp(incandescentOrange, (thermalPower - 0.2) / 0.35);
-                } else {
-                    displayColor.copy(incandescentOrange).lerp(targetColor, (thermalPower - 0.55) / 0.45);
-                }
+                displayColor.lerpColors(coldPhosphor, targetColor, Math.min(1.0, thermalPower * 1.2));
 
-                // Update Filament Material
-                if (filamentsGroup && filamentsGroup.children[0]) {
-                    const tube = filamentsGroup.children[0];
-                    tube.material.emissive.copy(displayColor);
+                // Update Central Phosphor LES Disc
+                if (phosphorMesh) {
+                    phosphorMesh.material.emissive.copy(displayColor);
                     const surgeMult = isSurging ? 1.5 : 1.0;
-                    tube.material.emissiveIntensity = thermalPower * 6.5 * surgeMult;
-                    tube.material.color.lerpColors(coldColor, new THREE.Color(0xffffff), thermalPower);
+                    phosphorMesh.material.emissiveIntensity = thermalPower * 6.5 * surgeMult;
+                    phosphorMesh.material.color.lerpColors(coldPhosphor, new THREE.Color(0xffffff), thermalPower);
                 }
 
                 // Update Optical Bloom Sprite (Smooth Breathing & Expansion)
                 if (bloomSprite) {
-                    const breathe = 1.0 + Math.sin(time * 2.4) * 0.04;
-                    const surgeScale = isSurging ? 1.35 : 1.0;
-                    const sW = 3.4 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
-                    const sH = 4.0 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const breathe = 1.0 + Math.sin(time * 2.4) * 0.03;
+                    const surgeScale = isSurging ? 1.4 : 1.0;
+                    const sW = 3.6 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const sH = 3.6 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
                     bloomSprite.scale.set(sW, sH, 1.0);
-                    bloomSprite.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.98 : 0.85);
+                    bloomSprite.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.98 : 0.88);
                     bloomSprite.material.color.copy(displayColor);
                 }
 
-                // Update Core Point Light with Quadratic Falloff
+                // Update Core Point Light with High CRI Intensity
                 if (corePointLight) {
-                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 8.5 : 5.5);
+                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 9.5 : 6.0);
                     corePointLight.color.copy(displayColor);
                 }
 
@@ -1852,9 +1803,9 @@
                 if (particleSystem) {
                     const positions = particleSystem.geometry.attributes.position.array;
                     for (let i = 0; i < particleCount; i++) {
-                        positions[i * 3 + 1] += (thermalPower > 0.1 ? 0.012 : 0.003);
-                        if (positions[i * 3 + 1] > 2.6) {
-                            positions[i * 3 + 1] = -1.2;
+                        positions[i * 3 + 2] += (thermalPower > 0.1 ? 0.012 : 0.003);
+                        if (positions[i * 3 + 2] > 2.2) {
+                            positions[i * 3 + 2] = 0.2;
                         }
                     }
                     particleSystem.geometry.attributes.position.needsUpdate = true;
@@ -1898,10 +1849,10 @@
 
             if (isPowerOn) {
                 if (btn) {
-                    btn.className = 'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer whitespace-nowrap';
+                    btn.className = 'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer whitespace-nowrap';
                 }
-                if (label) label.innerText = 'LIGHT: ON';
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                if (label) label.innerText = 'COB: ON';
+                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse';
                 if (text) text.innerText = cctProfiles[currentCCT].badgeText;
                 if (halo) {
                     halo.style.opacity = '0.85';
@@ -1910,18 +1861,18 @@
                 window.triggerLuminaireSurge();
             } else {
                 if (btn) {
-                    btn.className = 'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-slate-600 active:scale-95 cursor-pointer whitespace-nowrap';
+                    btn.className = 'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-slate-600 active:scale-95 cursor-pointer whitespace-nowrap';
                 }
-                if (label) label.innerText = 'LIGHT: OFF';
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-slate-500';
-                if (text) text.innerText = 'STANDBY • ECO SLEEP MODE';
+                if (label) label.innerText = 'COB: OFF';
+                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-500';
+                if (text) text.innerText = 'CITIZEN COB LED • STANDBY MODE';
                 if (halo) {
                     halo.style.opacity = '0.12';
                 }
             }
         };
 
-        // Kelvin Color Temperature Selector (3000K / 4000K / 6500K)
+        // Kelvin Color Temperature Selector (3000K / 3500K / 4000K / 5000K)
         window.setLuminaireCCT = function(cct, btnEl) {
             if (!cctProfiles[cct]) return;
             currentCCT = cct;
@@ -1929,11 +1880,17 @@
 
             // Update CCT Buttons
             document.querySelectorAll('.cct-btn').forEach(b => {
-                b.className = 'cct-btn px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer';
+                b.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer';
             });
             if (btnEl) {
-                const activeBg = cct === '3000K' ? 'bg-amber-500 text-white shadow-sm' : (cct === '4000K' ? 'bg-yellow-400 text-slate-900 shadow-sm' : 'bg-blue-500 text-white shadow-sm');
-                btnEl.className = 'cct-btn px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all duration-200 ' + activeBg + ' cursor-pointer';
+                const activeBg = cct === '3000K' 
+                    ? 'bg-amber-500 text-white shadow-sm' 
+                    : (cct === '3500K' 
+                        ? 'bg-orange-500 text-white shadow-sm' 
+                        : (cct === '4000K' 
+                            ? 'bg-yellow-400 text-slate-950 shadow-sm' 
+                            : 'bg-blue-400 text-slate-950 shadow-sm'));
+                btnEl.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 ' + activeBg + ' cursor-pointer';
             }
 
             // Update Ambient Halo & Tech Badge
@@ -1946,7 +1903,7 @@
                 text.innerText = profile.badgeText;
             }
 
-            // Trigger brief incandescent surge
+            // Trigger brief photonic surge
             window.triggerLuminaireSurge();
         };
 

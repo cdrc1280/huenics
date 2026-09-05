@@ -1583,7 +1583,7 @@
                 // 1. Interactive 3D Perspective Tilt on Cards with Dynamic Specular Glare
                 const tiltElements = document.querySelectorAll('.card-interactive, .bento-surface, .product-card, .catalog-card, [data-3d-tilt]');
                 tiltElements.forEach(el => {
-                    if (el.dataset.tiltActive) return;
+                    if (el.dataset.tiltActive || el.id === 'hero-3d-stage') return;
                     el.dataset.tiltActive = 'true';
 
                     // Ensure card has relative positioning & preserve-3d
@@ -1651,30 +1651,11 @@
                     el.addEventListener('mouseleave', onMouseLeave);
                 });
 
-                // 2. Interactive Hero 3D Stage Mouse Tracking
+                // 2. Interactive Hero 3D Stage Physics
+                // Note: Dedicated WebGL, micro-tilt and badge parallax are managed synchronously by window.initHuenicsLuminaire3D
                 const heroStage = document.getElementById('hero-3d-stage');
-                if (heroStage && !heroStage.dataset.heroTiltActive) {
+                if (heroStage) {
                     heroStage.dataset.heroTiltActive = 'true';
-                    let heroRect;
-                    const heroContainer = heroStage.parentElement;
-                    heroContainer.addEventListener('mousemove', (e) => {
-                        if (!heroRect) heroRect = heroContainer.getBoundingClientRect();
-                        const x = e.clientX - heroRect.left;
-                        const y = e.clientY - heroRect.top;
-                        const xPct = (x / heroRect.width) - 0.5;
-                        const yPct = (y / heroRect.height) - 0.5;
-                        const rotX = -(yPct * 12).toFixed(2);
-                        const rotY = (xPct * 16).toFixed(2);
-                        heroStage.style.transform = `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(20px)`;
-                    });
-                    heroContainer.addEventListener('mouseleave', () => {
-                        heroStage.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-                        heroStage.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0)';
-                        heroRect = null;
-                    });
-                    heroContainer.addEventListener('mouseenter', () => {
-                        heroStage.style.transition = 'transform 0.15s ease-out';
-                    });
                 }
 
                 // 3. GSAP Stagger Reveals with Guaranteed Visibility Fallback

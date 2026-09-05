@@ -83,6 +83,11 @@ class Product extends Model
         return $this->hasMany(ProductComponent::class, 'parent_product_id');
     }
 
+    public function usedAsSubComponent(): HasMany
+    {
+        return $this->hasMany(ProductComponent::class, 'component_product_id');
+    }
+
     public function componentGroups(): array
     {
         return $this->components()
@@ -114,6 +119,31 @@ class Product extends Model
     public function getHasSubComponentsAttribute(): bool
     {
         return $this->components()->exists();
+    }
+
+    /**
+     * Calculate maximum parent units that can be assembled based on sub-component stocks.
+     * Returns null if no tracked catalog components exist.
+     */
+    public function getBomStockCapacityAttribute(): ?float
+    {
+        $components = $this->components()->with('componentProduct.inventoryItem')->get();
+        if ($components->isEmpty()) {
+            return null;
+        }
+
+        $capacities = [];
+        foreach ($components as $component) {
+            if ($component->componentProduct && $component->componentProduct->inventoryItem) {
+                $componentStock = (float) $component->componentProduct->inventoryItem->quantity_on_hand;
+                $reqQty = (float) ($component->quantity ?: 1);
+                if ($reqQty > 0) {
+                    $capacities[] = floor($componentStock / $reqQty);
+                }
+            }
+        }
+
+        return !empty($capacities) ? (float) min($capacities) : null;
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────

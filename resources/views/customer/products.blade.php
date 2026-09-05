@@ -155,12 +155,14 @@
                                 </span>
                             </div>
                         @endif
-                        <span class="absolute top-2.5 left-2.5 hisi-pill-badge shadow-sm">
-                            {{ strtoupper($product->category ?: 'Lighting') }}
-                        </span>
-                        <span class="absolute top-2.5 right-2.5 text-[10px] font-mono text-slate-600 dark:text-slate-300 font-bold bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur px-2 py-0.5 rounded shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-                            {{ $product->sku ?: $product->product_code ?: 'SKU-GEN' }}
-                        </span>
+                        <div class="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-2 z-10 pointer-events-none">
+                            <span class="hisi-pill-badge shadow-sm shrink min-w-0 max-w-[62%] !inline-flex items-center pointer-events-auto" title="{{ strtoupper($product->category ?: 'Lighting') }}">
+                                <span class="truncate">{{ strtoupper($product->category ?: 'Lighting') }}</span>
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-600 dark:text-slate-300 font-bold bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur px-2 py-0.5 rounded shadow-sm border border-slate-200/60 dark:border-slate-700/60 shrink-0 max-w-[38%] truncate pointer-events-auto" title="{{ $product->sku ?: $product->product_code ?: 'SKU-GEN' }}">
+                                {{ $product->sku ?: $product->product_code ?: 'SKU-GEN' }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Title -->

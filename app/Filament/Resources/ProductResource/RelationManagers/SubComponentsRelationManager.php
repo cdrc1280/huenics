@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ProductResource\RelationManagers;
 use App\Enums\UnitOfMeasure;
 use App\Models\Product;
 use App\Models\ProductComponent;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -155,6 +157,7 @@ class SubComponentsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('component_name')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('effective_image')
                     ->label('Picture')
@@ -254,10 +257,91 @@ class SubComponentsRelationManager extends RelationManager
                         ? "Warehouse stock for catalog item {$record->componentProduct->canonical_name}"
                         : 'Custom bespoke component (not tracked separately in warehouse catalog)'
                     ),
+
+                TextColumn::make('assembleable_units')
+                    ->label('Max Build Units')
+                    ->badge()
+                    ->state(function (ProductComponent $record): string {
+                        if ($record->stock_on_hand === null) {
+                            return 'Custom Part';
+                        }
+                        $qty = (float) ($record->quantity ?: 1);
+                        $avail = $qty > 0 ? floor($record->stock_on_hand / $qty) : 0;
+                        return number_format($avail, 0) . ' units';
+                    })
+                    ->color(function (ProductComponent $record): string {
+                        if ($record->stock_on_hand === null) return 'gray';
+                        $qty = (float) ($record->quantity ?: 1);
+                        $avail = $qty > 0 ? floor($record->stock_on_hand / $qty) : 0;
+                        return $avail <= 0 ? 'danger' : ($avail < 10 ? 'warning' : 'success');
+                    })
+                    ->tooltip('Maximum parent units that can be built from current stock of this component'),
             ])
             ->headerActions([
+                Action::make('bulk_add_subcomponents')
+                    ->label('Bulk Add Sub-Components')
+                    ->icon('heroicon-o-squares-plus')
+                    ->color('primary')
+                    ->modalHeading('Bulk Add Sub-Components (Select Multiple Catalog Products)')
+                    ->modalDescription('Select multiple products from the catalogue dropdown to automatically attach them as sub-components / BOM parts.')
+                    ->modalWidth('2xl')
+                    ->form([
+                        Select::make('component_product_ids')
+                            ->label('Select Catalogue Products (Multiple Dropdown)')
+                            ->multiple()
+                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->placeholder('Search and select products...')
+                            ->helperText('Selected products will be bulk-created as BOM sub-components.'),
+
+                        TextInput::make('default_quantity')
+                            ->label('Quantity per Parent Unit')
+                            ->numeric()
+                            ->default(1.0)
+                            ->minValue(0.0001)
+                            ->required()
+                            ->helperText('Number of units required per 1 unit of the parent product.'),
+                    ])
+                    ->action(function (array $data): void {
+                        $parentProduct = $this->getOwnerRecord();
+                        $productIds = $data['component_product_ids'] ?? [];
+                        $qty = (float) ($data['default_quantity'] ?? 1.0);
+                        $count = 0;
+
+                        foreach ($productIds as $prodId) {
+                            $catalogItem = Product::find($prodId);
+                            if (!$catalogItem) continue;
+
+                            ProductComponent::create([
+                                'parent_product_id'    => $parentProduct->id,
+                                'component_product_id' => $catalogItem->id,
+                                'component_name'       => $catalogItem->canonical_name,
+                                'product_code'         => $catalogItem->product_code ?: $catalogItem->sku,
+                                'category'             => $catalogItem->category ?: 'General',
+                                'wattage'              => $catalogItem->wattage,
+                                'voltage'              => $catalogItem->voltage,
+                                'color_temperature'    => $catalogItem->color_temperature,
+                                'unit'                 => $catalogItem->unit_default ?: 'pcs',
+                                'cost_price'           => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                                'quantity'             => $qty,
+                                'image_path'           => $catalogItem->image_path,
+                                'component_group'      => $catalogItem->category ?: 'General',
+                                'option_name'          => $catalogItem->canonical_name,
+                                'additional_cost'      => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                            ]);
+                            $count++;
+                        }
+
+                        Notification::make()
+                            ->title("{$count} Sub-Components Created")
+                            ->body("Successfully attached {$count} parts to {$parentProduct->canonical_name}. Stocks and BOM capacity updated.")
+                            ->success()
+                            ->send();
+                    }),
+
                 CreateAction::make()
-                    ->label('Add Sub-Component')
+                    ->label('Add Single Sub-Component')
                     ->icon('heroicon-o-plus')
                     ->modalHeading('Add Product Sub-Component (BOM Part)')
                     ->mutateFormDataUsing(function (array $data): array {

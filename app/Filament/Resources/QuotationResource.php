@@ -63,6 +63,7 @@ class QuotationResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ])
+            ->where('is_online_request', false)
             ->with(['salesAgent', 'project', 'lineItems']);
         $user = auth()->user();
 

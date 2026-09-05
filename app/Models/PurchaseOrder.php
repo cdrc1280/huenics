@@ -74,6 +74,30 @@ class PurchaseOrder extends Model
     public const STATUS_CANCELLED = PurchaseOrderStatus::Cancelled->value;
     public const STATUS_REJECTED = PurchaseOrderStatus::Rejected->value;
 
+    // Payment Terms (Max 30 Days)
+    public const PAYMENT_TERM_COD = 'cod';
+    public const PAYMENT_TERM_PDC_7 = 'pdc_7';
+    public const PAYMENT_TERM_PDC_15 = 'pdc_15';
+    public const PAYMENT_TERM_PDC_30 = 'pdc_30';
+    public const PAYMENT_TERM_CREDIT_30 = 'credit_30';
+
+    // Payment Statuses
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+    public const PAYMENT_STATUS_PAID = 'paid';
+    public const PAYMENT_STATUS_PENDING = 'pending';
+    public const PAYMENT_STATUS_OVERDUE = 'overdue';
+
+    public static function getPaymentTermOptions(): array
+    {
+        return [
+            self::PAYMENT_TERM_COD => 'Cash On Delivery (COD) — Considered Paid',
+            self::PAYMENT_TERM_PDC_7 => 'Post Dated Check (PDC) - 7 Days — Considered Paid',
+            self::PAYMENT_TERM_PDC_15 => 'Post Dated Check (PDC) - 15 Days — Considered Paid',
+            self::PAYMENT_TERM_PDC_30 => 'Post Dated Check (PDC) - 30 Days — Considered Paid',
+            self::PAYMENT_TERM_CREDIT_30 => '30 Days Term — Manual Payment Counter',
+        ];
+    }
+
     public static function getWarrantyPeriodOptions(): array
     {
         return [
@@ -125,6 +149,15 @@ class PurchaseOrder extends Model
         'payment_terms',
         'delivery_terms',
         'is_conforme_po',
+        'payment_term_type',
+        'payment_due_date',
+        'payment_status',
+        'paid_at',
+        'pdc_check_number',
+        'pdc_bank',
+        'last_payment_reminder_sent_at',
+        'payment_account',
+        'payment_notes',
     ];
 
     protected function casts(): array
@@ -135,6 +168,9 @@ class PurchaseOrder extends Model
             'actual_delivery_date' => 'date',
             'warranty_start_date' => 'date',
             'warranty_end_date' => 'date',
+            'payment_due_date' => 'date',
+            'paid_at' => 'datetime',
+            'last_payment_reminder_sent_at' => 'datetime',
             'has_warranty' => 'boolean',
             'is_inventory_deducted' => 'boolean',
             'is_completed' => 'boolean',
@@ -145,6 +181,103 @@ class PurchaseOrder extends Model
             'realized_profit' => 'decimal:2',
             'printed_vat' => 'decimal:2',
             'computed_vat' => 'decimal:2',
+        ];
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_PAID;
+    }
+
+    public function isDelivered(): bool
+    {
+        return $this->delivery_status === self::DELIVERY_DELIVERED || $this->status === self::STATUS_DELIVERED;
+    }
+
+    public function getDaysUntilDueAttribute(): ?int
+    {
+        if (!$this->payment_due_date) {
+            return null;
+        }
+
+        return (int) now()->startOfDay()->diffInDays($this->payment_due_date->startOfDay(), false);
+    }
+
+    public function getDueStatusColorAttribute(): string
+    {
+        if ($this->isPaid()) {
+            return 'success';
+        }
+
+        if (!$this->payment_due_date) {
+            return 'gray';
+        }
+
+        $days = $this->days_until_due;
+
+        if ($days < 0) {
+            return 'danger'; // Overdue
+        }
+
+        if ($days <= 10) {
+            return 'warning'; // Due in 10 days or less: alert accountant to email client
+        }
+
+        return 'success'; // Safe timeline
+    }
+
+    public function canSendPaymentReminderToday(): bool
+    {
+        if (!$this->last_payment_reminder_sent_at) {
+            return true;
+        }
+
+        return !$this->last_payment_reminder_sent_at->isToday();
+    }
+
+    /**
+     * Generate ready-to-send payment reminder email payload (recipient, subject, body).
+     */
+    public function generatePaymentReminderEmail(): array
+    {
+        $clientEmail = $this->quotation?->email ?: '';
+        if (empty($clientEmail) || $clientEmail === 'N/A') {
+            $clientEmail = 'accounting@' . strtolower(preg_replace('/[^a-z0-9]/', '', $this->customer_name)) . '.com';
+        }
+
+        $dueDateStr = $this->payment_due_date ? $this->payment_due_date->format('F d, Y') : 'Pending Schedule';
+        $amountFormatted = 'PHP ' . number_format((float) $this->order_amount, 2);
+        $daysOverdue = ($this->days_until_due !== null && $this->days_until_due < 0) ? abs($this->days_until_due) : 0;
+        $urgencyText = $daysOverdue > 0
+            ? "Please be informed that this account is currently OVERDUE by {$daysOverdue} calendar days."
+            : "This is a friendly reminder that payment is due on {$dueDateStr} (" . ($this->days_until_due ?? 0) . " days remaining).";
+
+        $subject = "Payment Settlement Reminder: PO #{$this->po_number} - {$amountFormatted}";
+
+        $body = "Dear {$this->customer_name},\n\n"
+            . "Greetings from Huenics Industrial Sales Inc.\n\n"
+            . "We would like to follow up regarding the outstanding payment for Purchase Order #{$this->po_number}.\n\n"
+            . "Order Summary:\n"
+            . "• Purchase Order #: {$this->po_number}\n"
+            . "• Project / Site: " . ($this->project?->name ?? 'General Delivery') . "\n"
+            . "• Delivered On: " . ($this->actual_delivery_date ? $this->actual_delivery_date->format('F d, Y') : 'Completed') . "\n"
+            . "• Payment Terms: " . ($this->payment_terms ?: '30 Days Term') . "\n"
+            . "• Total Due Amount: {$amountFormatted}\n"
+            . "• Settlement Due Date: {$dueDateStr}\n\n"
+            . "{$urgencyText}\n\n"
+            . "Settlement / Banking Details for Transfer / PDC Pickup:\n"
+            . "• Account Name: Huenics Industrial Sales Inc.\n"
+            . "• Bank: BDO Unibank - Ortigas Center Branch\n"
+            . "• Account Number: 0048-2801-4492\n"
+            . "• CS Hotline: (02) 8561-6836 / +63 968 8500720\n\n"
+            . "Please reply with your deposit slip or check pickup confirmation once processed.\n\n"
+            . "Warm regards,\n"
+            . "Finance & Accounting Department\nHuenics Industrial Sales Inc.";
+
+        return [
+            'recipient' => $clientEmail,
+            'subject'   => $subject,
+            'body'      => $body,
         ];
     }
 

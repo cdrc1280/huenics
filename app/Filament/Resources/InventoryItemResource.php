@@ -22,6 +22,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -33,6 +34,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -137,6 +139,12 @@ class InventoryItemResource extends Resource
                             ->label('Unit of Measure')
                             ->default('pcs')
                             ->required(),
+
+                        Toggle::make('is_owned')
+                            ->label('Company-Owned Stock')
+                            ->default(true)
+                            ->helperText('Enable if company-owned. Disable if client-supplied, consigned, or vendor-held.')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -169,6 +177,7 @@ class InventoryItemResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('inbound_date')
                     ->label('Date')
@@ -236,6 +245,18 @@ class InventoryItemResource extends Resource
                     ->formatStateUsing(fn($state, InventoryItem $r) => number_format((float) $state, 0) . ' ' . ($r->unit ?: 'pcs'))
                     ->tooltip(fn(InventoryItem $r) => "Current stock balance: {$r->quantity_on_hand} {$r->unit}"),
 
+                TextColumn::make('is_owned')
+                    ->label('Ownership')
+                    ->badge()
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Company-Owned' : 'Consignment / Client-Supplied')
+                    ->color(fn(bool $state): string => $state ? 'success' : 'warning')
+                    ->icon(fn(bool $state): string => $state ? 'heroicon-m-check-badge' : 'heroicon-m-exclamation-triangle')
+                    ->sortable()
+                    ->tooltip(fn(InventoryItem $record): string => $record->is_owned
+                        ? 'Directly owned by Huenics Industrial Supply'
+                        : 'Client-supplied, consigned, or vendor-held inventory'
+                    ),
+
                 TextColumn::make('bom_hierarchy')
                     ->label('BOM / Assembly')
                     ->badge()
@@ -265,6 +286,29 @@ class InventoryItemResource extends Resource
                             return "Sub-component used in: " . $parents;
                         }
                         return 'Standard standalone inventory product';
+                    }),
+
+                TextColumn::make('bom_build_capacity')
+                    ->label('BOM Build Capacity')
+                    ->badge()
+                    ->state(function (InventoryItem $record): string {
+                        if (!$record->product || !$record->product->has_sub_components) {
+                            return '—';
+                        }
+                        $capacity = $record->product->bom_stock_capacity;
+                        return $capacity !== null ? number_format($capacity, 0) . ' units' : 'No tracked parts';
+                    })
+                    ->color(function (InventoryItem $record): string {
+                        if (!$record->product || !$record->product->has_sub_components) return 'gray';
+                        $capacity = $record->product->bom_stock_capacity;
+                        if ($capacity === null) return 'gray';
+                        return $capacity <= 0 ? 'danger' : ($capacity < 10 ? 'warning' : 'success');
+                    })
+                    ->tooltip(function (InventoryItem $record): string {
+                        if (!$record->product || !$record->product->has_sub_components) {
+                            return 'Standalone product (no BOM parts configured)';
+                        }
+                        return 'Calculated maximum buildable finished goods based on available warehouse stocks of sub-components.';
                     }),
 
                 TextColumn::make('location')
@@ -308,6 +352,12 @@ class InventoryItemResource extends Resource
                     ->wrap(),
             ])
             ->filters([
+                TernaryFilter::make('is_owned')
+                    ->label('Stock Ownership')
+                    ->placeholder('All Inventory (Company & Consigned)')
+                    ->trueLabel('Company-Owned Stock Only')
+                    ->falseLabel('Consigned / Client-Supplied Only'),
+
                 SelectFilter::make('location')
                     ->label('Filter by Location')
                     ->options(fn () => InventoryItem::whereNotNull('location')->where('location', '!=', '')->distinct()->pluck('location', 'location')),

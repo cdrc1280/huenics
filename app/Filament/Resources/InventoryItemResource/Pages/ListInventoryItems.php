@@ -21,6 +21,40 @@ class ListInventoryItems extends ListRecords
             Actions\CreateAction::make()
                 ->label('New Stock Record'),
 
+            Actions\Action::make('sync_bom_to_inventory')
+                ->label('Sync BOM Parts to Inventory')
+                ->icon('heroicon-o-puzzle-piece')
+                ->color('warning')
+                ->tooltip('Ensure all Bill of Materials (BOM) child components are registered in the warehouse inventory ledger')
+                ->requiresConfirmation()
+                ->modalHeading('Synchronize Sub-Components to Inventory')
+                ->modalDescription('This will scan all sub-components defined across product BOMs and guarantee an inventory stock record exists for every catalogued part.')
+                ->action(function (): void {
+                    $components = \App\Models\ProductComponent::whereNotNull('component_product_id')->get();
+                    $created = 0;
+                    foreach ($components as $comp) {
+                        $exists = \App\Models\InventoryItem::where('product_id', $comp->component_product_id)->exists();
+                        if (!$exists) {
+                            \App\Models\InventoryItem::create([
+                                'product_id' => $comp->component_product_id,
+                                'quantity_on_hand' => 0,
+                                'reorder_point' => 10,
+                                'unit' => $comp->unit ?: 'pcs',
+                                'is_owned' => true,
+                                'location' => 'BOM Parts Warehouse',
+                                'remarks' => 'Auto-synced from Product BOM',
+                            ]);
+                            $created++;
+                        }
+                    }
+
+                    \Filament\Notifications\Notification::make()
+                        ->title('BOM Parts Synchronized')
+                        ->body("Checked {$components->count()} sub-components. Created {$created} new inventory stock records.")
+                        ->success()
+                        ->send();
+                }),
+
             Actions\Action::make('download_template')
                 ->label('Download Template')
                 ->icon('heroicon-o-document-arrow-down')

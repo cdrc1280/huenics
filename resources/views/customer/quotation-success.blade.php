@@ -30,12 +30,6 @@
                     <span>Download PDF</span>
                 </a>
 
-                <button type="button" onclick="window.print()" 
-                        class="flex-1 md:flex-initial bg-slate-800 dark:bg-[#161f38] hover:bg-slate-700 dark:hover:bg-slate-700 btn-interactive text-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-transparent dark:border-slate-700">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    <span>Print</span>
-                </button>
-
                 <a href="{{ route('customer.quotation-builder') }}" 
                    class="flex-1 md:flex-initial bg-slate-100 dark:bg-[#161f38] hover:bg-slate-200 dark:hover:bg-slate-700 btn-interactive text-slate-700 dark:text-slate-300 font-medium text-xs px-3 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 border border-slate-300 dark:border-slate-700">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>

@@ -306,6 +306,7 @@ class SalesInvoicesRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('si_number')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('si_number')
                     ->label('SI #')

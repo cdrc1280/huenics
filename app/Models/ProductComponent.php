@@ -53,6 +53,21 @@ class ProductComponent extends Model
                 $component->additional_cost = $component->cost_price;
             }
         });
+
+        static::saved(function (ProductComponent $component) {
+            if ($component->component_product_id) {
+                \App\Models\InventoryItem::firstOrCreate(
+                    ['product_id' => $component->component_product_id],
+                    [
+                        'quantity_on_hand' => 0,
+                        'quantity_reserved' => 0,
+                        'reorder_point' => 10,
+                        'unit' => $component->effective_unit ?: 'pcs',
+                        'is_owned' => true,
+                    ]
+                );
+            }
+        });
     }
 
     // ─── Relationships ────────────────────────────────────────────────

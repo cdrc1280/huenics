@@ -129,7 +129,7 @@ class CustomerPortalTest extends TestCase
         $response = $this->post('/quotation/generate-unofficial', $payload);
 
         $response->assertStatus(200);
-        $response->assertSee('Unofficial Quotation Generated Successfully!');
+        $response->assertSee('Official Quotation Request Received & Encoded!');
         $response->assertSee('Engr. Roberto Santos');
         $response->assertSee('Palanza Tower');
         $response->assertSee('1-1/4" PVC Pipe Sch 40');
@@ -317,27 +317,25 @@ class CustomerPortalTest extends TestCase
             'action' => 'download_pdf',
         ];
 
-        // 1. Test direct PDF download
+        // Clear any previous IP rate limit cache
+        $ip = '127.0.0.1';
+        \Illuminate\Support\Facades\Cache::forget('quotation_daily_ip_' . $ip . '_' . now()->toDateString());
+
+        // 1. Test direct PDF download and admin DB persistence
         $pdfResponse = $this->post('/quotation/generate-unofficial', $payload);
         $pdfResponse->assertStatus(200);
         $this->assertEquals('application/pdf', $pdfResponse->headers->get('Content-Type'));
         $this->assertStringContainsString('attachment;', $pdfResponse->headers->get('Content-Disposition'));
 
-        // 2. Test direct Print Quotation view (Vendors Agreement Form)
-        $payload['action'] = 'print_quotation';
-        $printResponse = $this->post('/quotation/generate-unofficial', $payload);
-        $printResponse->assertStatus(200);
-        $printResponse->assertSee('VENDORS AGREEMENT FORM');
-        $printResponse->assertSee('HUENICS INDUSTRIAL SALES INC.');
-        $printResponse->assertSee('Engr. Ronald Rey Sandoval');
-        $printResponse->assertSee('MGS CONSTRUCTION, INC.');
-        $printResponse->assertSee('Palanza Tower');
-        $printResponse->assertSee('HISI-JF-2240-7W');
-        $printResponse->assertSee('window.print()', false);
-
-        // 3. Verify no unsolicited quotation record was inserted into the database
-        $this->assertDatabaseMissing('quotations', [
+        // Verify quotation was persisted in database for admin panel
+        $this->assertDatabaseHas('quotations', [
             'customer_name' => 'Engr. Ronald Rey Sandoval',
+            'customer_company' => 'MGS CONSTRUCTION, INC.',
         ]);
+
+        // 2. Test rate limiting: 2nd submission on same day from same IP is blocked
+        $secondResponse = $this->from('/quotation/builder')->post('/quotation/generate-unofficial', $payload);
+        $secondResponse->assertRedirect('/quotation/builder');
+        $secondResponse->assertSessionHas('error');
     }
 }

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Executive Sales & Performance Report — {{ $periodLabel }}</title>
     <style>
         @page {

@@ -130,27 +130,6 @@
             margin: 0 auto;
         }
 
-        .total-amount-row td {
-            border: 1px solid #000;
-            font-weight: bold;
-            font-size: 8.5px;
-            padding: 2.5px 6px;
-        }
-
-        .negotiated-amount-row td {
-            border: 1px solid #000;
-            font-weight: bold;
-            font-size: 9px;
-            padding: 2.5px 6px;
-        }
-
-        .price-disclaimer {
-            font-size: 7.5px;
-            font-weight: bold;
-            margin-top: 2px;
-            margin-bottom: 4px;
-            color: #111;
-        }
 
         /* Terms and Conditions */
         .terms-container {
@@ -373,18 +352,15 @@
         </tr>
     </table>
 
-    <!-- 3. Line Items Table (Exact Columns: Item Code, Description, References from Client, Qty, Unit, Unit Price, Discounted Price, Total) -->
+    <!-- 3. Line Items Table (Columns: Item Code, Description, References from Client, Qty, Unit) -->
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 14%;">Item Code</th>
-                <th style="width: 32%;">Product Description</th>
-                <th style="width: 12%;">References from Client</th>
-                <th style="width: 6%;">Qty</th>
-                <th style="width: 6%;">Unit</th>
-                <th style="width: 10%;">Unit Price</th>
-                <th style="width: 10%;">Discounted Price</th>
-                <th style="width: 10%;">Total</th>
+                <th style="width: 18%;">Item Code</th>
+                <th style="width: 50%;">Product Description</th>
+                <th style="width: 16%;">References from Client</th>
+                <th style="width: 8%;">Qty</th>
+                <th style="width: 8%;">Unit</th>
             </tr>
         </thead>
         <tbody>
@@ -393,9 +369,6 @@
                     $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
                     $prodImg = $item['base64_image'] ?? $prod?->base64_image;
                     $qty = (float) ($item['quantity'] ?? ($item['qty'] ?? 1));
-                    $unitPrice = (float) ($item['unit_price'] ?? 0);
-                    $discPrice = (float) ($item['discounted_price'] ?? ($unitPrice > 0 ? round($unitPrice * 0.90, 2) : 0));
-                    $lineTotal = (float) ($item['line_total'] ?? round($qty * $discPrice, 2));
                 @endphp
                 <tr>
                     <td style="font-weight: bold;">{{ $item['item_code'] ?? ($item['sku'] ?? 'GEN-ITEM') }}</td>
@@ -412,35 +385,14 @@
                     </td>
                     <td style="text-align: center; font-weight: bold;">{{ number_format($qty, 0) }}</td>
                     <td style="text-align: center;">{{ $item['unit'] ?? ($item['unit_default'] ?? 'pcs') }}</td>
-                    <td style="text-align: right;">{{ $unitPrice > 0 ? number_format($unitPrice, 2) : '—' }}</td>
-                    <td style="text-align: right;">{{ $discPrice > 0 ? number_format($discPrice, 2) : '—' }}</td>
-                    <td style="text-align: right; font-weight: bold;">{{ $lineTotal > 0 ? number_format($lineTotal, 2) : '—' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 12px; color: #6b7280;">No line items added to this quotation.</td>
+                    <td colspan="5" style="text-align: center; padding: 12px; color: #6b7280;">No line items added to this quotation.</td>
                 </tr>
             @endforelse
-
-            <!-- Bottom Totals Matching Reference PDF -->
-            <tr class="total-amount-row">
-                <td colspan="7" style="text-align: right;">Total Amount:</td>
-                <td style="text-align: right;">
-                    {{ number_format($quote['total_amount'] ?? ($quote['subtotal_undiscounted'] ?? ($quote['subtotal'] ?? 0)), 2) }}
-                </td>
-            </tr>
-            <tr class="negotiated-amount-row">
-                <td colspan="7" style="text-align: right; font-weight: 800;">Negotiated Amount:</td>
-                <td style="text-align: right; font-weight: 800; color: #b91c1c;">
-                    {{ number_format($quote['negotiated_amount'] ?? ($quote['grand_total'] ?? ($quote['subtotal'] ?? 0)), 2) }}
-                </td>
-            </tr>
         </tbody>
     </table>
-
-    <div class="price-disclaimer">
-        Prices are subject to change without prior notice. (VAT INC.)
-    </div>
 
     <!-- 4. Terms and Conditions (Exact Checkboxes from Reference PDF) -->
     <div class="terms-container">

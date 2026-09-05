@@ -70,6 +70,9 @@ class Quotation extends Model
         'terms_and_conditions',
         'payment_terms',
         'delivery_terms',
+        'is_online_request',
+        'customer_email',
+        'client_ip',
     ];
 
     protected function casts(): array
@@ -81,6 +84,7 @@ class Quotation extends Model
             'reviewed_at'    => 'datetime',
             'customer_signed_at' => 'datetime',
             'is_official_po' => 'boolean',
+            'is_online_request' => 'boolean',
             'total_amount'   => 'decimal:2',
             'negotiated_amount' => 'decimal:2',
             'total_cost'     => 'decimal:2',
@@ -154,7 +158,7 @@ class Quotation extends Model
 
     public function lineItems(): HasMany
     {
-        return $this->hasMany(QuotationLineItem::class)->orderBy('line_no');
+        return $this->hasMany(QuotationLineItem::class, 'quotation_id')->orderBy('line_no');
     }
 
     public function purchaseOrder(): HasOne
@@ -168,6 +172,16 @@ class Quotation extends Model
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────
+
+    public function scopeInternal($query)
+    {
+        return $query->where('is_online_request', false);
+    }
+
+    public function scopeOnlineRequests($query)
+    {
+        return $query->where('is_online_request', true);
+    }
 
     public function scopePending($query)
     {

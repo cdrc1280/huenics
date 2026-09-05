@@ -350,4 +350,75 @@ class SalesDashboardTest extends TestCase
         $this->assertStringContainsString('Annual Revenue & Quotation Trend — 2026', $chart->instance()->getHeading());
         $this->assertStringContainsString('Inhouse / Owner Accounts', $chart->instance()->getDescription());
     }
+
+    public function test_quotation_conversion_and_top_products_widgets_fetch_data_properly(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 1. Create Quotation in August 2026
+        $quote = Quotation::create([
+            'quotation_number' => 'HISI-Q-CONV-01',
+            'quotation_date' => '2026-08-10',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Conversion Customer',
+            'total_amount' => 120000.00,
+            'status' => Quotation::STATUS_APPROVED,
+        ]);
+
+        // 2. Create Won Purchase Order in August 2026
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-CONV-01',
+            'order_date' => '2026-08-15',
+            'quotation_id' => $quote->id,
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Conversion Customer',
+            'order_amount' => 120000.00,
+            'realized_profit' => 36000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        // 3. Create PO Line Item
+        \App\Models\PurchaseOrderLineItem::create([
+            'purchase_order_id' => $po->id,
+            'line_no' => 1,
+            'item_code' => 'HISI-COB-01',
+            'description' => 'Citizen Japan 15W COB Downlight',
+            'qty' => 100,
+            'unit' => 'PC',
+            'unit_price' => 1200.00,
+            'line_total' => 120000.00,
+        ]);
+
+        // Test QuotationConversionWidget
+        $convWidget = Livewire::test(\App\Filament\Widgets\QuotationConversionWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 8,
+            'selectedAgentId' => $this->salesRep->id,
+        ])
+            ->assertSuccessful();
+
+        $this->assertStringContainsString('August 2026', $convWidget->instance()->getDescription());
+        $convData = $convWidget->instance()->getData();
+        // Since $quote has a linked won PO, it should be counted under Won/Converted (first index)
+        $this->assertEquals(1, $convData['datasets'][0]['data'][0]);
+
+        // Test TopSellingProductsWidget
+        $topWidget = Livewire::test(\App\Filament\Widgets\TopSellingProductsWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 8,
+            'selectedAgentId' => $this->salesRep->id,
+        ])
+            ->assertSuccessful();
+
+        $this->assertStringContainsString('August 2026', $topWidget->instance()->getDescription());
+        $topData = $topWidget->instance()->getData();
+        $this->assertNotEmpty($topData['labels']);
+        $this->assertStringContainsString('Citizen Japan 15W', $topData['labels'][0]);
+        $this->assertEquals(120000.00, $topData['datasets'][0]['data'][0]);
+    }
 }

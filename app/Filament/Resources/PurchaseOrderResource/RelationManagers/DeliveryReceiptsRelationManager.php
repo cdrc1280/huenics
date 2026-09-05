@@ -209,6 +209,7 @@ class DeliveryReceiptsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('dr_number')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('dr_number')
                     ->label('DR #')

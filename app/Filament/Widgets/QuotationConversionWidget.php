@@ -31,11 +31,13 @@ class QuotationConversionWidget extends ChartWidget
         string $periodType = 'month',
         ?string $selectedDate = null,
         ?int $selectedWeek = null,
-        ?int $selectedMonth = null
+        ?int $selectedMonth = null,
+        ?int $agentId = null,
+        bool $isInhouse = false
     ): void {
         $this->selectedYear = $selectedYear ?? (int) now()->year;
-        $this->selectedAgentId = $selectedAgentId;
-        $this->filterInhouse = $filterInhouse;
+        $this->selectedAgentId = $selectedAgentId ?? $agentId;
+        $this->filterInhouse = $filterInhouse || $isInhouse;
         $this->periodType = $periodType;
         $this->selectedDate = $selectedDate ?? now()->toDateString();
         $this->selectedWeek = $selectedWeek ?? (int) now()->weekOfYear;
@@ -45,15 +47,39 @@ class QuotationConversionWidget extends ChartWidget
     #[On('salesFilterUpdated')]
     public function updateFilter(array $filterData): void
     {
-        $this->periodType = $filterData['periodType'] ?? 'month';
-        $this->selectedDate = $filterData['selectedDate'] ?? now()->toDateString();
+        $this->periodType = (string) ($filterData['periodType'] ?? 'month');
+        $this->selectedDate = (string) ($filterData['selectedDate'] ?? now()->toDateString());
         $this->selectedWeek = (int) ($filterData['selectedWeek'] ?? now()->weekOfYear);
         $this->selectedMonth = (int) ($filterData['selectedMonth'] ?? now()->month);
         $this->selectedYear = (int) ($filterData['selectedYear'] ?? now()->year);
-        $this->selectedAgentId = $filterData['selectedAgentId'] ?? null;
+        $this->selectedAgentId = isset($filterData['selectedAgentId']) ? (int) $filterData['selectedAgentId'] : null;
         $this->filterInhouse = (bool) ($filterData['filterInhouse'] ?? false);
         $this->cachedData = null;
         $this->updateChartData();
+    }
+
+    protected function resolveDateRange(): array
+    {
+        $year = (int) ($this->selectedYear ?: now()->year);
+
+        return match ($this->periodType) {
+            'days', 'day' => [
+                Carbon::parse($this->selectedDate ?: now()->toDateString())->startOfDay(),
+                Carbon::parse($this->selectedDate ?: now()->toDateString())->endOfDay(),
+            ],
+            'weeks', 'week' => [
+                Carbon::now()->setISODate($year, (int) ($this->selectedWeek ?: now()->weekOfYear))->startOfWeek(),
+                Carbon::now()->setISODate($year, (int) ($this->selectedWeek ?: now()->weekOfYear))->endOfWeek(),
+            ],
+            'years', 'year' => [
+                Carbon::create($year, 1, 1)->startOfYear(),
+                Carbon::create($year, 12, 31)->endOfYear(),
+            ],
+            default => [
+                Carbon::create($year, (int) ($this->selectedMonth ?: now()->month), 1)->startOfMonth(),
+                Carbon::create($year, (int) ($this->selectedMonth ?: now()->month), 1)->endOfMonth(),
+            ],
+        };
     }
 
     public function getHeading(): string | Htmlable | null
@@ -63,46 +89,86 @@ class QuotationConversionWidget extends ChartWidget
 
     public function getDescription(): ?string
     {
-        return 'Distribution of pipeline quotes by conversion status in selected period';
+        [$start, $end] = $this->resolveDateRange();
+        $periodLabel = match ($this->periodType) {
+            'days', 'day' => $start->format('M d, Y'),
+            'weeks', 'week' => "Week {$this->selectedWeek} ({$start->format('M d')} – {$end->format('M d, Y')})",
+            'years', 'year' => "Year {$start->format('Y')}",
+            default => $start->format('F Y'),
+        };
+
+        return "Distribution of pipeline quotes by conversion status in {$periodLabel}";
     }
 
-    protected function getData(): array
+    public function getData(): array
     {
+        [$start, $end] = $this->resolveDateRange();
+        $startStr = $start->copy()->startOfDay()->toDateTimeString();
+        $endStr = $end->copy()->endOfDay()->toDateTimeString();
+        $startDateOnly = $start->toDateString();
+        $endDateOnly = $end->toDateString();
+
         $quotationQuery = Quotation::query();
 
-        // Timeframe filter
-        if ($this->periodType === 'day' && $this->selectedDate) {
-            $quotationQuery->whereDate('quotation_date', $this->selectedDate);
-        } elseif ($this->periodType === 'week' && $this->selectedYear && $this->selectedWeek) {
-            $startOfWeek = Carbon::now()->setISODate($this->selectedYear, $this->selectedWeek)->startOfWeek();
-            $endOfWeek = (clone $startOfWeek)->endOfWeek();
-            $quotationQuery->whereBetween('quotation_date', [$startOfWeek, $endOfWeek]);
-        } elseif ($this->periodType === 'month' && $this->selectedYear && $this->selectedMonth) {
-            $quotationQuery->whereYear('quotation_date', $this->selectedYear)
-                ->whereMonth('quotation_date', $this->selectedMonth);
-        } elseif ($this->periodType === 'year' && $this->selectedYear) {
-            $quotationQuery->whereYear('quotation_date', $this->selectedYear);
-        }
+        // Scope date range against quotation_date and created_at fallback
+        $quotationQuery->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+            $q->whereBetween('quotation_date', [$startStr, $endStr])
+                ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                ->orWhereBetween('created_at', [$startStr, $endStr]);
+        });
 
         // Sales executive & inhouse filtering
         if ($this->filterInhouse) {
-            $quotationQuery->whereHas('salesAgent', fn ($q) => $q->where('is_owner', true));
+            $quotationQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
         } elseif ($this->selectedAgentId) {
             $quotationQuery->where('sales_agent_id', $this->selectedAgentId);
         }
 
         $allQuotes = $quotationQuery->get(['id', 'status', 'total_amount', 'valid_until']);
 
-        $convertedCount = $allQuotes->where('status', 'converted')->count();
-        $approvedCount = $allQuotes->where('status', 'approved')->count();
-        $pendingCount = $allQuotes->whereIn('status', ['pending_approval', 'under_review'])->count();
-        $draftCount = $allQuotes->where('status', 'draft')->count();
-        $rejectedCount = $allQuotes->whereIn('status', ['rejected', 'expired'])->count();
+        if ($allQuotes->isEmpty()) {
+            return [
+                'datasets' => [
+                    [
+                        'label' => 'Quotations',
+                        'data' => [0],
+                        'backgroundColor' => ['#94a3b8'],
+                        'borderWidth' => 2,
+                        'borderColor' => 'transparent',
+                    ],
+                ],
+                'labels' => ['No Pipeline Quotations in Period (0)'],
+            ];
+        }
 
-        // Also check if any quote has linked PO
-        if ($convertedCount === 0 && $allQuotes->isNotEmpty()) {
-            $quoteIds = $allQuotes->pluck('id');
-            $convertedCount = PurchaseOrder::whereIn('quotation_id', $quoteIds)->distinct('quotation_id')->count();
+        // Identify quotations that have won purchase orders
+        $wonQuoteIds = PurchaseOrder::query()
+            ->whereIn('quotation_id', $allQuotes->pluck('id'))
+            ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
+            ->pluck('quotation_id')
+            ->flip()
+            ->all();
+
+        $wonCount = 0;
+        $approvedCount = 0;
+        $reviewedCount = 0;
+        $pendingCount = 0;
+        $rejectedCount = 0;
+
+        foreach ($allQuotes as $quote) {
+            $status = strtolower((string) $quote->status);
+
+            if (isset($wonQuoteIds[$quote->id]) || in_array($status, ['converted', 'converted_to_po'], true)) {
+                $wonCount++;
+            } elseif (in_array($status, ['approved'], true)) {
+                $approvedCount++;
+            } elseif (in_array($status, ['reviewed', 'under_review'], true)) {
+                $reviewedCount++;
+            } elseif (in_array($status, ['rejected', 'expired'], true)) {
+                $rejectedCount++;
+            } else {
+                $pendingCount++;
+            }
         }
 
         return [
@@ -110,17 +176,17 @@ class QuotationConversionWidget extends ChartWidget
                 [
                     'label' => 'Quotations',
                     'data' => [
-                        $convertedCount,
+                        $wonCount,
                         $approvedCount,
+                        $reviewedCount,
                         $pendingCount,
-                        $draftCount,
                         $rejectedCount,
                     ],
                     'backgroundColor' => [
                         '#10b981', // Converted / Won (Green)
                         '#3b82f6', // Approved (Blue)
-                        '#f59e0b', // Pending (Amber)
-                        '#6366f1', // Draft (Indigo)
+                        '#06b6d4', // Reviewed (Cyan)
+                        '#f59e0b', // Pending / Draft (Amber)
                         '#ef4444', // Rejected / Expired (Red)
                     ],
                     'borderWidth' => 2,
@@ -128,11 +194,11 @@ class QuotationConversionWidget extends ChartWidget
                 ],
             ],
             'labels' => [
-                'Won / Converted (' . $convertedCount . ')',
-                'Approved (' . $approvedCount . ')',
-                'Under Review (' . $pendingCount . ')',
-                'Draft (' . $draftCount . ')',
-                'Rejected / Expired (' . $rejectedCount . ')',
+                "Won / Converted ({$wonCount})",
+                "Approved ({$approvedCount})",
+                "Reviewed ({$reviewedCount})",
+                "Pending ({$pendingCount})",
+                "Rejected ({$rejectedCount})",
             ],
         ];
     }

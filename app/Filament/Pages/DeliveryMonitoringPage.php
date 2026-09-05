@@ -255,8 +255,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
 
                             Toggle::make('auto_mark_delivered')
                                 ->label('Mark order as Delivered immediately upon upload')
-                                ->helperText('If enabled, will immediately deduct stock and realize sales. If disabled, DR & SI will be attached and verified, unlocking the "Mark as Delivered" action button.')
-                                ->default(true),
+                                ->helperText('If enabled, will immediately deduct stock and realize sales. If disabled, DR & SI will be attached and verified, unlocking the "Mark as Delivered" action button.'),
                         ])
                         ->action(function (PurchaseOrder $record, array $data) {
                             try {

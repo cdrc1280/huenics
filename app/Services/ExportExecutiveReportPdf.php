@@ -45,10 +45,16 @@ class ExportExecutiveReportPdf
         $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $this->resolvePeriodLabel($filterData));
         $filename = 'huenics-executive-sales-report-' . strtolower($periodLabel) . '-' . date('Ymd') . '.pdf';
 
-        return response($pdfContent, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return response()->streamDownload(
+            function () use ($pdfContent) {
+                echo $pdfContent;
+            },
+            $filename,
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]
+        );
     }
 
     protected function resolvePeriodLabel(array $filterData): string
