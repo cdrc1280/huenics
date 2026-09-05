@@ -747,49 +747,56 @@
 </section>
 
 <!-- ==========================================================================
-     SECTION 7: CLIENT REVIEWS & CONTRACTOR TESTIMONIALS (Antixor Dark Review Card)
+     SECTION 7: CLIENT REVIEWS & CONTRACTOR TESTIMONIALS (Dynamic)
      ========================================================================== -->
+@if(isset($testimonials) && $testimonials->isNotEmpty())
 <section class="py-16 bg-[#070b14] text-white relative overflow-hidden border-b border-slate-800/80">
     <div class="absolute inset-0 pointer-events-none opacity-20" 
          style="background-image: radial-gradient(rgba(33, 79, 224, 0.25) 1px, transparent 1px); background-size: 32px 32px;"></div>
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="bg-gradient-to-br from-[#111827] via-[#0e1628] to-[#0a1020] border border-blue-600/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative"
-             data-3d-tilt data-max-tilt="5">
-            <div class="glare-sheen"></div>
-            
-            <!-- Stars -->
-            <div class="flex items-center gap-1 text-amber-400 mb-6">
-                @for($i=0; $i<5; $i++)
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                @endfor
-            </div>
-
-            <!-- Quote Text -->
-            <blockquote class="text-base sm:text-xl font-medium text-slate-200 leading-relaxed italic mb-8">
-                &ldquo;Huenics has been our primary optoelectronics partner for three commercial tower fit-outs in Bonifacio Global City. Their Citizen Japan C.O.B downlights passed all strict consultant photometric audits, and their official BIR Sales Invoices and delivery receipts make project accounting transparent and audit-proof.&rdquo;
-            </blockquote>
-
-            <!-- Author Info -->
-            <div class="flex items-center justify-between border-t border-slate-800 pt-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md">
-                        RM
-                    </div>
-                    <div>
-                        <div class="text-sm font-bold text-white">Engr. Rafael M.</div>
-                        <div class="text-xs text-slate-400">Senior MEPF Project Director &bull; Metro Build Engineering Corp.</div>
-                    </div>
+        @foreach($testimonials as $testimonial)
+            <div class="bg-gradient-to-br from-[#111827] via-[#0e1628] to-[#0a1020] border border-blue-600/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative mb-8 last:mb-0"
+                 data-3d-tilt data-max-tilt="5">
+                <div class="glare-sheen"></div>
+                
+                <!-- Stars -->
+                <div class="flex items-center gap-1 text-amber-400 mb-6">
+                    @for($i = 0; $i < ($testimonial->rating ?? 5); $i++)
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    @endfor
                 </div>
 
-                <div class="hidden sm:flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Verified Trade Partner</span>
+                <!-- Quote Text -->
+                <blockquote class="text-base sm:text-xl font-medium text-slate-200 leading-relaxed italic mb-8">
+                    &ldquo;{{ $testimonial->quote }}&rdquo;
+                </blockquote>
+
+                <!-- Author Info -->
+                <div class="flex items-center justify-between border-t border-slate-800 pt-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md">
+                            {{ $testimonial->initials }}
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-white">{{ $testimonial->client_name }}</div>
+                            <div class="text-xs text-slate-400">
+                                @if($testimonial->role_title){{ $testimonial->role_title }} &bull; @endif
+                                {{ $testimonial->company_name ?: ($testimonial->project_name ?: 'Verified Client') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden sm:flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Verified Trade Partner</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        @endforeach
     </div>
 </section>
+@endif
 
 <!-- ==========================================================================
      SECTION 8: COMMERCIAL INSTALLATIONS GALLERY (Antixor Fleet Gallery Bento)

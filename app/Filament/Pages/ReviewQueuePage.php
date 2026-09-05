@@ -112,6 +112,15 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public array $originalState = [];
     public ?string $rejectionReason = '';
 
+    // Deletion Modal State
+    public ?int $confirmingDeleteIndex = null;
+
+    // Photo Preview Modal State
+    public ?string $previewPhotoUrl = null;
+    public ?string $previewPhotoTitle = null;
+    public ?string $previewPhotoSku = null;
+    public ?int $previewPhotoLineNo = null;
+
     public function setPreviewMode(string $mode): void
     {
         $this->previewMode = $mode;
@@ -914,15 +923,89 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         $this->printedVat = round($subtotal * 0.12, 2);
         $this->printedTotal = round($this->printedSubtotal + $this->printedVat, 2);
 
-        if ($this->currentDocument && $this->currentDocument->totals) {
-            $this->currentDocument->totals->update([
-                'printed_subtotal' => $this->printedSubtotal,
-                'printed_vat' => $this->printedVat,
-                'printed_total' => $this->printedTotal,
-                'computed_subtotal' => $this->printedSubtotal,
-                'computed_vat' => $this->printedVat,
-                'computed_grand_total' => $this->printedTotal,
-            ]);
+        if ($this->negotiatedAmount !== null && $this->negotiatedAmount > $this->printedTotal) {
+            $this->negotiatedAmount = $this->printedTotal;
+        }
+
+        if ($this->currentDocument) {
+            $this->currentDocument->totals()->updateOrCreate(
+                ['document_id' => $this->currentDocument->id],
+                [
+                    'printed_subtotal' => $this->printedSubtotal,
+                    'printed_vat' => $this->printedVat,
+                    'printed_total' => $this->printedTotal,
+                    'computed_subtotal' => $this->printedSubtotal,
+                    'computed_vat' => $this->printedVat,
+                    'computed_grand_total' => $this->printedTotal,
+                    'negotiated_amount' => $this->negotiatedAmount,
+                    'vat_mismatch' => false,
+                    'total_mismatch' => false,
+                ]
+            );
+
+            // Synchronize linked Quotation record and items
+            if ($this->currentDocument->document_type === Document::TYPE_VENDORS_AGREEMENT) {
+                $quotation = Quotation::where('document_id', $this->currentDocument->id)->first();
+                if ($quotation) {
+                    $quotation->update([
+                        'total_amount' => $this->printedTotal,
+                        'total_cost' => round($this->printedTotal * 0.7, 2),
+                        'estimated_profit' => round($this->printedTotal * 0.3, 2),
+                        'negotiated_amount' => $this->negotiatedAmount,
+                    ]);
+
+                    $quotation->lineItems()->delete();
+                    foreach ($this->editableItems as $idx => $line) {
+                        $lineTot = (float) ($line['printed_total'] ?? $line['computed_total']);
+                        $effPrice = (float) (!empty($line['discounted_price']) && (float) $line['discounted_price'] > 0 ? $line['discounted_price'] : ($line['unit_price'] ?? 0));
+                        $baseCost = round($effPrice * 0.7, 2);
+                        $quotation->lineItems()->create([
+                            'line_no' => $line['line_no'] ?? ($idx + 1),
+                            'item_code' => $line['material_code'] ?? null,
+                            'product_id' => $line['product_id'] ?? null,
+                            'description' => $line['description'] ?? '',
+                            'qty' => $line['qty'] ?? 1,
+                            'unit' => $line['unit'] ?? 'pcs',
+                            'unit_price' => $line['unit_price'] ?? 0,
+                            'discounted_price' => $line['discounted_price'] ?? null,
+                            'base_cost' => $baseCost,
+                            'line_total' => $lineTot,
+                            'gross_profit' => round($lineTot - (($line['qty'] ?? 1) * $baseCost), 2),
+                        ]);
+                    }
+                }
+            }
+
+            // Synchronize linked Purchase Order record and items
+            if ($this->currentDocument->document_type === Document::TYPE_PURCHASE_ORDER) {
+                $po = PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
+                if ($po) {
+                    $po->update([
+                        'order_amount' => $this->printedTotal,
+                    ]);
+
+                    $po->lineItems()->delete();
+                    foreach ($this->editableItems as $idx => $line) {
+                        $lineTot = (float) ($line['printed_total'] ?? $line['computed_total']);
+                        $po->lineItems()->create([
+                            'line_no' => $line['line_no'] ?? ($idx + 1),
+                            'item_code' => $line['material_code'] ?? null,
+                            'product_id' => $line['product_id'] ?? null,
+                            'description' => $line['description'] ?? '',
+                            'qty' => $line['qty'] ?? 1,
+                            'unit' => $line['unit'] ?? 'pcs',
+                            'unit_price' => $line['unit_price'] ?? 0,
+                            'discounted_price' => $line['discounted_price'] ?? null,
+                            'line_total' => $lineTot,
+                        ]);
+                    }
+                }
+            }
+
+            app(ReconcileDocumentTotals::class)->execute($this->currentDocument);
+
+            $this->currentDocument->refresh();
+            $this->currentDocument->load(['totals', 'lineItems']);
         }
     }
 
@@ -1015,19 +1098,73 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
     }
 
+    public function confirmDeleteLineItem(int $index): void
+    {
+        $this->confirmingDeleteIndex = $index;
+        $this->dispatch('open-modal', id: 'delete-line-item-modal');
+    }
+
+    public function cancelDeleteLineItem(): void
+    {
+        $this->confirmingDeleteIndex = null;
+        $this->dispatch('close-modal', id: 'delete-line-item-modal');
+    }
+
+    public function executeDeleteConfirmed(): void
+    {
+        if ($this->confirmingDeleteIndex !== null && isset($this->editableItems[$this->confirmingDeleteIndex])) {
+            $index = $this->confirmingDeleteIndex;
+            $this->confirmingDeleteIndex = null;
+            $this->dispatch('close-modal', id: 'delete-line-item-modal');
+            $this->removeLineItem($index);
+        }
+    }
+
+    public function openPhotoPreview(int $index): void
+    {
+        if (isset($this->editableItems[$index])) {
+            $item = $this->editableItems[$index];
+            $productId = $item['product_id'] ?? null;
+            $sku = $item['material_code'] ?? null;
+
+            $thumbUrl = !empty($productId) ? ($this->productThumbnails[$productId] ?? null) : null;
+            if (!$thumbUrl && !empty($sku)) {
+                $thumbUrl = $this->productThumbnails['sku:' . $sku] ?? null;
+            }
+
+            $this->previewPhotoUrl = $thumbUrl;
+            $this->previewPhotoTitle = !empty($item['description']) ? $item['description'] : ($this->products[$productId] ?? ($sku ?? 'Product Photo'));
+            $this->previewPhotoSku = $sku;
+            $this->previewPhotoLineNo = $item['line_no'] ?? ($index + 1);
+
+            $this->dispatch('open-modal', id: 'image-lightbox-modal');
+        }
+    }
+
     public function removeLineItem(int $index): void
     {
         if (isset($this->editableItems[$index])) {
             $this->pushStateToUndo();
 
-            $itemId = $this->editableItems[$index]['id'] ?? null;
+            $deletedItem = $this->editableItems[$index];
+            $deletedDesc = !empty($deletedItem['description']) ? $deletedItem['description'] : ($deletedItem['material_code'] ?? 'Line Item');
+            $lineNo = $deletedItem['line_no'] ?? ($index + 1);
+
+            $itemId = $deletedItem['id'] ?? null;
             if ($itemId && $this->currentDocument) {
                 $this->currentDocument->lineItems()->where('id', $itemId)->delete();
             }
+
             unset($this->editableItems[$index]);
             $this->editableItems = array_values($this->editableItems);
             $this->reindexLineNumbers();
             $this->recalculateAllFigures();
+
+            Notification::make()
+                ->title("Line #{$lineNo} Deleted")
+                ->body("Deleted: {$deletedDesc}. Figures recomputed: Subtotal ₱" . number_format($this->printedSubtotal, 2) . ", 12% VAT ₱" . number_format($this->printedVat, 2) . ", Grand Total ₱" . number_format($this->printedTotal, 2) . ".")
+                ->success()
+                ->send();
         }
     }
 
@@ -1079,8 +1216,8 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
         // Sync line items
         foreach ($this->editableItems as $item) {
-            $desc = !empty($item['description']) 
-                ? $item['description'] 
+            $desc = !empty($item['description'])
+                ? $item['description']
                 : (!empty($item['product_id']) ? (Product::find($item['product_id'])?->canonical_name ?? '') : '');
 
             if (!empty($item['id'])) {
@@ -1136,7 +1273,6 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 ->title('Quotation Link Required')
                 ->body('This is a normal purchase order and must be linked to an approved quotation before it can be verified and committed.')
                 ->danger()
-                ->persistent()
                 ->send();
             return;
         }
@@ -1146,7 +1282,6 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 ->title('Approval Blocked: Line Item Discrepancies')
                 ->body('This purchase order has line item or pricing discrepancies with its linked quotation. Discrepancies must be resolved before verification and approval.')
                 ->danger()
-                ->persistent()
                 ->send();
             return;
         }
@@ -1280,9 +1415,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public function getProductThumbnailsProperty(): array
     {
         return \Illuminate\Support\Facades\Cache::remember('lookup_product_thumbnails', 120, function () {
-            return Product::all(['id', 'image_path'])->mapWithKeys(function ($p) {
-                return [$p->id => $p->image_url];
-            })->toArray();
+            $map = [];
+            foreach (Product::all(['id', 'sku', 'image_path']) as $p) {
+                $url = $p->image_url;
+                if ($url) {
+                    $map[$p->id] = $url;
+                    if (!empty($p->sku)) {
+                        $map['sku:' . $p->sku] = $url;
+                    }
+                }
+            }
+            return $map;
         });
     }
 }

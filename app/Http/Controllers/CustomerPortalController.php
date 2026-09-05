@@ -6,6 +6,7 @@ use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationLineItem;
+use App\Models\Testimonial;
 use App\Models\User;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
@@ -60,11 +61,19 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $totalProductsCount = Product::query()->where('is_active', true)->count();
         $yearsInBusiness = CompanySetting::getYearsInBusiness();
 
+        $testimonials = Cache::remember('customer_portal_testimonials', 600, function () {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('testimonials')) {
+                return collect();
+            }
+            return Testimonial::active()->orderBy('sort_order')->orderBy('created_at', 'desc')->get();
+        });
+
         return view('customer.home', [
             'featuredProducts'   => $featuredProducts,
             'categories'         => $categories,
             'totalProductsCount' => $totalProductsCount,
             'yearsInBusiness'    => $yearsInBusiness,
+            'testimonials'       => $testimonials,
         ]);
     }
 

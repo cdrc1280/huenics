@@ -732,9 +732,14 @@
                 {{-- SECTION 2: EXTRACTED LINE ITEMS (Outer Encapsulating Section) --}}
                 <x-filament::section icon="heroicon-o-list-bullet">
                     <x-slot name="heading">
-                        <span class="text-sm font-semibold tracking-tight text-gray-950 dark:text-white">
-                            Extracted Line Items ({{ count($editableItems) }})
-                        </span>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <span class="text-sm font-semibold tracking-tight text-gray-950 dark:text-white">
+                                Extracted Line Items ({{ count($editableItems) }})
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-xs font-mono font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800/60 px-2.5 py-0.5 rounded-md shadow-2xs">
+                                Live Subtotal: ₱{{ number_format($printedSubtotal ?? 0, 2) }} &bull; Total: ₱{{ number_format($printedTotal ?? 0, 2) }}
+                            </span>
+                        </div>
                     </x-slot>
 
                     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -765,12 +770,14 @@
                                                     icon="heroicon-m-document-duplicate" color="gray" size="sm"
                                                     tooltip="Duplicate Item" label="Duplicate" />
 
-                                                <x-filament::button wire:click="removeLineItem({{ $index }})"
+                                                <x-filament::button type="button"
                                                     color="danger" size="xs"
                                                     icon="heroicon-m-trash"
-                                                    tooltip="Delete Line Item"
-                                                    wire:confirm="Are you sure you want to delete this line item?">
-                                                    Delete
+                                                    tooltip="Delete this line item and auto-recalculate all totals"
+                                                    wire:click="confirmDeleteLineItem({{ $index }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="confirmDeleteLineItem({{ $index }})">
+                                                    Delete Line
                                                 </x-filament::button>
                                             </div>
                                         @endif
@@ -827,22 +834,46 @@
                                             <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Photo</label>
                                             @php
                                                 $thumbUrl = !empty($item['product_id']) ? ($this->productThumbnails[$item['product_id']] ?? null) : null;
+                                                if (!$thumbUrl && !empty($item['material_code'])) {
+                                                    $thumbUrl = $this->productThumbnails['sku:' . $item['material_code']] ?? null;
+                                                }
+                                                $lineTitle = !empty($item['description']) ? $item['description'] : ($this->products[$item['product_id'] ?? null] ?? ($item['material_code'] ?? 'Product Photo'));
+                                                $lineSku = $item['material_code'] ?? '';
+                                                $lineNo = $item['line_no'] ?? ($index + 1);
                                             @endphp
-                                            <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 0.375rem; border: 1px solid rgba(148, 163, 184, 0.3); background-color: rgba(248, 250, 252, 0.5); overflow: hidden;" title="Product Image Preview">
-                                                @if($thumbUrl)
-                                                    <img src="{{ $thumbUrl }}" alt="Product" style="width: 100%; height: 100%; object-fit: contain;">
-                                                @else
-                                                    <x-filament::icon icon="heroicon-o-photo" class="h-4 w-4 text-gray-400" />
-                                                @endif
-                                            </div>
+                                            @if ($thumbUrl)
+                                                {{-- AVATAR: Rendered as a circular product avatar when photo exists --}}
+                                                <button type="button"
+                                                    wire:click="openPhotoPreview({{ $index }})"
+                                                    class="group relative inline-flex items-center justify-center rounded-full ring-2 ring-primary-500/40 hover:ring-primary-500 dark:ring-primary-400/50 hover:ring-primary-400 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer bg-white dark:bg-gray-900 shrink-0"
+                                                    style="width: 32px; height: 32px; overflow: hidden; padding: 0;"
+                                                    title="Click to maximize photo: {{ $lineTitle }}">
+                                                    <img src="{{ $thumbUrl }}" alt="{{ $lineTitle }}"
+                                                        class="w-full h-full rounded-full object-cover select-none"
+                                                        loading="lazy" />
+                                                    <div class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/35 flex items-center justify-center transition-colors">
+                                                        <x-filament::icon icon="heroicon-m-arrows-pointing-out" class="h-3.5 w-3.5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                                                    </div>
+                                                </button>
+                                            @else
+                                                {{-- PHOTO BUTTON ONLY: Clean native icon button when no photo is attached --}}
+                                                <x-filament::icon-button type="button"
+                                                    color="gray" size="sm"
+                                                    icon="heroicon-o-photo"
+                                                    tooltip="{{ $lineTitle ? 'Photo: ' . $lineTitle . ' (No image attached)' : 'View Photo' }}"
+                                                    label="Photo"
+                                                    wire:click="openPhotoPreview({{ $index }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="openPhotoPreview({{ $index }})" />
+                                            @endif
                                         </div>
                                     </div>
 
                                 {{-- Visual Divider Between Header Info and Pricing --}}
                                 <div style="border-top: 1px dashed rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0.875rem 0;"></div>
 
-                                {{-- ROW 2: Pricing, Quantities & Line Totals (1:1:2:2:3) --}}
-                                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 2fr 3fr; gap: 0.875rem; align-items: start;">
+                                {{-- ROW 2: Pricing, Quantities & Line Totals (1:1:2:2:3:auto) --}}
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 2fr 3fr {{ !$this->isReadOnly ? 'auto' : '' }}; gap: 0.875rem; align-items: start;">
                                     <div>
                                         <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                                             Qty <span class="text-danger-600 dark:text-danger-500 font-bold" style="color: #ef4444; font-weight: bold;">*</span>
@@ -909,6 +940,19 @@
                                             </span>
                                         @endif
                                     </div>
+
+                                    @if (!$this->isReadOnly)
+                                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 2px;">
+                                            <label class="block text-[11px] font-bold uppercase tracking-wider text-transparent select-none mb-1.5">&nbsp;</label>
+                                             <x-filament::icon-button type="button"
+                                                color="danger" size="sm"
+                                                icon="heroicon-m-trash"
+                                                tooltip="Delete this line item and auto-recalculate all totals"
+                                                wire:click="confirmDeleteLineItem({{ $index }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="confirmDeleteLineItem({{ $index }})" />
+                                        </div>
+                                    @endif
                                 </div>
                             </x-filament::section>
                         </div>
@@ -985,18 +1029,18 @@
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #6b7280;">Computed Subtotal:</span>
                                 <span
-                                    style="font-family: monospace;">₱{{ number_format($currentDocument->totals?->computed_subtotal ?? 0, 2) }}</span>
+                                    style="font-family: monospace;">₱{{ number_format($currentDocument->totals?->computed_subtotal ?? $printedSubtotal ?? 0, 2) }}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #6b7280;">Computed 12% Standard VAT:</span>
                                 <span
-                                    style="font-family: monospace; font-weight: 600; color: #2563eb;">₱{{ number_format($currentDocument->totals?->computed_vat ?? 0, 2) }}</span>
+                                    style="font-family: monospace; font-weight: 600; color: #2563eb;">₱{{ number_format($currentDocument->totals?->computed_vat ?? $printedVat ?? 0, 2) }}</span>
                             </div>
                             <div
                                 style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.85rem; border-top: 1px solid rgba(59, 130, 246, 0.3); padding-top: 0.35rem; color: #2563eb;">
                                 <span>Authoritative Value:</span>
                                 <span style="font-family: monospace;">
-                                    ₱{{ number_format($negotiatedAmount ?: $currentDocument->totals?->computed_grand_total ?? 0, 2) }}
+                                    ₱{{ number_format($negotiatedAmount ?: ($currentDocument->totals?->computed_grand_total ?? $printedTotal ?? 0), 2) }}
                                 </span>
                             </div>
                         </div>
@@ -1142,6 +1186,116 @@
                         </div>
                     </div>
                 </x-filament::section>
+
+                {{-- UNIFORM MODAL: PRODUCT PHOTO MAXIMIZE LIGHTBOX --}}
+                <x-filament::modal id="image-lightbox-modal" width="4xl" icon="heroicon-o-photo" icon-color="primary">
+                    <x-slot name="heading">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span class="text-sm font-bold tracking-tight text-gray-950 dark:text-white">{{ $previewPhotoTitle ?: 'Product Photo Preview' }}</span>
+                            @if ($previewPhotoSku)
+                                <span class="font-mono text-xs px-2 py-0.5 rounded bg-primary-50 text-primary-700 dark:bg-primary-950/70 dark:text-primary-300 border border-primary-200 dark:border-primary-800/60">[{{ $previewPhotoSku }}]</span>
+                            @endif
+                            @if ($previewPhotoLineNo)
+                                <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">(Line #{{ $previewPhotoLineNo }})</span>
+                            @endif
+                        </div>
+                    </x-slot>
+
+                    <div class="py-2">
+                        @if ($previewPhotoUrl)
+                            <div class="relative flex flex-col items-center justify-center rounded-xl bg-gray-950 border border-gray-800 p-4 shadow-2xl overflow-hidden" style="min-height: 380px; max-height: 75vh;">
+                                <img src="{{ $previewPhotoUrl }}" alt="{{ $previewPhotoTitle }}"
+                                    class="max-h-[68vh] w-auto max-w-full object-contain rounded-lg shadow-lg select-none transition-transform duration-200"
+                                    loading="eager" />
+
+                                <div class="absolute bottom-3 right-3 flex items-center gap-2">
+                                    <a href="{{ $previewPhotoUrl }}" target="_blank" rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-xs"
+                                        title="Open image full size in a new tab">
+                                        <x-filament::icon icon="heroicon-m-arrow-top-right-on-square" class="h-3.5 w-3.5 text-white" />
+                                        Open Original
+                                    </a>
+                                </div>
+                            </div>
+                        @else
+                            <div class="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-8 text-center bg-gray-50/50 dark:bg-white/2">
+                                <div class="mx-auto w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200/80 dark:border-primary-900/50 flex items-center justify-center mb-3">
+                                    <x-filament::icon icon="heroicon-o-photo" class="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                                </div>
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-white">{{ $previewPhotoTitle ?: 'Selected Product' }}</h4>
+                                @if ($previewPhotoSku)
+                                    <p class="font-mono text-xs text-gray-500 dark:text-gray-400 mt-1">Item Code: {{ $previewPhotoSku }}</p>
+                                @endif
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 max-w-md mx-auto">
+                                    No photograph is currently attached to this catalog item. You can upload product imagery in the <strong>Products</strong> management module.
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <x-slot name="footer">
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; width: 100%;">
+                            <x-filament::button type="button" color="gray"
+                                x-on:click="$dispatch('close-modal', { id: 'image-lightbox-modal' })">
+                                Close Preview
+                            </x-filament::button>
+                        </div>
+                    </x-slot>
+                </x-filament::modal>
+
+                {{-- UNIFORM MODAL: DELETE EXTRACTED LINE ITEM CONFIRMATION --}}
+                <x-filament::modal id="delete-line-item-modal" width="md" icon="heroicon-o-trash" icon-color="danger">
+                    <x-slot name="heading">
+                        Delete Extracted Line Item
+                    </x-slot>
+
+                    <x-slot name="description">
+                        This action will remove the line item and recalculate all document totals.
+                    </x-slot>
+
+                    @php
+                        $targetItem = ($confirmingDeleteIndex !== null && isset($editableItems[$confirmingDeleteIndex])) ? $editableItems[$confirmingDeleteIndex] : null;
+                    @endphp
+
+                    <div class="py-2 text-sm">
+                        <div class="rounded-lg bg-danger-50 dark:bg-danger-950/40 p-3.5 text-xs border border-danger-200 dark:border-danger-900/60 shadow-2xs">
+                            <div class="flex items-start gap-2.5">
+                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-5 w-5 text-danger-600 dark:text-danger-400 shrink-0 mt-0.5" />
+                                <div class="space-y-1">
+                                    <p class="font-bold text-danger-900 dark:text-danger-200">
+                                        Delete Line #{{ $targetItem['line_no'] ?? (($confirmingDeleteIndex ?? 0) + 1) }}
+                                        @if (!empty($targetItem['material_code']))
+                                            [{{ $targetItem['material_code'] }}]
+                                        @endif
+                                        ?
+                                    </p>
+                                    @if (!empty($targetItem['description']))
+                                        <p class="text-gray-700 dark:text-gray-300 font-medium">{{ $targetItem['description'] }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2.5 border-t border-danger-200/70 dark:border-danger-900/60 text-[11px] text-danger-800 dark:text-danger-300/90 leading-relaxed">
+                                The Subtotal, 12% standard Philippine VAT, grand totals, and linked quotation figures will be recomputed immediately.
+                            </div>
+                        </div>
+                    </div>
+
+                    <x-slot name="footer">
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; width: 100%;">
+                            <x-filament::button type="button" color="gray"
+                                wire:click="cancelDeleteLineItem">
+                                Cancel
+                            </x-filament::button>
+
+                            <x-filament::button type="button" color="danger" icon="heroicon-m-trash"
+                                wire:click="executeDeleteConfirmed"
+                                wire:loading.attr="disabled"
+                                wire:target="executeDeleteConfirmed">
+                                Delete Line Item
+                            </x-filament::button>
+                        </div>
+                    </x-slot>
+                </x-filament::modal>
 
             </div>
         </div>

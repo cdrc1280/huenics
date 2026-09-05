@@ -9,6 +9,7 @@ use App\Models\CompanySetting;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
 use App\Models\DocumentLineItem;
+use App\Models\DocumentTotal;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\ProductComponent;
@@ -375,5 +376,226 @@ class ErpEnhancementSuiteTest extends TestCase
             ->assertActionExists('exportAllAnalytics')
             ->assertActionExists('exportLeaderboardCsv')
             ->assertActionExists('downloadExecutiveReport');
+    }
+
+    /**
+     * Test 8: Extracted Line Item Deletion and Auto-Recomputation of All Figures
+     */
+    public function test_review_queue_line_item_deletion_auto_recomputes_all_figures(): void
+    {
+        $this->actingAs($this->admin);
+
+        $doc = Document::create([
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => 'HISI-2026-DEL-001',
+            'document_date' => now()->format('Y-m-d'),
+            'original_filename' => 'quotation_test.pdf',
+            'disk_path' => 'documents/quotations/test.pdf',
+            'file_hash' => 'hash_del_test_001',
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        $line1 = DocumentLineItem::create([
+            'document_id' => $doc->id,
+            'line_no' => 1,
+            'description' => 'First Product Item',
+            'qty' => 10,
+            'unit' => 'pcs',
+            'unit_price' => 1000.00,
+            'discounted_price' => 1000.00,
+            'printed_total' => 10000.00,
+            'computed_total' => 10000.00,
+        ]);
+
+        $line2 = DocumentLineItem::create([
+            'document_id' => $doc->id,
+            'line_no' => 2,
+            'description' => 'Second Product Item',
+            'qty' => 5,
+            'unit' => 'pcs',
+            'unit_price' => 2000.00,
+            'discounted_price' => 2000.00,
+            'printed_total' => 10000.00,
+            'computed_total' => 10000.00,
+        ]);
+
+        $docTotal = DocumentTotal::create([
+            'document_id' => $doc->id,
+            'printed_subtotal' => 20000.00,
+            'printed_vat' => 2400.00,
+            'printed_total' => 22400.00,
+            'computed_subtotal' => 20000.00,
+            'computed_vat' => 2400.00,
+            'computed_grand_total' => 22400.00,
+        ]);
+
+        $quotation = Quotation::create([
+            'document_id' => $doc->id,
+            'quotation_number' => 'HISI-2026-DEL-001',
+            'quotation_date' => now()->format('Y-m-d'),
+            'customer_name' => 'Test Client Corp',
+            'total_amount' => 22400.00,
+            'status' => 'draft',
+            'sales_agent_id' => $this->admin->id,
+        ]);
+
+        $quotation->lineItems()->create([
+            'line_no' => 1,
+            'description' => 'First Product Item',
+            'qty' => 10,
+            'unit_price' => 1000.00,
+            'line_total' => 10000.00,
+        ]);
+        $quotation->lineItems()->create([
+            'line_no' => 2,
+            'description' => 'Second Product Item',
+            'qty' => 5,
+            'unit_price' => 2000.00,
+            'line_total' => 10000.00,
+        ]);
+
+        // Mount ReviewQueuePage and delete Line #1
+        $component = Livewire::test(ReviewQueuePage::class, ['document_id' => $doc->id])
+            ->assertSuccessful()
+            ->call('removeLineItem', 0);
+
+        // 1. Verify component memory state
+        $component->assertSet('printedSubtotal', 10000.00);
+        $component->assertSet('printedVat', 1200.00);
+        $component->assertSet('printedTotal', 11200.00);
+
+        // 2. Verify remaining items in component
+        $remaining = $component->get('editableItems');
+        $this->assertCount(1, $remaining);
+        $this->assertEquals(1, $remaining[0]['line_no']);
+        $this->assertEquals('Second Product Item', $remaining[0]['description']);
+        $this->assertEquals(10000.00, $remaining[0]['computed_total']);
+
+        // 3. Verify database DocumentLineItem was deleted
+        $this->assertDatabaseMissing('document_line_items', ['id' => $line1->id]);
+        $this->assertDatabaseHas('document_line_items', ['id' => $line2->id]);
+
+        // 4. Verify DocumentTotal was recomputed and persisted
+        $docTotalFresh = $docTotal->fresh();
+        $this->assertEquals(10000.00, (float) $docTotalFresh->printed_subtotal);
+        $this->assertEquals(1200.00, (float) $docTotalFresh->printed_vat);
+        $this->assertEquals(11200.00, (float) $docTotalFresh->printed_total);
+        $this->assertEquals(10000.00, (float) $docTotalFresh->computed_subtotal);
+        $this->assertEquals(1200.00, (float) $docTotalFresh->computed_vat);
+        $this->assertEquals(11200.00, (float) $docTotalFresh->computed_grand_total);
+        $this->assertFalse((bool) $docTotalFresh->vat_mismatch);
+        $this->assertFalse((bool) $docTotalFresh->total_mismatch);
+
+        // 5. Verify linked Quotation was synchronized
+        $quotationFresh = $quotation->fresh();
+        $this->assertEquals(11200.00, (float) $quotationFresh->total_amount);
+        $this->assertCount(1, $quotationFresh->lineItems);
+        $this->assertEquals('Second Product Item', $quotationFresh->lineItems->first()->description);
+        $this->assertEquals(10000.00, (float) $quotationFresh->lineItems->first()->line_total);
+    }
+
+    /**
+     * Test 9: Review Queue Uniform Delete Modal & Product Photo Lightbox Rendering
+     */
+    public function test_review_queue_renders_uniform_modals_and_image_lightbox(): void
+    {
+        $this->actingAs($this->admin);
+
+        $product = Product::create([
+            'canonical_name' => 'LED Downlight COB Warmwhite 7W',
+            'sku' => 'HISI-JF-2240-7w',
+            'default_price' => 1950.00,
+            'image_path' => 'products/sample-luminaire.jpg',
+            'is_huenics_owned' => true,
+        ]);
+
+        $doc = Document::create([
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => 'HISI-2026-MODAL-001',
+            'document_date' => now()->format('Y-m-d'),
+            'original_filename' => 'quotation_modal_test.pdf',
+            'disk_path' => 'documents/quotations/test_modal.pdf',
+            'file_hash' => 'hash_modal_test_001',
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        DocumentLineItem::create([
+            'document_id' => $doc->id,
+            'line_no' => 1,
+            'description' => 'LED Downlight COB Warmwhite 7W',
+            'material_code' => 'HISI-JF-2240-7w',
+            'qty' => 500,
+            'unit' => 'pcs',
+            'unit_price' => 1950.00,
+            'discounted_price' => 1755.00,
+            'printed_total' => 877500.00,
+            'computed_total' => 877500.00,
+            'product_id' => $product->id,
+        ]);
+
+        $component = Livewire::test(ReviewQueuePage::class, ['document_id' => $doc->id])
+            ->assertSuccessful();
+
+        // 1. Verify that uniform Filament modals exist on the page
+        $component->assertSee('id="delete-line-item-modal"', false);
+        $component->assertSee('id="image-lightbox-modal"', false);
+
+        // 2. Verify that native browser popups (wire:confirm) are banned and completely removed
+        $component->assertDontSee('wire:confirm');
+
+        // 3. Verify that photo thumbnail lookup resolves by product ID and SKU
+        $thumbnails = $component->get('productThumbnails');
+        $this->assertArrayHasKey($product->id, $thumbnails);
+        $this->assertArrayHasKey('sku:' . $product->sku, $thumbnails);
+
+        // 4. Test photo preview action
+        $component->call('openPhotoPreview', 0)
+            ->assertSet('previewPhotoTitle', 'LED Downlight COB Warmwhite 7W')
+            ->assertSet('previewPhotoSku', 'HISI-JF-2240-7w');
+
+        // 5. Test delete confirmation modal flow
+        $component->call('confirmDeleteLineItem', 0)
+            ->assertSet('confirmingDeleteIndex', 0);
+
+        // 6. Verify avatar vs photo button rendering
+        // Line 1 has a product with image, so it renders the circular avatar button
+        $component->assertSee('rounded-full', false);
+        $component->assertSee('object-cover', false);
+
+        // Test item without image: renders clean photo button only
+        $docNoImage = Document::create([
+            'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+            'document_number' => 'HISI-2026-NOIMG-001',
+            'document_date' => now()->format('Y-m-d'),
+            'original_filename' => 'no_img.pdf',
+            'disk_path' => 'documents/quotations/no_img.pdf',
+            'file_hash' => 'hash_no_img_001',
+            'status' => Document::STATUS_REQUIRES_REVIEW,
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        DocumentLineItem::create([
+            'document_id' => $docNoImage->id,
+            'line_no' => 1,
+            'description' => 'Generic Stainless Screw',
+            'material_code' => 'SCRW-GEN-01',
+            'qty' => 100,
+            'unit' => 'pcs',
+            'unit_price' => 10.00,
+            'printed_total' => 1000.00,
+            'computed_total' => 1000.00,
+        ]);
+
+        $compNoImg = Livewire::test(ReviewQueuePage::class, ['document_id' => $docNoImage->id])
+            ->assertSuccessful();
+
+        // Line without image renders the photo icon button
+        $compNoImg->assertSee('fi-icon-btn', false);
+        $compNoImg->call('openPhotoPreview', 0)
+            ->assertSet('previewPhotoTitle', 'Generic Stainless Screw')
+            ->assertSet('previewPhotoSku', 'SCRW-GEN-01')
+            ->assertSet('previewPhotoUrl', null);
     }
 }

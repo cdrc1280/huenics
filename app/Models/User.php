@@ -247,7 +247,13 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canEditQuotationDocument(): bool
     {
-        return $this->hasPermission('edit_quotation_documents');
+        return $this->hasPermission('edit_quotation_documents')
+            || $this->isAdmin()
+            || $this->isCeo()
+            || $this->isOperationsManager()
+            || $this->isSalesExecutive()
+            || $this->canCreateDocuments()
+            || $this->canManageQuotations();
     }
 
     public function canDeleteRecords(): bool

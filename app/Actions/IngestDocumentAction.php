@@ -18,7 +18,8 @@ class IngestDocumentAction
         protected ReconcileDocumentTotals $reconciler,
         protected DocumentTypeValidator $validator,
         protected PdfTextExtractor $textExtractor
-    ) {}
+    ) {
+    }
 
     /**
      * Ingest, SHA-256 hash check, parse via Dynamic Per-Vendor Templates, and reconcile a PDF document.
@@ -102,7 +103,8 @@ class IngestDocumentAction
             if ($diskPath && $existing->disk_path && $diskPath !== $existing->disk_path) {
                 try {
                     \Illuminate\Support\Facades\Storage::disk('local')->delete($diskPath);
-                } catch (\Throwable) {}
+                } catch (\Throwable) {
+                }
             }
 
             return $existing;
@@ -191,32 +193,32 @@ class IngestDocumentAction
 
             $quotation = Quotation::create([
                 'quotation_number' => $quotationNumber,
-                'document_id'      => $document->id,
-                'sales_agent_id'   => $document->uploaded_by ?: $userId,
-                'customer_name'    => $customerName,
+                'document_id' => $document->id,
+                'sales_agent_id' => $document->uploaded_by ?: $userId,
+                'customer_name' => $customerName,
                 'customer_company' => $customerCompany,
-                'project_id'       => $document->project_id,
-                'project_name'     => $projectName,
+                'project_id' => $document->project_id,
+                'project_name' => $projectName,
                 'project_location' => $projectLocation,
-                'phone_no'         => $phoneNo,
-                'total_amount'     => $totalAmount,
-                'total_cost'       => round($totalAmount * 0.7, 2),
+                'phone_no' => $phoneNo,
+                'total_amount' => $totalAmount,
+                'total_cost' => round($totalAmount * 0.7, 2),
                 'estimated_profit' => round($totalAmount * 0.3, 2),
-                'status'           => Quotation::STATUS_PENDING,
-                'quotation_date'   => $quotationDate,
+                'status' => Quotation::STATUS_PENDING,
+                'quotation_date' => $quotationDate,
                 'terms_and_conditions' => $document->terms_and_conditions,
                 'payment_terms' => $document->payment_terms,
                 'delivery_terms' => $document->delivery_terms,
             ]);
         } else {
             $updates = [
-                'customer_name'    => $customerName,
+                'customer_name' => $customerName,
                 'customer_company' => $customerCompany,
-                'project_name'     => $projectName,
+                'project_name' => $projectName,
                 'project_location' => $projectLocation,
-                'phone_no'         => $phoneNo,
-                'total_amount'     => $totalAmount,
-                'total_cost'       => round($totalAmount * 0.7, 2),
+                'phone_no' => $phoneNo,
+                'total_amount' => $totalAmount,
+                'total_cost' => round($totalAmount * 0.7, 2),
                 'estimated_profit' => round($totalAmount * 0.3, 2),
             ];
             if (!empty($document->document_number)) {
@@ -237,17 +239,17 @@ class IngestDocumentAction
             $grossProfit = round($lineTotal - ($line->qty * $baseCost), 2);
 
             $quotation->lineItems()->create([
-                'line_no'          => $line->line_no ?: ($idx + 1),
-                'item_code'        => $line->material_code,
-                'product_id'       => $line->product_id,
-                'description'      => $line->description,
-                'qty'              => $line->qty,
-                'unit'             => $line->unit ?: 'pcs',
-                'unit_price'       => $line->unit_price,
+                'line_no' => $line->line_no ?: ($idx + 1),
+                'item_code' => $line->material_code,
+                'product_id' => $line->product_id,
+                'description' => $line->description,
+                'qty' => $line->qty,
+                'unit' => $line->unit ?: 'pcs',
+                'unit_price' => $line->unit_price,
                 'discounted_price' => $line->discounted_price,
-                'base_cost'        => $baseCost,
-                'line_total'       => $lineTotal,
-                'gross_profit'     => $grossProfit,
+                'base_cost' => $baseCost,
+                'line_total' => $lineTotal,
+                'gross_profit' => $grossProfit,
             ]);
         }
     }
@@ -292,35 +294,35 @@ class IngestDocumentAction
             }
 
             $po = PurchaseOrder::create([
-                'po_number'        => $poNumber,
-                'document_id'      => $document->id,
-                'quotation_id'     => $quotationId,
-                'is_conforme_po'   => $isConforme,
-                'sales_agent_id'   => $document->uploaded_by ?: $userId,
-                'customer_name'    => $customerName,
-                'project_id'       => $document->project_id,
-                'order_amount'     => $orderAmount,
-                'total_cost'       => round($orderAmount * 0.7, 2),
-                'realized_profit'  => round($orderAmount * 0.3, 2),
-                'printed_vat'      => $document->totals?->printed_vat,
-                'computed_vat'     => $document->totals?->computed_vat,
-                'order_date'       => $orderDate,
-                'has_warranty'     => true,
-                'warranty_period'  => PurchaseOrder::WARRANTY_1_YEAR,
-                'warranty_status'  => PurchaseOrder::WARRANTY_NONE,
-                'delivery_status'  => PurchaseOrder::DELIVERY_PENDING,
-                'status'           => PurchaseOrder::STATUS_PENDING,
+                'po_number' => $poNumber,
+                'document_id' => $document->id,
+                'quotation_id' => $quotationId,
+                'is_conforme_po' => $isConforme,
+                'sales_agent_id' => $document->uploaded_by ?: $userId,
+                'customer_name' => $customerName,
+                'project_id' => $document->project_id,
+                'order_amount' => $orderAmount,
+                'total_cost' => round($orderAmount * 0.7, 2),
+                'realized_profit' => round($orderAmount * 0.3, 2),
+                'printed_vat' => $document->totals?->printed_vat,
+                'computed_vat' => $document->totals?->computed_vat,
+                'order_date' => $orderDate,
+                'has_warranty' => true,
+                'warranty_period' => PurchaseOrder::WARRANTY_1_YEAR,
+                'warranty_status' => PurchaseOrder::WARRANTY_NONE,
+                'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+                'status' => PurchaseOrder::STATUS_PENDING,
                 'terms_and_conditions' => $document->terms_and_conditions,
                 'payment_terms' => $document->payment_terms,
                 'delivery_terms' => $document->delivery_terms,
             ]);
         } else {
             $updates = [
-                'customer_name'    => $customerName,
-                'order_amount'     => $orderAmount,
-                'printed_vat'      => $document->totals?->printed_vat,
-                'computed_vat'     => $document->totals?->computed_vat,
-                'is_conforme_po'   => $isConforme,
+                'customer_name' => $customerName,
+                'order_amount' => $orderAmount,
+                'printed_vat' => $document->totals?->printed_vat,
+                'computed_vat' => $document->totals?->computed_vat,
+                'is_conforme_po' => $isConforme,
             ];
             if ($quotationId && empty($po->quotation_id)) {
                 $updates['quotation_id'] = $quotationId;
@@ -359,17 +361,17 @@ class IngestDocumentAction
             $baseCost = round((float) $line->unit_price * 0.7, 2);
 
             $po->lineItems()->create([
-                'line_no'          => $line->line_no ?: ($idx + 1),
-                'item_code'        => $line->material_code,
-                'product_id'       => $line->product_id,
-                'description'      => $line->description,
-                'qty'              => $line->qty,
-                'unit'             => $line->unit ?: 'pcs',
-                'unit_price'       => $line->unit_price,
+                'line_no' => $line->line_no ?: ($idx + 1),
+                'item_code' => $line->material_code,
+                'product_id' => $line->product_id,
+                'description' => $line->description,
+                'qty' => $line->qty,
+                'unit' => $line->unit ?: 'pcs',
+                'unit_price' => $line->unit_price,
                 'discounted_price' => $line->discounted_price,
-                'base_cost'        => $baseCost,
-                'line_total'       => $lineTotal,
-                'line_cost'        => round((float) $line->qty * $baseCost, 2),
+                'base_cost' => $baseCost,
+                'line_total' => $lineTotal,
+                'line_cost' => round((float) $line->qty * $baseCost, 2),
             ]);
         }
 
@@ -423,7 +425,6 @@ class IngestDocumentAction
                 ->title('PO & Quotation Line Item Discrepancy')
                 ->body('Line items do not completely match linked Quotation:<br>' . implode('<br>', array_slice($mismatches, 0, 5)))
                 ->warning()
-                ->persistent()
                 ->send();
 
             try {

@@ -752,7 +752,7 @@ class PurchaseOrderResource extends Resource
                 $quotation = Quotation::findOrFail($data['quotation_id']);
 
                 // If switching from a previously linked quotation, restore previous quotation status
-                if ($oldQuotId && (int)$oldQuotId !== (int)$quotation->id) {
+                if ($oldQuotId && (int) $oldQuotId !== (int) $quotation->id) {
                     $prevQuot = Quotation::find($oldQuotId);
                     if ($prevQuot && $prevQuot->purchaseOrders()->where('id', '!=', $record->id)->count() === 0) {
                         $prevQuot->update(['status' => Quotation::STATUS_APPROVED]);
@@ -801,16 +801,19 @@ class PurchaseOrderResource extends Resource
 
                 if ($reconciliation['has_discrepancies']) {
                     $summaryParts = [];
-                    if ($reconciliation['qty_mismatches_count'] > 0) $summaryParts[] = "{$reconciliation['qty_mismatches_count']} Qty mismatches";
-                    if ($reconciliation['price_mismatches_count'] > 0) $summaryParts[] = "{$reconciliation['price_mismatches_count']} Price mismatches";
-                    if ($reconciliation['missing_in_quotation_count'] > 0) $summaryParts[] = "{$reconciliation['missing_in_quotation_count']} Unquoted items";
-                    if ($reconciliation['missing_in_po_count'] > 0) $summaryParts[] = "{$reconciliation['missing_in_po_count']} Items missing from PO";
+                    if ($reconciliation['qty_mismatches_count'] > 0)
+                        $summaryParts[] = "{$reconciliation['qty_mismatches_count']} Qty mismatches";
+                    if ($reconciliation['price_mismatches_count'] > 0)
+                        $summaryParts[] = "{$reconciliation['price_mismatches_count']} Price mismatches";
+                    if ($reconciliation['missing_in_quotation_count'] > 0)
+                        $summaryParts[] = "{$reconciliation['missing_in_quotation_count']} Unquoted items";
+                    if ($reconciliation['missing_in_po_count'] > 0)
+                        $summaryParts[] = "{$reconciliation['missing_in_po_count']} Items missing from PO";
 
                     Notification::make()
                         ->title('Linked with Line Item Discrepancies')
                         ->warning()
                         ->body("PO #{$record->po_number} was linked to Quotation #{$quotation->quotation_number}.\nDetected " . implode(', ', $summaryParts) . ".\nUse the 'Line Item Discrepancies' action or check the PO View page to review detailed line-by-line comparison.")
-                        ->persistent()
                         ->send();
                 } else {
                     Notification::make()

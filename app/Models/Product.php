@@ -164,6 +164,14 @@ class Product extends Model
             return asset($this->image_path);
         }
 
+        if (file_exists(public_path('storage/' . $this->image_path))) {
+            return asset('storage/' . $this->image_path);
+        }
+
+        if (file_exists(storage_path('app/public/' . $this->image_path))) {
+            return asset('storage/' . $this->image_path);
+        }
+
         return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image_path);
     }
 
