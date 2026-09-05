@@ -26,6 +26,21 @@ class ViewPurchaseOrder extends ViewRecord
 {
     protected static string $resource = PurchaseOrderResource::class;
 
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return 'Order Details & Verification';
+    }
+
+    public function getContentTabIcon(): string | \BackedEnum | \Illuminate\Contracts\Support\Htmlable | null
+    {
+        return 'heroicon-o-shopping-bag';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

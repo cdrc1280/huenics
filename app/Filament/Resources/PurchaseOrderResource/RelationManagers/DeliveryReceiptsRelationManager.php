@@ -25,12 +25,25 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class DeliveryReceiptsRelationManager extends RelationManager
 {
     protected static string $relationship = 'deliveryReceipts';
     protected static ?string $title = 'Delivery Receipts (DR)';
     protected static \BackedEnum|string|null $icon = 'heroicon-o-truck';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        /** @var PurchaseOrder $ownerRecord */
+        $count = $ownerRecord->deliveryReceipts()->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getBadgeColor(Model $ownerRecord, string $pageClass): ?string
+    {
+        return 'success';
+    }
 
     public function form(Schema $schema): Schema
     {

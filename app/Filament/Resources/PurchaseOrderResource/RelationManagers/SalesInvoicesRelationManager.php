@@ -25,12 +25,25 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class SalesInvoicesRelationManager extends RelationManager
 {
     protected static string $relationship = 'salesInvoices';
     protected static ?string $title = 'Sales Invoices (SI)';
     protected static \BackedEnum|string|null $icon = 'heroicon-o-receipt-percent';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        /** @var PurchaseOrder $ownerRecord */
+        $count = $ownerRecord->salesInvoices()->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getBadgeColor(Model $ownerRecord, string $pageClass): ?string
+    {
+        return 'info';
+    }
 
     public function form(Schema $schema): Schema
     {
