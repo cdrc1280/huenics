@@ -218,7 +218,7 @@
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
                         <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit max-w-[88%] sm:max-w-[85%] bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8px] xs:text-[9px] sm:text-[10px] font-black uppercase tracking-normal sm:tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-300 pointer-events-none z-20 overflow-hidden text-ellipsis whitespace-nowrap">
                             <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                            <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K WARM AMBER • 36° FLOOD • CRI 97+</span>
+                            <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K WARM AMBER • 24° SPOT • CRI 80</span>
                         </div>
                     </div>
 
@@ -263,36 +263,36 @@
                         <div class="flex-1 sm:flex-initial flex items-center justify-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
                             <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
                                     class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer text-center"
-                                    title="3000K Warm White (Architectural Amber • 36° Flood)">
+                                    title="3000K Warm White (Architectural Amber • 24° Spot • CRI 80)">
                                 3000K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
                                     class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
-                                    title="3500K Neutral Warm (Hospitality Sunset • 36° Flood)">
+                                    title="3500K Neutral Warm (Hospitality Sunset • 24° Spot • CRI 80)">
                                 3500K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
                                     class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
-                                    title="4000K Natural White (Commercial Crisp • 36° Flood)">
+                                    title="4000K Natural White (Commercial Crisp • 24° Spot • CRI 80)">
                                 4000K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
                                     class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
-                                    title="5000K Cool White (Industrial Daylight • 36° Flood)">
+                                    title="5000K Cool White (Industrial Daylight • 24° Spot • CRI 80)">
                                 5000K
                             </button>
                         </div>
                     </div>
 
-                    <!-- Console Tier 2: 36° Optic Flood Reflector & Interactive High-Voltage Surge Ignition -->
+                    <!-- Console Tier 2: 24° Optic Spot Reflector & Interactive High-Voltage Surge Ignition -->
                     <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-t-0">
-                        <!-- 36° Architectural Optic Badge -->
+                        <!-- 24° Architectural Optic Badge -->
                         <div class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300 whitespace-nowrap" 
-                             title="Precision 36° Architectural Collimated Optic Flood Reflector">
+                             title="Precision 24° Architectural Collimated Optic Spot Reflector • CRI 80">
                             <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
                             </svg>
-                            <span>36&deg; Optic Flood</span>
+                            <span>24&deg; Optic Spot</span>
                         </div>
 
                         <!-- Cool Interactive Surge / Pulse Animation Button -->
@@ -1265,9 +1265,9 @@
                 targetColor: 0xff8c1a,
                 ambientTint: 0x241408, // Warm room bounce
                 halo: 'radial-gradient(circle, rgba(255, 140, 26, 0.70) 0%, rgba(234, 88, 12, 0.35) 38%, rgba(180, 83, 9, 0.12) 65%, transparent 80%)',
-                badgeText: 'CITIZEN COB • 3000K WARM AMBER • 36° FLOOD • CRI 97+',
-                shortBadgeText: '3000K AMBER • 36° • CRI 97+',
-                name: '3000K Warm White (Architectural Amber)',
+                badgeText: 'CITIZEN COB • 3000K WARM AMBER • 24° SPOT • CRI 80',
+                shortBadgeText: '3000K AMBER • 24° • CRI 80',
+                name: '3000K Warm White (Architectural Amber • CRI 80)',
                 btnClass: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
                 powerScale: 0.94,
                 lumens: '3,450 lm'
@@ -1279,9 +1279,9 @@
                 targetColor: 0xffab5e,
                 ambientTint: 0x20150c,
                 halo: 'radial-gradient(circle, rgba(255, 171, 94, 0.65) 0%, rgba(249, 115, 22, 0.30) 38%, rgba(194, 65, 12, 0.10) 65%, transparent 80%)',
-                badgeText: 'CITIZEN COB • 3500K SOFT WHITE • 36° FLOOD • CRI 97+',
-                shortBadgeText: '3500K WHITE • 36° • CRI 97+',
-                name: '3500K Neutral Warm (Hospitality Sunset)',
+                badgeText: 'CITIZEN COB • 3500K SOFT WHITE • 24° SPOT • CRI 80',
+                shortBadgeText: '3500K WHITE • 24° • CRI 80',
+                name: '3500K Neutral Warm (Hospitality Sunset • CRI 80)',
                 btnClass: 'bg-orange-500 text-white shadow-md shadow-orange-500/30',
                 powerScale: 1.00,
                 lumens: '3,680 lm'
@@ -1293,9 +1293,9 @@
                 targetColor: 0xfff0dd,
                 ambientTint: 0x181a24,
                 halo: 'radial-gradient(circle, rgba(254, 240, 138, 0.62) 0%, rgba(250, 204, 21, 0.26) 38%, rgba(148, 163, 184, 0.10) 65%, transparent 80%)',
-                badgeText: 'CITIZEN COB • 4000K NATURAL WHITE • 36° FLOOD • CRI 95+',
-                shortBadgeText: '4000K CRISP • 36° • CRI 95+',
-                name: '4000K Natural White (Commercial Crisp)',
+                badgeText: 'CITIZEN COB • 4000K NATURAL WHITE • 24° SPOT • CRI 80',
+                shortBadgeText: '4000K CRISP • 24° • CRI 80',
+                name: '4000K Natural White (Commercial Crisp • CRI 80)',
                 btnClass: 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30',
                 powerScale: 1.08,
                 lumens: '3,920 lm'
@@ -1307,9 +1307,9 @@
                 targetColor: 0xc8e6ff,
                 ambientTint: 0x0a182a,
                 halo: 'radial-gradient(circle, rgba(186, 230, 253, 0.72) 0%, rgba(56, 189, 248, 0.38) 38%, rgba(14, 165, 233, 0.14) 65%, transparent 80%)',
-                badgeText: 'CITIZEN COB • 5000K COOL DAYLIGHT • 36° FLOOD • CRI 92+',
-                shortBadgeText: '5000K ARCTIC • 36° • CRI 92+',
-                name: '5000K Cool White (Industrial Daylight)',
+                badgeText: 'CITIZEN COB • 5000K COOL DAYLIGHT • 24° SPOT • CRI 80',
+                shortBadgeText: '5000K ARCTIC • 24° • CRI 80',
+                name: '5000K Cool White (Industrial Daylight • CRI 80)',
                 btnClass: 'bg-sky-400 text-slate-950 shadow-md shadow-sky-400/30',
                 powerScale: 1.18,
                 lumens: '4,150 lm'
@@ -1607,8 +1607,8 @@
             phosphorMesh.position.set(0, 0, 0.07);
             cobGroup.add(phosphorMesh);
 
-            // Precision Architectural 36° Faceted Reflector Collet (Mounting Bezel)
-            const colletGeo = new THREE.CylinderGeometry(1.24, 0.94, 0.16, 32, 1, true);
+            // Precision Architectural 24° Faceted Reflector Collet (Mounting Bezel)
+            const colletGeo = new THREE.CylinderGeometry(1.18, 0.94, 0.18, 32, 1, true);
             colletGeo.rotateX(Math.PI / 2);
             const colletMat = new THREE.MeshStandardMaterial({
                 color: 0xe2e8f0,
@@ -1621,7 +1621,7 @@
             cobGroup.add(colletMesh);
 
             // Optic Specular Ring Bezel
-            const opticRimGeo = new THREE.RingGeometry(1.22, 1.34, 48);
+            const opticRimGeo = new THREE.RingGeometry(1.16, 1.28, 48);
             const opticRimMat = new THREE.MeshStandardMaterial({
                 color: 0x94a3b8,
                 metalness: 0.88,
@@ -1633,12 +1633,12 @@
             cobGroup.add(opticRimMesh);
 
             // =========================================================
-            // 4. PRECISION 36° VOLUMETRIC ARCHITECTURAL BEAM CONE
+            // 4. PRECISION 24° VOLUMETRIC ARCHITECTURAL BEAM CONE
             // =========================================================
-            // Calibrated 36° Flood Optic Cone (Half-angle 18°: tan(18°) = 0.3249)
-            const beamLength = 4.2;
+            // Calibrated 24° Spot Optic Cone (Half-angle 12°: tan(12°) = 0.21255)
+            const beamLength = 4.4;
             const radiusOrigin = 0.88;
-            const radiusTerminal = radiusOrigin + beamLength * Math.tan(18 * Math.PI / 180); // ~2.245
+            const radiusTerminal = radiusOrigin + beamLength * Math.tan(12 * Math.PI / 180); // ~1.815
             const beamGeo = new THREE.CylinderGeometry(radiusOrigin, radiusTerminal, beamLength, 36, 1, true);
             beamGeo.translate(0, -beamLength / 2, 0);
             beamGeo.rotateX(Math.PI / 2);
@@ -1647,7 +1647,7 @@
                 map: beamTexture,
                 color: cctProfiles[currentCCT].beamHex,
                 transparent: true,
-                opacity: 0.32,
+                opacity: 0.36,
                 side: THREE.DoubleSide,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false
@@ -1670,7 +1670,7 @@
             });
             bloomSprite = new THREE.Sprite(bloomMat);
             bloomSprite.position.set(0, 0, 0.25);
-            bloomSprite.scale.set(3.8, 3.8, 1.0);
+            bloomSprite.scale.set(3.4, 3.4, 1.0);
             cobGroup.add(bloomSprite);
 
             // =========================================================
@@ -1711,16 +1711,16 @@
             cobGroup.add(shockwaveRing);
 
             // =========================================================
-            // 7. PHYSICS-BASED DYNAMIC LIGHTING (36° SPOTLIGHT & AMBIENT)
+            // 7. PHYSICS-BASED DYNAMIC LIGHTING (24° SPOTLIGHT & AMBIENT)
             // =========================================================
             // Core Point Light for High CRI Local Glow
-            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 4.5, 12, 2.0);
+            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 4.2, 12, 2.0);
             corePointLight.position.set(0, 0, 0.45);
             cobGroup.add(corePointLight);
 
-            // Precision 36° Architectural Spotlight (Collimated Optical Cone)
-            // Half-angle = 18 degrees = 0.314159 rad; penumbra = 0.38 for feathered architectural flood
-            spotLight = new THREE.SpotLight(cctProfiles[currentCCT].hex, 8.5, 24, 18 * Math.PI / 180, 0.38, 1.6);
+            // Precision 24° Architectural Spotlight (Collimated Optical Cone)
+            // Half-angle = 12 degrees = 0.20944 rad; penumbra = 0.32 for crisp architectural punch
+            spotLight = new THREE.SpotLight(cctProfiles[currentCCT].hex, 9.5, 26, 12 * Math.PI / 180, 0.32, 1.6);
             spotLight.position.set(0, 0, 0.15);
             spotLightTarget = new THREE.Object3D();
             spotLightTarget.position.set(0, 0, 15);
@@ -1728,7 +1728,7 @@
             spotLight.target = spotLightTarget;
             cobGroup.add(spotLight);
 
-            // Studio Ambiance: Dimmed to allow COB & 36° beam to take dramatic center stage
+            // Studio Ambiance: Dimmed to allow COB & 24° beam to take dramatic center stage
             ambientLight = new THREE.AmbientLight(0x181c28, 0.22);
             scene.add(ambientLight);
 
@@ -1985,28 +1985,28 @@
                 if (bloomSprite) {
                     const breathe = 1.0 + Math.sin(time * 2.4) * 0.03;
                     const surgeScale = isSurging ? 1.4 : 1.0;
-                    const sW = 3.8 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
-                    const sH = 3.8 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const sW = 3.4 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const sH = 3.4 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
                     bloomSprite.scale.set(sW, sH, 1.0);
                     bloomSprite.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.98 : 0.88);
                     bloomSprite.material.color.copy(displayColor);
                 }
 
-                // Update 36° Architectural Collimated Spotlight
+                // Update 24° Architectural Collimated Spotlight
                 if (spotLight) {
-                    spotLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 14.0 : 8.5) * profile.powerScale;
+                    spotLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 15.0 : 9.5) * profile.powerScale;
                     spotLight.color.copy(displayColor);
                 }
 
-                // Update 36° Volumetric Architectural Flood Beam Cone
+                // Update 24° Volumetric Architectural Spot Beam Cone
                 if (beamConeMesh) {
                     beamConeMesh.material.color.copy(new THREE.Color(profile.beamHex));
-                    beamConeMesh.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.65 : 0.32);
+                    beamConeMesh.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.70 : 0.36);
                 }
 
-                // Update Core Point Light with High CRI Local Glow
+                // Update Core Point Light with CRI 80 Local Glow
                 if (corePointLight) {
-                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 8.0 : 4.5);
+                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 7.5 : 4.2);
                     corePointLight.color.copy(displayColor);
                 }
 
