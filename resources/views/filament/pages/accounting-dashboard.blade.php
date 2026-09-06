@@ -218,45 +218,63 @@
             </div>
         </x-filament::section>
 
-        {{-- 3. Interactive Ledger Navigation Tabs & Report Download Toolbar --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.5rem;">
-            {{-- Tabs --}}
-            <div class="flex items-center gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-800" style="display: flex; gap: 0.5rem; background-color: #f3f4f6; border-radius: 0.75rem; padding: 0.25rem;">
+        {{-- 3. Interactive Ledger Navigation Tabs (Admin Theme Harmonized) --}}
+        <div class="pt-2">
+            <div class="inline-flex items-center gap-1.5 p-1 rounded-xl border border-gray-200 bg-gray-100/80 dark:border-white/10 dark:bg-gray-900/80"
+                 style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(15, 23, 42, 0.6);">
+                {{-- Tab 1: All Accounts & Transactions --}}
                 <button
                     type="button"
                     wire:click="setActiveTab('all')"
-                    class="rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors {{ $this->activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400' }}"
-                    style="border-radius: 0.5rem; padding: 0.375rem 0.875rem; font-size: 0.8125rem; font-weight: 600; border: none; cursor: pointer; {{ $this->activeTab === 'all' ? 'background-color: white; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05);' : 'background: transparent; color: #4b5563;' }}"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
+                           {{ $this->activeTab === 'all'
+                               ? 'background-color: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
+                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
                 >
-                    All Accounts & Transactions ({{ $stats['totalOrders'] }})
+                    <x-filament::icon icon="heroicon-m-banknotes" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    <span>All Accounts & Transactions</span>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
+                                 {{ $this->activeTab === 'all' ? 'background-color: rgba(59, 130, 246, 0.3); color: #bfdbfe;' : 'background-color: rgba(148, 163, 184, 0.15); color: #94a3b8;' }}">
+                        {{ $stats['totalOrders'] }}
+                    </span>
                 </button>
 
+                {{-- Tab 2: Action Required --}}
                 <button
                     type="button"
                     wire:click="setActiveTab('follow_up')"
-                    class="rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors {{ $this->activeTab === 'follow_up' ? 'bg-white text-amber-700 shadow-sm dark:bg-gray-900 dark:text-amber-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400' }}"
-                    style="border-radius: 0.5rem; padding: 0.375rem 0.875rem; font-size: 0.8125rem; font-weight: 600; border: none; cursor: pointer; {{ $this->activeTab === 'follow_up' ? 'background-color: white; color: #b45309; box-shadow: 0 1px 2px rgba(0,0,0,0.05);' : 'background: transparent; color: #4b5563;' }}"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
+                           {{ $this->activeTab === 'follow_up'
+                               ? 'background-color: rgba(217, 119, 6, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
+                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
                 >
-                    Action Required (≤ 10d & Overdue) ({{ $stats['warningCount'] + $stats['overdueCount'] }})
+                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    <span>Action Required (≤ 10d & Overdue)</span>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
+                                 {{ $this->activeTab === 'follow_up' ? 'background-color: rgba(245, 158, 11, 0.3); color: #fde68a;' : 'background-color: rgba(217, 119, 6, 0.15); color: #f59e0b;' }}">
+                        {{ $stats['warningCount'] + $stats['overdueCount'] }}
+                    </span>
                 </button>
 
+                {{-- Tab 3: Settled & Cleared --}}
                 <button
                     type="button"
                     wire:click="setActiveTab('payment_history')"
-                    class="rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors {{ $this->activeTab === 'payment_history' ? 'bg-white text-emerald-700 shadow-sm dark:bg-gray-900 dark:text-emerald-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400' }}"
-                    style="border-radius: 0.5rem; padding: 0.375rem 0.875rem; font-size: 0.8125rem; font-weight: 600; border: none; cursor: pointer; {{ $this->activeTab === 'payment_history' ? 'background-color: white; color: #047857; box-shadow: 0 1px 2px rgba(0,0,0,0.05);' : 'background: transparent; color: #4b5563;' }}"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
+                           {{ $this->activeTab === 'payment_history'
+                               ? 'background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
+                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
                 >
-                    Payment History (Settled & Cleared) ({{ $stats['paidCount'] }})
+                    <x-filament::icon icon="heroicon-m-check-badge" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    <span>Payment History (Settled & Cleared)</span>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
+                                 {{ $this->activeTab === 'payment_history' ? 'background-color: rgba(16, 185, 129, 0.3); color: #a7f3d0;' : 'background-color: rgba(34, 197, 94, 0.15); color: #22c55e;' }}">
+                        {{ $stats['paidCount'] }}
+                    </span>
                 </button>
-            </div>
-
-            {{-- Direct Report Download Links --}}
-            <div class="flex items-center gap-2" style="display: flex; gap: 0.5rem;">
-                <a
-                    href="{{ route('filament.admin.pages.accounting-dashboard') }}"
-                    wire:click.prevent="$dispatch('open-modal', { id: 'download-reports-modal' })"
-                    class="hidden"
-                ></a>
             </div>
         </div>
 

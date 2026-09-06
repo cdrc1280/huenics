@@ -9,6 +9,11 @@ class EditTransaction extends EditRecord
 {
     protected static string $resource = TransactionResource::class;
 
+    public static function canAccess(array $parameters = []): bool
+    {
+        return false;
+    }
+
     protected function getHeaderActions(): array
     {
         return [];

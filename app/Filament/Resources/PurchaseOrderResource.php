@@ -243,6 +243,41 @@ class PurchaseOrderResource extends Resource
                             ->default(PurchaseOrder::WARRANTY_1_YEAR)
                             ->required()
                             ->visible(fn ($get) => $get('has_warranty')),
+
+                        Placeholder::make('warranty_countdown_display')
+                            ->label('Warranty Remaining Counter')
+                            ->visible(fn ($get) => (bool) $get('has_warranty'))
+                            ->content(function (?PurchaseOrder $record): HtmlString {
+                                if (! $record) {
+                                    return new HtmlString('<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">Pending Order Creation (Countdown begins on delivery)</div>');
+                                }
+
+                                $color = $record->warranty_countdown_color;
+                                $countdown = e($record->warranty_countdown);
+                                $periodLabel = e($record->warranty_period_label);
+
+                                $colorClasses = match ($color) {
+                                    'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
+                                    'warning' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+                                    'danger' => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
+                                    'info' => 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60',
+                                    default => 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+                                };
+
+                                $expiryNotice = $record->warranty_end_date
+                                    ? '<span class="text-xs text-gray-500 dark:text-gray-400">Expires: '.$record->warranty_end_date->format('M d, Y').'</span>'
+                                    : '<span class="text-xs text-gray-400 italic">Activates upon DR &amp; SI delivery</span>';
+
+                                return new HtmlString("
+                                    <div class='flex flex-wrap items-center gap-2 pt-1'>
+                                        <span class='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border {$colorClasses}'>
+                                            {$countdown}
+                                        </span>
+                                        <span class='text-xs font-medium text-gray-600 dark:text-gray-300'>({$periodLabel} Selected)</span>
+                                        {$expiryNotice}
+                                    </div>
+                                ");
+                            }),
                     ]),
 
                 Section::make('Financials')
@@ -578,11 +613,12 @@ class PurchaseOrderResource extends Resource
                 ->formatStateUsing(fn (?string $state, PurchaseOrder $record): string => match ($state) {
                     'paid' => 'PAID'.($record->payment_term_type ? ' ('.strtoupper($record->payment_term_type).')' : ''),
                     'unpaid' => ($record->days_until_due !== null && $record->days_until_due < 0)
-                        ? 'OVERDUE ('.abs($record->days_until_due).'d)'
-                        : 'UNPAID'.($record->days_until_due !== null ? ' ('.$record->days_until_due.'d)' : ''),
+                    ? 'OVERDUE ('.abs($record->days_until_due).'d)'
+                    : 'UNPAID'.($record->days_until_due !== null ? ' ('.$record->days_until_due.'d)' : ''),
                     default => strtoupper($state ?: 'unpaid'),
                 })
-                ->tooltip(fn (PurchaseOrder $record): string => 'Term: '.($record->payment_terms ?: 'Not set').
+                ->tooltip(
+                    fn (PurchaseOrder $record): string => 'Term: '.($record->payment_terms ?: 'Not set').
                     ($record->payment_due_date ? ' | Due: '.$record->payment_due_date->format('M d, Y') : '').
                     ($record->payment_account ? ' | Account: '.$record->payment_account : '')
                 )
@@ -620,39 +656,23 @@ class PurchaseOrderResource extends Resource
                 ->searchable(query: fn (Builder $query, string $search) => $query->whereHas('salesInvoices', fn ($q) => $q->where('si_number', 'like', "%{$search}%")))
                 ->toggleable(),
 
-            TextColumn::make('warranty_status')
-                ->label('Warranty')
+            TextColumn::make('warranty_countdown')
+                ->label('Warranty Remaining')
                 ->badge()
-                ->formatStateUsing(fn (string $state): string => match ($state) {
-                    PurchaseOrder::WARRANTY_ACTIVE => 'Active',
-                    PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
-                    PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
-                    PurchaseOrder::WARRANTY_NONE => 'No Warranty',
-                    default => $state,
-                })
-                ->color(fn (string $state): string => match ($state) {
-                    PurchaseOrder::WARRANTY_ACTIVE => 'success',
-                    PurchaseOrder::WARRANTY_EXPIRING => 'warning',
-                    PurchaseOrder::WARRANTY_EXPIRED => 'danger',
-                    PurchaseOrder::WARRANTY_NONE => 'gray',
-                    default => 'gray',
-                })
+                ->color(fn (PurchaseOrder $record): string => $record->warranty_countdown_color)
+                ->description(fn (PurchaseOrder $record): ?string => $record->has_warranty ? ('Coverage: '.$record->warranty_period_label) : null)
                 ->tooltip(function (PurchaseOrder $record): string {
-                    $status = $record->warranty_status;
-                    if ($record->warranty_end_date) {
-                        $formatted = Carbon::parse($record->warranty_end_date)->format('M d, Y');
-
-                        return "Warranty status: {$status} (Expires {$formatted})";
+                    if (! $record->has_warranty) {
+                        return 'No warranty configured';
                     }
+                    if (! $record->warranty_end_date) {
+                        return "Selected coverage: {$record->warranty_period_label} (Activates upon delivery)";
+                    }
+                    $expires = Carbon::parse($record->warranty_end_date)->format('M d, Y');
 
-                    return "Warranty status: {$status}";
-                }),
-
-            TextColumn::make('warranty_period')
-                ->label('Warranty Period')
-                ->formatStateUsing(fn (string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state)
-                ->toggleable(isToggledHiddenByDefault: true)
-                ->tooltip('Chosen warranty coverage duration'),
+                    return "Selected coverage: {$record->warranty_period_label} | Valid until {$expires}";
+                })
+                ->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('warranty_end_date', $direction)),
 
             TextColumn::make('order_date')
                 ->label('Order Date')
@@ -1287,6 +1307,22 @@ class PurchaseOrderResource extends Resource
                         $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
                         Notification::make()->title('PO Cancelled')->warning()->send();
                     }),
+
+                Action::make('preview_pdf')
+                    ->label('Preview / Print PO (PDF)')
+                    ->icon('heroicon-m-printer')
+                    ->color('gray')
+                    ->tooltip('Preview and print official Purchase Order PDF')
+                    ->url(fn (PurchaseOrder $record): string => route('purchase-orders.preview-pdf', $record))
+                    ->openUrlInNewTab(),
+
+                Action::make('export_pdf')
+                    ->label('Export PO (PDF)')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->color('primary')
+                    ->tooltip('Download official Purchase Order PDF')
+                    ->url(fn (PurchaseOrder $record): string => route('purchase-orders.export-pdf', $record))
+                    ->openUrlInNewTab(),
 
                 ViewAction::make(),
                 DeleteAction::make()->requiresConfirmation(),

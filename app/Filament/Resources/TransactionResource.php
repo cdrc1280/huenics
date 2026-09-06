@@ -12,16 +12,11 @@ use App\Models\SalesInvoice;
 use App\Models\Transaction;
 use App\Models\Vendor;
 use App\Services\OrderFulfillmentService;
+use App\Services\TransactionExportService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -38,6 +33,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -68,12 +64,22 @@ class TransactionResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->canEditTransactions() ?? true;
+        return false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->canDeleteRecords() ?? true;
+        return false;
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
     }
 
     public static function form(Schema $schema): Schema
@@ -252,10 +258,35 @@ class TransactionResource extends Resource
             ->filters([
                 TrashedFilter::make(),
             ])
+            ->headerActions([
+                Action::make('export_all')
+                    ->label('Export All')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->tooltip('Export all transaction records to CSV')
+                    ->action(function () {
+                        return app(TransactionExportService::class)->downloadCsvResponse();
+                    }),
+            ])
             ->actions([
                 ActionGroup::make([
                     ViewAction::make(),
-                    EditAction::make(),
+
+                    Action::make('export_csv')
+                        ->label('Export to CSV')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success')
+                        ->action(function (Transaction $record) {
+                            $service = app(TransactionExportService::class);
+                            $filename = 'transaction-'.($record->transaction_code ?: $record->id).'-'.date('Ymd').'.csv';
+
+                            return response()->streamDownload(function () use ($service, $record): void {
+                                echo $service->exportSingleTransactionCsv($record);
+                            }, $filename, [
+                                'Content-Type' => 'text/csv; charset=UTF-8',
+                                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                            ]);
+                        }),
 
                     Action::make('upload_dr_si')
                         ->label('Upload DR & SI (Complete)')
@@ -379,17 +410,21 @@ class TransactionResource extends Resource
                                     ->send();
                             }
                         }),
-
-                    DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn (Transaction $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Transaction $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->requiresConfirmation(),
-                    RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    BulkAction::make('export_selected')
+                        ->label('Export Selected to CSV')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success')
+                        ->action(function (Collection $records) {
+                            return app(TransactionExportService::class)->downloadCsvResponse(
+                                $records,
+                                'transactions-selected-'.date('Ymd-His').'.csv'
+                            );
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
@@ -399,7 +434,6 @@ class TransactionResource extends Resource
         return [
             'index' => Pages\ListTransactions::route('/'),
             'create' => Pages\CreateTransaction::route('/create'),
-            'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
     }
 }

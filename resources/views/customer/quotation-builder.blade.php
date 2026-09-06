@@ -219,39 +219,39 @@
                 <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
                     
                     <!-- Procurement Summary Card -->
-                    <div class="bg-slate-900 dark:bg-[#0c1220] text-white border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
-                        <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300">
+                    <div class="bg-white dark:bg-[#0c1220] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+                        <div class="border-b border-slate-200 dark:border-slate-800 pb-3 flex justify-between items-center">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                                 Quotation Summary
                             </h3>
-                            <span class="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
+                            <span class="text-[10px] font-bold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
                                 Vendors Agreement Form
                             </span>
                         </div>
 
                         <div class="space-y-3 text-xs">
-                            <div class="flex justify-between text-slate-300">
+                            <div class="flex justify-between text-slate-500 dark:text-slate-300">
                                 <span>Selected Line Items:</span>
-                                <span id="summary-items-count" class="font-bold text-white text-sm font-mono tabular-nums">0 items</span>
+                                <span id="summary-items-count" class="font-bold text-slate-900 dark:text-white text-sm font-mono tabular-nums">0 items</span>
                             </div>
 
-                            <div class="flex justify-between text-slate-300">
+                            <div class="flex justify-between text-slate-500 dark:text-slate-300">
                                 <span>Tax Documentation:</span>
-                                <span class="font-bold text-slate-200 text-xs">12% BIR VAT Sales Invoice (SI)</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-xs">12% BIR VAT Sales Invoice (SI)</span>
                             </div>
 
-                            <div class="pt-3 border-t border-slate-800 flex justify-between items-baseline">
+                            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-baseline">
                                 <div>
-                                    <div class="text-xs uppercase font-extrabold text-slate-400">Quotation Format:</div>
-                                    <div class="text-[10px] text-slate-500">(Official Agreement PDF)</div>
+                                    <div class="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-400">Quotation Format:</div>
+                                    <div class="text-[10px] text-slate-400 dark:text-slate-500">(Official Agreement PDF)</div>
                                 </div>
-                                <span class="font-black text-sm text-[#60a5fa] uppercase tracking-wider">Ready for Export</span>
+                                <span class="font-black text-sm text-[#214fe0] dark:text-[#60a5fa] uppercase tracking-wider">Ready for Export</span>
                             </div>
                         </div>
 
                         <!-- Notice Box -->
-                        <div class="bg-slate-800/80 dark:bg-[#161f38]/80 rounded-xl p-3.5 border border-slate-700 text-[11px] text-slate-400 leading-relaxed">
-                            <div class="flex items-center gap-1.5 text-blue-400 font-bold mb-1">
+                        <div class="bg-slate-50 dark:bg-[#161f38]/80 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                            <div class="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold mb-1">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 <span>Official Quotation Generator</span>
                             </div>
@@ -269,6 +269,7 @@
                             </button>
                         </div>
                     </div>
+
 
                     <!-- Direct Help Box -->
                     <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm text-xs space-y-2 transition-colors">

@@ -14,7 +14,15 @@ class ListTransactions extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('New Manual Transaction'),
+                ->label('New Transaction'),
+
+            Actions\Action::make('export_all_csv')
+                ->label('Export Ledger (CSV)')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->tooltip('Export all transactions to CSV')
+                ->url(route('transactions.export-csv'))
+                ->openUrlInNewTab(false),
         ];
     }
 }

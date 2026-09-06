@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\UnitOfMeasure;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers\AliasesRelationManager;
 use App\Filament\Resources\ProductResource\RelationManagers\SubComponentsRelationManager;
 use App\Models\Product;
 use App\Services\InventoryService;
@@ -514,6 +515,7 @@ class ProductResource extends Resource
     {
         return [
             SubComponentsRelationManager::class,
+            AliasesRelationManager::class,
         ];
     }
 

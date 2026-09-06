@@ -179,14 +179,6 @@ class InventoryDashboard extends Page implements HasForms, HasTable
                     ->tooltip(fn (InventoryItem $r): string => $r->reorder_point && $r->quantity_on_hand <= $r->reorder_point ? 'Low stock warning: stock level is at or below reorder threshold' : 'Stock level is healthy'),
             ])
             ->headerActions([
-                Action::make('download_template')
-                    ->label('Download Template')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->color('gray')
-                    ->url(route('inventory.download-template'))
-                    ->openUrlInNewTab(false)
-                    ->tooltip('Download sample Inventory Report CSV template'),
-
                 Action::make('export_csv')
                     ->label('Export Inventory Report')
                     ->icon('heroicon-o-arrow-down-tray')

@@ -12,9 +12,17 @@ class ExportQuotationPdf
 {
     public function generate(Quotation $quotation): string
     {
+        $quotation->loadMissing([
+            'lineItems.product',
+            'salesAgent',
+            'approver',
+            'project',
+        ]);
+
         $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
 
         $dompdf = new Dompdf($options);
 

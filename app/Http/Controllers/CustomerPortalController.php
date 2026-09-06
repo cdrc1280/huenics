@@ -8,6 +8,8 @@ use App\Models\Quotation;
 use App\Models\QuotationLineItem;
 use App\Models\User;
 use App\Services\ExportUnofficialQuotationPdf;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -237,6 +239,25 @@ class CustomerPortalController extends Controller implements HasMiddleware
         try {
             $defaultSalesAgent = User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->first();
 
+            // Calculate total acquisition cost and line item gross margins
+            $totalCost = 0.0;
+            foreach ($items as &$line) {
+                $pId = $line['product_id'] ?? null;
+                $prod = $pId ? Product::find($pId) : null;
+                $linePrice = (float) ($line['discounted_price'] > 0 ? $line['discounted_price'] : $line['unit_price']);
+                $baseCost = (float) ($prod?->base_cost_price ?: round($linePrice * 0.70, 2));
+                $lineCost = round((float) $line['quantity'] * $baseCost, 2);
+                $grossProfit = round((float) $line['line_total'] - $lineCost, 2);
+
+                $line['base_cost'] = $baseCost;
+                $line['gross_profit'] = $grossProfit;
+                $totalCost += $lineCost;
+            }
+            unset($line);
+
+            $effectiveTotal = (float) ($quoteData['negotiated_amount'] ?: $quoteData['total_amount']);
+            $estimatedProfit = round($effectiveTotal - $totalCost, 2);
+
             $adminQuotation = Quotation::create([
                 'quotation_number' => $refNumber,
                 'sales_agent_id' => $defaultSalesAgent?->id ?? null,
@@ -248,6 +269,8 @@ class CustomerPortalController extends Controller implements HasMiddleware
                 'project_location' => $quoteData['project_location'],
                 'total_amount' => $quoteData['total_amount'],
                 'negotiated_amount' => $quoteData['negotiated_amount'],
+                'total_cost' => $totalCost,
+                'estimated_profit' => $estimatedProfit,
                 'status' => Quotation::STATUS_PENDING,
                 'is_online_request' => true,
                 'client_ip' => $clientIp,
@@ -268,7 +291,9 @@ class CustomerPortalController extends Controller implements HasMiddleware
                     'unit' => $line['unit'],
                     'unit_price' => $line['unit_price'],
                     'discounted_price' => $line['discounted_price'],
+                    'base_cost' => $line['base_cost'] ?? 0,
                     'line_total' => $line['line_total'],
+                    'gross_profit' => $line['gross_profit'] ?? 0,
                 ]);
             }
 
@@ -276,6 +301,9 @@ class CustomerPortalController extends Controller implements HasMiddleware
             $secondsUntilMidnight = max(60, now()->diffInSeconds(now()->endOfDay()));
             Cache::put($dailyIpKey, true, $secondsUntilMidnight);
             $quoteData['is_encoded'] = true;
+
+            $this->notifyStaffOfNewQuotationRequest($adminQuotation);
+
         } catch (\Throwable $e) {
             Log::warning('Quotation admin sync warning: '.$e->getMessage());
         }
@@ -343,5 +371,32 @@ class CustomerPortalController extends Controller implements HasMiddleware
         }
 
         return response()->view('errors.404', [], 404);
+    }
+
+    private function notifyStaffOfNewQuotationRequest(Quotation $quotation): void
+    {
+        $staffUsers = User::whereIn('role', [
+            User::ROLE_ADMIN,
+            User::ROLE_OPERATIONS_MANAGER,
+        ])->get();
+
+        $company = $quotation->customer_company ?: $quotation->customer_name;
+        $itemCount = $quotation->lineItems()->count();
+
+        $notification = Notification::make()
+            ->title('New Online Quotation Request')
+            ->body("{$quotation->customer_name} ({$company}) submitted a quotation request with {$itemCount} item(s).")
+            ->icon('heroicon-o-document-text')
+            ->iconColor('warning')
+            ->actions([
+                Action::make('view')
+                    ->label('Review Quotation')
+                    ->url(route('filament.admin.resources.quotations.view', ['record' => $quotation->id]))
+                    ->button(),
+            ]);
+
+        foreach ($staffUsers as $user) {
+            $notification->sendToDatabase($user);
+        }
     }
 }

@@ -93,12 +93,18 @@ class QuotationService
         $approver = $approver ?: auth()->user();
         $approverId = $approver?->id ?: ($quotation->sales_agent_id ?: (User::first()?->id ?: 1));
 
+        if ((float) $quotation->total_cost <= 0 || (float) $quotation->estimated_profit <= 0) {
+            $quotation->recalculateFinancials(false);
+        }
+
         $quotation->update([
             'status' => Quotation::STATUS_APPROVED,
             'approved_by' => $approverId,
             'approved_at' => now(),
             'reviewed_by' => $quotation->reviewed_by ?: $approverId,
             'reviewed_at' => $quotation->reviewed_at ?: now(),
+            'total_cost' => $quotation->total_cost,
+            'estimated_profit' => $quotation->estimated_profit,
         ]);
     }
 

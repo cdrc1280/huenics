@@ -3,12 +3,16 @@
 use App\Http\Controllers\CustomerPortalController;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
+use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\SalesInvoice;
+use App\Models\Transaction;
+use App\Services\ExportPurchaseOrderPdf;
 use App\Services\ExportQuotationPdf;
 use App\Services\InventoryReportService;
 use App\Services\LivePdfGenerator;
 use App\Services\ProductImportExportService;
+use App\Services\TransactionExportService;
 use Dompdf\Dompdf;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -143,6 +147,15 @@ Route::middleware(['web', 'auth'])->group(function () {
         return app(ExportQuotationPdf::class)->previewResponse($quotation);
     })->name('quotations.preview-pdf');
 
+    // Purchase Order PDF Export & Preview
+    Route::get('/purchase-orders/{purchaseOrder}/export-pdf', function (PurchaseOrder $purchaseOrder) {
+        return app(ExportPurchaseOrderPdf::class)->downloadResponse($purchaseOrder);
+    })->name('purchase-orders.export-pdf');
+
+    Route::get('/purchase-orders/{purchaseOrder}/preview-pdf', function (PurchaseOrder $purchaseOrder) {
+        return app(ExportPurchaseOrderPdf::class)->previewResponse($purchaseOrder);
+    })->name('purchase-orders.preview-pdf');
+
     // Delivery Receipt PDF Export
     Route::get('/delivery-receipts/{deliveryReceipt}/export-pdf', function (DeliveryReceipt $deliveryReceipt) {
         $html = view('pdf.delivery-receipt-template', ['record' => $deliveryReceipt])->render();
@@ -226,6 +239,23 @@ Route::middleware(['web', 'auth'])->group(function () {
             'Content-Disposition' => 'attachment; filename="huenics-inventory-template.csv"',
         ]);
     })->name('inventory.download-template');
+
+    // Transactions Ledger CSV Export
+    Route::get('/transactions/export-csv', function () {
+        return app(TransactionExportService::class)->downloadCsvResponse();
+    })->name('transactions.export-csv');
+
+    Route::get('/transactions/{transaction}/export-csv', function (Transaction $transaction) {
+        $service = app(TransactionExportService::class);
+        $filename = 'transaction-'.($transaction->transaction_code ?: $transaction->id).'-'.date('Ymd').'.csv';
+
+        return response()->streamDownload(function () use ($service, $transaction): void {
+            echo $service->exportSingleTransactionCsv($transaction);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    })->name('transactions.export-single-csv');
 });
 
 // ─── Public Storage Asset Fallback Route ────────────────────────────────────

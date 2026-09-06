@@ -37,6 +37,11 @@ class VendorLayoutEditorPage extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()?->canConfigureLayouts() ?? true;
@@ -44,7 +49,10 @@ class VendorLayoutEditorPage extends Page implements HasForms
 
     public function mount(): void
     {
-        $defaultVendor = Vendor::query()->first();
+        $requestedVendorId = request()->query('vendor_id');
+        $selectedVendor = $requestedVendorId ? Vendor::find($requestedVendorId) : null;
+        $defaultVendor = $selectedVendor ?: Vendor::query()->first();
+
         $this->form->fill([
             'vendor_id' => $defaultVendor?->id,
             'document_type' => 'purchase_order',

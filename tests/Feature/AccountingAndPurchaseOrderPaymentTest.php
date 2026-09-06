@@ -14,6 +14,7 @@ use App\Models\Quotation;
 use App\Models\RequestedQuotation;
 use App\Models\User;
 use App\Services\AccountingReportService;
+use App\Services\QuotationService;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -298,10 +299,17 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $freshQuote = Quotation::find($onlineQuote->id);
         $this->assertFalse((bool) $freshQuote->is_online_request);
         $this->assertEquals($this->adminUser->id, $freshQuote->sales_agent_id);
-        $this->assertEquals(Quotation::STATUS_APPROVED, $freshQuote->status);
+        // Accepting requested quotation starts at the first step: Pending review/approval in Quotations
+        $this->assertEquals(Quotation::STATUS_PENDING, $freshQuote->status);
 
         $officialQuotations = QuotationResource::getEloquentQuery()->get();
         $this->assertTrue($officialQuotations->contains('id', $freshQuote->id));
+
+        // When officially approved by management in Quotations resource
+        app(QuotationService::class)->approve($freshQuote, $this->adminUser);
+        $freshQuote->refresh();
+        $this->assertEquals(Quotation::STATUS_APPROVED, $freshQuote->status);
+        $this->assertNotNull($freshQuote->approved_at);
     }
 
     public function test_inventory_item_ownership_tracking_and_scopes(): void

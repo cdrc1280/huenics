@@ -229,17 +229,17 @@
 
 <!-- Floating Cart Action Bar -->
 <div id="floating-cart-bar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-xl px-3 sm:px-4 hidden pointer-events-none">
-    <div class="pointer-events-auto bg-slate-900/95 dark:bg-[#0c1322]/95 backdrop-blur-md text-white px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl shadow-2xl border border-slate-700/80 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-4">
+    <div class="pointer-events-auto bg-white/95 dark:bg-[#0c1322]/95 backdrop-blur-md text-slate-900 dark:text-white px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-4">
         <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#214fe0] text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                 <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div class="min-w-0">
-                <div class="text-xs font-bold text-white flex items-center gap-1 truncate">
-                    <span id="floating-cart-count" class="font-mono tabular-nums font-black text-blue-400">0</span>
+                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 truncate">
+                    <span id="floating-cart-count" class="font-mono tabular-nums font-black text-[#214fe0] dark:text-blue-400">0</span>
                     <span class="truncate">items in Quote</span>
                 </div>
-                <div class="text-[10px] sm:text-[11px] text-slate-400 hidden xs:block truncate">
+                <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 hidden xs:block truncate">
                     Bill of Quantities / Project Inquiry
                 </div>
             </div>

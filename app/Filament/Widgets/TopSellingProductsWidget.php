@@ -15,7 +15,9 @@ class TopSellingProductsWidget extends ChartWidget
 
     protected int|string|array $columnSpan = 1;
 
-    protected ?string $maxHeight = '280px';
+    protected ?string $maxHeight = '360px';
+
+    public const TOP_PRODUCTS_LIMIT = 10;
 
     public string $periodType = 'month';
 
@@ -176,32 +178,39 @@ class TopSellingProductsWidget extends ChartWidget
                 'revenue' => (float) $items->sum('line_total'),
                 'qty' => (float) $items->sum('qty'),
             ];
-        })->sortByDesc('revenue')->take(7);
+        })->sortByDesc('revenue')->take(self::TOP_PRODUCTS_LIMIT);
 
         $labels = [];
         $data = [];
 
         foreach ($grouped as $item) {
             $productName = $item['name'];
-            $shortName = strlen($productName) > 24 ? substr($productName, 0, 22).'..' : $productName;
+            $shortName = strlen($productName) > 28 ? substr($productName, 0, 26).'..' : $productName;
             $labels[] = $shortName;
             $data[] = round((float) $item['revenue'], 2);
         }
+
+        $palette = [
+            '#1d4ed8', // Blue 700
+            '#2563eb', // Blue 600
+            '#3b82f6', // Blue 500
+            '#0284c7', // Sky 600
+            '#0ea5e9', // Sky 500
+            '#0d9488', // Teal 600
+            '#14b8a6', // Teal 500
+            '#6366f1', // Indigo 500
+            '#8b5cf6', // Violet 500
+            '#a855f7', // Purple 500
+            '#d946ef', // Fuchsia 500
+            '#ec4899', // Pink 500
+        ];
 
         return [
             'datasets' => [
                 [
                     'label' => 'Revenue (₱)',
                     'data' => $data,
-                    'backgroundColor' => [
-                        '#2563eb',
-                        '#3b82f6',
-                        '#60a5fa',
-                        '#93c5fd',
-                        '#38bdf8',
-                        '#818cf8',
-                        '#a5b4fc',
-                    ],
+                    'backgroundColor' => array_slice($palette, 0, max(1, count($data))),
                     'borderRadius' => 4,
                 ],
             ],
@@ -227,6 +236,11 @@ class TopSellingProductsWidget extends ChartWidget
                 'x' => [
                     'ticks' => [
                         'callback' => '(function(value) { return "₱" + Number(value).toLocaleString(); })',
+                    ],
+                ],
+                'y' => [
+                    'ticks' => [
+                        'autoSkip' => false,
                     ],
                 ],
             ],

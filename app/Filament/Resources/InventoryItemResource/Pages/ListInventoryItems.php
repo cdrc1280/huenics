@@ -57,14 +57,6 @@ class ListInventoryItems extends ListRecords
                         ->send();
                 }),
 
-            Actions\Action::make('download_template')
-                ->label('Download Template')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->url(route('inventory.download-template'))
-                ->openUrlInNewTab(false)
-                ->tooltip('Download sample Inventory Report CSV template matching the reference ledger format'),
-
             Actions\Action::make('export_csv')
                 ->label('Export Inventory Report')
                 ->icon('heroicon-o-arrow-down-tray')

@@ -157,7 +157,7 @@ class VendorResource extends Resource
                         ->icon('heroicon-o-adjustments-horizontal')
                         ->color('info')
                         ->visible(fn (Vendor $record): bool => ! $record->trashed())
-                        ->url(fn (Vendor $record): string => VendorLayoutEditorPage::getUrl()),
+                        ->url(fn (Vendor $record): string => VendorLayoutEditorPage::getUrl(['vendor_id' => $record->id])),
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
                     RestoreAction::make()->requiresConfirmation()->visible(fn (Vendor $record): bool => $record->trashed()),

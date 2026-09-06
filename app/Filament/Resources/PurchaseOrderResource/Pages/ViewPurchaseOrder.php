@@ -433,6 +433,22 @@ class ViewPurchaseOrder extends ViewRecord
                 ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
                 ->visible(fn (): bool => ! $this->record->trashed() && $this->record->isApproved() && ($this->record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $this->record->status === PurchaseOrder::STATUS_DELIVERED))
                 ->url(fn () => DeliveryMonitoringPage::getUrl()),
+
+            Action::make('preview_pdf')
+                ->label('Preview PO (PDF)')
+                ->icon('heroicon-m-printer')
+                ->color('gray')
+                ->tooltip('Preview and print official Purchase Order PDF')
+                ->url(fn (): string => route('purchase-orders.preview-pdf', $this->record))
+                ->openUrlInNewTab(),
+
+            Action::make('export_pdf')
+                ->label('Export PO (PDF)')
+                ->icon('heroicon-m-arrow-down-tray')
+                ->color('primary')
+                ->tooltip('Download official Purchase Order PDF')
+                ->url(fn (): string => route('purchase-orders.export-pdf', $this->record))
+                ->openUrlInNewTab(),
         ];
     }
 
@@ -494,13 +510,11 @@ class ViewPurchaseOrder extends ViewRecord
                     TextEntry::make('total_invoiced_amount')
                         ->label('Total Invoiced')
                         ->money('PHP'),
-                    TextEntry::make('warranty_status')->label('Warranty Status')->badge()
-                        ->color(fn (string $state) => match ($state) {
-                            PurchaseOrder::WARRANTY_ACTIVE => 'success',
-                            PurchaseOrder::WARRANTY_EXPIRING => 'warning',
-                            PurchaseOrder::WARRANTY_EXPIRED => 'danger',
-                            default => 'gray',
-                        }),
+                    TextEntry::make('warranty_countdown')
+                        ->label('Warranty Remaining')
+                        ->badge()
+                        ->color(fn (PurchaseOrder $record): string => $record->warranty_countdown_color)
+                        ->helperText(fn (PurchaseOrder $record): string => $record->warranty_end_date ? ('Coverage valid until '.$record->warranty_end_date->format('M d, Y')) : 'Awaiting delivery to begin countdown'),
                     TextEntry::make('warranty_period')
                         ->label('Warranty Period')
                         ->formatStateUsing(fn (string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state),

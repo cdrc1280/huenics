@@ -7,6 +7,7 @@ use App\Enums\PurchaseOrderStatus;
 use App\Enums\WarrantyPeriod;
 use App\Enums\WarrantyStatus;
 use App\Services\PoQuotationReconciler;
+use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,7 +49,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class PurchaseOrder extends Model
 {
-    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     // Delivery statuses
     public const DELIVERY_PENDING = DeliveryStatus::Pending->value;
@@ -422,6 +423,80 @@ class PurchaseOrder extends Model
         }
 
         return (int) now()->diffInMonths($this->warranty_end_date, false);
+    }
+
+    public function getWarrantyCountdownAttribute(): string
+    {
+        if (! $this->has_warranty) {
+            return 'No Warranty';
+        }
+
+        if (! $this->warranty_end_date) {
+            return 'Pending Delivery';
+        }
+
+        $endDate = Carbon::parse($this->warranty_end_date)->endOfDay();
+        $now = now();
+
+        if ($now->greaterThan($endDate)) {
+            return 'Expired ('.$endDate->diffForHumans().')';
+        }
+
+        $diff = $now->diff($endDate);
+        $parts = [];
+
+        if ($diff->y > 0) {
+            $parts[] = $diff->y.' '.($diff->y === 1 ? 'yr' : 'yrs');
+        }
+        if ($diff->m > 0) {
+            $parts[] = $diff->m.' '.($diff->m === 1 ? 'mo' : 'mos');
+        }
+        if ($diff->y === 0 && $diff->d > 0) {
+            $parts[] = $diff->d.' '.($diff->d === 1 ? 'day' : 'days');
+        }
+
+        if (empty($parts)) {
+            return $diff->h > 0 ? ($diff->h.' hrs left') : 'Expires today';
+        }
+
+        return implode(', ', $parts).' left';
+    }
+
+    public function getWarrantyCountdownColorAttribute(): string
+    {
+        if (! $this->has_warranty) {
+            return 'gray';
+        }
+
+        if (! $this->warranty_end_date) {
+            return 'info';
+        }
+
+        $endDate = Carbon::parse($this->warranty_end_date)->endOfDay();
+        if (now()->greaterThan($endDate)) {
+            return 'danger';
+        }
+
+        $daysRemaining = (int) now()->startOfDay()->diffInDays($endDate->startOfDay(), false);
+
+        if ($daysRemaining <= 15) {
+            return 'danger';
+        }
+
+        if ($daysRemaining <= 60) {
+            return 'warning';
+        }
+
+        return 'success';
+    }
+
+    public function getWarrantySummaryAttribute(): string
+    {
+        if (! $this->has_warranty) {
+            return 'No Warranty';
+        }
+
+        return "{$this->warranty_period_label} • {$this->warranty_countdown}";
     }
 
     public function getIsOverdueAttribute(): bool

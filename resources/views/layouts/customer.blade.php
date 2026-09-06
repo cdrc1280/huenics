@@ -682,6 +682,44 @@
         </div>
     </footer>
 
+    <!-- ==========================================================================
+         FLOATING SCROLL TO TOP / TAP CONTROLLER (Universal Customer Portal)
+         ========================================================================== -->
+    <button type="button" 
+            id="scroll-to-top" 
+            onclick="window.scrollToTop()"
+            aria-label="Scroll to top of page"
+            title="Scroll to top"
+            class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 text-slate-700 dark:text-slate-200 shadow-xl shadow-slate-900/10 dark:shadow-black/60 hover:text-[#214fe0] dark:hover:text-[#60a5fa] hover:border-blue-300 dark:hover:border-blue-500/50 hover:-translate-y-1 active:scale-95 transition-all duration-300 ease-out opacity-0 pointer-events-none translate-y-4 scale-90 group focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer select-none">
+        
+        <!-- Circular Progress Tracking Ring (SVG) -->
+        <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none p-0.5" viewBox="0 0 48 48">
+            <!-- Background Circular Track -->
+            <circle cx="24" cy="24" r="20" 
+                    class="stroke-slate-200/80 dark:stroke-slate-800" 
+                    stroke-width="2.5" 
+                    fill="none" />
+            <!-- Active Fill Indicator (Matches Active Huenics Theme) -->
+            <circle id="scroll-progress-ring" 
+                    cx="24" cy="24" r="20" 
+                    class="stroke-[#214fe0] dark:stroke-[#60a5fa] transition-all duration-150 ease-out" 
+                    stroke-width="2.5" 
+                    stroke-linecap="round" 
+                    fill="none" 
+                    stroke-dasharray="125.66" 
+                    stroke-dashoffset="125.66" />
+        </svg>
+
+        <!-- Center Arrow Icon -->
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:-translate-y-0.5 relative z-10" 
+             fill="none" 
+             viewBox="0 0 24 24" 
+             stroke="currentColor" 
+             stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
+
     <!-- Global Cart Script for Quotation Builder -->
     <script>
         function toggleMobileMenu() {
@@ -1104,6 +1142,9 @@
                 }
                 if (window.lucide) {
                     lucide.createIcons();
+                }
+                if (window.updateScrollProgress) {
+                    window.updateScrollProgress();
                 }
 
                 // Dispatch page-loaded event
@@ -1707,6 +1748,60 @@
             }
         };
 
+        // ==========================================================================
+        // Uniform Scroll-To-Top / Tap Controller (Dual Theme & SPA Resilient)
+        // ==========================================================================
+        window.initScrollToTop = function() {
+            const btn = document.getElementById('scroll-to-top');
+            const progressRing = document.getElementById('scroll-progress-ring');
+            if (!btn || !progressRing) return;
+
+            const circumference = 2 * Math.PI * 20; // 125.66px
+            let isTicking = false;
+
+            window.updateScrollProgress = function() {
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+
+                // Threshold to reveal button (after 240px scrolled)
+                if (scrollTop > 240) {
+                    btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4', 'scale-90');
+                    btn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                } else {
+                    btn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                    btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4', 'scale-90');
+                }
+
+                // Update circular progress tracking ring
+                if (scrollHeight > 0) {
+                    const progress = Math.min(1, Math.max(0, scrollTop / scrollHeight));
+                    const offset = circumference - (progress * circumference);
+                    progressRing.style.strokeDashoffset = offset.toFixed(2);
+                } else {
+                    progressRing.style.strokeDashoffset = circumference.toString();
+                }
+
+                isTicking = false;
+            };
+
+            window.addEventListener('scroll', () => {
+                if (!isTicking) {
+                    window.requestAnimationFrame(window.updateScrollProgress);
+                    isTicking = true;
+                }
+            }, { passive: true });
+
+            window.updateScrollProgress();
+        };
+
+        window.scrollToTop = function() {
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({
+                top: 0,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth'
+            });
+        };
+
         // Initialize badge, theme icon, modal, 3D physics, and SPA navigator on load
         document.addEventListener('DOMContentLoaded', () => {
             CartManager.updateNavBadge();
@@ -1715,6 +1810,7 @@
             HuenicsSPA.init();
             if (window.Huenics3D) Huenics3D.init();
             if (window.lucide) lucide.createIcons();
+            if (window.initScrollToTop) window.initScrollToTop();
         });
     </script>
 

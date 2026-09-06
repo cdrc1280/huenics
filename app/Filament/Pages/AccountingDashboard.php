@@ -73,7 +73,10 @@ class AccountingDashboard extends Page implements HasForms, HasTable
 
         // Auto-select the highest priority order requiring follow-up
         $urgentPo = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
-            ->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
+            ->where(function ($q) {
+                $q->whereNull('payment_status')
+                    ->orWhere('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID);
+            })
             ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()))
             ->orderByRaw('CASE WHEN payment_due_date < ? THEN 1 WHEN payment_due_date <= ? THEN 2 ELSE 3 END', [
                 now()->toDateString(),
@@ -81,6 +84,13 @@ class AccountingDashboard extends Page implements HasForms, HasTable
             ])
             ->orderBy('payment_due_date', 'asc')
             ->first();
+
+        if (! $urgentPo) {
+            $urgentPo = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
+                ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()))
+                ->latest('id')
+                ->first();
+        }
 
         if ($urgentPo) {
             $this->loadEmailTemplateForPo($urgentPo->id);
@@ -169,7 +179,10 @@ class AccountingDashboard extends Page implements HasForms, HasTable
     public function getPendingFollowUpOrdersProperty()
     {
         $query = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
-            ->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
+            ->where(function ($q) {
+                $q->whereNull('payment_status')
+                    ->orWhere('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID);
+            })
             ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()))
             ->with(['project', 'quotation'])
             ->orderByRaw('CASE WHEN payment_due_date < ? THEN 1 WHEN payment_due_date <= ? THEN 2 ELSE 3 END', [

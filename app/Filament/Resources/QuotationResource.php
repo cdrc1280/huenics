@@ -21,7 +21,6 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -607,7 +606,6 @@ class QuotationResource extends Resource
                     ->url(fn (Quotation $r) => route('quotations.preview-pdf', $r))
                     ->openUrlInNewTab(),
 
-                ViewAction::make(),
                 DeleteAction::make()->requiresConfirmation(),
                 RestoreAction::make()->requiresConfirmation()->visible(fn (Quotation $record): bool => $record->trashed()),
                 ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Quotation $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),

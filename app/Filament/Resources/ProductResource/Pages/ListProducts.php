@@ -21,14 +21,6 @@ class ListProducts extends ListRecords
             Actions\CreateAction::make()
                 ->label('Add Product'),
 
-            Actions\Action::make('download_template')
-                ->label('Download Template')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->url(route('products.download-template-excel'))
-                ->openUrlInNewTab(false)
-                ->tooltip('Download sample Excel (.xlsx) import template matching PRICELIST structure'),
-
             Actions\Action::make('export_csv')
                 ->label('Export Excel')
                 ->icon('heroicon-o-arrow-down-tray')

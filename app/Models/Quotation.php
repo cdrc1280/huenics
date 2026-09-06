@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuotationStatus;
+use App\Traits\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Quotation extends Model
 {
-    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     public const STATUS_PENDING = QuotationStatus::Pending->value;
 
@@ -266,5 +267,58 @@ class Quotation extends Model
         }
 
         return $candidate;
+    }
+
+    /**
+     * Recalculate financial totals, line item base costs, and estimated gross profit.
+     */
+    public function recalculateFinancials(bool $save = true): self
+    {
+        $this->loadMissing('lineItems.product');
+
+        $totalAmount = 0.0;
+        $totalCost = 0.0;
+
+        foreach ($this->lineItems as $item) {
+            $qty = (float) ($item->qty ?: 1);
+            $unitPrice = (float) ($item->unit_price ?: 0);
+            $discPrice = $item->discounted_price !== null ? (float) $item->discounted_price : null;
+            $effectivePrice = ($discPrice !== null && $discPrice > 0) ? $discPrice : $unitPrice;
+            $lineTotal = round($qty * $effectivePrice, 2);
+
+            $baseCost = (float) ($item->base_cost ?: 0);
+            if ($baseCost <= 0 && $item->product) {
+                $baseCost = (float) ($item->product->base_cost_price ?: 0);
+            }
+            if ($baseCost <= 0 && $effectivePrice > 0) {
+                $baseCost = round($effectivePrice * 0.70, 2);
+            }
+
+            $lineCost = round($qty * $baseCost, 2);
+            $grossProfit = round($lineTotal - $lineCost, 2);
+
+            $item->base_cost = $baseCost;
+            $item->line_total = $lineTotal;
+            $item->gross_profit = $grossProfit;
+            if ($item->isDirty()) {
+                $item->saveQuietly();
+            }
+
+            $totalAmount += $lineTotal;
+            $totalCost += $lineCost;
+        }
+
+        $effectiveTotal = (float) ($this->negotiated_amount ?: ($totalAmount ?: $this->total_amount));
+        $estimatedProfit = round($effectiveTotal - $totalCost, 2);
+
+        $this->total_amount = $totalAmount ?: (float) $this->total_amount;
+        $this->total_cost = $totalCost;
+        $this->estimated_profit = $estimatedProfit;
+
+        if ($save) {
+            $this->saveQuietly();
+        }
+
+        return $this;
     }
 }
