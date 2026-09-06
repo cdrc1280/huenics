@@ -16,12 +16,12 @@ class AccountingReportService
         $orders = $orders ?: PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where(function ($q) {
                 $q->where('delivery_status', PurchaseOrder::DELIVERY_DELIVERED)
-                  ->orWhere('status', PurchaseOrder::STATUS_DELIVERED);
+                    ->orWhere('status', PurchaseOrder::STATUS_DELIVERED);
             })
             ->orderBy('payment_due_date', 'asc')
             ->get();
 
-        $filename = 'Huenics_Receivables_Report_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'Huenics_Receivables_Report_'.now()->format('Ymd_His').'.csv';
 
         return response()->streamDownload(function () use ($orders) {
             $handle = fopen('php://output', 'w');
@@ -48,7 +48,7 @@ class AccountingReportService
                 $days = $po->days_until_due;
                 $daysStr = $po->isPaid()
                     ? 'Settled'
-                    : ($days !== null ? ($days < 0 ? abs($days) . ' days overdue' : $days . ' days left') : 'No due date');
+                    : ($days !== null ? ($days < 0 ? abs($days).' days overdue' : $days.' days left') : 'No due date');
 
                 fputcsv($handle, [
                     $po->po_number,
@@ -69,7 +69,7 @@ class AccountingReportService
 
             fclose($handle);
         }, $filename, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
@@ -83,7 +83,7 @@ class AccountingReportService
             ->orderBy('paid_at', 'desc')
             ->get();
 
-        $filename = 'Huenics_Payment_History_Ledger_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'Huenics_Payment_History_Ledger_'.now()->format('Ymd_His').'.csv';
 
         return response()->streamDownload(function () use ($orders) {
             $handle = fopen('php://output', 'w');
@@ -119,7 +119,7 @@ class AccountingReportService
 
             fclose($handle);
         }, $filename, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
@@ -132,35 +132,35 @@ class AccountingReportService
         $orders = $orders ?: PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where(function ($q) {
                 $q->where('delivery_status', PurchaseOrder::DELIVERY_DELIVERED)
-                  ->orWhere('status', PurchaseOrder::STATUS_DELIVERED);
+                    ->orWhere('status', PurchaseOrder::STATUS_DELIVERED);
             })
             ->orderBy('payment_due_date', 'asc')
             ->get();
 
         $totalReceivables = (float) $orders->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)->sum('order_amount');
         $totalCollected = (float) $orders->where('payment_status', PurchaseOrder::PAYMENT_STATUS_PAID)->sum('order_amount');
-        $overdueCount = $orders->filter(fn($po) => !$po->isPaid() && $po->days_until_due !== null && $po->days_until_due < 0)->count();
-        $warningCount = $orders->filter(fn($po) => !$po->isPaid() && $po->days_until_due !== null && $po->days_until_due >= 0 && $po->days_until_due <= 10)->count();
+        $overdueCount = $orders->filter(fn ($po) => ! $po->isPaid() && $po->days_until_due !== null && $po->days_until_due < 0)->count();
+        $warningCount = $orders->filter(fn ($po) => ! $po->isPaid() && $po->days_until_due !== null && $po->days_until_due >= 0 && $po->days_until_due <= 10)->count();
 
         $pdf = Pdf::loadView('pdf.accounting-receivables-report', [
-            'orders'           => $orders,
+            'orders' => $orders,
             'totalReceivables' => $totalReceivables,
-            'totalCollected'   => $totalCollected,
-            'overdueCount'     => $overdueCount,
-            'warningCount'     => $warningCount,
-            'generatedAt'      => now(),
+            'totalCollected' => $totalCollected,
+            'overdueCount' => $overdueCount,
+            'warningCount' => $warningCount,
+            'generatedAt' => now(),
         ])
-        ->setPaper('a4', 'landscape')
-        ->setOption('isHtml5ParserEnabled', true)
-        ->setOption('isRemoteEnabled', true);
+            ->setPaper('a4', 'landscape')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
 
         $pdfContent = $pdf->output();
-        $filename = 'Huenics_Receivables_Aging_Report_' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'Huenics_Receivables_Aging_Report_'.now()->format('Ymd_His').'.pdf';
 
         return response()->streamDownload(function () use ($pdfContent) {
-            print($pdfContent);
+            echo $pdfContent;
         }, $filename, [
-            'Content-Type'        => 'application/pdf',
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
@@ -177,21 +177,21 @@ class AccountingReportService
         $totalPaid = (float) $orders->sum('order_amount');
 
         $pdf = Pdf::loadView('pdf.accounting-payment-history', [
-            'orders'      => $orders,
-            'totalPaid'   => $totalPaid,
+            'orders' => $orders,
+            'totalPaid' => $totalPaid,
             'generatedAt' => now(),
         ])
-        ->setPaper('a4', 'landscape')
-        ->setOption('isHtml5ParserEnabled', true)
-        ->setOption('isRemoteEnabled', true);
+            ->setPaper('a4', 'landscape')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
 
         $pdfContent = $pdf->output();
-        $filename = 'Huenics_Payment_History_Ledger_' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'Huenics_Payment_History_Ledger_'.now()->format('Ymd_His').'.pdf';
 
         return response()->streamDownload(function () use ($pdfContent) {
-            print($pdfContent);
+            echo $pdfContent;
         }, $filename, [
-            'Content-Type'        => 'application/pdf',
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }

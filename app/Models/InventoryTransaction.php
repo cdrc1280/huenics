@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryTransaction extends Model
 {
-    use HasFactory, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory;
 
     public $timestamps = false;
 
@@ -35,12 +35,12 @@ class InventoryTransaction extends Model
     protected function casts(): array
     {
         return [
-            'quantity'      => 'decimal:4',
-            'transit_in'    => 'decimal:4',
-            'transit_out'   => 'decimal:4',
+            'quantity' => 'decimal:4',
+            'transit_in' => 'decimal:4',
+            'transit_out' => 'decimal:4',
             'balance_after' => 'decimal:4',
             'date_released' => 'date',
-            'created_at'    => 'datetime',
+            'created_at' => 'datetime',
         ];
     }
 

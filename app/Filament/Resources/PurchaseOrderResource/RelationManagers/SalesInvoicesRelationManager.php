@@ -30,13 +30,16 @@ use Illuminate\Database\Eloquent\Model;
 class SalesInvoicesRelationManager extends RelationManager
 {
     protected static string $relationship = 'salesInvoices';
+
     protected static ?string $title = 'Sales Invoices (SI)';
+
     protected static \BackedEnum|string|null $icon = 'heroicon-o-receipt-percent';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
         /** @var PurchaseOrder $ownerRecord */
         $count = $ownerRecord->salesInvoices()->count();
+
         return $count > 0 ? (string) $count : null;
     }
 
@@ -366,7 +369,7 @@ class SalesInvoicesRelationManager extends RelationManager
                     ->falseIcon('heroicon-o-document')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->getStateUsing(fn (SalesInvoice $r): bool => !empty($r->file_path) || !empty($r->document_id)),
+                    ->getStateUsing(fn (SalesInvoice $r): bool => ! empty($r->file_path) || ! empty($r->document_id)),
             ])
             ->headerActions([
                 CreateAction::make()
@@ -388,6 +391,7 @@ class SalesInvoicesRelationManager extends RelationManager
                         if (empty($data['delivery_receipt_numbers'])) {
                             $data['delivery_receipt_numbers'] = $po->deliveryReceipts()->pluck('dr_number')->implode(', ');
                         }
+
                         return $data;
                     })
                     ->after(function (SalesInvoice $record) {

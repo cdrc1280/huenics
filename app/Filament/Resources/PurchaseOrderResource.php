@@ -2,23 +2,26 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UnitOfMeasure;
 use App\Filament\Pages\DeliveryMonitoringPage;
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Models\DeliveryReceipt;
+use App\Models\Document;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\SalesInvoice;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\OrderFulfillmentService;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
@@ -43,15 +46,20 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class PurchaseOrderResource extends Resource
 {
     protected static ?string $model = PurchaseOrder::class;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-shopping-cart';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+
     protected static ?string $navigationLabel = 'Purchase Orders';
+
     protected static ?int $navigationSort = 2;
 
     public static function canAccess(): bool
@@ -88,7 +96,7 @@ class PurchaseOrderResource extends Resource
                 ->schema([
                     TextInput::make('po_number')
                         ->label('PO #')
-                        ->default(fn() => PurchaseOrder::generateNumber())
+                        ->default(fn () => PurchaseOrder::generateNumber())
                         ->disabled()
                         ->dehydrated()
                         ->required(),
@@ -100,7 +108,7 @@ class PurchaseOrderResource extends Resource
                             User::ROLE_ADMIN,
                             User::ROLE_OPERATIONS_MANAGER,
                         ])->pluck('name', 'id'))
-                        ->default(fn() => auth()->id())
+                        ->default(fn () => auth()->id())
                         ->required()
                         ->searchable(),
 
@@ -119,8 +127,8 @@ class PurchaseOrderResource extends Resource
                                     ->where('status', Quotation::STATUS_APPROVED);
                             }
 
-                            return $query->get()->mapWithKeys(fn(Quotation $q) => [
-                                $q->id => "{$q->quotation_number} - {$q->customer_name} (" . ($q->project?->name ?? $q->project_name ?? 'No Project') . ") - ₱" . number_format((float) $q->total_amount, 2)
+                            return $query->get()->mapWithKeys(fn (Quotation $q) => [
+                                $q->id => "{$q->quotation_number} - {$q->customer_name} (".($q->project?->name ?? $q->project_name ?? 'No Project').') - ₱'.number_format((float) $q->total_amount, 2),
                             ]);
                         })
                         ->searchable()
@@ -130,10 +138,10 @@ class PurchaseOrderResource extends Resource
                         ->live()
                         ->afterStateUpdated(function ($state, $set, $get) {
                             if ($state && $quotation = Quotation::find($state)) {
-                                if (!$get('customer_name') || $get('customer_name') === 'Valued Customer') {
+                                if (! $get('customer_name') || $get('customer_name') === 'Valued Customer') {
                                     $set('customer_name', $quotation->customer_name);
                                 }
-                                if (!$get('project_id') && $quotation->project_id) {
+                                if (! $get('project_id') && $quotation->project_id) {
                                     $set('project_id', $quotation->project_id);
                                 }
                                 if ($quotation->sales_agent_id) {
@@ -145,7 +153,7 @@ class PurchaseOrderResource extends Resource
                     Toggle::make('is_conforme_po')
                         ->label('Conforme PO (No Quotation Required)')
                         ->helperText('Check if this is a conforme purchase order that does not require a matching quotation')
-                        ->visible(fn() => auth()->user()?->is_owner === true)
+                        ->visible(fn () => auth()->user()?->is_owner === true)
                         ->default(false),
 
                     TextInput::make('customer_name')
@@ -178,6 +186,7 @@ class PurchaseOrderResource extends Resource
                             if ($record && ($record->is_completed || $record->hasBothDrAndSi())) {
                                 $opts[PurchaseOrder::DELIVERY_DELIVERED] = 'Delivered (DR & SI Attached)';
                             }
+
                             return $opts;
                         })
                         ->default(PurchaseOrder::DELIVERY_PENDING)
@@ -197,6 +206,7 @@ class PurchaseOrderResource extends Resource
                             if ($record && ($record->is_completed || $record->hasBothDrAndSi())) {
                                 $opts[PurchaseOrder::STATUS_DELIVERED] = 'Delivered (DR & SI Attached)';
                             }
+
                             return $opts;
                         })
                         ->default(PurchaseOrder::STATUS_APPROVED)
@@ -208,7 +218,6 @@ class PurchaseOrderResource extends Resource
                         ->nullable()
                         ->columnSpanFull(),
                 ]),
-
 
             Section::make([
                 Section::make('Delivery & Warranty')
@@ -233,7 +242,7 @@ class PurchaseOrderResource extends Resource
                             ->options(PurchaseOrder::getWarrantyPeriodOptions())
                             ->default(PurchaseOrder::WARRANTY_1_YEAR)
                             ->required()
-                            ->visible(fn($get) => $get('has_warranty')),
+                            ->visible(fn ($get) => $get('has_warranty')),
                     ]),
 
                 Section::make('Financials')
@@ -260,8 +269,6 @@ class PurchaseOrderResource extends Resource
                             ->dehydrated(),
                     ]),
             ]),
-
-
 
             Section::make('Line Items')
                 ->icon('heroicon-o-list-bullet')
@@ -330,15 +337,16 @@ class PurchaseOrderResource extends Resource
                                 ->label('Photo')
                                 ->content(function ($get) {
                                     $pId = $get('product_id');
-                                    if (!$pId) {
-                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    if (! $pId) {
+                                        return new HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
                                     }
                                     $product = Product::find($pId);
                                     $url = $product?->image_url;
-                                    if (!$url) {
-                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    if (! $url) {
+                                        return new HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
                                     }
-                                    return new \Illuminate\Support\HtmlString('<img src="' . e($url) . '" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
+
+                                    return new HtmlString('<img src="'.e($url).'" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
                                 })
                                 ->columnSpan(1),
 
@@ -348,12 +356,12 @@ class PurchaseOrderResource extends Resource
                                 ->default(1)
                                 ->minValue(0.0001)
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
                                 ->columnSpan(1),
 
                             Select::make('unit')
                                 ->label('Unit')
-                                ->options(\App\Enums\UnitOfMeasure::class)
+                                ->options(UnitOfMeasure::class)
                                 ->default('pcs')
                                 ->required()
                                 ->columnSpan(1),
@@ -363,7 +371,7 @@ class PurchaseOrderResource extends Resource
                                 ->numeric()
                                 ->prefix('₱')
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $state), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $state), 2)))
                                 ->columnSpan(2),
 
                             TextInput::make('discounted_price')
@@ -372,7 +380,7 @@ class PurchaseOrderResource extends Resource
                                 ->prefix('₱')
                                 ->nullable()
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $state > 0 ? (float) $state : (float) $get('unit_price')), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $state > 0 ? (float) $state : (float) $get('unit_price')), 2)))
                                 ->columnSpan(2),
 
                             TextInput::make('line_total')
@@ -415,39 +423,43 @@ class PurchaseOrderResource extends Resource
                         if ($reconciliation['has_discrepancies']) {
                             return "{$record->quotation->quotation_number} ({$reconciliation['discrepancy_count']} Discrepancies)";
                         }
+
                         return "{$record->quotation->quotation_number} (Matched)";
                     }
                     if ($record->is_conforme_po) {
                         return 'Conforme PO (No Quotation)';
                     }
+
                     return 'Not Linked';
                 })
                 ->badge()
-                ->icon(fn(PurchaseOrder $record) => match (true) {
+                ->icon(fn (PurchaseOrder $record) => match (true) {
                     (bool) $record->quotation && $record->hasLineItemDiscrepancies() => 'heroicon-m-exclamation-triangle',
                     (bool) $record->quotation => 'heroicon-m-check-badge',
                     $record->is_conforme_po => 'heroicon-m-document-check',
                     default => 'heroicon-m-exclamation-triangle',
                 })
-                ->color(fn(PurchaseOrder $record) => match (true) {
+                ->color(fn (PurchaseOrder $record) => match (true) {
                     (bool) $record->quotation && $record->hasLineItemDiscrepancies() => 'warning',
                     (bool) $record->quotation => 'success',
                     $record->is_conforme_po => 'gray',
                     default => 'danger',
                 })
-                ->url(fn(PurchaseOrder $record) => $record->quotation ? QuotationResource::getUrl('view', ['record' => $record->quotation]) : null)
+                ->url(fn (PurchaseOrder $record) => $record->quotation ? QuotationResource::getUrl('view', ['record' => $record->quotation]) : null)
                 ->tooltip(function (PurchaseOrder $record): string {
                     if ($record->quotation) {
                         $reconciliation = $record->getReconciliationReport();
                         if ($reconciliation['has_discrepancies']) {
                             return "Connected to Quotation {$record->quotation->quotation_number} with {$reconciliation['discrepancy_count']} discrepancies (Qty: {$reconciliation['qty_mismatches_count']}, Price: {$reconciliation['price_mismatches_count']}, Unquoted: {$reconciliation['missing_in_quotation_count']}). Click 'Line Item Discrepancies' to inspect.";
                         }
-                        return "Connected to Quotation {$record->quotation->quotation_number} (₱" . number_format((float) $record->quotation->total_amount, 2) . ") — 100% line items and pricing match perfectly.";
+
+                        return "Connected to Quotation {$record->quotation->quotation_number} (₱".number_format((float) $record->quotation->total_amount, 2).') — 100% line items and pricing match perfectly.';
                     }
                     if ($record->is_conforme_po) {
-                        return "Conforme Purchase Order — self-contained order, quotation link not required";
+                        return 'Conforme Purchase Order — self-contained order, quotation link not required';
                     }
-                    return "Unlinked Normal PO — must be linked to an approved quotation before Review and Approval";
+
+                    return 'Unlinked Normal PO — must be linked to an approved quotation before Review and Approval';
                 })
                 ->searchable(query: function ($query, string $search) {
                     return $query->whereHas('quotation', function ($q) use ($search) {
@@ -472,44 +484,42 @@ class PurchaseOrderResource extends Resource
                 ->label('Customer')
                 ->searchable()
                 ->sortable()
-                ->tooltip(fn(PurchaseOrder $record): string => "Customer: {$record->customer_name}"),
+                ->tooltip(fn (PurchaseOrder $record): string => "Customer: {$record->customer_name}"),
 
             TextColumn::make('salesAgent.name')
                 ->label('Agent')
                 ->sortable()
-                ->tooltip(fn(PurchaseOrder $record): string => "Sales executive credited: " . ($record->salesAgent?->name ?? 'Unassigned')),
+                ->tooltip(fn (PurchaseOrder $record): string => 'Sales executive credited: '.($record->salesAgent?->name ?? 'Unassigned')),
 
             TextColumn::make('project.name')
                 ->label('Project')
                 ->sortable()
                 ->default('—')
-                ->tooltip(fn(PurchaseOrder $record): string => "Project Site: " . ($record->project?->name ?? 'General / None')),
+                ->tooltip(fn (PurchaseOrder $record): string => 'Project Site: '.($record->project?->name ?? 'General / None')),
 
             TextColumn::make('is_conforme_po')
                 ->label('PO Type')
                 ->badge()
-                ->formatStateUsing(fn(bool $state) => $state ? 'Conforme PO' : 'Normal PO')
-                ->color(fn(bool $state) => $state ? 'info' : 'gray'),
-
-
+                ->formatStateUsing(fn (bool $state) => $state ? 'Conforme PO' : 'Normal PO')
+                ->color(fn (bool $state) => $state ? 'info' : 'gray'),
 
             TextColumn::make('order_amount')
                 ->label('Order Amount')
                 ->money('PHP')
                 ->sortable()
-                ->tooltip(fn(PurchaseOrder $record): string => "Gross order amount (includes 12% VAT): ₱" . number_format((float) $record->order_amount, 2)),
+                ->tooltip(fn (PurchaseOrder $record): string => 'Gross order amount (includes 12% VAT): ₱'.number_format((float) $record->order_amount, 2)),
 
             TextColumn::make('realized_profit')
                 ->label('Profit')
                 ->money('PHP')
                 ->sortable()
-                ->color(fn($state) => $state > 0 ? 'success' : 'danger')
-                ->tooltip(fn(PurchaseOrder $record): string => "Realized net profit (Order Amount minus Total Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+                ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                ->tooltip(fn (PurchaseOrder $record): string => 'Realized net profit (Order Amount minus Total Cost ₱'.number_format((float) $record->total_cost, 2).')'),
 
             TextColumn::make('status')
                 ->label('Status')
                 ->badge()
-                ->formatStateUsing(fn(string $state): string => match ($state) {
+                ->formatStateUsing(fn (string $state): string => match ($state) {
                     PurchaseOrder::STATUS_PENDING => 'Pending Delivery',
                     PurchaseOrder::STATUS_DELIVERED => 'Delivered',
                     PurchaseOrder::STATUS_CANCELLED => 'Cancelled',
@@ -519,20 +529,20 @@ class PurchaseOrderResource extends Resource
                 ->colors([
                     'warning' => PurchaseOrder::STATUS_PENDING,
                     'success' => PurchaseOrder::STATUS_DELIVERED,
-                    'danger' => fn($state) => in_array($state, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED]),
+                    'danger' => fn ($state) => in_array($state, [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED]),
                 ]),
 
             TextColumn::make('delivery_status')
                 ->label('Delivery')
                 ->badge()
-                ->formatStateUsing(fn(string $state): string => match ($state) {
+                ->formatStateUsing(fn (string $state): string => match ($state) {
                     PurchaseOrder::DELIVERY_PENDING => 'Pending',
                     PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
                     PurchaseOrder::DELIVERY_DELIVERED => 'Delivered',
                     PurchaseOrder::DELIVERY_OVERDUE => 'Overdue',
                     default => $state,
                 })
-                ->color(fn(string $state): string => match ($state) {
+                ->color(fn (string $state): string => match ($state) {
                     PurchaseOrder::DELIVERY_PENDING => 'warning',
                     PurchaseOrder::DELIVERY_TRANSIT => 'info',
                     PurchaseOrder::DELIVERY_DELIVERED => 'success',
@@ -543,19 +553,19 @@ class PurchaseOrderResource extends Resource
             TextColumn::make('fulfillment_status')
                 ->label('Fulfillment')
                 ->badge()
-                ->state(fn(PurchaseOrder $record): string => match (true) {
+                ->state(fn (PurchaseOrder $record): string => match (true) {
                     $record->isCompleted() => 'Completed & Realized',
                     $record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED => 'Delivered (Awaiting DR & SI)',
                     $record->isApproved() => 'Approved (Pending Delivery)',
                     default => 'Pending Review',
                 })
-                ->color(fn(string $state): string => match ($state) {
+                ->color(fn (string $state): string => match ($state) {
                     'Completed & Realized' => 'success',
                     'Delivered (Awaiting DR & SI)' => 'warning',
                     'Approved (Pending Delivery)' => 'info',
                     default => 'gray',
                 })
-                ->tooltip(fn(PurchaseOrder $record): string => match (true) {
+                ->tooltip(fn (PurchaseOrder $record): string => match (true) {
                     $record->isCompleted() => 'DR & SI verified. Stocks deducted and sales realized in analytics.',
                     $record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED => 'Delivered physically. Upload DR & SI to deduct stock and reflect sales.',
                     default => 'Pending order fulfillment lifecycle',
@@ -564,18 +574,17 @@ class PurchaseOrderResource extends Resource
             TextColumn::make('payment_status')
                 ->label('Payment')
                 ->badge()
-                ->color(fn(PurchaseOrder $record): string => $record->due_status_color)
-                ->formatStateUsing(fn(?string $state, PurchaseOrder $record): string => match ($state) {
-                    'paid' => 'PAID' . ($record->payment_term_type ? ' (' . strtoupper($record->payment_term_type) . ')' : ''),
+                ->color(fn (PurchaseOrder $record): string => $record->due_status_color)
+                ->formatStateUsing(fn (?string $state, PurchaseOrder $record): string => match ($state) {
+                    'paid' => 'PAID'.($record->payment_term_type ? ' ('.strtoupper($record->payment_term_type).')' : ''),
                     'unpaid' => ($record->days_until_due !== null && $record->days_until_due < 0)
-                        ? 'OVERDUE (' . abs($record->days_until_due) . 'd)'
-                        : 'UNPAID' . ($record->days_until_due !== null ? ' (' . $record->days_until_due . 'd)' : ''),
+                        ? 'OVERDUE ('.abs($record->days_until_due).'d)'
+                        : 'UNPAID'.($record->days_until_due !== null ? ' ('.$record->days_until_due.'d)' : ''),
                     default => strtoupper($state ?: 'unpaid'),
                 })
-                ->tooltip(fn(PurchaseOrder $record): string =>
-                    "Term: " . ($record->payment_terms ?: 'Not set') .
-                    ($record->payment_due_date ? " | Due: " . $record->payment_due_date->format('M d, Y') : '') .
-                    ($record->payment_account ? " | Account: " . $record->payment_account : '')
+                ->tooltip(fn (PurchaseOrder $record): string => 'Term: '.($record->payment_terms ?: 'Not set').
+                    ($record->payment_due_date ? ' | Due: '.$record->payment_due_date->format('M d, Y') : '').
+                    ($record->payment_account ? ' | Account: '.$record->payment_account : '')
                 )
                 ->sortable(),
 
@@ -583,8 +592,8 @@ class PurchaseOrderResource extends Resource
                 ->label('Est. Delivery')
                 ->date('M j, Y')
                 ->sortable()
-                ->color(fn(PurchaseOrder $record): ?string => $record->is_overdue ? 'danger' : null)
-                ->tooltip(fn(PurchaseOrder $record): string => $record->is_overdue ? 'Delivery is past the estimated arrival date' : 'Expected delivery schedule'),
+                ->color(fn (PurchaseOrder $record): ?string => $record->is_overdue ? 'danger' : null)
+                ->tooltip(fn (PurchaseOrder $record): string => $record->is_overdue ? 'Delivery is past the estimated arrival date' : 'Expected delivery schedule'),
 
             TextColumn::make('actual_delivery_date')
                 ->label('Delivered On')
@@ -595,33 +604,33 @@ class PurchaseOrderResource extends Resource
 
             TextColumn::make('delivery_receipts_display')
                 ->label('DR #s')
-                ->state(fn(PurchaseOrder $record): string => $record->delivery_receipt_numbers_string)
+                ->state(fn (PurchaseOrder $record): string => $record->delivery_receipt_numbers_string)
                 ->badge()
                 ->color('info')
-                ->tooltip(fn(PurchaseOrder $record): string => "Linked DRs: {$record->delivery_receipt_numbers_string} (" . $record->deliveryReceipts->count() . " DRs)")
-                ->searchable(query: fn(Builder $query, string $search) => $query->whereHas('deliveryReceipts', fn($q) => $q->where('dr_number', 'like', "%{$search}%")))
+                ->tooltip(fn (PurchaseOrder $record): string => "Linked DRs: {$record->delivery_receipt_numbers_string} (".$record->deliveryReceipts->count().' DRs)')
+                ->searchable(query: fn (Builder $query, string $search) => $query->whereHas('deliveryReceipts', fn ($q) => $q->where('dr_number', 'like', "%{$search}%")))
                 ->toggleable(),
 
             TextColumn::make('sales_invoices_display')
                 ->label('SI #s')
-                ->state(fn(PurchaseOrder $record): string => $record->sales_invoice_numbers_string)
+                ->state(fn (PurchaseOrder $record): string => $record->sales_invoice_numbers_string)
                 ->badge()
                 ->color('success')
-                ->tooltip(fn(PurchaseOrder $record): string => "Linked SIs: {$record->sales_invoice_numbers_string} (" . $record->salesInvoices->count() . " SIs, Total: ₱" . number_format($record->total_invoiced_amount, 2) . ")")
-                ->searchable(query: fn(Builder $query, string $search) => $query->whereHas('salesInvoices', fn($q) => $q->where('si_number', 'like', "%{$search}%")))
+                ->tooltip(fn (PurchaseOrder $record): string => "Linked SIs: {$record->sales_invoice_numbers_string} (".$record->salesInvoices->count().' SIs, Total: ₱'.number_format($record->total_invoiced_amount, 2).')')
+                ->searchable(query: fn (Builder $query, string $search) => $query->whereHas('salesInvoices', fn ($q) => $q->where('si_number', 'like', "%{$search}%")))
                 ->toggleable(),
 
             TextColumn::make('warranty_status')
                 ->label('Warranty')
                 ->badge()
-                ->formatStateUsing(fn(string $state): string => match ($state) {
+                ->formatStateUsing(fn (string $state): string => match ($state) {
                     PurchaseOrder::WARRANTY_ACTIVE => 'Active',
                     PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
                     PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
                     PurchaseOrder::WARRANTY_NONE => 'No Warranty',
                     default => $state,
                 })
-                ->color(fn(string $state): string => match ($state) {
+                ->color(fn (string $state): string => match ($state) {
                     PurchaseOrder::WARRANTY_ACTIVE => 'success',
                     PurchaseOrder::WARRANTY_EXPIRING => 'warning',
                     PurchaseOrder::WARRANTY_EXPIRED => 'danger',
@@ -631,15 +640,17 @@ class PurchaseOrderResource extends Resource
                 ->tooltip(function (PurchaseOrder $record): string {
                     $status = $record->warranty_status;
                     if ($record->warranty_end_date) {
-                        $formatted = \Carbon\Carbon::parse($record->warranty_end_date)->format('M d, Y');
+                        $formatted = Carbon::parse($record->warranty_end_date)->format('M d, Y');
+
                         return "Warranty status: {$status} (Expires {$formatted})";
                     }
+
                     return "Warranty status: {$status}";
                 }),
 
             TextColumn::make('warranty_period')
                 ->label('Warranty Period')
-                ->formatStateUsing(fn(string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state)
+                ->formatStateUsing(fn (string $state): string => PurchaseOrder::getWarrantyPeriodOptions()[$state] ?? $state)
                 ->toggleable(isToggledHiddenByDefault: true)
                 ->tooltip('Chosen warranty coverage duration'),
 
@@ -694,12 +705,12 @@ class PurchaseOrderResource extends Resource
     public static function getLinkToQuotationAction(): Action
     {
         return Action::make('link_to_quotation')
-            ->label(fn(?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'Change Linked Quotation' : 'Link to Approved Quotation')
+            ->label(fn (?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'Change Linked Quotation' : 'Link to Approved Quotation')
             ->icon('heroicon-m-link')
-            ->color(fn(?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'gray' : 'info')
-            ->visible(fn(?PurchaseOrder $record): bool => !($record && $record->quotation_id && !$record->hasLineItemDiscrepancies()))
-            ->tooltip(fn(?PurchaseOrder $record): string => ($record && $record->quotation) ? "Currently linked to Quotation {$record->quotation->quotation_number}. Click to change or unlink." : 'Link this PO to an approved quotation')
-            ->modalHeading(fn(?PurchaseOrder $record): string => "Link PO #" . ($record?->po_number ?? '') . " to Approved Quotation")
+            ->color(fn (?PurchaseOrder $record): string => ($record && $record->quotation_id) ? 'gray' : 'info')
+            ->visible(fn (?PurchaseOrder $record): bool => ! ($record && $record->quotation_id && ! $record->hasLineItemDiscrepancies()))
+            ->tooltip(fn (?PurchaseOrder $record): string => ($record && $record->quotation) ? "Currently linked to Quotation {$record->quotation->quotation_number}. Click to change or unlink." : 'Link this PO to an approved quotation')
+            ->modalHeading(fn (?PurchaseOrder $record): string => 'Link PO #'.($record?->po_number ?? '').' to Approved Quotation')
             ->modalDescription('Select an approved quotation to link to this purchase order. This connects the quotation and PO, allows line-item cross-verification, and fills missing customer details.')
             ->modalSubmitActionLabel('Save Link')
             ->form([
@@ -725,19 +736,19 @@ class PurchaseOrderResource extends Resource
 
                         if ($record && $record->customer_name) {
                             $cName = strtolower(trim($record->customer_name));
-                            $query->orderByRaw("CASE WHEN LOWER(customer_name) LIKE ? THEN 0 ELSE 1 END", ["%{$cName}%"]);
+                            $query->orderByRaw('CASE WHEN LOWER(customer_name) LIKE ? THEN 0 ELSE 1 END', ["%{$cName}%"]);
                         }
 
                         $query->orderBy('quotation_date', 'desc')->orderBy('id', 'desc');
 
-                        return $query->get()->mapWithKeys(fn(Quotation $q) => [
-                            $q->id => "{$q->quotation_number} — {$q->customer_name} (₱" . number_format((float) $q->total_amount, 2) . ") — " . ($q->quotation_date ? \Carbon\Carbon::parse($q->quotation_date)->format('M j, Y') : 'No Date')
+                        return $query->get()->mapWithKeys(fn (Quotation $q) => [
+                            $q->id => "{$q->quotation_number} — {$q->customer_name} (₱".number_format((float) $q->total_amount, 2).') — '.($q->quotation_date ? Carbon::parse($q->quotation_date)->format('M j, Y') : 'No Date'),
                         ]);
                     })
                     ->searchable()
                     ->nullable()
                     ->placeholder('Select an approved quotation (or clear to unlink)')
-                    ->default(fn(PurchaseOrder $record) => $record->quotation_id)
+                    ->default(fn (PurchaseOrder $record) => $record->quotation_id)
                     ->helperText('Quotations matching this PO customer name appear first. Leave empty to unlink.'),
 
                 Toggle::make('sync_missing_details')
@@ -763,6 +774,7 @@ class PurchaseOrderResource extends Resource
                         ->info()
                         ->body("PO #{$record->po_number} is no longer linked to any quotation.")
                         ->send();
+
                     return;
                 }
 
@@ -781,7 +793,7 @@ class PurchaseOrderResource extends Resource
                 $record->unsetRelation('quotation');
                 $record->setRelation('quotation', $quotation);
 
-                if (!empty($data['sync_missing_details'])) {
+                if (! empty($data['sync_missing_details'])) {
                     if (empty($record->customer_name) || $record->customer_name === 'Valued Customer') {
                         $record->customer_name = $quotation->customer_name;
                     }
@@ -809,7 +821,7 @@ class PurchaseOrderResource extends Resource
                 }
 
                 if ($record->document_id && $quotation->document_id) {
-                    $trx = \App\Models\Transaction::where('purchase_order_document_id', $record->document_id)->first();
+                    $trx = Transaction::where('purchase_order_document_id', $record->document_id)->first();
                     if ($trx) {
                         $trx->update(['quotation_document_id' => $quotation->document_id]);
                     }
@@ -819,19 +831,23 @@ class PurchaseOrderResource extends Resource
 
                 if ($reconciliation['has_discrepancies']) {
                     $summaryParts = [];
-                    if ($reconciliation['qty_mismatches_count'] > 0)
+                    if ($reconciliation['qty_mismatches_count'] > 0) {
                         $summaryParts[] = "{$reconciliation['qty_mismatches_count']} Qty mismatches";
-                    if ($reconciliation['price_mismatches_count'] > 0)
+                    }
+                    if ($reconciliation['price_mismatches_count'] > 0) {
                         $summaryParts[] = "{$reconciliation['price_mismatches_count']} Price mismatches";
-                    if ($reconciliation['missing_in_quotation_count'] > 0)
+                    }
+                    if ($reconciliation['missing_in_quotation_count'] > 0) {
                         $summaryParts[] = "{$reconciliation['missing_in_quotation_count']} Unquoted items";
-                    if ($reconciliation['missing_in_po_count'] > 0)
+                    }
+                    if ($reconciliation['missing_in_po_count'] > 0) {
                         $summaryParts[] = "{$reconciliation['missing_in_po_count']} Items missing from PO";
+                    }
 
                     Notification::make()
                         ->title('Linked with Line Item Discrepancies')
                         ->warning()
-                        ->body("PO #{$record->po_number} was linked to Quotation #{$quotation->quotation_number}.\nDetected " . implode(', ', $summaryParts) . ".\nUse the 'Line Item Discrepancies' action or check the PO View page to review detailed line-by-line comparison.")
+                        ->body("PO #{$record->po_number} was linked to Quotation #{$quotation->quotation_number}.\nDetected ".implode(', ', $summaryParts).".\nUse the 'Line Item Discrepancies' action or check the PO View page to review detailed line-by-line comparison.")
                         ->send();
                 } else {
                     Notification::make()
@@ -850,36 +866,36 @@ class PurchaseOrderResource extends Resource
                 static::getLinkToQuotationAction(),
 
                 Action::make('view_discrepancies')
-                    ->label(fn(PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'Line Item Discrepancies' : 'Reconciliation Report')
+                    ->label(fn (PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'Line Item Discrepancies' : 'Reconciliation Report')
                     ->icon('heroicon-m-scale')
-                    ->color(fn(PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'warning' : 'info')
+                    ->color(fn (PurchaseOrder $r) => $r->hasLineItemDiscrepancies() ? 'warning' : 'info')
                     ->tooltip('View side-by-side line item comparison and discrepancy analysis against linked quotation')
-                    ->visible(fn(PurchaseOrder $r): bool => (bool) $r->quotation_id)
-                    ->modalHeading(fn(PurchaseOrder $r): string => "PO #{$r->po_number} vs Quotation #{$r->quotation?->quotation_number} Line Item Reconciliation")
+                    ->visible(fn (PurchaseOrder $r): bool => (bool) $r->quotation_id)
+                    ->modalHeading(fn (PurchaseOrder $r): string => "PO #{$r->po_number} vs Quotation #{$r->quotation?->quotation_number} Line Item Reconciliation")
                     ->modalDescription('Detailed comparison of quantities, unit prices, and line items between this Purchase Order and its connected Quotation.')
                     ->modalWidth('5xl')
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close')
-                    ->modalContent(fn(PurchaseOrder $record) => view('filament.infolists.po-quotation-reconciliation', [
+                    ->modalContent(fn (PurchaseOrder $record) => view('filament.infolists.po-quotation-reconciliation', [
                         'reconciliation' => $record->getReconciliationReport(),
-                        'getRecord' => fn() => $record,
+                        'getRecord' => fn () => $record,
                     ])),
 
                 Action::make('toggle_conforme')
-                    ->label(fn(PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal PO' : 'Switch to Conforme PO')
+                    ->label(fn (PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal PO' : 'Switch to Conforme PO')
                     ->icon('heroicon-m-arrows-right-left')
                     ->color('gray')
-                    ->tooltip(fn(PurchaseOrder $r) => $r->is_conforme_po
+                    ->tooltip(fn (PurchaseOrder $r) => $r->is_conforme_po
                         ? 'Convert to Normal PO (requires linking to an approved quotation)'
                         : 'Convert to Conforme PO (exempt from quotation matching)')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && ! $r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED)
                     ->requiresConfirmation()
-                    ->modalHeading(fn(PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal Purchase Order' : 'Switch to Conforme Purchase Order')
-                    ->modalDescription(fn(PurchaseOrder $r) => $r->is_conforme_po
+                    ->modalHeading(fn (PurchaseOrder $r) => $r->is_conforme_po ? 'Switch to Normal Purchase Order' : 'Switch to Conforme Purchase Order')
+                    ->modalDescription(fn (PurchaseOrder $r) => $r->is_conforme_po
                         ? 'Switching to Normal PO will require this purchase order to be linked to an approved quotation before Review and Approval.'
                         : 'Switching to Conforme PO exempts this purchase order from quotation matching, immediately unlocking Review and Approval.')
                     ->action(function (PurchaseOrder $record) {
-                        $newVal = !$record->is_conforme_po;
+                        $newVal = ! $record->is_conforme_po;
                         $record->update(['is_conforme_po' => $newVal]);
                         $typeLabel = $newVal ? 'Conforme PO' : 'Normal PO';
                         Notification::make()->title("PO Classification Updated to {$typeLabel}")->success()->send();
@@ -890,21 +906,23 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
                     ->tooltip(function (PurchaseOrder $record): string {
-                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                        if (! $record->is_conforme_po && ! $record->quotation_id) {
                             return 'Normal PO must be linked to an approved quotation first before approval.';
                         }
+
                         return 'Approve purchase order to authorize fulfillment and delivery';
                     })
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id) && !$r->hasLineItemDiscrepancies())
-                    ->disabled(fn(PurchaseOrder $r): bool => (!$r->is_conforme_po && !$r->quotation_id) || $r->hasLineItemDiscrepancies())
-                    ->requiresConfirmation(fn(PurchaseOrder $r): bool => $r->is_conforme_po || (bool) $r->quotation_id)
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && ! $r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id) && ! $r->hasLineItemDiscrepancies())
+                    ->disabled(fn (PurchaseOrder $r): bool => (! $r->is_conforme_po && ! $r->quotation_id) || $r->hasLineItemDiscrepancies())
+                    ->requiresConfirmation(fn (PurchaseOrder $r): bool => $r->is_conforme_po || (bool) $r->quotation_id)
                     ->action(function (PurchaseOrder $record) {
-                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                        if (! $record->is_conforme_po && ! $record->quotation_id) {
                             Notification::make()
                                 ->title('Quotation Link Required')
                                 ->body("PO {$record->po_number} is a normal purchase order and must be linked to an approved quotation first.")
                                 ->warning()
                                 ->send();
+
                             return;
                         }
                         if ($record->hasLineItemDiscrepancies()) {
@@ -913,11 +931,12 @@ class PurchaseOrderResource extends Resource
                                 ->body("PO {$record->po_number} has line item discrepancies with linked Quotation #{$record->quotation?->quotation_number}. Discrepancies must be resolved before approval.")
                                 ->danger()
                                 ->send();
+
                             return;
                         }
                         $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
                         if ($record->document) {
-                            $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                            $record->document->update(['status' => Document::STATUS_VERIFIED]);
                         }
                         Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
                     }),
@@ -927,29 +946,32 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-clipboard-document-check')
                     ->color('warning')
                     ->tooltip(function (PurchaseOrder $record): string {
-                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                        if (! $record->is_conforme_po && ! $record->quotation_id) {
                             return 'Normal PO must be linked to an approved quotation first before review & verification.';
                         }
+
                         return 'Review, verify math and reconcile purchase order line items';
                     })
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id))
-                    ->disabled(fn(PurchaseOrder $r): bool => !$r->is_conforme_po && !$r->quotation_id)
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && ! $r->isReviewed() && ! $r->isApproved() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_REJECTED && ($r->is_conforme_po || (bool) $r->quotation_id))
+                    ->disabled(fn (PurchaseOrder $r): bool => ! $r->is_conforme_po && ! $r->quotation_id)
                     ->url(function (PurchaseOrder $record) {
-                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                        if (! $record->is_conforme_po && ! $record->quotation_id) {
                             return null;
                         }
                         if ($record->document_id) {
                             return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
                         }
+
                         return null;
                     })
                     ->action(function (PurchaseOrder $record) {
-                        if (!$record->is_conforme_po && !$record->quotation_id) {
+                        if (! $record->is_conforme_po && ! $record->quotation_id) {
                             Notification::make()
                                 ->title('Quotation Link Required')
                                 ->body("PO {$record->po_number} is a normal purchase order and must be linked to an approved quotation first.")
                                 ->warning()
                                 ->send();
+
                             return;
                         }
                         if ($record->document_id) {
@@ -963,8 +985,8 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-check-badge')
                     ->color('success')
                     ->tooltip('DR & SI are verified and attached. Mark this purchase order as delivered to deduct inventory and realize sales.')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && $r->hasBothDrAndSi() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
-                    ->modalHeading(fn(PurchaseOrder $record): string => "Mark as Delivered: PO #{$record->po_number}")
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && $r->isApproved() && $r->hasBothDrAndSi() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
+                    ->modalHeading(fn (PurchaseOrder $record): string => "Mark as Delivered: PO #{$record->po_number}")
                     ->modalDescription('Both Delivery Receipt (DR) and Sales Invoice (SI) are verified and attached. Confirming delivery will finalize this order, deduct stock from the product catalog/BOM, and record sales in the dashboard.')
                     ->form([
                         DatePicker::make('actual_delivery_date')
@@ -973,13 +995,13 @@ class PurchaseOrderResource extends Resource
                             ->required(),
                         Toggle::make('has_warranty')
                             ->label('Include Warranty')
-                            ->default(fn($record) => $record->has_warranty ?? true)
+                            ->default(fn ($record) => $record->has_warranty ?? true)
                             ->live(),
                         Select::make('warranty_period')
                             ->label('Warranty Period')
                             ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                            ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
-                            ->visible(fn($get) => (bool) $get('has_warranty')),
+                            ->default(fn ($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                            ->visible(fn ($get) => (bool) $get('has_warranty')),
                     ])
                     ->action(function (PurchaseOrder $record, array $data) {
                         try {
@@ -1003,8 +1025,8 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-arrow-up-tray')
                     ->color('primary')
                     ->tooltip('Upload physical Delivery Receipt (DR) and Sales Invoice (SI) hard copies (Images/PDF)')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && !$r->isCompleted() && !$r->isDelivered())
-                    ->modalHeading(fn(PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && $r->isApproved() && ! $r->isCompleted() && ! $r->isDelivered())
+                    ->modalHeading(fn (PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
                     ->modalDescription('Upload physical hard copies of both Delivery Receipt (DR) and Sales Invoice (SI) in PDF or Image format.')
                     ->modalWidth('4xl')
                     ->form([
@@ -1026,12 +1048,12 @@ class PurchaseOrderResource extends Resource
 
                                     TextInput::make('dr_number')
                                         ->label('DR Number')
-                                        ->default(fn() => DeliveryReceipt::generateNumber())
+                                        ->default(fn () => DeliveryReceipt::generateNumber())
                                         ->required(),
 
                                     DatePicker::make('delivery_date')
                                         ->label('Delivery Date')
-                                        ->default(fn(PurchaseOrder $record) => $record->actual_delivery_date ?? now())
+                                        ->default(fn (PurchaseOrder $record) => $record->actual_delivery_date ?? now())
                                         ->required(),
 
                                     TextInput::make('delivered_by')
@@ -1040,7 +1062,7 @@ class PurchaseOrderResource extends Resource
 
                                     TextInput::make('received_by')
                                         ->label('Received By (Client / Site Receiver)')
-                                        ->default(fn(PurchaseOrder $record) => $record->customer_name)
+                                        ->default(fn (PurchaseOrder $record) => $record->customer_name)
                                         ->placeholder('Customer site receiver name')
                                         ->helperText('Name of the client or site personnel who received the delivery'),
                                 ]),
@@ -1064,7 +1086,7 @@ class PurchaseOrderResource extends Resource
 
                                     TextInput::make('si_number')
                                         ->label('SI Number')
-                                        ->default(fn() => SalesInvoice::generateNumber())
+                                        ->default(fn () => SalesInvoice::generateNumber())
                                         ->required(),
 
                                     DatePicker::make('invoice_date')
@@ -1086,7 +1108,7 @@ class PurchaseOrderResource extends Resource
                                         ->label('Invoice Total (₱)')
                                         ->numeric()
                                         ->prefix('₱')
-                                        ->default(fn(PurchaseOrder $record) => (float) $record->order_amount)
+                                        ->default(fn (PurchaseOrder $record) => (float) $record->order_amount)
                                         ->required(),
                                 ]),
                             ]),
@@ -1097,7 +1119,7 @@ class PurchaseOrderResource extends Resource
                     ])
                     ->action(function (PurchaseOrder $record, array $data) {
                         try {
-                            if (!empty($data['auto_mark_delivered'])) {
+                            if (! empty($data['auto_mark_delivered'])) {
                                 $result = app(OrderFulfillmentService::class)->fulfillOrder($record, $data);
                                 $drNo = $result['delivery_receipt']->dr_number;
                                 $siNo = $result['sales_invoice']->si_number;
@@ -1128,11 +1150,11 @@ class PurchaseOrderResource extends Resource
                     }),
 
                 Action::make('add_payment_terms')
-                    ->label(fn(PurchaseOrder $record): string => $record->payment_term_type ? 'Update Payment Terms' : 'Add Payment Terms')
+                    ->label(fn (PurchaseOrder $record): string => $record->payment_term_type ? 'Update Payment Terms' : 'Add Payment Terms')
                     ->icon('heroicon-m-credit-card')
                     ->color('success')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && ($r->isDelivered() || $r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
-                    ->modalHeading(fn(PurchaseOrder $record): string => "Set Payment Terms: PO #{$record->po_number}")
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && ($r->isDelivered() || $r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
+                    ->modalHeading(fn (PurchaseOrder $record): string => "Set Payment Terms: PO #{$record->po_number}")
                     ->modalDescription('Specify credit payment terms for this delivered purchase order (Strict limit: Max 30 days from delivery).')
                     ->modalWidth('2xl')
                     ->form([
@@ -1141,9 +1163,9 @@ class PurchaseOrderResource extends Resource
                             ->options(PurchaseOrder::getPaymentTermOptions())
                             ->required()
                             ->live()
-                            ->default(fn(PurchaseOrder $record) => $record->payment_term_type ?? PurchaseOrder::PAYMENT_TERM_COD)
+                            ->default(fn (PurchaseOrder $record) => $record->payment_term_type ?? PurchaseOrder::PAYMENT_TERM_COD)
                             ->afterStateUpdated(function ($state, callable $set, ?PurchaseOrder $record) {
-                                $baseDate = ($record && $record->actual_delivery_date) ? \Carbon\Carbon::parse($record->actual_delivery_date) : now();
+                                $baseDate = ($record && $record->actual_delivery_date) ? Carbon::parse($record->actual_delivery_date) : now();
                                 $dueDate = match ($state) {
                                     PurchaseOrder::PAYMENT_TERM_COD => $baseDate->copy(),
                                     PurchaseOrder::PAYMENT_TERM_PDC_7 => $baseDate->copy()->addDays(7),
@@ -1161,34 +1183,35 @@ class PurchaseOrderResource extends Resource
                                 if ($record && $record->payment_due_date) {
                                     return $record->payment_due_date->format('Y-m-d');
                                 }
-                                $baseDate = ($record && $record->actual_delivery_date) ? \Carbon\Carbon::parse($record->actual_delivery_date) : now();
+                                $baseDate = ($record && $record->actual_delivery_date) ? Carbon::parse($record->actual_delivery_date) : now();
+
                                 return $baseDate->copy()->addDays(30)->format('Y-m-d');
                             })
-                            ->maxDate(fn(?PurchaseOrder $record) => (($record && $record->actual_delivery_date) ? \Carbon\Carbon::parse($record->actual_delivery_date) : now())->addDays(30))
+                            ->maxDate(fn (?PurchaseOrder $record) => (($record && $record->actual_delivery_date) ? Carbon::parse($record->actual_delivery_date) : now())->addDays(30))
                             ->helperText('Strict ERP rule: Payment terms cannot exceed 30 days from delivery date.'),
 
                         TextInput::make('pdc_check_number')
                             ->label('PDC Check Number')
-                            ->visible(fn($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
-                            ->required(fn($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
-                            ->default(fn(PurchaseOrder $record) => $record->pdc_check_number)
+                            ->visible(fn ($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
+                            ->required(fn ($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
+                            ->default(fn (PurchaseOrder $record) => $record->pdc_check_number)
                             ->placeholder('e.g. CHK-9842103'),
 
                         TextInput::make('pdc_bank')
                             ->label('Bank Name / Branch')
-                            ->visible(fn($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
-                            ->required(fn($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
-                            ->default(fn(PurchaseOrder $record) => $record->pdc_bank)
+                            ->visible(fn ($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
+                            ->required(fn ($get) => in_array($get('payment_term_type'), [PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30]))
+                            ->default(fn (PurchaseOrder $record) => $record->pdc_bank)
                             ->placeholder('e.g. BDO Unibank - Ortigas Center'),
 
                         TextInput::make('payment_account')
                             ->label('Account Reference / Counter Tag')
-                            ->default(fn(PurchaseOrder $record) => $record->payment_account)
+                            ->default(fn (PurchaseOrder $record) => $record->payment_account)
                             ->placeholder('e.g. ACCT-MGS-01 / Counter Ticket #884'),
 
                         Textarea::make('payment_notes')
                             ->label('Payment Notes / Counter Details')
-                            ->default(fn(PurchaseOrder $record) => $record->payment_notes)
+                            ->default(fn (PurchaseOrder $record) => $record->payment_notes)
                             ->placeholder('Enter special instructions, counter schedule, or check release details...')
                             ->rows(2),
                     ])
@@ -1204,21 +1227,21 @@ class PurchaseOrderResource extends Resource
 
                         $record->update([
                             'payment_term_type' => $termType,
-                            'payment_terms'     => PurchaseOrder::getPaymentTermOptions()[$termType] ?? $termType,
-                            'payment_due_date'  => $dueDate,
-                            'payment_status'    => $isPaid ? PurchaseOrder::PAYMENT_STATUS_PAID : PurchaseOrder::PAYMENT_STATUS_UNPAID,
-                            'paid_at'           => $isPaid ? now() : null,
-                            'is_completed'      => $isPaid ? true : $record->is_completed,
-                            'completed_at'      => $isPaid ? ($record->completed_at ?? now()) : $record->completed_at,
-                            'pdc_check_number'  => $data['pdc_check_number'] ?? null,
-                            'pdc_bank'          => $data['pdc_bank'] ?? null,
-                            'payment_account'   => $data['payment_account'] ?? null,
-                            'payment_notes'     => $data['payment_notes'] ?? null,
+                            'payment_terms' => PurchaseOrder::getPaymentTermOptions()[$termType] ?? $termType,
+                            'payment_due_date' => $dueDate,
+                            'payment_status' => $isPaid ? PurchaseOrder::PAYMENT_STATUS_PAID : PurchaseOrder::PAYMENT_STATUS_UNPAID,
+                            'paid_at' => $isPaid ? now() : null,
+                            'is_completed' => $isPaid ? true : $record->is_completed,
+                            'completed_at' => $isPaid ? ($record->completed_at ?? now()) : $record->completed_at,
+                            'pdc_check_number' => $data['pdc_check_number'] ?? null,
+                            'pdc_bank' => $data['pdc_bank'] ?? null,
+                            'payment_account' => $data['payment_account'] ?? null,
+                            'payment_notes' => $data['payment_notes'] ?? null,
                         ]);
 
                         Notification::make()
                             ->title('Payment Terms Configured')
-                            ->body("Payment terms set to " . (PurchaseOrder::getPaymentTermOptions()[$termType] ?? $termType) . ". Status: " . ($isPaid ? 'PAID' : 'UNPAID (Pending Counter)'))
+                            ->body('Payment terms set to '.(PurchaseOrder::getPaymentTermOptions()[$termType] ?? $termType).'. Status: '.($isPaid ? 'PAID' : 'UNPAID (Pending Counter)'))
                             ->success()
                             ->send();
                     }),
@@ -1227,16 +1250,16 @@ class PurchaseOrderResource extends Resource
                     ->label('Mark Payment Received')
                     ->icon('heroicon-m-banknotes')
                     ->color('success')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && ($r->isDelivered() || $r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) && !$r->isPaid())
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && ($r->isDelivered() || $r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED) && ! $r->isPaid())
                     ->requiresConfirmation()
-                    ->modalHeading(fn(PurchaseOrder $record): string => "Confirm Payment Received: PO #{$record->po_number}")
+                    ->modalHeading(fn (PurchaseOrder $record): string => "Confirm Payment Received: PO #{$record->po_number}")
                     ->modalDescription('Are you sure you want to mark this 30-day counter credit order as PAID in full?')
                     ->action(function (PurchaseOrder $record): void {
                         $record->update([
                             'payment_status' => PurchaseOrder::PAYMENT_STATUS_PAID,
-                            'paid_at'        => now(),
-                            'is_completed'   => true,
-                            'completed_at'   => $record->completed_at ?? now(),
+                            'paid_at' => now(),
+                            'is_completed' => true,
+                            'completed_at' => $record->completed_at ?? now(),
                         ]);
 
                         Notification::make()
@@ -1251,14 +1274,14 @@ class PurchaseOrderResource extends Resource
                     ->icon('heroicon-m-clock')
                     ->color('info')
                     ->tooltip('Open Delivery & Warranty Tracker for this purchase order')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
-                    ->url(fn() => DeliveryMonitoringPage::getUrl()),
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && $r->isApproved() && ($r->delivery_status === PurchaseOrder::DELIVERY_DELIVERED || $r->status === PurchaseOrder::STATUS_DELIVERED))
+                    ->url(fn () => DeliveryMonitoringPage::getUrl()),
 
                 Action::make('cancel_po')
                     ->label('Cancel PO')
                     ->icon('heroicon-m-x-circle')
                     ->color('danger')
-                    ->visible(fn(PurchaseOrder $r): bool => !$r->trashed() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
+                    ->visible(fn (PurchaseOrder $r): bool => ! $r->trashed() && $r->status !== PurchaseOrder::STATUS_CANCELLED && $r->status !== PurchaseOrder::STATUS_DELIVERED)
                     ->requiresConfirmation()
                     ->action(function (PurchaseOrder $record) {
                         $record->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
@@ -1267,13 +1290,13 @@ class PurchaseOrderResource extends Resource
 
                 ViewAction::make(),
                 DeleteAction::make()->requiresConfirmation(),
-                RestoreAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed()),
-                ForceDeleteAction::make()->requiresConfirmation()->visible(fn(PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                RestoreAction::make()->requiresConfirmation()->visible(fn (PurchaseOrder $record): bool => $record->trashed()),
+                ForceDeleteAction::make()->requiresConfirmation()->visible(fn (PurchaseOrder $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
             ]),
         ];
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
@@ -1284,7 +1307,7 @@ class PurchaseOrderResource extends Resource
             BulkActionGroup::make([
                 DeleteBulkAction::make()->requiresConfirmation(),
                 RestoreBulkAction::make()->requiresConfirmation(),
-                ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
             ]),
         ];
     }

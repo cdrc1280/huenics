@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum DocumentStatus: string implements HasLabel, HasColor, HasIcon
+enum DocumentStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Uploaded = 'uploaded';
     case Processing = 'processing';

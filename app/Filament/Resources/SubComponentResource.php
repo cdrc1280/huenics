@@ -6,7 +6,6 @@ use App\Filament\Resources\SubComponentResource\Pages;
 use App\Models\Product;
 use App\Models\ProductComponent;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -19,20 +18,24 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class SubComponentResource extends Resource
 {
     protected static ?string $model = ProductComponent::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
+
     protected static ?string $navigationParentItem = 'Products Catalog';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-puzzle-piece';
+
     protected static ?string $navigationLabel = 'Sub-Components & BOM';
+
     protected static ?int $navigationSort = 3;
 
     public static function canCreate(): bool
@@ -40,12 +43,12 @@ class SubComponentResource extends Resource
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -64,7 +67,7 @@ class SubComponentResource extends Resource
                 ->schema([
                     Select::make('parent_product_id')
                         ->label('Parent Finished Product (Assembled Good)')
-                        ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                        ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                         ->searchable()
                         ->required()
                         ->helperText('The catalog product that will consume this sub-component.')
@@ -78,11 +81,13 @@ class SubComponentResource extends Resource
                         Select::make('component_product_id')
                             ->label('Link Catalogue Product (Dropdown Selection)')
                             ->placeholder('Select catalog item to auto-populate specifications...')
-                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                             ->searchable()
                             ->live()
                             ->afterStateUpdated(function ($state, callable $set) {
-                                if (!$state) return;
+                                if (! $state) {
+                                    return;
+                                }
                                 $item = Product::find($state);
                                 if ($item) {
                                     $set('component_name', $item->canonical_name);
@@ -185,7 +190,7 @@ class SubComponentResource extends Resource
                     ->label('Component Name')
                     ->wrap()
                     ->searchable()
-                    ->description(fn(ProductComponent $r) => $r->componentProduct ? 'Linked Catalog: ' . $r->componentProduct->canonical_name : 'Custom Part'),
+                    ->description(fn (ProductComponent $r) => $r->componentProduct ? 'Linked Catalog: '.$r->componentProduct->canonical_name : 'Custom Part'),
 
                 TextColumn::make('effective_category')
                     ->label('Category')
@@ -197,27 +202,33 @@ class SubComponentResource extends Resource
                     ->label('Qty / Unit')
                     ->badge()
                     ->color('success')
-                    ->formatStateUsing(fn($state, ProductComponent $r) => number_format((float) ($state ?: 1), 2) . ' ' . $r->effective_unit),
+                    ->formatStateUsing(fn ($state, ProductComponent $r) => number_format((float) ($state ?: 1), 2).' '.$r->effective_unit),
 
                 TextColumn::make('stock_on_hand')
                     ->label('Stock On Hand')
                     ->badge()
-                    ->color(fn($state) => $state === null ? 'gray' : ((float) $state <= 0 ? 'danger' : 'success'))
-                    ->formatStateUsing(fn($state, ProductComponent $r) => $state !== null ? number_format((float) $state, 2) . ' ' . $r->effective_unit : 'Custom')
-                    ->tooltip(fn(ProductComponent $r) => $r->componentProduct ? "Current inventory stock balance for {$r->componentProduct->canonical_name}" : 'Custom part not tracked separately'),
+                    ->color(fn ($state) => $state === null ? 'gray' : ((float) $state <= 0 ? 'danger' : 'success'))
+                    ->formatStateUsing(fn ($state, ProductComponent $r) => $state !== null ? number_format((float) $state, 2).' '.$r->effective_unit : 'Custom')
+                    ->tooltip(fn (ProductComponent $r) => $r->componentProduct ? "Current inventory stock balance for {$r->componentProduct->canonical_name}" : 'Custom part not tracked separately'),
 
                 TextColumn::make('assembleable_units')
                     ->label('Max Build Units')
                     ->badge()
                     ->state(function (ProductComponent $r): string {
-                        if ($r->stock_on_hand === null) return 'Custom';
+                        if ($r->stock_on_hand === null) {
+                            return 'Custom';
+                        }
                         $qty = (float) ($r->quantity ?: 1);
-                        return $qty > 0 ? number_format(floor($r->stock_on_hand / $qty), 0) . ' units' : '0 units';
+
+                        return $qty > 0 ? number_format(floor($r->stock_on_hand / $qty), 0).' units' : '0 units';
                     })
                     ->color(function (ProductComponent $r): string {
-                        if ($r->stock_on_hand === null) return 'gray';
+                        if ($r->stock_on_hand === null) {
+                            return 'gray';
+                        }
                         $qty = (float) ($r->quantity ?: 1);
                         $avail = $qty > 0 ? floor($r->stock_on_hand / $qty) : 0;
+
                         return $avail <= 0 ? 'danger' : ($avail < 10 ? 'warning' : 'success');
                     })
                     ->tooltip('Maximum parent units that can be built from current stock of this component'),
@@ -237,12 +248,12 @@ class SubComponentResource extends Resource
             ->filters([
                 SelectFilter::make('parent_product_id')
                     ->label('Filter by Parent Product')
-                    ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                    ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                     ->searchable(),
 
                 SelectFilter::make('category')
                     ->label('Filter by Category')
-                    ->options(fn() => ProductComponent::distinct()->whereNotNull('category')->pluck('category', 'category')),
+                    ->options(fn () => ProductComponent::distinct()->whereNotNull('category')->pluck('category', 'category')),
             ])
             ->headerActions([
                 Action::make('bulk_add_subcomponents')
@@ -255,14 +266,14 @@ class SubComponentResource extends Resource
                     ->form([
                         Select::make('parent_product_id')
                             ->label('Select Parent Finished Product')
-                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                             ->searchable()
                             ->required(),
 
                         Select::make('component_product_ids')
                             ->label('Select Catalogue Components (Multiple Dropdown)')
                             ->multiple()
-                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                             ->searchable()
                             ->required()
                             ->placeholder('Search and select parts...'),
@@ -276,7 +287,9 @@ class SubComponentResource extends Resource
                     ])
                     ->action(function (array $data): void {
                         $parent = Product::find($data['parent_product_id']);
-                        if (!$parent) return;
+                        if (! $parent) {
+                            return;
+                        }
 
                         $ids = $data['component_product_ids'] ?? [];
                         $qty = (float) ($data['default_quantity'] ?? 1.0);
@@ -284,24 +297,26 @@ class SubComponentResource extends Resource
 
                         foreach ($ids as $cid) {
                             $part = Product::find($cid);
-                            if (!$part) continue;
+                            if (! $part) {
+                                continue;
+                            }
 
                             ProductComponent::create([
-                                'parent_product_id'    => $parent->id,
+                                'parent_product_id' => $parent->id,
                                 'component_product_id' => $part->id,
-                                'component_name'       => $part->canonical_name,
-                                'product_code'         => $part->product_code ?: $part->sku,
-                                'category'             => $part->category ?: 'General',
-                                'wattage'              => $part->wattage,
-                                'voltage'              => $part->voltage,
-                                'color_temperature'    => $part->color_temperature,
-                                'unit'                 => $part->unit_default ?: 'pcs',
-                                'cost_price'           => $part->base_cost_price > 0 ? $part->base_cost_price : $part->selling_price,
-                                'quantity'             => $qty,
-                                'image_path'           => $part->image_path,
-                                'component_group'      => $part->category ?: 'General',
-                                'option_name'          => $part->canonical_name,
-                                'additional_cost'      => $part->base_cost_price > 0 ? $part->base_cost_price : $part->selling_price,
+                                'component_name' => $part->canonical_name,
+                                'product_code' => $part->product_code ?: $part->sku,
+                                'category' => $part->category ?: 'General',
+                                'wattage' => $part->wattage,
+                                'voltage' => $part->voltage,
+                                'color_temperature' => $part->color_temperature,
+                                'unit' => $part->unit_default ?: 'pcs',
+                                'cost_price' => $part->base_cost_price > 0 ? $part->base_cost_price : $part->selling_price,
+                                'quantity' => $qty,
+                                'image_path' => $part->image_path,
+                                'component_group' => $part->category ?: 'General',
+                                'option_name' => $part->canonical_name,
+                                'additional_cost' => $part->base_cost_price > 0 ? $part->base_cost_price : $part->selling_price,
                             ]);
                             $count++;
                         }
@@ -327,9 +342,9 @@ class SubComponentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListSubComponents::route('/'),
+            'index' => Pages\ListSubComponents::route('/'),
             'create' => Pages\CreateSubComponent::route('/create'),
-            'edit'   => Pages\EditSubComponent::route('/{record}/edit'),
+            'edit' => Pages\EditSubComponent::route('/{record}/edit'),
         ];
     }
 }

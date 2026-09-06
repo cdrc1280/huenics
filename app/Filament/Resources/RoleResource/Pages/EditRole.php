@@ -14,7 +14,7 @@ class EditRole extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
-                ->hidden(fn(): bool => $this->record->is_system),
+                ->hidden(fn (): bool => $this->record->is_system),
         ];
     }
 

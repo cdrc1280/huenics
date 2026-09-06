@@ -6,6 +6,8 @@ use App\Enums\DeliveryStatus;
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\WarrantyPeriod;
 use App\Enums\WarrantyStatus;
+use App\Services\PoQuotationReconciler;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,45 +48,66 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class PurchaseOrder extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     // Delivery statuses
     public const DELIVERY_PENDING = DeliveryStatus::Pending->value;
+
     public const DELIVERY_TRANSIT = DeliveryStatus::InTransit->value;
+
     public const DELIVERY_DELIVERED = DeliveryStatus::Delivered->value;
+
     public const DELIVERY_OVERDUE = DeliveryStatus::Overdue->value;
 
     // Warranty periods (3 options: 6 Months, 1 Year, 2 Years)
     public const WARRANTY_6_MONTHS = WarrantyPeriod::SixMonths->value;
+
     public const WARRANTY_1_YEAR = WarrantyPeriod::OneYear->value;
+
     public const WARRANTY_2_YEARS = WarrantyPeriod::TwoYears->value;
+
     public const WARRANTY_2_YEARS_6_MONTHS = WarrantyPeriod::TwoYearsSixMonths->value;
 
     // Warranty statuses
     public const WARRANTY_ACTIVE = WarrantyStatus::Active->value;
+
     public const WARRANTY_EXPIRING = WarrantyStatus::ExpiringSoon->value;
+
     public const WARRANTY_EXPIRED = WarrantyStatus::Expired->value;
+
     public const WARRANTY_NONE = WarrantyStatus::NoWarranty->value;
 
     // PO statuses
     public const STATUS_PENDING = PurchaseOrderStatus::Pending->value;
+
     public const STATUS_APPROVED = PurchaseOrderStatus::Approved->value;
+
     public const STATUS_PENDING_DELIVERY = PurchaseOrderStatus::PendingDelivery->value;
+
     public const STATUS_DELIVERED = PurchaseOrderStatus::Delivered->value;
+
     public const STATUS_CANCELLED = PurchaseOrderStatus::Cancelled->value;
+
     public const STATUS_REJECTED = PurchaseOrderStatus::Rejected->value;
 
     // Payment Terms (Max 30 Days)
     public const PAYMENT_TERM_COD = 'cod';
+
     public const PAYMENT_TERM_PDC_7 = 'pdc_7';
+
     public const PAYMENT_TERM_PDC_15 = 'pdc_15';
+
     public const PAYMENT_TERM_PDC_30 = 'pdc_30';
+
     public const PAYMENT_TERM_CREDIT_30 = 'credit_30';
 
     // Payment Statuses
     public const PAYMENT_STATUS_UNPAID = 'unpaid';
+
     public const PAYMENT_STATUS_PAID = 'paid';
+
     public const PAYMENT_STATUS_PENDING = 'pending';
+
     public const PAYMENT_STATUS_OVERDUE = 'overdue';
 
     public static function getPaymentTermOptions(): array
@@ -196,7 +219,7 @@ class PurchaseOrder extends Model
 
     public function getDaysUntilDueAttribute(): ?int
     {
-        if (!$this->payment_due_date) {
+        if (! $this->payment_due_date) {
             return null;
         }
 
@@ -209,7 +232,7 @@ class PurchaseOrder extends Model
             return 'success';
         }
 
-        if (!$this->payment_due_date) {
+        if (! $this->payment_due_date) {
             return 'gray';
         }
 
@@ -228,11 +251,11 @@ class PurchaseOrder extends Model
 
     public function canSendPaymentReminderToday(): bool
     {
-        if (!$this->last_payment_reminder_sent_at) {
+        if (! $this->last_payment_reminder_sent_at) {
             return true;
         }
 
-        return !$this->last_payment_reminder_sent_at->isToday();
+        return ! $this->last_payment_reminder_sent_at->isToday();
     }
 
     /**
@@ -242,42 +265,42 @@ class PurchaseOrder extends Model
     {
         $clientEmail = $this->quotation?->email ?: '';
         if (empty($clientEmail) || $clientEmail === 'N/A') {
-            $clientEmail = 'accounting@' . strtolower(preg_replace('/[^a-z0-9]/', '', $this->customer_name)) . '.com';
+            $clientEmail = 'accounting@'.strtolower(preg_replace('/[^a-z0-9]/', '', $this->customer_name)).'.com';
         }
 
         $dueDateStr = $this->payment_due_date ? $this->payment_due_date->format('F d, Y') : 'Pending Schedule';
-        $amountFormatted = 'PHP ' . number_format((float) $this->order_amount, 2);
+        $amountFormatted = 'PHP '.number_format((float) $this->order_amount, 2);
         $daysOverdue = ($this->days_until_due !== null && $this->days_until_due < 0) ? abs($this->days_until_due) : 0;
         $urgencyText = $daysOverdue > 0
             ? "Please be informed that this account is currently OVERDUE by {$daysOverdue} calendar days."
-            : "This is a friendly reminder that payment is due on {$dueDateStr} (" . ($this->days_until_due ?? 0) . " days remaining).";
+            : "This is a friendly reminder that payment is due on {$dueDateStr} (".($this->days_until_due ?? 0).' days remaining).';
 
         $subject = "Payment Settlement Reminder: PO #{$this->po_number} - {$amountFormatted}";
 
         $body = "Dear {$this->customer_name},\n\n"
-            . "Greetings from Huenics Industrial Sales Inc.\n\n"
-            . "We would like to follow up regarding the outstanding payment for Purchase Order #{$this->po_number}.\n\n"
-            . "Order Summary:\n"
-            . "• Purchase Order #: {$this->po_number}\n"
-            . "• Project / Site: " . ($this->project?->name ?? 'General Delivery') . "\n"
-            . "• Delivered On: " . ($this->actual_delivery_date ? $this->actual_delivery_date->format('F d, Y') : 'Completed') . "\n"
-            . "• Payment Terms: " . ($this->payment_terms ?: '30 Days Term') . "\n"
-            . "• Total Due Amount: {$amountFormatted}\n"
-            . "• Settlement Due Date: {$dueDateStr}\n\n"
-            . "{$urgencyText}\n\n"
-            . "Settlement / Banking Details for Transfer / PDC Pickup:\n"
-            . "• Account Name: Huenics Industrial Sales Inc.\n"
-            . "• Bank: BDO Unibank - Ortigas Center Branch\n"
-            . "• Account Number: 0048-2801-4492\n"
-            . "• CS Hotline: (02) 8561-6836 / +63 968 8500720\n\n"
-            . "Please reply with your deposit slip or check pickup confirmation once processed.\n\n"
-            . "Warm regards,\n"
-            . "Finance & Accounting Department\nHuenics Industrial Sales Inc.";
+            ."Greetings from Huenics Industrial Sales Inc.\n\n"
+            ."We would like to follow up regarding the outstanding payment for Purchase Order #{$this->po_number}.\n\n"
+            ."Order Summary:\n"
+            ."• Purchase Order #: {$this->po_number}\n"
+            .'• Project / Site: '.($this->project?->name ?? 'General Delivery')."\n"
+            .'• Delivered On: '.($this->actual_delivery_date ? $this->actual_delivery_date->format('F d, Y') : 'Completed')."\n"
+            .'• Payment Terms: '.($this->payment_terms ?: '30 Days Term')."\n"
+            ."• Total Due Amount: {$amountFormatted}\n"
+            ."• Settlement Due Date: {$dueDateStr}\n\n"
+            ."{$urgencyText}\n\n"
+            ."Settlement / Banking Details for Transfer / PDC Pickup:\n"
+            ."• Account Name: Huenics Industrial Sales Inc.\n"
+            ."• Bank: BDO Unibank - Ortigas Center Branch\n"
+            ."• Account Number: 0048-2801-4492\n"
+            ."• CS Hotline: (02) 8561-6836 / +63 968 8500720\n\n"
+            ."Please reply with your deposit slip or check pickup confirmation once processed.\n\n"
+            ."Warm regards,\n"
+            ."Finance & Accounting Department\nHuenics Industrial Sales Inc.";
 
         return [
             'recipient' => $clientEmail,
-            'subject'   => $subject,
-            'body'      => $body,
+            'subject' => $subject,
+            'body' => $body,
         ];
     }
 
@@ -351,6 +374,7 @@ class PurchaseOrder extends Model
         if ($numbers->isNotEmpty()) {
             return $numbers->implode(', ');
         }
+
         return $this->delivery_receipt_no ?: '—';
     }
 
@@ -360,6 +384,7 @@ class PurchaseOrder extends Model
         if ($numbers->isNotEmpty()) {
             return $numbers->implode(', ');
         }
+
         return $this->sales_invoice_no ?: '—';
     }
 
@@ -392,9 +417,10 @@ class PurchaseOrder extends Model
 
     public function getWarrantyMonthsRemainingAttribute(): int
     {
-        if (!$this->warranty_end_date || $this->warranty_status === self::WARRANTY_EXPIRED) {
+        if (! $this->warranty_end_date || $this->warranty_status === self::WARRANTY_EXPIRED) {
             return 0;
         }
+
         return (int) now()->diffInMonths($this->warranty_end_date, false);
     }
 
@@ -402,7 +428,7 @@ class PurchaseOrder extends Model
     {
         return $this->delivery_status === self::DELIVERY_PENDING
             && $this->expected_delivery_date
-            && \Carbon\Carbon::parse($this->expected_delivery_date)->isPast();
+            && Carbon::parse($this->expected_delivery_date)->isPast();
     }
 
     public function getReconciliationReport(?Quotation $quotation = null): array
@@ -415,12 +441,12 @@ class PurchaseOrder extends Model
             }
         }
 
-        return app(\App\Services\PoQuotationReconciler::class)->reconcile($this, $quotation);
+        return app(PoQuotationReconciler::class)->reconcile($this, $quotation);
     }
 
     public function hasLineItemDiscrepancies(): bool
     {
-        if (!$this->quotation_id && !$this->quotation) {
+        if (! $this->quotation_id && ! $this->quotation) {
             return false;
         }
 
@@ -478,8 +504,8 @@ class PurchaseOrder extends Model
 
     public static function generateNumber(): string
     {
-        $prefix = 'PO-' . date('Y') . '-';
-        $numbers = static::where('po_number', 'like', $prefix . '%')->pluck('po_number');
+        $prefix = 'PO-'.date('Y').'-';
+        $numbers = static::where('po_number', 'like', $prefix.'%')->pluck('po_number');
 
         $maxSeq = 0;
         foreach ($numbers as $num) {
@@ -490,11 +516,11 @@ class PurchaseOrder extends Model
         }
 
         $nextSeq = $maxSeq + 1;
-        $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+        $candidate = $prefix.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
 
         while (static::where('po_number', $candidate)->exists()) {
             $nextSeq++;
-            $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
         }
 
         return $candidate;

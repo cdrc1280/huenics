@@ -13,15 +13,23 @@ use Livewire\Attributes\On;
 class SalesRevenueChartWidget extends ChartWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected ?string $maxHeight = '320px';
 
     public string $periodType = 'month';
+
     public ?string $selectedDate = null;
+
     public ?int $selectedWeek = null;
+
     public ?int $selectedMonth = null;
+
     public ?int $selectedYear = null;
+
     public ?int $selectedAgentId = null;
+
     public bool $filterInhouse = false;
 
     public function mount(
@@ -58,18 +66,19 @@ class SalesRevenueChartWidget extends ChartWidget
         $this->updateChartData();
     }
 
-    public function getHeading(): string | Htmlable | null
+    public function getHeading(): string|Htmlable|null
     {
         $year = $this->selectedYear ?: (int) now()->year;
+
         return match ($this->periodType) {
-            'days' => "Daily Sales & Pipeline Velocity — " . Carbon::parse($this->selectedDate ?: now()->toDateString())->format('M d, Y'),
+            'days' => 'Daily Sales & Pipeline Velocity — '.Carbon::parse($this->selectedDate ?: now()->toDateString())->format('M d, Y'),
             'weeks' => "Weekly Sales & Pipeline Velocity — Week {$this->selectedWeek} ({$year})",
             'years' => "Annual Revenue & Quotation Trend — {$year}",
-            default => "Monthly Revenue & Quotation Trend — " . Carbon::create($year, $this->selectedMonth ?: (int) now()->month, 1)->format('F Y'),
+            default => 'Monthly Revenue & Quotation Trend — '.Carbon::create($year, $this->selectedMonth ?: (int) now()->month, 1)->format('F Y'),
         };
     }
 
-    public function getDescription(): string | Htmlable | null
+    public function getDescription(): string|Htmlable|null
     {
         $filterContext = 'All Sales Executives';
         if ($this->filterInhouse) {
@@ -145,7 +154,7 @@ class SalesRevenueChartWidget extends ChartWidget
             $poQuery = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
                 ->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                     $q->whereBetween('order_date', [$startStr, $endStr])
-                        ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                        ->orWhere(fn ($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
                         ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
                         ->orWhereBetween('completed_at', [$startStr, $endStr])
                         ->orWhereBetween('created_at', [$startStr, $endStr]);
@@ -154,13 +163,13 @@ class SalesRevenueChartWidget extends ChartWidget
             $qQuery = Quotation::whereNotIn('status', [Quotation::STATUS_REJECTED])
                 ->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                     $q->whereBetween('quotation_date', [$startStr, $endStr])
-                        ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                        ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
                         ->orWhereBetween('created_at', [$startStr, $endStr]);
                 });
 
             if ($this->filterInhouse) {
-                $poQuery->where(fn($q) => $q->whereHas('salesAgent', fn($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
-                $qQuery->where(fn($q) => $q->whereHas('salesAgent', fn($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $poQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $qQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
             } elseif ($this->selectedAgentId) {
                 $poQuery->where('sales_agent_id', $this->selectedAgentId);
                 $qQuery->where('sales_agent_id', $this->selectedAgentId);

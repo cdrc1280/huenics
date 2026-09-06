@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UnitOfMeasure;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers\SubComponentsRelationManager;
 use App\Models\Product;
 use App\Services\InventoryService;
+use App\Services\ProductImportExportService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -16,7 +19,6 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -27,7 +29,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -36,6 +37,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -44,8 +46,11 @@ class ProductResource extends Resource
     protected static ?string $model = Product::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-cube';
+
     protected static ?string $navigationLabel = 'Products Catalog';
+
     protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
@@ -127,7 +132,7 @@ class ProductResource extends Resource
 
                         Select::make('unit_default')
                             ->label('Default Unit')
-                            ->options(\App\Enums\UnitOfMeasure::class)
+                            ->options(UnitOfMeasure::class)
                             ->default('pcs')
                             ->required(),
 
@@ -168,7 +173,7 @@ class ProductResource extends Resource
                 Section::make('Modular Bill of Materials (BOM) & Parts')
                     ->description('Configure dynamic sub-components and modular parts for this product (e.g., LED COB, Driver, Housing, Optics).')
                     ->icon('heroicon-o-puzzle-piece')
-                    ->visible(fn($get) => (bool) $get('is_composite'))
+                    ->visible(fn ($get) => (bool) $get('is_composite'))
                     ->schema([
                         Repeater::make('components')
                             ->relationship('components')
@@ -181,7 +186,7 @@ class ProductResource extends Resource
                                     ->searchable()
                                     ->live()
                                     ->afterStateUpdated(function ($state, callable $set) {
-                                        if (!$state) {
+                                        if (! $state) {
                                             return;
                                         }
                                         $catalogItem = Product::find($state);
@@ -248,7 +253,7 @@ class ProductResource extends Resource
 
                                 Select::make('unit')
                                     ->label('Unit')
-                                    ->options(\App\Enums\UnitOfMeasure::class)
+                                    ->options(UnitOfMeasure::class)
                                     ->default('pcs')
                                     ->columnSpan(['default' => 12, 'sm' => 2]),
 
@@ -287,14 +292,14 @@ class ProductResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->default('—')
-                    ->tooltip(fn(Product $record): string => "Product Code: " . ($record->product_code ?: 'N/A')),
+                    ->tooltip(fn (Product $record): string => 'Product Code: '.($record->product_code ?: 'N/A')),
 
                 TextColumn::make('canonical_name')
                     ->label('Product Name')
                     ->searchable()
                     ->sortable()
                     ->wrap()
-                    ->tooltip(fn(Product $record): string => "Canonical Name: {$record->canonical_name}"),
+                    ->tooltip(fn (Product $record): string => "Canonical Name: {$record->canonical_name}"),
 
                 TextColumn::make('category')
                     ->label('Category')
@@ -303,7 +308,7 @@ class ProductResource extends Resource
                     ->badge()
                     ->color('info')
                     ->default('General')
-                    ->tooltip(fn(Product $record): string => "Product Category: " . ($record->category ?: 'General')),
+                    ->tooltip(fn (Product $record): string => 'Product Category: '.($record->category ?: 'General')),
 
                 TextColumn::make('wattage')
                     ->label('Wattage')
@@ -344,23 +349,22 @@ class ProductResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->color('success')
-                    ->tooltip(fn(Product $record): string => "Standard catalogue selling price: ₱" . number_format((float) $record->selling_price, 2)),
+                    ->tooltip(fn (Product $record): string => 'Standard catalogue selling price: ₱'.number_format((float) $record->selling_price, 2)),
 
                 TextColumn::make('inventoryItem.quantity_on_hand')
                     ->label('Stock On Hand')
                     ->numeric(2)
                     ->sortable()
                     ->badge()
-                    ->color(fn(?float $state, Product $record): string => match (true) {
+                    ->color(fn (?float $state, Product $record): string => match (true) {
                         ($state ?? 0) <= 0 => 'danger',
                         $record->inventoryItem?->reorder_point && ($state ?? 0) <= $record->inventoryItem->reorder_point => 'warning',
                         default => 'success',
                     })
                     ->formatStateUsing(
-                        fn(?float $state, Product $record): string =>
-                        number_format((float) ($state ?? 0), 2) . ' ' . ($record->unit_default ?: 'pcs')
+                        fn (?float $state, Product $record): string => number_format((float) ($state ?? 0), 2).' '.($record->unit_default ?: 'pcs')
                     )
-                    ->tooltip(fn(Product $record): string => "Current physical inventory on hand: " . number_format((float) ($record->inventoryItem?->quantity_on_hand ?? 0), 2) . " " . ($record->unit_default ?: 'pcs')),
+                    ->tooltip(fn (Product $record): string => 'Current physical inventory on hand: '.number_format((float) ($record->inventoryItem?->quantity_on_hand ?? 0), 2).' '.($record->unit_default ?: 'pcs')),
 
                 IconColumn::make('is_huenics_owned')
                     ->label('Huenics Stock')
@@ -408,8 +412,8 @@ class ProductResource extends Resource
                     static::getAddStockAction(),
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Product $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (Product $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Product $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
@@ -417,17 +421,18 @@ class ProductResource extends Resource
                     BulkAction::make('export_selected')
                         ->label('Export Selected to CSV')
                         ->icon('heroicon-o-arrow-down-tray')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $csv = app(\App\Services\ProductImportExportService::class)->exportCsv($records);
+                        ->action(function (Collection $records) {
+                            $csv = app(ProductImportExportService::class)->exportCsv($records);
+
                             return response()->streamDownload(function () use ($csv) {
                                 echo $csv;
-                            }, 'huenics-products-selected-' . date('Ymd-His') . '.csv', [
+                            }, 'huenics-products-selected-'.date('Ymd-His').'.csv', [
                                 'Content-Type' => 'text/csv; charset=UTF-8',
                             ]);
                         }),
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }
@@ -438,9 +443,9 @@ class ProductResource extends Resource
             ->label('Add Stock')
             ->icon('heroicon-m-plus')
             ->color('success')
-            ->visible(fn(Product $record): bool => !$record->trashed())
-            ->modalHeading(fn(Product $record): string => "Add Stock — {$record->canonical_name}")
-            ->modalDescription(fn(Product $record): string => "Current inventory on hand: " . number_format((float) ($record->inventoryItem?->quantity_on_hand ?? 0), 2) . " " . ($record->unit_default ?: 'pcs') . ". Enter quantity to receive and add to inventory.")
+            ->visible(fn (Product $record): bool => ! $record->trashed())
+            ->modalHeading(fn (Product $record): string => "Add Stock — {$record->canonical_name}")
+            ->modalDescription(fn (Product $record): string => 'Current inventory on hand: '.number_format((float) ($record->inventoryItem?->quantity_on_hand ?? 0), 2).' '.($record->unit_default ?: 'pcs').'. Enter quantity to receive and add to inventory.')
             ->modalSubmitActionLabel('Confirm & Add Stock')
             ->form([
                 TextInput::make('quantity')
@@ -451,7 +456,7 @@ class ProductResource extends Resource
                     ->required()
                     ->autofocus()
                     ->placeholder('e.g. 50')
-                    ->helperText(fn(Product $record): string => "Stock will be added in: " . ($record->unit_default ?: 'pcs')),
+                    ->helperText(fn (Product $record): string => 'Stock will be added in: '.($record->unit_default ?: 'pcs')),
 
                 Select::make('transaction_type')
                     ->label('Stock-In Type')
@@ -479,7 +484,7 @@ class ProductResource extends Resource
                 $qty = (float) $data['quantity'];
                 $type = $data['transaction_type'];
                 $notes = (string) $data['notes'];
-                $ref = !empty($data['reference']) ? (string) $data['reference'] : null;
+                $ref = ! empty($data['reference']) ? (string) $data['reference'] : null;
 
                 if ($ref) {
                     $notes = "[Ref: {$ref}] {$notes}";
@@ -508,7 +513,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Resources\ProductResource\RelationManagers\SubComponentsRelationManager::class,
+            SubComponentsRelationManager::class,
         ];
     }
 

@@ -50,8 +50,8 @@ class InventoryReportService
         foreach ($items as $item) {
             $product = $item->product;
 
-            $dateStr = $item->inbound_date 
-                ? $item->inbound_date->format('m/d/Y') 
+            $dateStr = $item->inbound_date
+                ? $item->inbound_date->format('m/d/Y')
                 : ($item->created_at ? $item->created_at->format('m/d/Y') : '');
 
             $dateReleasedStr = $item->date_released ? $item->date_released->format('m/d/Y') : '';
@@ -227,21 +227,21 @@ class InventoryReportService
      */
     public function importInventoryReport(string $filePath, bool $updateExisting = true): array
     {
-        if (!file_exists($filePath) || !is_readable($filePath)) {
+        if (! file_exists($filePath) || ! is_readable($filePath)) {
             throw new \InvalidArgumentException("Inventory report CSV file does not exist or is not readable: {$filePath}");
         }
 
         $handle = fopen($filePath, 'r');
-        if (!$handle) {
+        if (! $handle) {
             throw new \RuntimeException("Failed to open inventory report file: {$filePath}");
         }
 
         $importedCount = 0;
-        $updatedCount  = 0;
-        $skippedCount  = 0;
-        $errors        = [];
-        $headerMap     = null;
-        $rowIndex      = 0;
+        $updatedCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+        $headerMap = null;
+        $rowIndex = 0;
 
         while (($row = fgetcsv($handle, 4096, ',')) !== false) {
             $rowIndex++;
@@ -257,6 +257,7 @@ class InventoryReportService
                 $possibleHeader = $this->parseHeaderRow($trimmedRow);
                 if ($possibleHeader !== null) {
                     $headerMap = $possibleHeader;
+
                     continue;
                 }
             }
@@ -264,21 +265,21 @@ class InventoryReportService
             // Fallback default map if header row wasn't present
             if ($headerMap === null) {
                 $headerMap = [
-                    'date'          => 0,
-                    'po_number'     => 1,
+                    'date' => 0,
+                    'po_number' => 1,
                     'supplier_name' => 2,
-                    'sku'           => 3,
-                    'item_code'     => 4,
-                    'picture'       => 5,
-                    'particulars'   => 6,
-                    'transit_in'    => 7,
-                    'transit_out'   => 8,
-                    'balance'       => 9,
-                    'location'      => 10,
+                    'sku' => 3,
+                    'item_code' => 4,
+                    'picture' => 5,
+                    'particulars' => 6,
+                    'transit_in' => 7,
+                    'transit_out' => 8,
+                    'balance' => 9,
+                    'location' => 10,
                     'customer_name' => 11,
-                    'project_name'  => 12,
+                    'project_name' => 12,
                     'date_released' => 13,
-                    'remarks'       => 14,
+                    'remarks' => 14,
                 ];
             }
 
@@ -286,6 +287,7 @@ class InventoryReportService
 
             if (empty($record['item_code']) && empty($record['sku']) && empty($record['particulars'])) {
                 $skippedCount++;
+
                 continue;
             }
 
@@ -294,40 +296,40 @@ class InventoryReportService
                     $product = null;
 
                     // Match product by code or SKU
-                    if (!empty($record['item_code'])) {
+                    if (! empty($record['item_code'])) {
                         $product = Product::where('product_code', $record['item_code'])->first();
                     }
 
-                    if (!$product && !empty($record['sku'])) {
+                    if (! $product && ! empty($record['sku'])) {
                         $product = Product::where('sku', $record['sku'])->orWhere('product_code', $record['sku'])->first();
                     }
 
-                    if (!$product && !empty($record['particulars'])) {
+                    if (! $product && ! empty($record['particulars'])) {
                         $product = Product::where('canonical_name', $record['particulars'])->first();
                     }
 
-                    if (!$product) {
-                        $code = $record['item_code'] ?: ($record['sku'] ?: ('PRD-' . strtoupper(substr(uniqid(), -6))));
+                    if (! $product) {
+                        $code = $record['item_code'] ?: ($record['sku'] ?: ('PRD-'.strtoupper(substr(uniqid(), -6))));
                         $name = $record['particulars'] ?: $code;
 
                         $product = Product::create([
-                            'product_code'      => $code,
-                            'sku'               => $record['sku'] ?: $code,
-                            'canonical_name'    => $name,
-                            'description'       => $record['particulars'] ?: $name,
-                            'category'          => 'General',
-                            'unit_default'      => 'pcs',
-                            'default_price'     => 0.00,
-                            'selling_price'     => 0.00,
-                            'base_cost_price'   => 0.00,
-                            'image_path'        => $record['picture'],
-                            'is_huenics_owned'  => true,
-                            'is_active'         => true,
+                            'product_code' => $code,
+                            'sku' => $record['sku'] ?: $code,
+                            'canonical_name' => $name,
+                            'description' => $record['particulars'] ?: $name,
+                            'category' => 'General',
+                            'unit_default' => 'pcs',
+                            'default_price' => 0.00,
+                            'selling_price' => 0.00,
+                            'base_cost_price' => 0.00,
+                            'image_path' => $record['picture'],
+                            'is_huenics_owned' => true,
+                            'is_active' => true,
                         ]);
                     } else {
                         if ($updateExisting) {
                             $product->update([
-                                'sku'        => $record['sku'] ?: $product->sku,
+                                'sku' => $record['sku'] ?: $product->sku,
                                 'image_path' => $record['picture'] ?: $product->image_path,
                             ]);
                         }
@@ -337,8 +339,8 @@ class InventoryReportService
                     $invItem = InventoryItem::where('product_id', $product->id)->first();
                     $isNewItem = false;
 
-                    if (!$invItem) {
-                        $invItem = new InventoryItem();
+                    if (! $invItem) {
+                        $invItem = new InventoryItem;
                         $invItem->product_id = $product->id;
                         $invItem->quantity_on_hand = 0;
                         $invItem->quantity_reserved = 0;
@@ -354,28 +356,28 @@ class InventoryReportService
                             $invItem->quantity_on_hand = (float) $invItem->quantity_on_hand + $record['transit_in'];
                         }
 
-                        if (!empty($record['location'])) {
+                        if (! empty($record['location'])) {
                             $invItem->location = $record['location'];
                         }
-                        if (!empty($record['supplier_name'])) {
+                        if (! empty($record['supplier_name'])) {
                             $invItem->supplier_name = $record['supplier_name'];
                         }
-                        if (!empty($record['po_number'])) {
+                        if (! empty($record['po_number'])) {
                             $invItem->po_number = $record['po_number'];
                         }
-                        if (!empty($record['customer_name'])) {
+                        if (! empty($record['customer_name'])) {
                             $invItem->customer_name = $record['customer_name'];
                         }
-                        if (!empty($record['project_name'])) {
+                        if (! empty($record['project_name'])) {
                             $invItem->project_name = $record['project_name'];
                         }
-                        if (!empty($record['date_released'])) {
+                        if (! empty($record['date_released'])) {
                             $invItem->date_released = $record['date_released'];
                         }
-                        if (!empty($record['inbound_date'])) {
+                        if (! empty($record['inbound_date'])) {
                             $invItem->inbound_date = $record['inbound_date'];
                         }
-                        if (!empty($record['remarks'])) {
+                        if (! empty($record['remarks'])) {
                             $invItem->remarks = $record['remarks'];
                         }
 
@@ -388,21 +390,21 @@ class InventoryReportService
 
                         InventoryTransaction::create([
                             'inventory_item_id' => $invItem->id,
-                            'transaction_type'  => $type,
-                            'reference_type'    => !empty($record['po_number']) ? 'po' : 'import',
-                            'quantity'          => $qty > 0 ? $qty : 0,
-                            'po_number'         => $record['po_number'],
-                            'supplier_name'     => $record['supplier_name'],
-                            'customer_name'     => $record['customer_name'],
-                            'project_name'      => $record['project_name'],
-                            'location'          => $record['location'],
-                            'date_released'     => $record['date_released'],
-                            'transit_in'        => $record['transit_in'],
-                            'transit_out'       => $record['transit_out'],
-                            'balance_after'     => $invItem->quantity_on_hand,
-                            'notes'             => $record['remarks'] ?: "Imported from inventory report: {$record['particulars']}",
-                            'performed_by'      => $performedById,
-                            'created_at'        => $record['inbound_date'] ? Carbon::parse($record['inbound_date']) : now(),
+                            'transaction_type' => $type,
+                            'reference_type' => ! empty($record['po_number']) ? 'po' : 'import',
+                            'quantity' => $qty > 0 ? $qty : 0,
+                            'po_number' => $record['po_number'],
+                            'supplier_name' => $record['supplier_name'],
+                            'customer_name' => $record['customer_name'],
+                            'project_name' => $record['project_name'],
+                            'location' => $record['location'],
+                            'date_released' => $record['date_released'],
+                            'transit_in' => $record['transit_in'],
+                            'transit_out' => $record['transit_out'],
+                            'balance_after' => $invItem->quantity_on_hand,
+                            'notes' => $record['remarks'] ?: "Imported from inventory report: {$record['particulars']}",
+                            'performed_by' => $performedById,
+                            'created_at' => $record['inbound_date'] ? Carbon::parse($record['inbound_date']) : now(),
                         ]);
 
                         if ($isNewItem) {
@@ -413,8 +415,8 @@ class InventoryReportService
                     }
                 });
             } catch (\Throwable $e) {
-                $errors[] = "Row {$rowIndex}: " . $e->getMessage();
-                Log::warning("Inventory import error at row {$rowIndex}: " . $e->getMessage());
+                $errors[] = "Row {$rowIndex}: ".$e->getMessage();
+                Log::warning("Inventory import error at row {$rowIndex}: ".$e->getMessage());
             }
         }
 
@@ -422,9 +424,9 @@ class InventoryReportService
 
         return [
             'imported' => $importedCount,
-            'updated'  => $updatedCount,
-            'skipped'  => $skippedCount,
-            'errors'   => $errors,
+            'updated' => $updatedCount,
+            'skipped' => $skippedCount,
+            'errors' => $errors,
         ];
     }
 
@@ -512,7 +514,9 @@ class InventoryReportService
         $rawRemarks = isset($map['remarks']) && isset($row[$map['remarks']]) ? trim($row[$map['remarks']]) : null;
 
         $parseDate = function (?string $val): ?string {
-            if (empty($val)) return null;
+            if (empty($val)) {
+                return null;
+            }
             try {
                 return Carbon::parse($val)->format('Y-m-d');
             } catch (\Throwable) {
@@ -521,27 +525,30 @@ class InventoryReportService
         };
 
         $parseNum = function (?string $val): ?float {
-            if ($val === null || $val === '' || str_starts_with($val, '#')) return null;
+            if ($val === null || $val === '' || str_starts_with($val, '#')) {
+                return null;
+            }
             $clean = preg_replace('/[^0-9.-]/', '', str_replace(',', '', $val));
+
             return is_numeric($clean) ? (float) $clean : null;
         };
 
         return [
-            'inbound_date'  => $parseDate($rawDate),
-            'po_number'     => $rawPo ?: null,
+            'inbound_date' => $parseDate($rawDate),
+            'po_number' => $rawPo ?: null,
             'supplier_name' => $rawSupplier ?: null,
-            'sku'           => $rawSku ?: null,
-            'item_code'     => $rawCode ?: null,
-            'picture'       => $rawPic ?: null,
-            'particulars'   => $rawDesc ?: null,
-            'transit_in'    => $parseNum($rawIn),
-            'transit_out'   => $parseNum($rawOut),
-            'balance'       => $parseNum($rawBal),
-            'location'      => $rawLoc ?: null,
+            'sku' => $rawSku ?: null,
+            'item_code' => $rawCode ?: null,
+            'picture' => $rawPic ?: null,
+            'particulars' => $rawDesc ?: null,
+            'transit_in' => $parseNum($rawIn),
+            'transit_out' => $parseNum($rawOut),
+            'balance' => $parseNum($rawBal),
+            'location' => $rawLoc ?: null,
             'customer_name' => $rawCust ?: null,
-            'project_name'  => $rawProj ?: null,
+            'project_name' => $rawProj ?: null,
             'date_released' => $parseDate($rawRelDate),
-            'remarks'       => $rawRemarks ?: null,
+            'remarks' => $rawRemarks ?: null,
         ];
     }
 
@@ -555,9 +562,10 @@ class InventoryReportService
                 return '';
             }
             $str = (string) $value;
-            if (!mb_check_encoding($str, 'UTF-8')) {
+            if (! mb_check_encoding($str, 'UTF-8')) {
                 $str = mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
             }
+
             return $str;
         }, $row);
     }

@@ -38,6 +38,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TransactionResource extends Resource
@@ -65,12 +66,12 @@ class TransactionResource extends Resource
         return auth()->user()?->canEditTransactions() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canEditTransactions() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -81,42 +82,42 @@ class TransactionResource extends Resource
             ->components([
                 Section::make('Transaction Record')
                     ->components([
-                        Forms\Components\TextInput::make('transaction_code')
+                        TextInput::make('transaction_code')
                             ->label('Transaction Reference Code')
                             ->disabled()
                             ->dehydrated(false),
 
-                        Forms\Components\Select::make('project_id')
+                        Select::make('project_id')
                             ->label('Project / Customer Job')
                             ->options(Project::pluck('name', 'id'))
                             ->required()
                             ->searchable(),
 
-                        Forms\Components\Select::make('vendor_id')
+                        Select::make('vendor_id')
                             ->label('Vendor')
                             ->options(Vendor::pluck('name', 'id'))
                             ->required()
                             ->searchable(),
 
-                        Forms\Components\Select::make('purchase_order_id')
+                        Select::make('purchase_order_id')
                             ->label('Purchase Order Reference')
                             ->options(PurchaseOrder::pluck('po_number', 'id'))
                             ->searchable()
                             ->nullable(),
 
-                        Forms\Components\TextInput::make('final_amount')
+                        TextInput::make('final_amount')
                             ->label('Authoritative Reconciled Amount (₱)')
                             ->numeric()
                             ->prefix('₱')
                             ->required(),
 
-                        Forms\Components\DatePicker::make('order_date')
+                        DatePicker::make('order_date')
                             ->label('Order Date'),
 
-                        Forms\Components\DatePicker::make('delivery_date')
+                        DatePicker::make('delivery_date')
                             ->label('Delivery Date'),
 
-                        Forms\Components\Select::make('status')
+                        Select::make('status')
                             ->options([
                                 'pending_delivery' => 'Pending Delivery',
                                 'delivered' => 'Delivered / Fulfilled',
@@ -138,25 +139,25 @@ class TransactionResource extends Resource
                 Section::make('Associated Lifecycle Documents')
                     ->description('Links to Quotation, Purchase Order, Delivery Receipt, and Sales Invoice documents.')
                     ->components([
-                        Forms\Components\Select::make('quotation_document_id')
+                        Select::make('quotation_document_id')
                             ->label('1. Quotation Document')
                             ->options(Document::where('document_type', Document::TYPE_VENDORS_AGREEMENT)->pluck('document_number', 'id'))
                             ->searchable()
                             ->placeholder('No quotation linked'),
 
-                        Forms\Components\Select::make('purchase_order_document_id')
+                        Select::make('purchase_order_document_id')
                             ->label('2. Purchase Order Document')
                             ->options(Document::where('document_type', Document::TYPE_PURCHASE_ORDER)->pluck('document_number', 'id'))
                             ->searchable()
                             ->placeholder('No PO linked'),
 
-                        Forms\Components\Select::make('delivery_receipt_document_id')
+                        Select::make('delivery_receipt_document_id')
                             ->label('3. Delivery Receipt Document')
                             ->options(Document::where('document_type', DocumentType::DeliveryReceipt->value)->pluck('document_number', 'id'))
                             ->searchable()
                             ->placeholder('No DR linked'),
 
-                        Forms\Components\Select::make('sales_invoice_document_id')
+                        Select::make('sales_invoice_document_id')
                             ->label('4. Sales Invoice Document')
                             ->options(Document::where('document_type', DocumentType::SalesInvoice->value)->pluck('document_number', 'id'))
                             ->searchable()
@@ -201,7 +202,7 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'pending_delivery' => 'warning',
                         'delivered' => 'success',
                         'cancelled' => 'danger',
@@ -211,12 +212,12 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('fulfillment_status')
                     ->label('Fulfillment')
                     ->badge()
-                    ->state(fn(Transaction $record): string => match (true) {
+                    ->state(fn (Transaction $record): string => match (true) {
                         $record->is_completed || $record->hasFulfillmentDocuments() => 'Completed & Realized',
                         $record->status === 'delivered' => 'Delivered (Awaiting DR & SI)',
                         default => 'Pending Delivery',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Completed & Realized' => 'success',
                         'Delivered (Awaiting DR & SI)' => 'warning',
                         default => 'gray',
@@ -224,23 +225,23 @@ class TransactionResource extends Resource
 
                 Tables\Columns\IconColumn::make('doc_match')
                     ->label('Quotation & PO Match')
-                    ->state(fn(Transaction $record): bool => !empty($record->quotation_document_id) && !empty($record->purchase_order_document_id))
+                    ->state(fn (Transaction $record): bool => ! empty($record->quotation_document_id) && ! empty($record->purchase_order_document_id))
                     ->boolean()
                     ->trueIcon('heroicon-s-shield-check')
                     ->falseIcon('heroicon-o-link')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->tooltip(fn(Transaction $record): string => (!empty($record->quotation_document_id) && !empty($record->purchase_order_document_id)) ? 'Quotation & Purchase Order Linked' : 'Partial Document Record'),
+                    ->tooltip(fn (Transaction $record): string => (! empty($record->quotation_document_id) && ! empty($record->purchase_order_document_id)) ? 'Quotation & Purchase Order Linked' : 'Partial Document Record'),
 
                 Tables\Columns\IconColumn::make('dr_si_match')
                     ->label('DR & SI Uploaded')
-                    ->state(fn(Transaction $record): bool => $record->hasFulfillmentDocuments() || $record->is_completed)
+                    ->state(fn (Transaction $record): bool => $record->hasFulfillmentDocuments() || $record->is_completed)
                     ->boolean()
                     ->trueIcon('heroicon-s-check-badge')
                     ->falseIcon('heroicon-o-arrow-up-tray')
                     ->trueColor('success')
                     ->falseColor('warning')
-                    ->tooltip(fn(Transaction $record): string => ($record->hasFulfillmentDocuments() || $record->is_completed) ? 'Delivery Receipt & Sales Invoice Uploaded' : 'Awaiting DR & SI Upload'),
+                    ->tooltip(fn (Transaction $record): string => ($record->hasFulfillmentDocuments() || $record->is_completed) ? 'Delivery Receipt & Sales Invoice Uploaded' : 'Awaiting DR & SI Upload'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Verified On')
@@ -260,8 +261,8 @@ class TransactionResource extends Resource
                         ->label('Upload DR & SI (Complete)')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->color('primary')
-                        ->visible(fn(Transaction $record): bool => !$record->trashed() && !$record->is_completed && ($record->purchaseOrder !== null || $record->purchase_order_document_id !== null))
-                        ->modalHeading(fn(Transaction $record): string => "Complete Transaction: Upload DR & SI for {$record->transaction_code}")
+                        ->visible(fn (Transaction $record): bool => ! $record->trashed() && ! $record->is_completed && ($record->purchaseOrder !== null || $record->purchase_order_document_id !== null))
+                        ->modalHeading(fn (Transaction $record): string => "Complete Transaction: Upload DR & SI for {$record->transaction_code}")
                         ->modalDescription('Upload both the Delivery Receipt and Sales Invoice files (Images or PDF) to finalize this transaction, deduct stocks from inventory, and realize sales analytics.')
                         ->modalWidth('4xl')
                         ->form([
@@ -283,12 +284,12 @@ class TransactionResource extends Resource
 
                                         TextInput::make('dr_number')
                                             ->label('DR Number')
-                                            ->default(fn() => DeliveryReceipt::generateNumber())
+                                            ->default(fn () => DeliveryReceipt::generateNumber())
                                             ->required(),
 
                                         DatePicker::make('delivery_date')
                                             ->label('Delivery Date')
-                                            ->default(fn(Transaction $record) => $record->delivery_date ?? now())
+                                            ->default(fn (Transaction $record) => $record->delivery_date ?? now())
                                             ->required(),
 
                                         TextInput::make('delivered_by')
@@ -319,7 +320,7 @@ class TransactionResource extends Resource
 
                                         TextInput::make('si_number')
                                             ->label('SI Number')
-                                            ->default(fn() => SalesInvoice::generateNumber())
+                                            ->default(fn () => SalesInvoice::generateNumber())
                                             ->required(),
 
                                         DatePicker::make('invoice_date')
@@ -341,7 +342,7 @@ class TransactionResource extends Resource
                                             ->label('Invoice Total (₱)')
                                             ->numeric()
                                             ->prefix('₱')
-                                            ->default(fn(Transaction $record) => (float) $record->final_amount)
+                                            ->default(fn (Transaction $record) => (float) $record->final_amount)
                                             ->required(),
                                     ]),
                                 ]),
@@ -351,12 +352,13 @@ class TransactionResource extends Resource
                                 $po = $record->purchaseOrder
                                     ?: ($record->purchase_order_document_id ? PurchaseOrder::where('document_id', $record->purchase_order_document_id)->first() : null);
 
-                                if (!$po) {
+                                if (! $po) {
                                     Notification::make()
                                         ->title('Cannot Complete')
                                         ->body('No linked Purchase Order was found for this transaction.')
                                         ->danger()
                                         ->send();
+
                                     return;
                                 }
 
@@ -379,15 +381,15 @@ class TransactionResource extends Resource
                         }),
 
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(Transaction $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Transaction $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (Transaction $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Transaction $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

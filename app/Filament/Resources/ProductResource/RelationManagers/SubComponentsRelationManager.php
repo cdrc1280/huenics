@@ -26,7 +26,9 @@ use Filament\Tables\Table;
 class SubComponentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'components';
+
     protected static ?string $title = 'Sub-Components / Bill of Materials (BOM)';
+
     protected static \BackedEnum|string|null $icon = 'heroicon-o-puzzle-piece';
 
     public function form(Schema $schema): Schema
@@ -40,11 +42,11 @@ class SubComponentsRelationManager extends RelationManager
                         Select::make('component_product_id')
                             ->label('Link Existing Catalog Product (Optional)')
                             ->placeholder('Select catalog item to auto-populate specifications...')
-                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                             ->searchable()
                             ->live()
                             ->afterStateUpdated(function ($state, callable $set) {
-                                if (!$state) {
+                                if (! $state) {
                                     return;
                                 }
 
@@ -170,7 +172,7 @@ class SubComponentsRelationManager extends RelationManager
                     ->weight('bold')
                     ->searchable(query: function ($query, string $search) {
                         $query->where('product_code', 'like', "%{$search}%")
-                            ->orWhereHas('componentProduct', fn($q) => $q->where('product_code', 'like', "%{$search}%"));
+                            ->orWhereHas('componentProduct', fn ($q) => $q->where('product_code', 'like', "%{$search}%"));
                     })
                     ->sortable()
                     ->default('—'),
@@ -182,9 +184,9 @@ class SubComponentsRelationManager extends RelationManager
                     ->searchable(query: function ($query, string $search) {
                         $query->where('component_name', 'like', "%{$search}%")
                             ->orWhere('option_name', 'like', "%{$search}%")
-                            ->orWhereHas('componentProduct', fn($q) => $q->where('canonical_name', 'like', "%{$search}%"));
+                            ->orWhereHas('componentProduct', fn ($q) => $q->where('canonical_name', 'like', "%{$search}%"));
                     })
-                    ->description(fn(ProductComponent $record): ?string => $record->componentProduct ? 'Linked Catalog Part: ' . $record->componentProduct->canonical_name : null),
+                    ->description(fn (ProductComponent $record): ?string => $record->componentProduct ? 'Linked Catalog Part: '.$record->componentProduct->canonical_name : null),
 
                 TextColumn::make('effective_category')
                     ->label('Category')
@@ -226,8 +228,7 @@ class SubComponentsRelationManager extends RelationManager
                     ->badge()
                     ->color('success')
                     ->formatStateUsing(
-                        fn($state, ProductComponent $record): string =>
-                        number_format((float) ($state ?: 1), 2) . ' ' . $record->effective_unit
+                        fn ($state, ProductComponent $record): string => number_format((float) ($state ?: 1), 2).' '.$record->effective_unit
                     )
                     ->tooltip('Quantity needed to manufacture/assemble 1 unit of the parent product'),
 
@@ -237,23 +238,20 @@ class SubComponentsRelationManager extends RelationManager
                     ->weight('bold')
                     ->color('success')
                     ->tooltip(
-                        fn(ProductComponent $record): string =>
-                        number_format((float) ($record->quantity ?: 1), 2) . ' × ₱' . number_format($record->effective_cost, 2)
+                        fn (ProductComponent $record): string => number_format((float) ($record->quantity ?: 1), 2).' × ₱'.number_format($record->effective_cost, 2)
                     ),
 
                 TextColumn::make('stock_on_hand')
                     ->label('Stock On Hand')
                     ->badge()
-                    ->color(fn($state) => $state === null ? 'gray' : ((float) $state <= 0 ? 'danger' : 'success'))
+                    ->color(fn ($state) => $state === null ? 'gray' : ((float) $state <= 0 ? 'danger' : 'success'))
                     ->formatStateUsing(
-                        fn($state, ProductComponent $record): string =>
-                        $state !== null
-                        ? number_format((float) $state, 2) . ' ' . $record->effective_unit
+                        fn ($state, ProductComponent $record): string => $state !== null
+                        ? number_format((float) $state, 2).' '.$record->effective_unit
                         : 'Custom Part'
                     )
                     ->tooltip(
-                        fn(ProductComponent $record): string =>
-                        $record->componentProduct
+                        fn (ProductComponent $record): string => $record->componentProduct
                         ? "Warehouse stock for catalog item {$record->componentProduct->canonical_name}"
                         : 'Custom bespoke component (not tracked separately in warehouse catalog)'
                     ),
@@ -267,12 +265,16 @@ class SubComponentsRelationManager extends RelationManager
                         }
                         $qty = (float) ($record->quantity ?: 1);
                         $avail = $qty > 0 ? floor($record->stock_on_hand / $qty) : 0;
-                        return number_format($avail, 0) . ' units';
+
+                        return number_format($avail, 0).' units';
                     })
                     ->color(function (ProductComponent $record): string {
-                        if ($record->stock_on_hand === null) return 'gray';
+                        if ($record->stock_on_hand === null) {
+                            return 'gray';
+                        }
                         $qty = (float) ($record->quantity ?: 1);
                         $avail = $qty > 0 ? floor($record->stock_on_hand / $qty) : 0;
+
                         return $avail <= 0 ? 'danger' : ($avail < 10 ? 'warning' : 'success');
                     })
                     ->tooltip('Maximum parent units that can be built from current stock of this component'),
@@ -289,7 +291,7 @@ class SubComponentsRelationManager extends RelationManager
                         Select::make('component_product_ids')
                             ->label('Select Catalogue Products (Multiple Dropdown)')
                             ->multiple()
-                            ->options(fn() => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
                             ->searchable()
                             ->required()
                             ->placeholder('Search and select products...')
@@ -311,24 +313,26 @@ class SubComponentsRelationManager extends RelationManager
 
                         foreach ($productIds as $prodId) {
                             $catalogItem = Product::find($prodId);
-                            if (!$catalogItem) continue;
+                            if (! $catalogItem) {
+                                continue;
+                            }
 
                             ProductComponent::create([
-                                'parent_product_id'    => $parentProduct->id,
+                                'parent_product_id' => $parentProduct->id,
                                 'component_product_id' => $catalogItem->id,
-                                'component_name'       => $catalogItem->canonical_name,
-                                'product_code'         => $catalogItem->product_code ?: $catalogItem->sku,
-                                'category'             => $catalogItem->category ?: 'General',
-                                'wattage'              => $catalogItem->wattage,
-                                'voltage'              => $catalogItem->voltage,
-                                'color_temperature'    => $catalogItem->color_temperature,
-                                'unit'                 => $catalogItem->unit_default ?: 'pcs',
-                                'cost_price'           => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
-                                'quantity'             => $qty,
-                                'image_path'           => $catalogItem->image_path,
-                                'component_group'      => $catalogItem->category ?: 'General',
-                                'option_name'          => $catalogItem->canonical_name,
-                                'additional_cost'      => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                                'component_name' => $catalogItem->canonical_name,
+                                'product_code' => $catalogItem->product_code ?: $catalogItem->sku,
+                                'category' => $catalogItem->category ?: 'General',
+                                'wattage' => $catalogItem->wattage,
+                                'voltage' => $catalogItem->voltage,
+                                'color_temperature' => $catalogItem->color_temperature,
+                                'unit' => $catalogItem->unit_default ?: 'pcs',
+                                'cost_price' => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                                'quantity' => $qty,
+                                'image_path' => $catalogItem->image_path,
+                                'component_group' => $catalogItem->category ?: 'General',
+                                'option_name' => $catalogItem->canonical_name,
+                                'additional_cost' => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
                             ]);
                             $count++;
                         }
@@ -349,6 +353,7 @@ class SubComponentsRelationManager extends RelationManager
                         $data['component_group'] = $data['category'] ?: ($data['component_group'] ?? 'General');
                         $data['option_name'] = $data['component_name'] ?: ($data['option_name'] ?? 'Part');
                         $data['additional_cost'] = $data['cost_price'] ?? 0.00;
+
                         return $data;
                     }),
             ])
@@ -359,6 +364,7 @@ class SubComponentsRelationManager extends RelationManager
                         $data['component_group'] = $data['category'] ?: ($data['component_group'] ?? 'General');
                         $data['option_name'] = $data['component_name'] ?: ($data['option_name'] ?? 'Part');
                         $data['additional_cost'] = $data['cost_price'] ?? 0.00;
+
                         return $data;
                     }),
                 DeleteAction::make()->requiresConfirmation(),

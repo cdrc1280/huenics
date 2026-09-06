@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\DeliveryReceipt;
+use App\Models\Document;
 use App\Models\PurchaseOrder;
 use App\Models\SalesInvoice;
 use App\Services\OrderFulfillmentService;
@@ -25,17 +26,20 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
-class DeliveryMonitoringPage extends Page implements HasTable, HasForms
+class DeliveryMonitoringPage extends Page implements HasForms, HasTable
 {
-    use InteractsWithTable, InteractsWithForms;
+    use InteractsWithForms, InteractsWithTable;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
+
     protected static ?string $navigationLabel = 'Delivery & Warranty Tracker';
+
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+
     protected string $view = 'filament.pages.delivery-monitoring-page';
+
     protected static ?int $navigationSort = 7;
 
     public function table(Table $table): Table
@@ -57,10 +61,10 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                 TextColumn::make('expected_delivery_date')
                     ->date()
                     ->sortable()
-                    ->color(fn($record) => $record->is_overdue ? 'danger' : (now()->diffInDays($record->expected_delivery_date, false) < 3 && $record->delivery_status !== 'delivered' ? 'warning' : null)),
+                    ->color(fn ($record) => $record->is_overdue ? 'danger' : (now()->diffInDays($record->expected_delivery_date, false) < 3 && $record->delivery_status !== 'delivered' ? 'warning' : null)),
                 TextColumn::make('delivery_status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         PurchaseOrder::DELIVERY_PENDING, 'pending' => 'warning',
                         PurchaseOrder::DELIVERY_TRANSIT, 'in_transit' => 'info',
                         PurchaseOrder::DELIVERY_DELIVERED, 'delivered' => 'success',
@@ -70,13 +74,13 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                 TextColumn::make('fulfillment_status')
                     ->label('Fulfillment')
                     ->badge()
-                    ->state(fn(PurchaseOrder $record): string => match (true) {
+                    ->state(fn (PurchaseOrder $record): string => match (true) {
                         $record->isCompleted() => 'Completed & Realized',
                         $record->delivery_status === PurchaseOrder::DELIVERY_DELIVERED => 'Delivered (Awaiting DR & SI)',
                         $record->isApproved() => 'Approved (Pending Delivery)',
                         default => 'Pending Review',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Completed & Realized' => 'success',
                         'Delivered (Awaiting DR & SI)' => 'warning',
                         'Approved (Pending Delivery)' => 'info',
@@ -87,13 +91,13 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                 TextColumn::make('warranty_status')
                     ->label('Warranty')
                     ->badge()
-                    ->formatStateUsing(fn(?string $state, $record): string => match ($state) {
-                        PurchaseOrder::WARRANTY_ACTIVE => 'Active (' . ($record->warranty_period === PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS || $record->warranty_period === '2_years' ? '2.5 yrs' : '1 yr') . ')',
+                    ->formatStateUsing(fn (?string $state, $record): string => match ($state) {
+                        PurchaseOrder::WARRANTY_ACTIVE => 'Active ('.($record->warranty_period === PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS || $record->warranty_period === '2_years' ? '2.5 yrs' : '1 yr').')',
                         PurchaseOrder::WARRANTY_EXPIRING => 'Expiring Soon',
                         PurchaseOrder::WARRANTY_EXPIRED => 'Expired',
                         default => 'No Warranty',
                     })
-                    ->color(fn(?string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         PurchaseOrder::WARRANTY_ACTIVE => 'success',
                         PurchaseOrder::WARRANTY_EXPIRING => 'warning',
                         PurchaseOrder::WARRANTY_EXPIRED => 'danger',
@@ -112,12 +116,12 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->label('Approve PO')
                         ->icon('heroicon-o-check')
                         ->color('info')
-                        ->visible(fn($record) => !$record->isApproved())
+                        ->visible(fn ($record) => ! $record->isApproved())
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
                             $record->update(['status' => PurchaseOrder::STATUS_APPROVED]);
                             if ($record->document) {
-                                $record->document->update(['status' => \App\Models\Document::STATUS_VERIFIED]);
+                                $record->document->update(['status' => Document::STATUS_VERIFIED]);
                             }
                             Notification::make()->title('Purchase Order Approved')->body("PO {$record->po_number} is now approved and verified for delivery.")->success()->send();
                         }),
@@ -127,8 +131,8 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->icon('heroicon-o-check-badge')
                         ->color('success')
                         ->tooltip('DR & SI are verified and attached. Mark this purchase order as delivered to deduct inventory and realize sales.')
-                        ->visible(fn(PurchaseOrder $r): bool => $r->isApproved() && $r->hasBothDrAndSi() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
-                        ->modalHeading(fn(PurchaseOrder $record): string => "Mark as Delivered: PO #{$record->po_number}")
+                        ->visible(fn (PurchaseOrder $r): bool => $r->isApproved() && $r->hasBothDrAndSi() && $r->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED)
+                        ->modalHeading(fn (PurchaseOrder $record): string => "Mark as Delivered: PO #{$record->po_number}")
                         ->modalDescription('Both Delivery Receipt (DR) and Sales Invoice (SI) are verified and attached. Confirming delivery will finalize this order, deduct stock from the product catalog/BOM, and record sales in the dashboard.')
                         ->form([
                             DatePicker::make('actual_delivery_date')
@@ -137,13 +141,13 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                                 ->required(),
                             Toggle::make('has_warranty')
                                 ->label('Include Warranty')
-                                ->default(fn($record) => $record->has_warranty ?? true)
+                                ->default(fn ($record) => $record->has_warranty ?? true)
                                 ->live(),
                             Select::make('warranty_period')
                                 ->label('Warranty Period')
                                 ->options(PurchaseOrder::getWarrantyPeriodOptions())
-                                ->default(fn($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
-                                ->visible(fn($get) => (bool) $get('has_warranty')),
+                                ->default(fn ($record) => $record->warranty_period ?? PurchaseOrder::WARRANTY_1_YEAR)
+                                ->visible(fn ($get) => (bool) $get('has_warranty')),
                         ])
                         ->action(function (PurchaseOrder $record, array $data) {
                             try {
@@ -167,8 +171,8 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ->icon('heroicon-o-arrow-up-tray')
                         ->color('primary')
                         ->tooltip('Upload physical Delivery Receipt (DR) and Sales Invoice (SI) hard copies (Images/PDF)')
-                        ->visible(fn(PurchaseOrder $r): bool => $r->isApproved() && !$r->isCompleted())
-                        ->modalHeading(fn(PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
+                        ->visible(fn (PurchaseOrder $r): bool => $r->isApproved() && ! $r->isCompleted())
+                        ->modalHeading(fn (PurchaseOrder $record): string => "Upload Hard Copies (DR & SI): PO #{$record->po_number}")
                         ->modalDescription('Upload physical hard copies of both Delivery Receipt (DR) and Sales Invoice (SI) in PDF or Image format.')
                         ->modalWidth('4xl')
                         ->form([
@@ -190,12 +194,12 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
 
                                         TextInput::make('dr_number')
                                             ->label('DR Number')
-                                            ->default(fn() => DeliveryReceipt::generateNumber())
+                                            ->default(fn () => DeliveryReceipt::generateNumber())
                                             ->required(),
 
                                         DatePicker::make('delivery_date')
                                             ->label('Delivery Date')
-                                            ->default(fn(PurchaseOrder $record) => $record->actual_delivery_date ?? now())
+                                            ->default(fn (PurchaseOrder $record) => $record->actual_delivery_date ?? now())
                                             ->required(),
 
                                         TextInput::make('delivered_by')
@@ -226,7 +230,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
 
                                         TextInput::make('si_number')
                                             ->label('SI Number')
-                                            ->default(fn() => SalesInvoice::generateNumber())
+                                            ->default(fn () => SalesInvoice::generateNumber())
                                             ->required(),
 
                                         DatePicker::make('invoice_date')
@@ -248,7 +252,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                                             ->label('Invoice Total (₱)')
                                             ->numeric()
                                             ->prefix('₱')
-                                            ->default(fn(PurchaseOrder $record) => (float) $record->order_amount)
+                                            ->default(fn (PurchaseOrder $record) => (float) $record->order_amount)
                                             ->required(),
                                     ]),
                                 ]),
@@ -259,7 +263,7 @@ class DeliveryMonitoringPage extends Page implements HasTable, HasForms
                         ])
                         ->action(function (PurchaseOrder $record, array $data) {
                             try {
-                                if (!empty($data['auto_mark_delivered'])) {
+                                if (! empty($data['auto_mark_delivered'])) {
                                     $result = app(OrderFulfillmentService::class)->fulfillOrder($record, $data);
                                     $drNo = $result['delivery_receipt']->dr_number;
                                     $siNo = $result['sales_invoice']->si_number;

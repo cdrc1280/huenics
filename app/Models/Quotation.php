@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\QuotationStatus;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 /**
  * @property int $id
  * @property string $quotation_number
@@ -33,13 +35,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Quotation extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
-    public const STATUS_PENDING      = QuotationStatus::Pending->value;
-    public const STATUS_REVIEWED     = QuotationStatus::Reviewed->value;
-    public const STATUS_APPROVED     = QuotationStatus::Approved->value;
-    public const STATUS_REJECTED     = QuotationStatus::Rejected->value;
-    public const STATUS_CONVERTED    = QuotationStatus::ConvertedToPo->value;
+    public const STATUS_PENDING = QuotationStatus::Pending->value;
+
+    public const STATUS_REVIEWED = QuotationStatus::Reviewed->value;
+
+    public const STATUS_APPROVED = QuotationStatus::Approved->value;
+
+    public const STATUS_REJECTED = QuotationStatus::Rejected->value;
+
+    public const STATUS_CONVERTED = QuotationStatus::ConvertedToPo->value;
 
     protected $fillable = [
         'quotation_number',
@@ -79,15 +85,15 @@ class Quotation extends Model
     {
         return [
             'quotation_date' => 'date',
-            'valid_until'    => 'date',
-            'approved_at'    => 'datetime',
-            'reviewed_at'    => 'datetime',
+            'valid_until' => 'date',
+            'approved_at' => 'datetime',
+            'reviewed_at' => 'datetime',
             'customer_signed_at' => 'datetime',
             'is_official_po' => 'boolean',
             'is_online_request' => 'boolean',
-            'total_amount'   => 'decimal:2',
+            'total_amount' => 'decimal:2',
             'negotiated_amount' => 'decimal:2',
-            'total_cost'     => 'decimal:2',
+            'total_cost' => 'decimal:2',
             'estimated_profit' => 'decimal:2',
         ];
     }
@@ -113,13 +119,13 @@ class Quotation extends Model
     {
         return $this->reviewed_by !== null
             || in_array($this->status, [self::STATUS_REVIEWED, 'reviewed', self::STATUS_APPROVED, 'approved', self::STATUS_CONVERTED, 'converted_to_po'], true)
-            || !empty($this->approved_by);
+            || ! empty($this->approved_by);
     }
 
     public function isApproved(): bool
     {
         return in_array($this->status, [self::STATUS_APPROVED, 'approved'], true)
-            || !empty($this->approved_by);
+            || ! empty($this->approved_by);
     }
 
     public function isRejected(): bool
@@ -143,7 +149,7 @@ class Quotation extends Model
 
     public function canServeAsOfficialPO(): bool
     {
-        return (bool) $this->is_official_po && !empty($this->customer_signature_name);
+        return (bool) $this->is_official_po && ! empty($this->customer_signature_name);
     }
 
     public function document(): BelongsTo
@@ -209,30 +215,30 @@ class Quotation extends Model
 
     public function getIsExpiredAttribute(): bool
     {
-        return $this->valid_until && \Carbon\Carbon::parse($this->valid_until)->isPast();
+        return $this->valid_until && Carbon::parse($this->valid_until)->isPast();
     }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            self::STATUS_PENDING   => 'Pending',
-            self::STATUS_REVIEWED  => 'Reviewed',
-            self::STATUS_APPROVED  => 'Approved',
-            self::STATUS_REJECTED  => 'Rejected / Lost',
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_REVIEWED => 'Reviewed',
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_REJECTED => 'Rejected / Lost',
             self::STATUS_CONVERTED => 'Converted to PO',
-            default                => ucfirst($this->status),
+            default => ucfirst($this->status),
         };
     }
 
     public function getStatusColorAttribute(): string
     {
         return match ($this->status) {
-            self::STATUS_PENDING   => 'warning',
-            self::STATUS_REVIEWED  => 'info',
-            self::STATUS_APPROVED  => 'success',
-            self::STATUS_REJECTED  => 'danger',
+            self::STATUS_PENDING => 'warning',
+            self::STATUS_REVIEWED => 'info',
+            self::STATUS_APPROVED => 'success',
+            self::STATUS_REJECTED => 'danger',
             self::STATUS_CONVERTED => 'primary',
-            default                => 'gray',
+            default => 'gray',
         };
     }
 
@@ -240,8 +246,8 @@ class Quotation extends Model
 
     public static function generateNumber(): string
     {
-        $prefix = 'QT-' . date('Y') . '-';
-        $numbers = static::where('quotation_number', 'like', $prefix . '%')->pluck('quotation_number');
+        $prefix = 'QT-'.date('Y').'-';
+        $numbers = static::where('quotation_number', 'like', $prefix.'%')->pluck('quotation_number');
 
         $maxSeq = 0;
         foreach ($numbers as $num) {
@@ -252,11 +258,11 @@ class Quotation extends Model
         }
 
         $nextSeq = $maxSeq + 1;
-        $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+        $candidate = $prefix.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
 
         while (static::where('quotation_number', $candidate)->exists()) {
             $nextSeq++;
-            $candidate = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
         }
 
         return $candidate;

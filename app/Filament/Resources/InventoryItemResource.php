@@ -5,9 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InventoryItemResource\Pages;
 use App\Models\InventoryItem;
 use App\Models\Product;
-use App\Models\User;
+use App\Models\ProductComponent;
 use App\Services\InventoryReportService;
-use App\Services\InventoryService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -17,18 +16,14 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
@@ -39,6 +34,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InventoryItemResource extends Resource
@@ -46,8 +42,11 @@ class InventoryItemResource extends Resource
     protected static ?string $model = InventoryItem::class;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-archive-box';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Warehouse & Inventory';
+
     protected static ?string $navigationLabel = 'Inventory Stock Ledger';
+
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
@@ -67,12 +66,12 @@ class InventoryItemResource extends Resource
         return auth()->user()?->canManageInventory() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canManageInventory() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -181,7 +180,7 @@ class InventoryItemResource extends Resource
             ->columns([
                 TextColumn::make('inbound_date')
                     ->label('Date')
-                    ->state(fn(InventoryItem $r) => $r->inbound_date ?: $r->created_at)
+                    ->state(fn (InventoryItem $r) => $r->inbound_date ?: $r->created_at)
                     ->date('m/d/Y')
                     ->sortable()
                     ->placeholder('—')
@@ -193,7 +192,7 @@ class InventoryItemResource extends Resource
                     ->sortable()
                     ->default('—')
                     ->weight('medium')
-                    ->tooltip(fn(InventoryItem $r) => "PO Reference: " . ($r->po_number ?: 'None')),
+                    ->tooltip(fn (InventoryItem $r) => 'PO Reference: '.($r->po_number ?: 'None')),
 
                 TextColumn::make('supplier_name')
                     ->label('Suppliers Name')
@@ -201,7 +200,7 @@ class InventoryItemResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->default('—')
-                    ->tooltip(fn(InventoryItem $r) => "Supplier: " . ($r->supplier_name ?: 'None')),
+                    ->tooltip(fn (InventoryItem $r) => 'Supplier: '.($r->supplier_name ?: 'None')),
 
                 TextColumn::make('product.sku')
                     ->label('S.K.U.')
@@ -209,7 +208,7 @@ class InventoryItemResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->default('—')
-                    ->tooltip(fn(InventoryItem $r) => "SKU: " . ($r->product?->sku ?: 'N/A')),
+                    ->tooltip(fn (InventoryItem $r) => 'SKU: '.($r->product?->sku ?: 'N/A')),
 
                 TextColumn::make('product.product_code')
                     ->label('Item Code')
@@ -217,7 +216,7 @@ class InventoryItemResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->default('—')
-                    ->tooltip(fn(InventoryItem $r) => "Product Code: " . ($r->product?->product_code ?: 'N/A')),
+                    ->tooltip(fn (InventoryItem $r) => 'Product Code: '.($r->product?->product_code ?: 'N/A')),
 
                 ImageColumn::make('product.image_path')
                     ->label('Pictures')
@@ -230,29 +229,29 @@ class InventoryItemResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->wrap()
-                    ->tooltip(fn(InventoryItem $r) => "Particulars: " . ($r->product?->canonical_name ?: 'N/A')),
+                    ->tooltip(fn (InventoryItem $r) => 'Particulars: '.($r->product?->canonical_name ?: 'N/A')),
 
                 TextColumn::make('quantity_on_hand')
                     ->label('Balance')
                     ->numeric(0)
                     ->sortable()
                     ->badge()
-                    ->color(fn(InventoryItem $record): string => match (true) {
+                    ->color(fn (InventoryItem $record): string => match (true) {
                         $record->quantity_on_hand <= 0 => 'danger',
                         $record->reorder_point && $record->quantity_on_hand <= $record->reorder_point => 'warning',
                         default => 'success',
                     })
-                    ->formatStateUsing(fn($state, InventoryItem $r) => number_format((float) $state, 0) . ' ' . ($r->unit ?: 'pcs'))
-                    ->tooltip(fn(InventoryItem $r) => "Current stock balance: {$r->quantity_on_hand} {$r->unit}"),
+                    ->formatStateUsing(fn ($state, InventoryItem $r) => number_format((float) $state, 0).' '.($r->unit ?: 'pcs'))
+                    ->tooltip(fn (InventoryItem $r) => "Current stock balance: {$r->quantity_on_hand} {$r->unit}"),
 
                 TextColumn::make('is_owned')
                     ->label('Ownership')
                     ->badge()
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Company-Owned' : 'Consignment / Client-Supplied')
-                    ->color(fn(bool $state): string => $state ? 'success' : 'warning')
-                    ->icon(fn(bool $state): string => $state ? 'heroicon-m-check-badge' : 'heroicon-m-exclamation-triangle')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Company-Owned' : 'Consignment / Client-Supplied')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'warning')
+                    ->icon(fn (bool $state): string => $state ? 'heroicon-m-check-badge' : 'heroicon-m-exclamation-triangle')
                     ->sortable()
-                    ->tooltip(fn(InventoryItem $record): string => $record->is_owned
+                    ->tooltip(fn (InventoryItem $record): string => $record->is_owned
                         ? 'Directly owned by Huenics Industrial Supply'
                         : 'Client-supplied, consigned, or vendor-held inventory'
                     ),
@@ -265,10 +264,11 @@ class InventoryItemResource extends Resource
                         if ($parentCount > 0) {
                             return "Parent ({$parentCount} Parts)";
                         }
-                        $usages = \App\Models\ProductComponent::where('component_product_id', $record->product_id)->count();
+                        $usages = ProductComponent::where('component_product_id', $record->product_id)->count();
                         if ($usages > 0) {
                             return "Sub-Component ({$usages})";
                         }
+
                         return 'Standard';
                     })
                     ->color(fn (string $state): string => match (true) {
@@ -279,12 +279,14 @@ class InventoryItemResource extends Resource
                     ->tooltip(function (InventoryItem $record): string {
                         if ($record->product && $record->product->components->isNotEmpty()) {
                             $partNames = $record->product->components->pluck('component_name')->filter()->take(3)->implode(', ');
-                            return "Parent assembly with sub-components: " . ($partNames ?: 'Multiple parts');
+
+                            return 'Parent assembly with sub-components: '.($partNames ?: 'Multiple parts');
                         }
-                        $parents = \App\Models\Product::whereHas('components', fn($q) => $q->where('component_product_id', $record->product_id))->pluck('canonical_name')->take(2)->implode(', ');
+                        $parents = Product::whereHas('components', fn ($q) => $q->where('component_product_id', $record->product_id))->pluck('canonical_name')->take(2)->implode(', ');
                         if ($parents) {
-                            return "Sub-component used in: " . $parents;
+                            return 'Sub-component used in: '.$parents;
                         }
+
                         return 'Standard standalone inventory product';
                     }),
 
@@ -292,22 +294,29 @@ class InventoryItemResource extends Resource
                     ->label('BOM Build Capacity')
                     ->badge()
                     ->state(function (InventoryItem $record): string {
-                        if (!$record->product || !$record->product->has_sub_components) {
+                        if (! $record->product || ! $record->product->has_sub_components) {
                             return '—';
                         }
                         $capacity = $record->product->bom_stock_capacity;
-                        return $capacity !== null ? number_format($capacity, 0) . ' units' : 'No tracked parts';
+
+                        return $capacity !== null ? number_format($capacity, 0).' units' : 'No tracked parts';
                     })
                     ->color(function (InventoryItem $record): string {
-                        if (!$record->product || !$record->product->has_sub_components) return 'gray';
+                        if (! $record->product || ! $record->product->has_sub_components) {
+                            return 'gray';
+                        }
                         $capacity = $record->product->bom_stock_capacity;
-                        if ($capacity === null) return 'gray';
+                        if ($capacity === null) {
+                            return 'gray';
+                        }
+
                         return $capacity <= 0 ? 'danger' : ($capacity < 10 ? 'warning' : 'success');
                     })
                     ->tooltip(function (InventoryItem $record): string {
-                        if (!$record->product || !$record->product->has_sub_components) {
+                        if (! $record->product || ! $record->product->has_sub_components) {
                             return 'Standalone product (no BOM parts configured)';
                         }
+
                         return 'Calculated maximum buildable finished goods based on available warehouse stocks of sub-components.';
                     }),
 
@@ -319,7 +328,7 @@ class InventoryItemResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->default('—')
-                    ->tooltip(fn(InventoryItem $r) => "Storage Location: " . ($r->location ?: 'Unassigned')),
+                    ->tooltip(fn (InventoryItem $r) => 'Storage Location: '.($r->location ?: 'Unassigned')),
 
                 TextColumn::make('customer_name')
                     ->label('Customer Name')
@@ -389,13 +398,13 @@ class InventoryItemResource extends Resource
                             $query->whereHas('product.components');
                         } elseif ($data['value'] === 'component') {
                             $query->whereHas('product', function ($pq) {
-                                $pq->whereIn('id', \App\Models\ProductComponent::whereNotNull('component_product_id')->select('component_product_id'));
+                                $pq->whereIn('id', ProductComponent::whereNotNull('component_product_id')->select('component_product_id'));
                             });
                         } elseif ($data['value'] === 'standalone') {
                             $query->whereDoesntHave('product.components')
-                                  ->whereHas('product', function ($pq) {
-                                      $pq->whereNotIn('id', \App\Models\ProductComponent::whereNotNull('component_product_id')->select('component_product_id'));
-                                  });
+                                ->whereHas('product', function ($pq) {
+                                    $pq->whereNotIn('id', ProductComponent::whereNotNull('component_product_id')->select('component_product_id'));
+                                });
                         }
                     }),
 
@@ -407,23 +416,22 @@ class InventoryItemResource extends Resource
                         ->label('View BOM Hierarchy')
                         ->icon('heroicon-o-puzzle-piece')
                         ->color('info')
-                        ->visible(fn(InventoryItem $record): bool => 
-                            ($record->product && $record->product->components()->exists()) ||
-                            \App\Models\ProductComponent::where('component_product_id', $record->product_id)->exists()
+                        ->visible(fn (InventoryItem $record): bool => ($record->product && $record->product->components()->exists()) ||
+                            ProductComponent::where('component_product_id', $record->product_id)->exists()
                         )
-                        ->modalHeading(fn(InventoryItem $record): string => "BOM Hierarchy: {$record->product?->canonical_name}")
+                        ->modalHeading(fn (InventoryItem $record): string => "BOM Hierarchy: {$record->product?->canonical_name}")
                         ->modalDescription('Parent-child assembly relationship, component stock availability, and unit cost breakdown')
                         ->modalWidth('5xl')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Close')
                         ->modalContent(function (InventoryItem $record) {
-                            $parentComponents = $record->product 
-                                ? $record->product->components()->with(['componentProduct.inventoryItem'])->get() 
+                            $parentComponents = $record->product
+                                ? $record->product->components()->with(['componentProduct.inventoryItem'])->get()
                                 : collect();
-                            $usedInParents = \App\Models\Product::whereHas('components', fn($q) => $q->where('component_product_id', $record->product_id))
+                            $usedInParents = Product::whereHas('components', fn ($q) => $q->where('component_product_id', $record->product_id))
                                 ->with([
                                     'inventoryItem',
-                                    'components' => fn($q) => $q->where('component_product_id', $record->product_id),
+                                    'components' => fn ($q) => $q->where('component_product_id', $record->product_id),
                                 ])->get();
 
                             return view('filament.components.inventory-bom-modal', [
@@ -434,7 +442,7 @@ class InventoryItemResource extends Resource
                         }),
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(InventoryItem $record): bool => $record->trashed()),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (InventoryItem $record): bool => $record->trashed()),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
@@ -445,9 +453,10 @@ class InventoryItemResource extends Resource
                         ->color('success')
                         ->action(function (Collection $records) {
                             $csv = app(InventoryReportService::class)->exportInventoryReport($records);
+
                             return response()->streamDownload(function () use ($csv) {
                                 echo $csv;
-                            }, 'huenics-inventory-selected-' . date('Ymd-His') . '.csv', [
+                            }, 'huenics-inventory-selected-'.date('Ymd-His').'.csv', [
                                 'Content-Type' => 'text/csv; charset=UTF-8',
                             ]);
                         }),
@@ -460,9 +469,9 @@ class InventoryItemResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListInventoryItems::route('/'),
+            'index' => Pages\ListInventoryItems::route('/'),
             'create' => Pages\CreateInventoryItem::route('/create'),
-            'edit'   => Pages\EditInventoryItem::route('/{record}/edit'),
+            'edit' => Pages\EditInventoryItem::route('/{record}/edit'),
         ];
     }
 }

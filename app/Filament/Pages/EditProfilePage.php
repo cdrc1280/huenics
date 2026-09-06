@@ -19,10 +19,15 @@ class EditProfilePage extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationLabel = 'My Profile & E-Signature';
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-circle';
+
     protected static ?string $slug = 'edit-profile';
+
     protected static UnitEnum|string|null $navigationGroup = 'System Administration';
+
     protected string $view = 'filament.pages.edit-profile-page';
+
     protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
@@ -91,7 +96,7 @@ class EditProfilePage extends Page implements HasForms
                 'e_signature_path' => $state['e_signature_path'] ?? $user->e_signature_path,
             ];
 
-            if (!empty($state['password'])) {
+            if (! empty($state['password'])) {
                 $updateData['password'] = Hash::make($state['password']);
             }
 

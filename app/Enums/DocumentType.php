@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum DocumentType: string implements HasLabel, HasColor, HasIcon
+enum DocumentType: string implements HasColor, HasIcon, HasLabel
 {
     case VendorsAgreement = 'vendors_agreement';
     case PurchaseOrder = 'purchase_order';

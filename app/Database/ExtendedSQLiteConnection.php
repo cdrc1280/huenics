@@ -10,6 +10,7 @@ class ExtendedSQLiteConnection extends SQLiteConnection
     {
         $pdo = parent::getPdo();
         $this->registerSqlitePolyfills($pdo);
+
         return $pdo;
     }
 
@@ -17,12 +18,13 @@ class ExtendedSQLiteConnection extends SQLiteConnection
     {
         $pdo = parent::getReadPdo();
         $this->registerSqlitePolyfills($pdo);
+
         return $pdo;
     }
 
     protected function registerSqlitePolyfills($pdo): void
     {
-        if (!$pdo || !method_exists($pdo, 'sqliteCreateFunction')) {
+        if (! $pdo || ! method_exists($pdo, 'sqliteCreateFunction')) {
             return;
         }
 
@@ -39,7 +41,7 @@ class ExtendedSQLiteConnection extends SQLiteConnection
                 return null;
             }
             $data = json_decode((string) $json, true);
-            if (!is_array($data)) {
+            if (! is_array($data)) {
                 return null;
             }
 

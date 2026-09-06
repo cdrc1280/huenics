@@ -31,4 +31,3 @@ enum WarrantyPeriod: string implements HasLabel
         };
     }
 }
-

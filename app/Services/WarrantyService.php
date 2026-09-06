@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\PurchaseOrder;
+use App\Models\User;
+use App\Notifications\WarrantyExpiringNotification;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class WarrantyService
@@ -22,19 +25,20 @@ class WarrantyService
      */
     public function activateWarranty(PurchaseOrder $po): void
     {
-        if (!$po->has_warranty || !$po->actual_delivery_date || $po->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED) {
+        if (! $po->has_warranty || ! $po->actual_delivery_date || $po->delivery_status !== PurchaseOrder::DELIVERY_DELIVERED) {
             $this->deactivateWarranty($po);
+
             return;
         }
 
-        $months         = $this->periodToMonths($po->warranty_period);
-        $startDate      = $po->actual_delivery_date;
-        $endDate        = $startDate->copy()->addMonths($months);
+        $months = $this->periodToMonths($po->warranty_period);
+        $startDate = $po->actual_delivery_date;
+        $endDate = $startDate->copy()->addMonths($months);
 
         $po->updateQuietly([
             'warranty_start_date' => $startDate,
-            'warranty_end_date'   => $endDate,
-            'warranty_status'     => $this->resolveStatus($endDate),
+            'warranty_end_date' => $endDate,
+            'warranty_status' => $this->resolveStatus($endDate),
         ]);
     }
 
@@ -44,9 +48,9 @@ class WarrantyService
     public function deactivateWarranty(PurchaseOrder $po): void
     {
         $po->updateQuietly([
-            'warranty_status'     => PurchaseOrder::WARRANTY_NONE,
+            'warranty_status' => PurchaseOrder::WARRANTY_NONE,
             'warranty_start_date' => null,
-            'warranty_end_date'   => null,
+            'warranty_end_date' => null,
         ]);
     }
 
@@ -55,9 +59,10 @@ class WarrantyService
      */
     public function computeStatus(PurchaseOrder $po): string
     {
-        if (!$po->has_warranty || !$po->warranty_end_date) {
+        if (! $po->has_warranty || ! $po->warranty_end_date) {
             return PurchaseOrder::WARRANTY_NONE;
         }
+
         return $this->resolveStatus($po->warranty_end_date);
     }
 
@@ -99,7 +104,7 @@ class WarrantyService
         return $updated;
     }
 
-    protected function resolveStatus(\Carbon\Carbon|\Illuminate\Support\Carbon $endDate): string
+    protected function resolveStatus(Carbon|\Illuminate\Support\Carbon $endDate): string
     {
         if ($endDate->isPast()) {
             return PurchaseOrder::WARRANTY_EXPIRED;
@@ -107,19 +112,20 @@ class WarrantyService
         if ($endDate->lte(now()->addDays(30))) {
             return PurchaseOrder::WARRANTY_EXPIRING;
         }
+
         return PurchaseOrder::WARRANTY_ACTIVE;
     }
 
     protected function triggerExpiringNotification(PurchaseOrder $po): void
     {
-        $recipients = \App\Models\User::whereIn('role', [
-            \App\Models\User::ROLE_ADMIN,
-            \App\Models\User::ROLE_SALES_EXECUTIVE,
-            \App\Models\User::ROLE_CEO,
+        $recipients = User::whereIn('role', [
+            User::ROLE_ADMIN,
+            User::ROLE_SALES_EXECUTIVE,
+            User::ROLE_CEO,
         ])->get();
 
         foreach ($recipients as $user) {
-            $user->notify(new \App\Notifications\WarrantyExpiringNotification($po));
+            $user->notify(new WarrantyExpiringNotification($po));
         }
     }
 }

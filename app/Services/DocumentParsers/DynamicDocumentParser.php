@@ -3,14 +3,12 @@
 namespace App\Services\DocumentParsers;
 
 use App\Models\Document;
-use App\Models\DocumentLineItem;
-use App\Models\DocumentTotal;
 use App\Models\Product;
 use App\Models\ProductAlias;
 use App\Models\Project;
 use App\Models\Vendor;
 use App\Models\VendorDocumentLayout;
-use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -24,7 +22,6 @@ class DynamicDocumentParser
     /**
      * Ingest and parse a document.
      *
-     * @param Document $document
      * @return array{success: bool, confidence: float, line_items_count: int, message: string}
      */
     public function parseDocument(Document $document): array
@@ -36,20 +33,21 @@ class DynamicDocumentParser
         if ($filePath && file_exists($filePath)) {
             $extractionResult = $this->textExtractor->extract($filePath);
             $fullText = $this->preprocessExtractedText($this->sanitizeUtf8($extractionResult['text']));
-            $lines = array_map(fn($l) => $this->sanitizeUtf8($l), $extractionResult['lines']);
+            $lines = array_map(fn ($l) => $this->sanitizeUtf8($l), $extractionResult['lines']);
             $document->raw_extracted_text = $fullText;
-            if (!empty($extractionResult['companion_pdf'])) {
+            if (! empty($extractionResult['companion_pdf'])) {
                 $document->companion_pdf_path = $extractionResult['companion_pdf'];
             }
-        } elseif (!empty($document->raw_extracted_text)) {
+        } elseif (! empty($document->raw_extracted_text)) {
             $fullText = $this->preprocessExtractedText($this->sanitizeUtf8($document->raw_extracted_text));
-            $lines = array_map(fn($l) => $this->sanitizeUtf8($l), explode("\n", $fullText));
+            $lines = array_map(fn ($l) => $this->sanitizeUtf8($l), explode("\n", $fullText));
             $document->raw_extracted_text = $fullText;
         } else {
             $document->update([
                 'status' => Document::STATUS_FAILED,
                 'failure_reason' => "Physical file not found on disk: {$document->disk_path}",
             ]);
+
             return ['success' => false, 'confidence' => 0, 'line_items_count' => 0, 'message' => 'File not found'];
         }
 
@@ -60,12 +58,12 @@ class DynamicDocumentParser
         }
 
         // 3. Resolve Vendor if not set
-        if (!$document->vendor_id) {
+        if (! $document->vendor_id) {
             $document->vendor_id = $this->detectVendorId($fullText);
         }
 
         // 4. Resolve Project if not set
-        if (!$document->project_id) {
+        if (! $document->project_id) {
             $document->project_id = $this->detectProjectId($fullText);
         }
 
@@ -74,25 +72,25 @@ class DynamicDocumentParser
 
         // 6. Extract Header metadata
         $headerData = $this->extractHeaderMetadata($layout, $fullText, $lines, $document->document_type);
-        if (!empty($headerData['document_number'])) {
+        if (! empty($headerData['document_number'])) {
             $document->document_number = $headerData['document_number'];
         }
-        if (!empty($headerData['document_date'])) {
+        if (! empty($headerData['document_date'])) {
             $document->document_date = $headerData['document_date'];
         }
-        if (!empty($headerData['customer_name'])) {
+        if (! empty($headerData['customer_name'])) {
             $document->customer_name = $headerData['customer_name'];
         }
-        if (!empty($headerData['customer_company'])) {
+        if (! empty($headerData['customer_company'])) {
             $document->customer_company = $headerData['customer_company'];
         }
-        if (!empty($headerData['project_name'])) {
+        if (! empty($headerData['project_name'])) {
             $document->project_name = $headerData['project_name'];
         }
-        if (!empty($headerData['project_location'])) {
+        if (! empty($headerData['project_location'])) {
             $document->project_location = $headerData['project_location'];
         }
-        if (!empty($headerData['phone_no'])) {
+        if (! empty($headerData['phone_no'])) {
             $document->phone_no = $headerData['phone_no'];
         }
 
@@ -192,6 +190,7 @@ class DynamicDocumentParser
                 return $vendor->id;
             }
         }
+
         return $vendors->first()?->id;
     }
 
@@ -209,6 +208,7 @@ class DynamicDocumentParser
                 return $project->id;
             }
         }
+
         return $projects->first()?->id;
     }
 
@@ -289,7 +289,7 @@ class DynamicDocumentParser
         if (preg_match('/(?:Customer\s*(?:Name)?|Customs|Client|Sold\s*To|Attention\s*To|Attn|Attention)\s*[:\.\-]?\s*([^\r\n]+)/i', $fullText, $m)) {
             $cand = trim(preg_replace('/\s+(?:Company|Compmy|Address|Mdress|For\s*Project|Project|Date).*/i', '', $m[1]));
             $cand = preg_replace('/^(?:No\.?\s*[\d\-]+|\d+)\s*/i', '', $cand);
-            if (!empty($cand) && !preg_match('/^(?:SIR\/MA\'AM|SIR|MA\'AM|N\/A|NONE|TOTAL.*)$/i', $cand)) {
+            if (! empty($cand) && ! preg_match('/^(?:SIR\/MA\'AM|SIR|MA\'AM|N\/A|NONE|TOTAL.*)$/i', $cand)) {
                 $data['customer_name'] = trim(preg_replace('/\s+/', ' ', $cand));
             }
         }
@@ -335,7 +335,7 @@ class DynamicDocumentParser
             if (preg_match('/VAF\s*[#]\s*([A-Za-z0-9\-\s\.\/]+?)(?=\s*[\-\–]\s*(?:Palanza|Project|Rev)|[\r\n]|$)/i', $fullText, $m)) {
                 $cand = trim(preg_replace('/\s+/', ' ', $m[1]));
                 if (preg_match('/\d/', $cand)) {
-                    $candidates[] = ['value' => 'VAF#' . $cand, 'priority' => 100];
+                    $candidates[] = ['value' => 'VAF#'.$cand, 'priority' => 100];
                 }
             }
 
@@ -350,7 +350,7 @@ class DynamicDocumentParser
             // Labeled format: "Quotation No: 261001- P" or "Quotation No. VAF-2026-081"
             if (preg_match('/Quotation\s*(?:No\.?|#|Number)\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/\#]+?)(?=\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\s*[\r\n]|$)/i', $fullText, $m)) {
                 $cand = trim(preg_replace('/\s+$/', '', $m[1]));
-                if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                if (preg_match('/\d/', $cand) && ! preg_match($rejectedKeywords, $cand)) {
                     $candidates[] = ['value' => $cand, 'priority' => 90];
                 }
             }
@@ -361,7 +361,7 @@ class DynamicDocumentParser
             // Labeled PO format: "P.O. No: PO-2026-0001", "P.O. No: 4010027093", "PO# 12345"
             if (preg_match('/\b(?:P\.?O\.?|Purchase\s*Order)\s*(?:No\.?|#|Number|[:\.\-])\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
                 $cand = trim($m[1]);
-                if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+                if (preg_match('/\d/', $cand) && ! preg_match($rejectedKeywords, $cand)) {
                     $candidates[] = ['value' => $cand, 'priority' => 100];
                 }
             }
@@ -375,7 +375,7 @@ class DynamicDocumentParser
         // ─── Order Slip / Sales Order patterns ────────────────────────────
         if (preg_match('/(?:Order\s*Slip|S\.?O\.?)\s*[#]?\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{3,25})/i', $fullText, $m)) {
             $cand = trim($m[1]);
-            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+            if (preg_match('/\d/', $cand) && ! preg_match($rejectedKeywords, $cand)) {
                 $candidates[] = ['value' => $cand, 'priority' => 85];
             }
         }
@@ -384,7 +384,7 @@ class DynamicDocumentParser
         // Generic "No." at line start
         if (preg_match('/(?:^|\n|\r)\s*(?:No\.?|NO)\s*[:\.\-]?\s*([A-Za-z0-9\-\_\/]{4,25})/i', $fullText, $m)) {
             $cand = trim($m[1]);
-            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+            if (preg_match('/\d/', $cand) && ! preg_match($rejectedKeywords, $cand)) {
                 $candidates[] = ['value' => $cand, 'priority' => 70];
             }
         }
@@ -392,7 +392,7 @@ class DynamicDocumentParser
         // Generic labeled document number (broadest)
         if (preg_match('/(?:Quotation|Quote|PO|P\.O\.|Order\s*Slip|S\.O\.|Sales\s*Order|Invoice|SI|DR|Delivery\s*Receipt)\s*(?:No\.?|NO|Number|\#)?\s*[:\.\-]?\s*([A-Za-z0-9\-\s\.\_\/\#]+?)(?=\s+(?:Date|Dated|Customer|Company|Address|Page|For|Phone|Project)|\s*[\r\n]|$)/i', $fullText, $m)) {
             $cand = trim(preg_replace('/\s+$/', '', $m[1]));
-            if (preg_match('/\d/', $cand) && !preg_match($rejectedKeywords, $cand)) {
+            if (preg_match('/\d/', $cand) && ! preg_match($rejectedKeywords, $cand)) {
                 $candidates[] = ['value' => $cand, 'priority' => 60];
             }
         }
@@ -402,7 +402,7 @@ class DynamicDocumentParser
         }
 
         // Sort by priority descending, pick highest
-        usort($candidates, fn($a, $b) => $b['priority'] <=> $a['priority']);
+        usort($candidates, fn ($a, $b) => $b['priority'] <=> $a['priority']);
 
         // Clean the winning candidate: trim trailing/leading whitespace, trailing periods, trailing dashes
         $winner = trim($candidates[0]['value']);
@@ -419,17 +419,17 @@ class DynamicDocumentParser
         $datePattern = '([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|[0-9]{4}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{1,2})';
 
         // Priority 1: Explicit order/quotation date labels (excludes "Delivery Date")
-        if (preg_match('/(?:Quotation\s*Date|PO\s*Date|Order\s*Date)\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+        if (preg_match('/(?:Quotation\s*Date|PO\s*Date|Order\s*Date)\s*[:\.]?\s*'.$datePattern.'/i', $fullText, $m)) {
             return $this->fieldExtractor->postProcess($m[1], 'parse_date');
         }
 
         // Priority 2: Generic "Date:" label — but NOT if preceded by "Delivery" or "Expected"
-        if (preg_match('/(?<!Delivery\s)(?<!Expected\s)(?<!Expiry\s)(?<!Warranty\s)\bDate\b\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+        if (preg_match('/(?<!Delivery\s)(?<!Expected\s)(?<!Expiry\s)(?<!Warranty\s)\bDate\b\s*[:\.]?\s*'.$datePattern.'/i', $fullText, $m)) {
             return $this->fieldExtractor->postProcess($m[1], 'parse_date');
         }
 
         // Priority 3: "Dated" label
-        if (preg_match('/\bDated\s*[:\.]?\s*' . $datePattern . '/i', $fullText, $m)) {
+        if (preg_match('/\bDated\s*[:\.]?\s*'.$datePattern.'/i', $fullText, $m)) {
             return $this->fieldExtractor->postProcess($m[1], 'parse_date');
         }
 
@@ -456,40 +456,42 @@ class DynamicDocumentParser
                     $rawDesc = trim(preg_replace('/\s+/', ' ', $m['desc']));
                     $rawDesc = preg_replace('/^(?:(?:Item\s*No|Material\s*Code|Qty|UoM|Material\s*Description|Unit\s*Cost|Total\s*Cost|White)\s*)+/i', '', $rawDesc);
                     $rawDesc = trim($rawDesc);
-                    if (empty($rawDesc) || preg_match('/^[\d\,\.\s\-\–\—₱P]+$/', $rawDesc)) continue;
+                    if (empty($rawDesc) || preg_match('/^[\d\,\.\s\-\–\—₱P]+$/', $rawDesc)) {
+                        continue;
+                    }
 
-                $itemNo = !empty($m['itemNo']) ? (int) $m['itemNo'] : null;
-                $matCode = !empty($m['materialCode']) ? trim($m['materialCode']) : null;
-                $qty = (float) str_replace(',', '', $m['qty']);
-                $unit = strtolower(trim($m['unit']));
-                $unitPrice = (float) str_replace(',', '', $m['unitCost']);
-                $printedTotal = (float) str_replace(',', '', $m['totalCost']);
-                $computedTotal = round($qty * $unitPrice, 2);
-                $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
+                    $itemNo = ! empty($m['itemNo']) ? (int) $m['itemNo'] : null;
+                    $matCode = ! empty($m['materialCode']) ? trim($m['materialCode']) : null;
+                    $qty = (float) str_replace(',', '', $m['qty']);
+                    $unit = strtolower(trim($m['unit']));
+                    $unitPrice = (float) str_replace(',', '', $m['unitCost']);
+                    $printedTotal = (float) str_replace(',', '', $m['totalCost']);
+                    $computedTotal = round($qty * $unitPrice, 2);
+                    $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
 
-                $fingerprint = md5(($itemNo ?? '') . '|' . strtolower($rawDesc) . '|' . $qty . '|' . $unitPrice . '|' . $printedTotal);
-                if (isset($seenFingerprints[$fingerprint])) {
-                    continue;
+                    $fingerprint = md5(($itemNo ?? '').'|'.strtolower($rawDesc).'|'.$qty.'|'.$unitPrice.'|'.$printedTotal);
+                    if (isset($seenFingerprints[$fingerprint])) {
+                        continue;
+                    }
+                    $seenFingerprints[$fingerprint] = true;
+
+                    $items[] = [
+                        'line_no' => $lineIndex++,
+                        'material_code' => $this->sanitizeUtf8($matCode),
+                        'description' => $this->sanitizeUtf8($rawDesc),
+                        'qty' => $qty,
+                        'unit' => $this->sanitizeUtf8($unit),
+                        'unit_price' => $unitPrice,
+                        'discounted_price' => null,
+                        'printed_total' => $printedTotal,
+                        'computed_total' => $computedTotal,
+                        'total_mismatch' => $totalMismatch,
+                        'product_id' => $this->matchProductByDescription($rawDesc, $document->vendor_id, $matCode, $unitPrice, $unit),
+                        'raw_line_text' => $this->sanitizeUtf8($m[0]),
+                    ];
                 }
-                $seenFingerprints[$fingerprint] = true;
-
-                $items[] = [
-                    'line_no' => $lineIndex++,
-                    'material_code' => $this->sanitizeUtf8($matCode),
-                    'description' => $this->sanitizeUtf8($rawDesc),
-                    'qty' => $qty,
-                    'unit' => $this->sanitizeUtf8($unit),
-                    'unit_price' => $unitPrice,
-                    'discounted_price' => null,
-                    'printed_total' => $printedTotal,
-                    'computed_total' => $computedTotal,
-                    'total_mismatch' => $totalMismatch,
-                    'product_id' => $this->matchProductByDescription($rawDesc, $document->vendor_id, $matCode, $unitPrice, $unit),
-                    'raw_line_text' => $this->sanitizeUtf8($m[0]),
-                ];
             }
         }
-    }
 
         // ─── Strategy B: Quotation Row Scanner ─────────────────────────────
         // Format: [Item Code] [Description] [Qty] [Unit] [UnitPrice] [DiscountedPrice] [Total]
@@ -540,7 +542,7 @@ class DynamicDocumentParser
             preg_match_all($rowPattern, $tableSection, $matches, PREG_SET_ORDER);
 
             foreach ($matches as $m) {
-                $itemCode = !empty($m['itemCode']) ? trim($m['itemCode']) : null;
+                $itemCode = ! empty($m['itemCode']) ? trim($m['itemCode']) : null;
                 $rawDesc = trim($m['desc']);
 
                 $rawDesc = preg_replace('/^(?:(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total|Price)\s*)+/i', '', $rawDesc);
@@ -551,7 +553,7 @@ class DynamicDocumentParser
                     continue;
                 }
 
-                if (!$itemCode && preg_match('/^(HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+(.*)$/i', $rawDesc, $cm)) {
+                if (! $itemCode && preg_match('/^(HISI\s*[\-\_]?\s*(?:MTL\-\s*\d+W|[A-Z0-9\-\_]+)|[A-Z0-9]{2,10}\-[A-Z0-9\-\_]+)\s+(.*)$/i', $rawDesc, $cm)) {
                     $itemCode = trim($cm[1]);
                     $rawDesc = trim($cm[2]);
                 }
@@ -559,7 +561,7 @@ class DynamicDocumentParser
                 $qty = (float) str_replace(',', '', $m['qty']);
                 $unit = strtolower(trim($m['unit']));
                 $unitPrice = (float) str_replace(',', '', $m['unitPrice']);
-                $discPrice = !empty($m['discPrice']) ? (float) str_replace(',', '', $m['discPrice']) : null;
+                $discPrice = ! empty($m['discPrice']) ? (float) str_replace(',', '', $m['discPrice']) : null;
                 $printedTotal = (float) str_replace(',', '', $m['total']);
 
                 $effectiveUnitPrice = ($discPrice !== null && $discPrice > 0) ? $discPrice : $unitPrice;
@@ -575,7 +577,7 @@ class DynamicDocumentParser
 
                 $totalMismatch = abs($printedTotal - $computedTotal) > 0.01;
 
-                $fingerprint = md5(($itemCode ?? '') . '|' . strtolower($rawDesc) . '|' . $qty . '|' . $unitPrice . '|' . ($discPrice ?? 0) . '|' . $printedTotal);
+                $fingerprint = md5(($itemCode ?? '').'|'.strtolower($rawDesc).'|'.$qty.'|'.$unitPrice.'|'.($discPrice ?? 0).'|'.$printedTotal);
                 if (isset($seenFingerprints[$fingerprint])) {
                     continue;
                 }
@@ -606,7 +608,9 @@ class DynamicDocumentParser
 
             foreach ($lines as $rawLine) {
                 $line = trim($this->sanitizeUtf8($rawLine));
-                if (empty($line)) continue;
+                if (empty($line)) {
+                    continue;
+                }
 
                 if (preg_match('/^(?:HUENICS|Colors\s*•|VENDORS\s*AGREEMENT|Quotation|Customer|Customs|Company|Compmy|Address|Mdress|2F\s*Starmall|For\s*Project|Project|Project\s*Location|Phone|Item|Product|Description|Discounted|Price|Unit\s*Price|Total|Total\s*Amount|Negotiated\s*Amount|Prices\s*are\s*subject|Terms\s*and\s*Conditions|Validity|Stock\s*Availability|Terms\s*Of\s*Delivery|Payment\s*Terms|Remarks|NOTES|Minimum\s*amount|Return|Gate\s*fees|Please\s*inspect|Special\s*order|I\/We\s*hereby|Customer\'s\s*Name|Prepared\s*by|Approved\s*by|Customer\s*Service|Office\s*Add|THE\s*WARRANTY)/i', $line)) {
                     continue;
@@ -628,7 +632,7 @@ class DynamicDocumentParser
                     $discountedPrice = (float) str_replace(',', '', $m[5]);
                     $tStr = trim($m[6]);
                     $tStr = preg_replace('/(?:₱|P|PHP)?\s*/i', '', $tStr);
-                    $printedTotal = !empty($tStr) ? (float) str_replace(',', '', $tStr) : round($qty * $discountedPrice, 2);
+                    $printedTotal = ! empty($tStr) ? (float) str_replace(',', '', $tStr) : round($qty * $discountedPrice, 2);
                     $matched = true;
                 } elseif (preg_match('/^(.*?)\s*([\d\,\.]+)\s+([A-Za-z]+)\s+(?:₱|P|PHP)?\s*([\d\,\.]+)\s+(?:₱|P|PHP)?\s*([\d\,\.]+)$/i', $line, $m)) {
                     $prefixText = trim($m[1]);
@@ -642,13 +646,13 @@ class DynamicDocumentParser
                 }
 
                 if ($matched && $qty > 0 && $unitPrice > 0) {
-                    if (!empty($prefixText)) {
+                    if (! empty($prefixText)) {
                         $descBuffer[] = $prefixText;
                     }
                     $desc = trim(implode(' ', $descBuffer));
                     $desc = preg_replace('/^(?:(?:Item\s*Code|Product\s*Description|References\s*from\s*Client|Qty|Unit|Unit\s*Price|Discounted\s*Price|Total|Price)\s*)+/i', '', $desc);
                     if (empty($desc)) {
-                        $desc = 'Item Line ' . $lineIndex;
+                        $desc = 'Item Line '.$lineIndex;
                     }
 
                     $effectivePrice = ($discountedPrice !== null && $discountedPrice > 0) ? $discountedPrice : $unitPrice;
@@ -686,6 +690,7 @@ class DynamicDocumentParser
         }
         $string = str_replace("\xD8", 'Ø', $string);
         $converted = @mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+
         return $converted ?: $string;
     }
 
@@ -746,7 +751,7 @@ class DynamicDocumentParser
         $normalized = ProductAlias::normalize($cleanName);
 
         // 1. Direct alias match (vendor-specific first, then global)
-        if (!empty($normalized)) {
+        if (! empty($normalized)) {
             $alias = ProductAlias::where('normalized_alias', $normalized)
                 ->where(function ($q) use ($vendorId) {
                     if ($vendorId) {
@@ -786,7 +791,7 @@ class DynamicDocumentParser
                 'is_active' => true,
             ]);
 
-            if (!empty($normalized)) {
+            if (! empty($normalized)) {
                 ProductAlias::create([
                     'product_id' => $newProduct->id,
                     'alias_text' => $cleanName,
@@ -795,11 +800,11 @@ class DynamicDocumentParser
                 ]);
             }
 
-            \Illuminate\Support\Facades\Cache::forget('lookup_products_list');
+            Cache::forget('lookup_products_list');
 
             return $newProduct->id;
         } catch (\Throwable $e) {
-            Log::warning("Auto-creating product for line item '{$cleanName}' notice: " . $e->getMessage());
+            Log::warning("Auto-creating product for line item '{$cleanName}' notice: ".$e->getMessage());
         }
 
         return null;

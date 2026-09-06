@@ -22,13 +22,13 @@ class DeliveryOverdueNotification extends Notification
         $daysOverdue = (int) now()->diffInDays($this->po->expected_delivery_date);
 
         return [
-            'title'        => '🚨 Delivery Overdue',
-            'body'         => "PO {$this->po->po_number} for \"{$this->po->customer_name}\" was expected on {$this->po->expected_delivery_date->format('M d, Y')} ({$daysOverdue} day(s) overdue).",
-            'action_url'   => '/admin/purchase-orders/' . $this->po->id,
-            'action_text'  => 'View PO',
-            'type'         => 'delivery_overdue',
-            'po_id'        => $this->po->id,
-            'po_number'    => $this->po->po_number,
+            'title' => '🚨 Delivery Overdue',
+            'body' => "PO {$this->po->po_number} for \"{$this->po->customer_name}\" was expected on {$this->po->expected_delivery_date->format('M d, Y')} ({$daysOverdue} day(s) overdue).",
+            'action_url' => '/admin/purchase-orders/'.$this->po->id,
+            'action_text' => 'View PO',
+            'type' => 'delivery_overdue',
+            'po_id' => $this->po->id,
+            'po_number' => $this->po->po_number,
             'days_overdue' => $daysOverdue,
         ];
     }

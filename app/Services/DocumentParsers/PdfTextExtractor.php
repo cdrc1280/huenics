@@ -2,12 +2,12 @@
 
 namespace App\Services\DocumentParsers;
 
+use Dompdf\Dompdf;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser as SmalotParser;
-use Dompdf\Dompdf;
 
 class PdfTextExtractor
 {
@@ -16,12 +16,12 @@ class PdfTextExtractor
      * Uses pdftotext CLI with -layout option if available for high fidelity tabular layout,
      * with automatic fallback to Smalot\PdfParser.
      *
-     * @param string $filePath Absolute path to file
+     * @param  string  $filePath  Absolute path to file
      * @return array{text: string, lines: array<int, string>, engine: string, companion_pdf: ?string}
      */
     public function extract(string $filePath): array
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             throw new Exception("File not found at: {$filePath}");
         }
 
@@ -56,7 +56,7 @@ class PdfTextExtractor
                     if ($process->successful()) {
                         $output = $process->output();
                         $json = json_decode(trim($output), true);
-                        if ($json && isset($json['success']) && $json['success'] === true && !empty(trim($json['text']))) {
+                        if ($json && isset($json['success']) && $json['success'] === true && ! empty(trim($json['text']))) {
                             return [
                                 'text' => $json['text'],
                                 'lines' => $json['lines'] ?? [],
@@ -66,15 +66,16 @@ class PdfTextExtractor
                         }
                     }
                 } catch (Exception $e) {
-                    Log::warning("WinOCR attempt with {$py} failed: " . $e->getMessage());
+                    Log::warning("WinOCR attempt with {$py} failed: ".$e->getMessage());
                 }
             }
 
             try {
                 $process = Process::run("tesseract \"{$filePath}\" stdout --psm 6");
-                if ($process->successful() && !empty(trim($process->output()))) {
+                if ($process->successful() && ! empty(trim($process->output()))) {
                     $text = $process->output();
                     $lines = preg_split('/\r\n|\r|\n/', $text);
+
                     return [
                         'text' => $text,
                         'lines' => $lines ?: [],
@@ -82,12 +83,13 @@ class PdfTextExtractor
                         'companion_pdf' => $companionPdf,
                     ];
                 }
-                
+
                 // Fallback without psm
                 $process = Process::run("tesseract \"{$filePath}\" stdout");
-                if ($process->successful() && !empty(trim($process->output()))) {
+                if ($process->successful() && ! empty(trim($process->output()))) {
                     $text = $process->output();
                     $lines = preg_split('/\r\n|\r|\n/', $text);
+
                     return [
                         'text' => $text,
                         'lines' => $lines ?: [],
@@ -96,7 +98,7 @@ class PdfTextExtractor
                     ];
                 }
             } catch (Exception $e) {
-                Log::warning("Tesseract OCR failed: " . $e->getMessage());
+                Log::warning('Tesseract OCR failed: '.$e->getMessage());
             }
 
             return [
@@ -110,8 +112,9 @@ class PdfTextExtractor
         // Try high-fidelity in-order stream extraction via Smalot Parser first
         try {
             $phpText = $this->extractViaPhp($filePath);
-            if (!empty(trim($phpText))) {
+            if (! empty(trim($phpText))) {
                 $lines = preg_split('/\r\n|\r|\n/', $phpText);
+
                 return [
                     'text' => $phpText,
                     'lines' => $lines ?: [],
@@ -120,13 +123,14 @@ class PdfTextExtractor
                 ];
             }
         } catch (\Throwable $e) {
-            Log::debug("Smalot parser pass failed: " . $e->getMessage());
+            Log::debug('Smalot parser pass failed: '.$e->getMessage());
         }
 
         // Fallback to pdftotext CLI
         $cliText = $this->extractViaCli($filePath);
         if ($cliText !== null && strlen(trim($cliText)) > 0) {
             $lines = preg_split('/\r\n|\r|\n/', $cliText);
+
             return [
                 'text' => $cliText,
                 'lines' => $lines ?: [],
@@ -148,24 +152,25 @@ class PdfTextExtractor
         try {
             $imageData = base64_encode(file_get_contents($imagePath));
             $mime = mime_content_type($imagePath) ?: 'image/jpeg';
-            $src = 'data:' . $mime . ';base64,' . $imageData;
+            $src = 'data:'.$mime.';base64,'.$imageData;
 
             $html = '<!DOCTYPE html><html><head><style>body,html{margin:0;padding:0;text-align:center;} img{max-width:100%;max-height:100%;}</style></head><body><img src="'.$src.'"></body></html>';
 
-            $dompdf = new Dompdf();
+            $dompdf = new Dompdf;
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
 
             $output = $dompdf->output();
-            
-            $filename = pathinfo($imagePath, PATHINFO_FILENAME) . '_' . time() . '.pdf';
-            $relPath = 'private/documents/companions/' . $filename;
+
+            $filename = pathinfo($imagePath, PATHINFO_FILENAME).'_'.time().'.pdf';
+            $relPath = 'private/documents/companions/'.$filename;
             Storage::disk('local')->put($relPath, $output);
-            
+
             return $relPath;
         } catch (Exception $e) {
-            Log::error("Failed to convert image to PDF: " . $e->getMessage());
+            Log::error('Failed to convert image to PDF: '.$e->getMessage());
+
             return null;
         }
     }
@@ -179,7 +184,7 @@ class PdfTextExtractor
                 return $process->output();
             }
         } catch (Exception $e) {
-            Log::debug("CLI pdftotext failed or not found: " . $e->getMessage());
+            Log::debug('CLI pdftotext failed or not found: '.$e->getMessage());
         }
 
         return null;
@@ -188,12 +193,13 @@ class PdfTextExtractor
     protected function extractViaPhp(string $pdfPath): string
     {
         try {
-            $parser = new SmalotParser();
+            $parser = new SmalotParser;
             $pdf = $parser->parseFile($pdfPath);
+
             return $pdf->getText();
         } catch (Exception $e) {
-            Log::error("Smalot PDF parsing failed: " . $e->getMessage());
-            throw new Exception("Failed to parse PDF content: " . $e->getMessage());
+            Log::error('Smalot PDF parsing failed: '.$e->getMessage());
+            throw new Exception('Failed to parse PDF content: '.$e->getMessage());
         }
     }
 }

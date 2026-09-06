@@ -6,7 +6,6 @@ use App\Models\DeliveryReceipt;
 use App\Models\PurchaseOrder;
 use App\Models\SalesInvoice;
 use App\Services\OrderFulfillmentService;
-use BackedEnum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -20,7 +19,6 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
-use UnitEnum;
 
 class UploadFulfillmentDocumentsPage extends Page implements HasForms
 {
@@ -49,7 +47,7 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
             $initialPo = PurchaseOrder::find($poId);
         }
 
-        if (!$initialPo) {
+        if (! $initialPo) {
             $initialPo = PurchaseOrder::where('status', '!=', PurchaseOrder::STATUS_CANCELLED)
                 ->where('is_completed', false)
                 ->latest()
@@ -58,14 +56,14 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
 
         $this->form->fill([
             'purchase_order_id' => $initialPo?->id,
-            'dr_number'         => DeliveryReceipt::generateNumber(),
-            'delivery_date'     => $initialPo?->actual_delivery_date?->toDateString() ?: now()->toDateString(),
-            'delivered_by'      => null,
-            'received_by'       => null,
-            'si_number'         => SalesInvoice::generateNumber(),
-            'invoice_date'      => now()->toDateString(),
-            'payment_status'    => SalesInvoice::STATUS_PAID,
-            'total_amount'      => $initialPo ? (float) $initialPo->order_amount : 0,
+            'dr_number' => DeliveryReceipt::generateNumber(),
+            'delivery_date' => $initialPo?->actual_delivery_date?->toDateString() ?: now()->toDateString(),
+            'delivered_by' => null,
+            'received_by' => null,
+            'si_number' => SalesInvoice::generateNumber(),
+            'invoice_date' => now()->toDateString(),
+            'payment_status' => SalesInvoice::STATUS_PAID,
+            'total_amount' => $initialPo ? (float) $initialPo->order_amount : 0,
         ]);
     }
 
@@ -87,7 +85,8 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
                                         ->get()
                                         ->mapWithKeys(function ($po) {
                                             $flag = $po->isCompleted() ? '✅ [Fulfilled]' : ($po->delivery_status === PurchaseOrder::DELIVERY_DELIVERED ? '🚚 [Delivered - Awaiting DR&SI]' : '⏳ [Pending]');
-                                            return [$po->id => "{$po->po_number} — {$po->customer_name} (₱" . number_format($po->order_amount, 2) . ") {$flag}"];
+
+                                            return [$po->id => "{$po->po_number} — {$po->customer_name} (₱".number_format($po->order_amount, 2).") {$flag}"];
                                         });
                                 })
                                 ->searchable()
@@ -107,9 +106,13 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
                                 ->label('Current Order State')
                                 ->content(function ($get) {
                                     $poId = $get('purchase_order_id');
-                                    if (!$poId) return 'No PO selected';
+                                    if (! $poId) {
+                                        return 'No PO selected';
+                                    }
                                     $po = PurchaseOrder::with('salesAgent', 'project')->find($poId);
-                                    if (!$po) return 'PO not found';
+                                    if (! $po) {
+                                        return 'PO not found';
+                                    }
 
                                     $statusBadge = match (true) {
                                         $po->isCompleted() => '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Completed & Realized</span>',
@@ -121,9 +124,9 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
                                         <div class='text-xs space-y-1'>
                                             <div><strong>Status:</strong> {$statusBadge}</div>
                                             <div><strong>Customer:</strong> {$po->customer_name}</div>
-                                            <div><strong>Amount:</strong> ₱" . number_format($po->order_amount, 2) . "</div>
+                                            <div><strong>Amount:</strong> ₱".number_format($po->order_amount, 2).'</div>
                                         </div>
-                                    ");
+                                    ');
                                 })
                                 ->columnSpan(['default' => 12, 'md' => 4]),
                         ]),
@@ -146,7 +149,7 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
 
                             TextInput::make('dr_number')
                                 ->label('DR #')
-                                ->default(fn() => DeliveryReceipt::generateNumber())
+                                ->default(fn () => DeliveryReceipt::generateNumber())
                                 ->required(),
 
                             DatePicker::make('delivery_date')
@@ -179,7 +182,7 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
 
                             TextInput::make('si_number')
                                 ->label('SI #')
-                                ->default(fn() => SalesInvoice::generateNumber())
+                                ->default(fn () => SalesInvoice::generateNumber())
                                 ->required(),
 
                             DatePicker::make('invoice_date')
@@ -212,8 +215,9 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
         $formData = $this->form->getState();
 
         $po = PurchaseOrder::find($formData['purchase_order_id']);
-        if (!$po) {
+        if (! $po) {
             Notification::make()->title('PO Not Found')->body('Please select a valid Purchase Order.')->danger()->send();
+
             return;
         }
 

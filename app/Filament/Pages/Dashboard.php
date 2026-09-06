@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Resources\DocumentResource;
 use App\Filament\Widgets\DocumentStatsOverview;
 use App\Filament\Widgets\RecentDocumentsWidget;
 use Filament\Actions\Action;
@@ -11,8 +10,11 @@ use Filament\Pages\Dashboard as BaseDashboard;
 class Dashboard extends BaseDashboard
 {
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-home';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Dashboards & Analytics';
+
     protected static ?string $navigationLabel = 'Main Dashboard';
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $title = 'Dashboard';
@@ -28,7 +30,6 @@ class Dashboard extends BaseDashboard
     //             ->url(ReviewQueuePage::getUrl()),
     //     ];
     // }
-
 
     public function getWidgets(): array
     {

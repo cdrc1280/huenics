@@ -24,6 +24,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductAliasResource extends Resource
@@ -31,8 +32,11 @@ class ProductAliasResource extends Resource
     protected static ?string $model = ProductAlias::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-arrows-right-left';
+
     protected static ?string $navigationLabel = 'Product Aliases & Matching';
+
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
@@ -48,12 +52,12 @@ class ProductAliasResource extends Resource
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -122,15 +126,15 @@ class ProductAliasResource extends Resource
                 ActionGroup::make([
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(ProductAlias $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(ProductAlias $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (ProductAlias $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (ProductAlias $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

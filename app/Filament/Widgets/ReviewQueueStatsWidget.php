@@ -5,15 +5,16 @@ namespace App\Filament\Widgets;
 use App\Models\Document;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 class ReviewQueueStatsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $stats = \Illuminate\Support\Facades\Cache::remember('widget_review_queue_stats', 30, function () {
+        $stats = Cache::remember('widget_review_queue_stats', 30, function () {
             $pendingCount = Document::where('status', Document::STATUS_REQUIRES_REVIEW)->count();
             $verifiedCount = Document::where('status', Document::STATUS_VERIFIED)->count();
-            
+
             $mismatchCount = Document::where('status', Document::STATUS_REQUIRES_REVIEW)
                 ->whereHas('totals', function ($q) {
                     $q->where('vat_mismatch', true)->orWhere('total_mismatch', true);
@@ -57,5 +58,4 @@ class ReviewQueueStatsWidget extends BaseWidget
                 ->extraAttributes(['title' => 'Reconciled documents successfully committed to master financial ledger']),
         ];
     }
-
 }

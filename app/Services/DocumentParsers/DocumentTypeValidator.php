@@ -10,7 +10,6 @@ class DocumentTypeValidator
     /**
      * Detect document type from raw extracted text.
      *
-     * @param string $text
      * @return string|null 'vendors_agreement', 'purchase_order', or null
      */
     public function detectType(string $text): ?string
@@ -97,8 +96,6 @@ class DocumentTypeValidator
     /**
      * Validate that the document extracted text matches the expected document type.
      *
-     * @param string $extractedText
-     * @param string $expectedType
      * @throws InvalidArgumentException
      */
     public function validate(string $extractedText, string $expectedType): void
@@ -108,25 +105,25 @@ class DocumentTypeValidator
         if ($expectedType === Document::TYPE_VENDORS_AGREEMENT) {
             if ($detectedType === Document::TYPE_PURCHASE_ORDER) {
                 throw new InvalidArgumentException(
-                    "Invalid File Upload: The uploaded document appears to be a Purchase Order (PO), not a Quotation. Please upload this document under Purchase Orders."
+                    'Invalid File Upload: The uploaded document appears to be a Purchase Order (PO), not a Quotation. Please upload this document under Purchase Orders.'
                 );
             }
 
             if ($detectedType !== Document::TYPE_VENDORS_AGREEMENT) {
                 throw new InvalidArgumentException(
-                    "Invalid File Upload: The uploaded document could not be verified as a valid Quotation or Vendors Agreement Form. Please ensure you upload a valid quotation PDF or image."
+                    'Invalid File Upload: The uploaded document could not be verified as a valid Quotation or Vendors Agreement Form. Please ensure you upload a valid quotation PDF or image.'
                 );
             }
         } elseif ($expectedType === Document::TYPE_PURCHASE_ORDER) {
             if ($detectedType === Document::TYPE_VENDORS_AGREEMENT) {
                 throw new InvalidArgumentException(
-                    "Invalid File Upload: The uploaded document appears to be a Quotation / Vendors Agreement, not a Purchase Order. Please upload this document under Quotations."
+                    'Invalid File Upload: The uploaded document appears to be a Quotation / Vendors Agreement, not a Purchase Order. Please upload this document under Quotations.'
                 );
             }
 
             if ($detectedType !== Document::TYPE_PURCHASE_ORDER) {
                 throw new InvalidArgumentException(
-                    "Invalid File Upload: The uploaded document could not be verified as a valid Purchase Order (PO). Please ensure you upload a valid Purchase Order PDF or image."
+                    'Invalid File Upload: The uploaded document could not be verified as a valid Purchase Order (PO). Please ensure you upload a valid Purchase Order PDF or image.'
                 );
             }
         }

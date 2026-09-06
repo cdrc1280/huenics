@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',

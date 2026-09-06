@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
-use App\Models\QuotationLineItem;
 use App\Models\SalesQuota;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -20,46 +19,46 @@ class QuotationService
         return DB::transaction(function () use ($data, $agent) {
             $quotation = Quotation::create([
                 'quotation_number' => Quotation::generateNumber(),
-                'document_id'      => $data['document_id'] ?? null,
-                'sales_agent_id'   => $agent->id,
-                'customer_name'    => $data['customer_name'],
-                'project_id'       => $data['project_id'] ?? null,
-                'total_amount'     => 0,
-                'total_cost'       => 0,
+                'document_id' => $data['document_id'] ?? null,
+                'sales_agent_id' => $agent->id,
+                'customer_name' => $data['customer_name'],
+                'project_id' => $data['project_id'] ?? null,
+                'total_amount' => 0,
+                'total_cost' => 0,
                 'estimated_profit' => 0,
-                'status'           => Quotation::STATUS_PENDING,
-                'quotation_date'   => $data['quotation_date'] ?? now(),
-                'valid_until'      => $data['valid_until'] ?? null,
-                'notes'            => $data['notes'] ?? null,
+                'status' => Quotation::STATUS_PENDING,
+                'quotation_date' => $data['quotation_date'] ?? now(),
+                'valid_until' => $data['valid_until'] ?? null,
+                'notes' => $data['notes'] ?? null,
             ]);
 
             $totalAmount = 0;
-            $totalCost   = 0;
+            $totalCost = 0;
 
             foreach ($data['line_items'] ?? [] as $i => $item) {
-                $lineTotal   = round((float) $item['qty'] * (float) $item['unit_price'], 2);
-                $lineCost    = round((float) $item['qty'] * (float) ($item['base_cost'] ?? 0), 2);
+                $lineTotal = round((float) $item['qty'] * (float) $item['unit_price'], 2);
+                $lineCost = round((float) $item['qty'] * (float) ($item['base_cost'] ?? 0), 2);
                 $grossProfit = round($lineTotal - $lineCost, 2);
 
                 $quotation->lineItems()->create([
-                    'line_no'      => $i + 1,
-                    'product_id'   => $item['product_id'] ?? null,
-                    'description'  => $item['description'],
-                    'qty'          => $item['qty'],
-                    'unit'         => $item['unit'] ?? 'pcs',
-                    'unit_price'   => $item['unit_price'],
-                    'base_cost'    => $item['base_cost'] ?? 0,
-                    'line_total'   => $lineTotal,
+                    'line_no' => $i + 1,
+                    'product_id' => $item['product_id'] ?? null,
+                    'description' => $item['description'],
+                    'qty' => $item['qty'],
+                    'unit' => $item['unit'] ?? 'pcs',
+                    'unit_price' => $item['unit_price'],
+                    'base_cost' => $item['base_cost'] ?? 0,
+                    'line_total' => $lineTotal,
                     'gross_profit' => $grossProfit,
                 ]);
 
                 $totalAmount += $lineTotal;
-                $totalCost   += $lineCost;
+                $totalCost += $lineCost;
             }
 
             $quotation->update([
-                'total_amount'     => $totalAmount,
-                'total_cost'       => $totalCost,
+                'total_amount' => $totalAmount,
+                'total_cost' => $totalCost,
                 'estimated_profit' => round($totalAmount - $totalCost, 2),
             ]);
 
@@ -88,14 +87,14 @@ class QuotationService
     public function approve(Quotation $quotation, ?User $approver = null): void
     {
         if ($quotation->isConverted()) {
-            throw new \RuntimeException("Cannot approve an already converted quotation.");
+            throw new \RuntimeException('Cannot approve an already converted quotation.');
         }
 
         $approver = $approver ?: auth()->user();
         $approverId = $approver?->id ?: ($quotation->sales_agent_id ?: (User::first()?->id ?: 1));
 
         $quotation->update([
-            'status'      => Quotation::STATUS_APPROVED,
+            'status' => Quotation::STATUS_APPROVED,
             'approved_by' => $approverId,
             'approved_at' => now(),
             'reviewed_by' => $quotation->reviewed_by ?: $approverId,
@@ -109,7 +108,7 @@ class QuotationService
     public function reject(Quotation $quotation, string $reason): void
     {
         $quotation->update([
-            'status'           => Quotation::STATUS_REJECTED,
+            'status' => Quotation::STATUS_REJECTED,
             'rejection_reason' => $reason,
         ]);
     }
@@ -122,54 +121,54 @@ class QuotationService
     public function convertToPO(Quotation $quotation, array $options = []): PurchaseOrder
     {
         if ($quotation->isConverted()) {
-            throw new \RuntimeException("This quotation has already been converted to a Purchase Order.");
+            throw new \RuntimeException('This quotation has already been converted to a Purchase Order.');
         }
 
         if ($quotation->isRejected()) {
-            throw new \RuntimeException("Cannot convert a rejected quotation.");
+            throw new \RuntimeException('Cannot convert a rejected quotation.');
         }
 
         // Auto-approve if not yet formally marked approved but user is converting
-        if (!$quotation->isReadyForConversion()) {
+        if (! $quotation->isReadyForConversion()) {
             if (auth()->check() && auth()->user()->canConvertToPO()) {
                 $this->approve($quotation, auth()->user());
                 $quotation->refresh();
             } else {
-                throw new \RuntimeException("Quotation must be Approved before converting to PO.");
+                throw new \RuntimeException('Quotation must be Approved before converting to PO.');
             }
         }
 
         return DB::transaction(function () use ($quotation, $options) {
-            $subtotal    = (float) ($quotation->negotiated_amount ?: $quotation->total_amount);
+            $subtotal = (float) ($quotation->negotiated_amount ?: $quotation->total_amount);
             $computedVat = round($subtotal * 0.12, 2);
 
             $agentId = $quotation->sales_agent_id;
-            if (!$agentId || !User::where('id', $agentId)->exists()) {
+            if (! $agentId || ! User::where('id', $agentId)->exists()) {
                 $agentId = auth()->id() ?: (User::first()?->id ?: 1);
             }
 
             $totalCost = (float) ($quotation->total_cost ?: round($subtotal * 0.7, 2));
 
             $po = PurchaseOrder::create([
-                'po_number'               => PurchaseOrder::generateNumber(),
-                'document_id'             => $quotation->document_id,
-                'quotation_id'            => $quotation->id,
-                'sales_agent_id'          => $agentId,
-                'customer_name'           => $quotation->customer_name ?: 'Valued Customer',
-                'project_id'              => $quotation->project_id,
-                'order_amount'            => $subtotal + $computedVat,
-                'total_cost'              => $totalCost,
-                'realized_profit'         => round($subtotal - $totalCost, 2),
-                'computed_vat'            => $computedVat,
-                'printed_vat'             => $options['printed_vat'] ?? null,
-                'order_date'              => $options['order_date'] ?? now(),
-                'expected_delivery_date'  => $options['expected_delivery_date'] ?? null,
-                'has_warranty'            => $options['has_warranty'] ?? true,
-                'warranty_period'         => $options['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
-                'warranty_status'         => PurchaseOrder::WARRANTY_NONE,
-                'delivery_status'         => PurchaseOrder::DELIVERY_PENDING,
-                'status'                  => PurchaseOrder::STATUS_PENDING,
-                'notes'                   => $options['notes'] ?? null,
+                'po_number' => PurchaseOrder::generateNumber(),
+                'document_id' => $quotation->document_id,
+                'quotation_id' => $quotation->id,
+                'sales_agent_id' => $agentId,
+                'customer_name' => $quotation->customer_name ?: 'Valued Customer',
+                'project_id' => $quotation->project_id,
+                'order_amount' => $subtotal + $computedVat,
+                'total_cost' => $totalCost,
+                'realized_profit' => round($subtotal - $totalCost, 2),
+                'computed_vat' => $computedVat,
+                'printed_vat' => $options['printed_vat'] ?? null,
+                'order_date' => $options['order_date'] ?? now(),
+                'expected_delivery_date' => $options['expected_delivery_date'] ?? null,
+                'has_warranty' => $options['has_warranty'] ?? true,
+                'warranty_period' => $options['warranty_period'] ?? PurchaseOrder::WARRANTY_1_YEAR,
+                'warranty_status' => PurchaseOrder::WARRANTY_NONE,
+                'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+                'status' => PurchaseOrder::STATUS_PENDING,
+                'notes' => $options['notes'] ?? null,
             ]);
 
             // Inherit line items from quotation
@@ -185,35 +184,35 @@ class QuotationService
                     $lineCost = round($qty * $baseCost, 2);
 
                     $po->lineItems()->create([
-                        'line_no'          => $item->line_no ?: ($idx + 1),
-                        'item_code'        => $item->item_code ?? null,
-                        'product_id'       => $item->product_id,
-                        'description'      => $item->description ?: ($item->product?->canonical_name ?: 'Line item #' . ($idx + 1)),
-                        'qty'              => $qty,
-                        'unit'             => $item->unit ?: 'pcs',
-                        'unit_price'       => $unitPrice,
+                        'line_no' => $item->line_no ?: ($idx + 1),
+                        'item_code' => $item->item_code ?? null,
+                        'product_id' => $item->product_id,
+                        'description' => $item->description ?: ($item->product?->canonical_name ?: 'Line item #'.($idx + 1)),
+                        'qty' => $qty,
+                        'unit' => $item->unit ?: 'pcs',
+                        'unit_price' => $unitPrice,
                         'discounted_price' => $discountedPrice,
-                        'base_cost'        => $baseCost,
-                        'line_total'       => $lineTotal,
-                        'line_cost'        => $lineCost,
+                        'base_cost' => $baseCost,
+                        'line_total' => $lineTotal,
+                        'line_cost' => $lineCost,
                     ]);
                 }
             } else {
                 $po->lineItems()->create([
-                    'line_no'     => 1,
-                    'description' => 'Quotation ' . ($quotation->quotation_number ?: 'Items'),
-                    'qty'         => 1,
-                    'unit'        => 'lot',
-                    'unit_price'  => $subtotal,
-                    'base_cost'   => round($subtotal * 0.7, 2),
-                    'line_total'  => $subtotal,
-                    'line_cost'   => round($subtotal * 0.7, 2),
+                    'line_no' => 1,
+                    'description' => 'Quotation '.($quotation->quotation_number ?: 'Items'),
+                    'qty' => 1,
+                    'unit' => 'lot',
+                    'unit_price' => $subtotal,
+                    'base_cost' => round($subtotal * 0.7, 2),
+                    'line_total' => $subtotal,
+                    'line_cost' => round($subtotal * 0.7, 2),
                 ]);
             }
 
             // Mark quotation as converted and sync timestamps
             $quotation->update([
-                'status'      => Quotation::STATUS_CONVERTED,
+                'status' => Quotation::STATUS_CONVERTED,
                 'approved_by' => $quotation->approved_by ?: $agentId,
                 'approved_at' => $quotation->approved_at ?: now(),
                 'reviewed_by' => $quotation->reviewed_by ?: $agentId,

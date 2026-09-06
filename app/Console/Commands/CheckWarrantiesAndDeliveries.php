@@ -10,7 +10,8 @@ use Illuminate\Console\Command;
 
 class CheckWarrantiesAndDeliveries extends Command
 {
-    protected $signature   = 'huenics:check-warranties-deliveries';
+    protected $signature = 'huenics:check-warranties-deliveries';
+
     protected $description = 'Daily check: refresh warranty statuses and flag overdue deliveries with notifications.';
 
     public function handle(WarrantyService $warranty): int

@@ -22,6 +22,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProjectResource extends Resource
@@ -29,8 +30,11 @@ class ProjectResource extends Resource
     protected static ?string $model = Project::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Master Data & Registry';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationLabel = 'Projects & Job Sites';
+
     protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): Builder
@@ -46,12 +50,12 @@ class ProjectResource extends Resource
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return auth()->user()?->canManageCatalog() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -136,7 +140,7 @@ class ProjectResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
                         'completed' => 'info',
                         'on_hold' => 'warning',
@@ -150,15 +154,15 @@ class ProjectResource extends Resource
                 ActionGroup::make([
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(Project $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Project $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (Project $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Project $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

@@ -11,6 +11,7 @@ use App\Models\Quotation;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Vendor;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class VerifyDocument
@@ -23,19 +24,15 @@ class VerifyDocument
     /**
      * Commit document verification, create/update transactions, and record audit trail.
      *
-     * @param Document $document
-     * @param User $user
-     * @param array<int, array> $editedLineItems
-     * @param array $options
-     * @return Transaction
+     * @param  array<int, array>  $editedLineItems
      */
     public function execute(Document $document, User $user, array $editedLineItems = [], array $options = []): Transaction
     {
-        return DB::transaction(function () use ($document, $user, $editedLineItems, $options) {
+        return DB::transaction(function () use ($document, $user, $editedLineItems) {
             $oldDocState = $document->toArray();
 
             // 1. Apply any line item adjustments made during review
-            if (!empty($editedLineItems)) {
+            if (! empty($editedLineItems)) {
                 foreach ($editedLineItems as $itemData) {
                     if (empty($itemData['id'])) {
                         continue;
@@ -54,7 +51,7 @@ class VerifyDocument
                         ]);
 
                         // Auto-learn product alias if user linked a canonical product
-                        if (!empty($item->product_id) && !empty($item->description)) {
+                        if (! empty($item->product_id) && ! empty($item->description)) {
                             ProductAlias::firstOrCreate([
                                 'product_id' => $item->product_id,
                                 'normalized_alias' => ProductAlias::normalize($item->description),
@@ -106,7 +103,7 @@ class VerifyDocument
                 $vendorId = Vendor::value('id');
             }
 
-            if (!$vendorId) {
+            if (! $vendorId) {
                 $defaultVendor = Vendor::firstOrCreate(
                     ['slug' => 'huenics-industrial'],
                     [
@@ -118,7 +115,7 @@ class VerifyDocument
                 $vendorId = $defaultVendor->id;
             }
 
-            if (!$document->vendor_id || $document->vendor_id !== $vendorId) {
+            if (! $document->vendor_id || $document->vendor_id !== $vendorId) {
                 $document->update(['vendor_id' => $vendorId]);
             }
 
@@ -130,7 +127,7 @@ class VerifyDocument
                 $projectId = Project::value('id');
             }
 
-            if (!$projectId) {
+            if (! $projectId) {
                 $defaultProject = Project::firstOrCreate(
                     ['code' => 'PRJ-GENERAL'],
                     [
@@ -141,7 +138,7 @@ class VerifyDocument
                 $projectId = $defaultProject->id;
             }
 
-            if (!$document->project_id || $document->project_id !== $projectId) {
+            if (! $document->project_id || $document->project_id !== $projectId) {
                 $document->update(['project_id' => $projectId]);
             }
 
@@ -202,7 +199,7 @@ class VerifyDocument
 
         $isOfficialPo = isset($options['is_official_po']) ? (bool) $options['is_official_po'] : ($quotation?->is_official_po ?? false);
         $customerSigName = isset($options['customer_signature_name']) ? $options['customer_signature_name'] : ($quotation?->customer_signature_name ?? null);
-        $customerSignedAt = !empty($options['customer_signed_at']) ? \Carbon\Carbon::parse($options['customer_signed_at']) : ($quotation?->customer_signed_at ?? null);
+        $customerSignedAt = ! empty($options['customer_signed_at']) ? Carbon::parse($options['customer_signed_at']) : ($quotation?->customer_signed_at ?? null);
 
         if ($quotation) {
             $quotation->update([
@@ -227,7 +224,7 @@ class VerifyDocument
             ]);
         } else {
             $quotationNumber = $document->document_number;
-            if (!$quotationNumber || Quotation::where('quotation_number', $quotationNumber)->exists()) {
+            if (! $quotationNumber || Quotation::where('quotation_number', $quotationNumber)->exists()) {
                 $quotationNumber = Quotation::generateNumber();
             }
 
@@ -308,7 +305,7 @@ class VerifyDocument
             ]);
         } else {
             $poNumber = $document->document_number;
-            if (!$poNumber || PurchaseOrder::where('po_number', $poNumber)->exists()) {
+            if (! $poNumber || PurchaseOrder::where('po_number', $poNumber)->exists()) {
                 $poNumber = PurchaseOrder::generateNumber();
             }
 
@@ -357,4 +354,3 @@ class VerifyDocument
         return $po;
     }
 }
-

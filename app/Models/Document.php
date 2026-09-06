@@ -10,19 +10,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Document extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     public const TYPE_PURCHASE_ORDER = DocumentType::PurchaseOrder->value;
+
     public const TYPE_VENDORS_AGREEMENT = DocumentType::VendorsAgreement->value;
 
     public const STATUS_UPLOADED = DocumentStatus::Uploaded->value;
+
     public const STATUS_PROCESSING = DocumentStatus::Processing->value;
+
     public const STATUS_REQUIRES_REVIEW = DocumentStatus::RequiresReview->value;
+
     public const STATUS_VERIFIED = DocumentStatus::Verified->value;
+
     public const STATUS_FAILED = DocumentStatus::Failed->value;
+
     public const STATUS_REJECTED = DocumentStatus::Rejected->value;
 
     protected $fillable = [
@@ -129,10 +136,10 @@ class Document extends Model
         }
 
         $candidates = [
-            storage_path('app/private/' . $this->disk_path),
-            storage_path('app/' . $this->disk_path),
-            storage_path('app/public/' . $this->disk_path),
-            public_path('storage/' . $this->disk_path),
+            storage_path('app/private/'.$this->disk_path),
+            storage_path('app/'.$this->disk_path),
+            storage_path('app/public/'.$this->disk_path),
+            public_path('storage/'.$this->disk_path),
         ];
 
         foreach ($candidates as $path) {
@@ -141,12 +148,12 @@ class Document extends Model
             }
         }
 
-        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($this->disk_path)) {
-            return \Illuminate\Support\Facades\Storage::disk('local')->path($this->disk_path);
+        if (Storage::disk('local')->exists($this->disk_path)) {
+            return Storage::disk('local')->path($this->disk_path);
         }
 
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->disk_path)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->path($this->disk_path);
+        if (Storage::disk('public')->exists($this->disk_path)) {
+            return Storage::disk('public')->path($this->disk_path);
         }
 
         return null;

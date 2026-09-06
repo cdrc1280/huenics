@@ -31,7 +31,7 @@ class Role extends Model
         parent::boot();
 
         static::saving(function (Role $role) {
-            if (empty($role->slug) && !empty($role->name)) {
+            if (empty($role->slug) && ! empty($role->name)) {
                 $role->slug = Str::slug($role->name, '_');
             }
         });

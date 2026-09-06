@@ -21,17 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Throwable $e) {
+        $exceptions->render(function (Throwable $e) {
             if (isset($_GET['debug_error']) || isset($_SERVER['HTTP_X_DEBUG_ERROR']) || request()?->header('X-Debug-Error') === 'huenics-inspect') {
                 return response()->json([
                     'error' => $e->getMessage(),
                     'class' => get_class($e),
-                    'file' => $e->getFile() . ':' . $e->getLine(),
+                    'file' => $e->getFile().':'.$e->getLine(),
                     'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 25),
                 ], 500);
             }
         });
         $exceptions->shouldRenderJsonWhen(
-            fn (\Illuminate\Http\Request $request) => $request->is('api/*') || $request->expectsJson(),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

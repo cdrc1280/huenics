@@ -10,9 +10,7 @@ class LowStockNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public readonly InventoryItem $item)
-    {
-    }
+    public function __construct(public readonly InventoryItem $item) {}
 
     public function via(object $notifiable): array
     {
@@ -35,4 +33,3 @@ class LowStockNotification extends Notification
         ];
     }
 }
-

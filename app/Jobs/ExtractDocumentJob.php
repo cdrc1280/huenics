@@ -27,11 +27,12 @@ class ExtractDocumentJob implements ShouldQueue
             // 1. Run dynamic text extraction & table parsing
             $result = $parser->parseDocument($this->document);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 $this->document->update([
                     'status' => Document::STATUS_FAILED,
                     'failure_reason' => $result['message'],
                 ]);
+
                 return;
             }
 
@@ -45,7 +46,7 @@ class ExtractDocumentJob implements ShouldQueue
 
             Log::info("Document #{$this->document->id} parsed successfully with {$result['line_items_count']} line items.");
         } catch (Exception $e) {
-            Log::error("Failed to extract document #{$this->document->id}: " . $e->getMessage(), [
+            Log::error("Failed to extract document #{$this->document->id}: ".$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 

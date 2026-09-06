@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\InventoryItemResource\Pages;
 
 use App\Filament\Resources\InventoryItemResource;
+use App\Models\InventoryItem;
+use App\Models\ProductComponent;
 use App\Services\InventoryReportService;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
@@ -30,12 +32,12 @@ class ListInventoryItems extends ListRecords
                 ->modalHeading('Synchronize Sub-Components to Inventory')
                 ->modalDescription('This will scan all sub-components defined across product BOMs and guarantee an inventory stock record exists for every catalogued part.')
                 ->action(function (): void {
-                    $components = \App\Models\ProductComponent::whereNotNull('component_product_id')->get();
+                    $components = ProductComponent::whereNotNull('component_product_id')->get();
                     $created = 0;
                     foreach ($components as $comp) {
-                        $exists = \App\Models\InventoryItem::where('product_id', $comp->component_product_id)->exists();
-                        if (!$exists) {
-                            \App\Models\InventoryItem::create([
+                        $exists = InventoryItem::where('product_id', $comp->component_product_id)->exists();
+                        if (! $exists) {
+                            InventoryItem::create([
                                 'product_id' => $comp->component_product_id,
                                 'quantity_on_hand' => 0,
                                 'reorder_point' => 10,
@@ -48,7 +50,7 @@ class ListInventoryItems extends ListRecords
                         }
                     }
 
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title('BOM Parts Synchronized')
                         ->body("Checked {$components->count()} sub-components. Created {$created} new inventory stock records.")
                         ->success()
@@ -102,8 +104,8 @@ class ListInventoryItems extends ListRecords
                         $result = $service->importInventoryReport($filePath, $updateExisting);
 
                         $msg = "Imported {$result['imported']} new item(s), updated {$result['updated']} existing item(s).";
-                        if (!empty($result['errors'])) {
-                            $msg .= " (" . count($result['errors']) . " row(s) had notes or warnings)";
+                        if (! empty($result['errors'])) {
+                            $msg .= ' ('.count($result['errors']).' row(s) had notes or warnings)';
                         }
 
                         Notification::make()

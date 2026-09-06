@@ -9,9 +9,6 @@ class ReconcileDocumentTotals
 {
     /**
      * Reconcile line item arithmetic and document totals against Philippine standard VAT.
-     *
-     * @param Document $document
-     * @return DocumentTotal
      */
     public function execute(Document $document): DocumentTotal
     {
@@ -72,7 +69,7 @@ class ReconcileDocumentTotals
                 // Check if printed total matches VAT-inclusive or VAT-exclusive computed total
                 $matchesWithVat = abs($printed - $computedGrandTotal) <= 1.00;
                 $matchesWithoutVat = abs($printed - $computedSubtotal) <= 1.00;
-                $totalMismatch = !($matchesWithVat || $matchesWithoutVat);
+                $totalMismatch = ! ($matchesWithVat || $matchesWithoutVat);
             }
         }
 

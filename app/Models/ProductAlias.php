@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class ProductAlias extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_id',
@@ -34,6 +34,7 @@ class ProductAlias extends Model
         $normalized = Str::lower(trim($text));
         $normalized = preg_replace('/[^\w\s\-\.\/]/u', '', $normalized);
         $normalized = preg_replace('/\s+/', ' ', $normalized);
+
         return trim($normalized);
     }
 

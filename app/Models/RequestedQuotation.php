@@ -31,8 +31,8 @@ class RequestedQuotation extends Quotation
         $this->status = self::STATUS_APPROVED;
         $this->approved_by = auth()->id();
         $this->approved_at = now();
-        $this->notes = ($this->notes ? $this->notes . "\n" : '') .
-            "Converted from Online Requested Quotation to Official Quotation by " . (auth()->user()?->name ?? 'System') . " on " . now()->format('Y-m-d H:i');
+        $this->notes = ($this->notes ? $this->notes."\n" : '').
+            'Converted from Online Requested Quotation to Official Quotation by '.(auth()->user()?->name ?? 'System').' on '.now()->format('Y-m-d H:i');
         $this->save();
 
         return $this;

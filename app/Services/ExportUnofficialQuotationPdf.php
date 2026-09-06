@@ -12,11 +12,11 @@ class ExportUnofficialQuotationPdf
     /**
      * Generate PDF binary content for an unofficial customer quotation.
      *
-     * @param array<string, mixed> $quotationData
+     * @param  array<string, mixed>  $quotationData
      */
     public function generate(array $quotationData): string
     {
-        $options = new Options();
+        $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
         $options->set('defaultFont', 'Helvetica');
@@ -71,16 +71,16 @@ class ExportUnofficialQuotationPdf
     /**
      * Return a file download response for the unofficial quotation PDF.
      *
-     * @param array<string, mixed> $quotationData
+     * @param  array<string, mixed>  $quotationData
      */
     public function downloadResponse(array $quotationData): Response
     {
         $pdfContent = $this->generate($quotationData);
-        $refNumber = $quotationData['quotation_number'] ?? ('UNOFF-' . date('Ymd-His'));
+        $refNumber = $quotationData['quotation_number'] ?? ('UNOFF-'.date('Ymd-His'));
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $refNumber . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="'.$refNumber.'.pdf"',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0',
@@ -90,16 +90,16 @@ class ExportUnofficialQuotationPdf
     /**
      * Return an inline browser preview response for the unofficial quotation PDF.
      *
-     * @param array<string, mixed> $quotationData
+     * @param  array<string, mixed>  $quotationData
      */
     public function previewResponse(array $quotationData): Response
     {
         $pdfContent = $this->generate($quotationData);
-        $refNumber = $quotationData['quotation_number'] ?? ('UNOFF-' . date('Ymd-His'));
+        $refNumber = $quotationData['quotation_number'] ?? ('UNOFF-'.date('Ymd-His'));
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $refNumber . '.pdf"',
+            'Content-Disposition' => 'inline; filename="'.$refNumber.'.pdf"',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0',

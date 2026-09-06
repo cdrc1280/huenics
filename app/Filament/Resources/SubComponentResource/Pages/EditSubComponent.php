@@ -22,6 +22,7 @@ class EditSubComponent extends EditRecord
         $data['component_group'] = $data['category'] ?: ($data['component_group'] ?? 'General');
         $data['option_name'] = $data['component_name'] ?: ($data['option_name'] ?? 'Part');
         $data['additional_cost'] = $data['cost_price'] ?? 0.00;
+
         return $data;
     }
 }

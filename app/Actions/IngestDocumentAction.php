@@ -5,11 +5,15 @@ namespace App\Actions;
 use App\Models\Document;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
+use App\Models\Transaction;
+use App\Models\User;
 use App\Services\DocumentParsers\DocumentTypeValidator;
 use App\Services\DocumentParsers\DynamicDocumentParser;
 use App\Services\DocumentParsers\PdfTextExtractor;
 use Exception;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class IngestDocumentAction
 {
@@ -18,20 +22,11 @@ class IngestDocumentAction
         protected ReconcileDocumentTotals $reconciler,
         protected DocumentTypeValidator $validator,
         protected PdfTextExtractor $textExtractor
-    ) {
-    }
+    ) {}
 
     /**
      * Ingest, SHA-256 hash check, parse via Dynamic Per-Vendor Templates, and reconcile a PDF document.
      *
-     * @param string $diskPath
-     * @param string $originalFilename
-     * @param string $documentType
-     * @param int|null $vendorId
-     * @param int|null $projectId
-     * @param int|null $userId
-     * @param int|null $quotationId
-     * @return Document
      * @throws Exception
      */
     public function execute(
@@ -45,10 +40,10 @@ class IngestDocumentAction
         bool $isConformePo = false
     ): Document {
         $candidates = [
-            storage_path('app/private/' . $diskPath),
-            storage_path('app/' . $diskPath),
-            storage_path('app/public/' . $diskPath),
-            public_path('storage/' . $diskPath),
+            storage_path('app/private/'.$diskPath),
+            storage_path('app/'.$diskPath),
+            storage_path('app/public/'.$diskPath),
+            public_path('storage/'.$diskPath),
         ];
 
         $filePath = null;
@@ -59,7 +54,7 @@ class IngestDocumentAction
             }
         }
 
-        if (!$filePath && file_exists($diskPath)) {
+        if (! $filePath && file_exists($diskPath)) {
             $filePath = $diskPath;
         }
 
@@ -76,10 +71,10 @@ class IngestDocumentAction
             $fileHash = hash_file('sha256', $filePath);
             $mimeType = mime_content_type($filePath);
         } else {
-            $fileHash = hash('sha256', $diskPath . '_' . $originalFilename);
+            $fileHash = hash('sha256', $diskPath.'_'.$originalFilename);
         }
 
-        if (!$mimeType) {
+        if (! $mimeType) {
             $ext = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
             $mimeType = match ($ext) {
                 'pdf' => 'application/pdf',
@@ -102,7 +97,7 @@ class IngestDocumentAction
             // Delete duplicate physical file from temporary upload storage if distinct
             if ($diskPath && $existing->disk_path && $diskPath !== $existing->disk_path) {
                 try {
-                    \Illuminate\Support\Facades\Storage::disk('local')->delete($diskPath);
+                    Storage::disk('local')->delete($diskPath);
                 } catch (\Throwable) {
                 }
             }
@@ -132,11 +127,11 @@ class IngestDocumentAction
             ]);
             $this->reconciler->execute($document);
         } catch (\Throwable $e) {
-            Log::warning("Dynamic parsing notice for Document #{$document->id}: " . $e->getMessage());
+            Log::warning("Dynamic parsing notice for Document #{$document->id}: ".$e->getMessage());
         }
 
         // Check if a document with this exact document number already exists for this document type
-        if (!empty($document->document_number)) {
+        if (! empty($document->document_number)) {
             $duplicateNumberDoc = Document::where('id', '!=', $document->id)
                 ->where('document_type', $document->document_type)
                 ->where('document_number', $document->document_number)
@@ -156,7 +151,7 @@ class IngestDocumentAction
         try {
             $this->syncInitialResourceRecord($document, $userId ?: (auth()->id() ?: 1), $quotationId, $isConformePo);
         } catch (\Throwable $e) {
-            Log::warning("Initial resource record sync notice for Document #{$document->id}: " . $e->getMessage());
+            Log::warning("Initial resource record sync notice for Document #{$document->id}: ".$e->getMessage());
         }
 
         return $document;
@@ -185,9 +180,9 @@ class IngestDocumentAction
         $totalAmount = (float) ($document->totals?->printed_total ?: ($document->totals?->computed_grand_total ?: 0));
 
         $quotation = Quotation::where('document_id', $document->id)->first();
-        if (!$quotation) {
+        if (! $quotation) {
             $quotationNumber = $document->document_number;
-            if (!$quotationNumber || Quotation::where('quotation_number', $quotationNumber)->exists()) {
+            if (! $quotationNumber || Quotation::where('quotation_number', $quotationNumber)->exists()) {
                 $quotationNumber = Quotation::generateNumber();
             }
 
@@ -221,10 +216,10 @@ class IngestDocumentAction
                 'total_cost' => round($totalAmount * 0.7, 2),
                 'estimated_profit' => round($totalAmount * 0.3, 2),
             ];
-            if (!empty($document->document_number)) {
+            if (! empty($document->document_number)) {
                 $updates['quotation_number'] = $document->document_number;
             }
-            if (!empty($document->document_date)) {
+            if (! empty($document->document_date)) {
                 $updates['quotation_date'] = $document->document_date;
             }
             $quotation->update($updates);
@@ -268,7 +263,7 @@ class IngestDocumentAction
         $isConforme = $isConformePo;
 
         // 2. If not explicitly flagged by the user, detect ONLY unambiguous Conforme markers:
-        if (!$isConforme) {
+        if (! $isConforme) {
             // Check if the document header explicitly declares it as a Conforme PO
             $hasConformeTitle = (bool) preg_match('/\b(?:CONFORME\s+PURCHASE\s+ORDER|PURCHASE\s+ORDER\s+CONFORME|CONFORME\s+P\.?O\.?)\b/i', $rawText);
 
@@ -281,15 +276,15 @@ class IngestDocumentAction
             $isClientPurchaseOrder = (bool) preg_match('/\bPURCHASE\s+ORDER\b/i', $rawText)
                 && (bool) preg_match('/\b(?:Vendor|Supplier)\s*:\s*.*HUENICS/i', $rawText);
 
-            if (($hasConformeTitle || $isVendorsAgreementPo) && !$isClientPurchaseOrder) {
+            if (($hasConformeTitle || $isVendorsAgreementPo) && ! $isClientPurchaseOrder) {
                 $isConforme = true;
             }
         }
 
         $po = PurchaseOrder::where('document_id', $document->id)->first();
-        if (!$po) {
+        if (! $po) {
             $poNumber = $document->document_number;
-            if (!$poNumber || PurchaseOrder::where('po_number', $poNumber)->exists()) {
+            if (! $poNumber || PurchaseOrder::where('po_number', $poNumber)->exists()) {
                 $poNumber = PurchaseOrder::generateNumber();
             }
 
@@ -327,27 +322,27 @@ class IngestDocumentAction
             if ($quotationId && empty($po->quotation_id)) {
                 $updates['quotation_id'] = $quotationId;
             }
-            if (!empty($document->document_number)) {
+            if (! empty($document->document_number)) {
                 $updates['po_number'] = $document->document_number;
             }
-            if (!empty($document->document_date)) {
+            if (! empty($document->document_date)) {
                 $updates['order_date'] = $document->document_date;
             }
             $po->update($updates);
         }
 
         if ($quotationId && $quotation = Quotation::find($quotationId)) {
-            if (empty($po->project_id) && !empty($quotation->project_id)) {
+            if (empty($po->project_id) && ! empty($quotation->project_id)) {
                 $po->update(['project_id' => $quotation->project_id]);
             }
-            if (!empty($quotation->sales_agent_id) && empty($po->sales_agent_id)) {
+            if (! empty($quotation->sales_agent_id) && empty($po->sales_agent_id)) {
                 $po->update(['sales_agent_id' => $quotation->sales_agent_id]);
             }
             $quotation->update([
                 'status' => Quotation::STATUS_CONVERTED,
             ]);
             if ($quotation->document_id) {
-                $trx = \App\Models\Transaction::where('quotation_document_id', $quotation->document_id)->first();
+                $trx = Transaction::where('quotation_document_id', $quotation->document_id)->first();
                 if ($trx && empty($trx->purchase_order_document_id)) {
                     $trx->update(['purchase_order_document_id' => $document->id]);
                 }
@@ -385,15 +380,15 @@ class IngestDocumentAction
         }
 
         $quotation = $po->quotation ?? Quotation::where('document_id', $document->id)->first();
-        if (!$quotation) {
+        if (! $quotation) {
             // Find by transaction
-            $trx = \App\Models\Transaction::where('purchase_order_document_id', $document->id)->first();
+            $trx = Transaction::where('purchase_order_document_id', $document->id)->first();
             if ($trx && $trx->quotation_document_id) {
                 $quotation = Quotation::where('document_id', $trx->quotation_document_id)->first();
             }
         }
 
-        if (!$quotation) {
+        if (! $quotation) {
             return; // No quotation linked
         }
 
@@ -415,24 +410,24 @@ class IngestDocumentAction
                     break;
                 }
             }
-            if (!$matched) {
+            if (! $matched) {
                 $mismatches[] = "Line item not in quotation: {$poLine->description}";
             }
         }
 
-        if (!empty($mismatches)) {
-            \Filament\Notifications\Notification::make()
+        if (! empty($mismatches)) {
+            Notification::make()
                 ->title('PO & Quotation Line Item Discrepancy')
-                ->body('Line items do not completely match linked Quotation:<br>' . implode('<br>', array_slice($mismatches, 0, 5)))
+                ->body('Line items do not completely match linked Quotation:<br>'.implode('<br>', array_slice($mismatches, 0, 5)))
                 ->warning()
                 ->send();
 
             try {
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title('PO & Quotation Mismatch')
                     ->body(implode('<br>', $mismatches))
                     ->warning()
-                    ->sendToDatabase(\App\Models\User::where('role', 'admin')->get());
+                    ->sendToDatabase(User::where('role', 'admin')->get());
             } catch (\Throwable $e) {
                 // Ignore if DB notifications not configured in test environment
             }

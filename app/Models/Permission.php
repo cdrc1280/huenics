@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 class Permission extends Model
 {
@@ -22,7 +23,7 @@ class Permission extends Model
         return $this->belongsToMany(Role::class, 'role_permission');
     }
 
-    public static function getAllGrouped(): \Illuminate\Support\Collection
+    public static function getAllGrouped(): Collection
     {
         return static::all()->groupBy('group');
     }

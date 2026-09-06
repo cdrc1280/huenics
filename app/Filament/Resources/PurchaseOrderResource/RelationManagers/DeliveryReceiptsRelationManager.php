@@ -30,13 +30,16 @@ use Illuminate\Database\Eloquent\Model;
 class DeliveryReceiptsRelationManager extends RelationManager
 {
     protected static string $relationship = 'deliveryReceipts';
+
     protected static ?string $title = 'Delivery Receipts (DR)';
+
     protected static \BackedEnum|string|null $icon = 'heroicon-o-truck';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
         /** @var PurchaseOrder $ownerRecord */
         $count = $ownerRecord->deliveryReceipts()->count();
+
         return $count > 0 ? (string) $count : null;
     }
 
@@ -68,7 +71,7 @@ class DeliveryReceiptsRelationManager extends RelationManager
                             ->label('Delivery Type')
                             ->options([
                                 'complete' => 'Complete Delivery',
-                                'partial'  => 'Partial Delivery',
+                                'partial' => 'Partial Delivery',
                             ])
                             ->default('complete')
                             ->required(),
@@ -253,7 +256,7 @@ class DeliveryReceiptsRelationManager extends RelationManager
                     ->falseIcon('heroicon-o-document')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->getStateUsing(fn (DeliveryReceipt $r): bool => !empty($r->file_path) || !empty($r->document_id)),
+                    ->getStateUsing(fn (DeliveryReceipt $r): bool => ! empty($r->file_path) || ! empty($r->document_id)),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -282,6 +285,7 @@ class DeliveryReceiptsRelationManager extends RelationManager
                         if (empty($data['project_name'])) {
                             $data['project_name'] = $po->project?->name;
                         }
+
                         return $data;
                     })
                     ->after(function (DeliveryReceipt $record) {
@@ -290,7 +294,7 @@ class DeliveryReceiptsRelationManager extends RelationManager
                         // Append to comma-separated list of DRs on PO
                         $allDrNumbers = $po->deliveryReceipts()->pluck('dr_number')->filter()->unique()->implode(', ');
                         $po->update([
-                            'delivery_receipt_no'  => $allDrNumbers,
+                            'delivery_receipt_no' => $allDrNumbers,
                             'actual_delivery_date' => $record->delivery_date ?? $po->actual_delivery_date ?? now(),
                         ]);
                     }),

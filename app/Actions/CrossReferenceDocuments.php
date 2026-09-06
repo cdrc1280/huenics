@@ -12,7 +12,6 @@ class CrossReferenceDocuments
     /**
      * Find related companion documents (Quotation, PO) for the same transaction.
      *
-     * @param Document $document
      * @return array{
      *   quotation: ?Document,
      *   purchase_order: ?Document,
@@ -41,7 +40,7 @@ class CrossReferenceDocuments
         if ($document->document_date) {
             $query->whereBetween('document_date', [
                 $date->copy()->subDays(14)->format('Y-m-d'),
-                $date->copy()->addDays(14)->format('Y-m-d')
+                $date->copy()->addDays(14)->format('Y-m-d'),
             ]);
         }
 
@@ -59,7 +58,7 @@ class CrossReferenceDocuments
         $docIds = array_filter([$document->id, $quotation?->id, $po?->id]);
         $existingTransaction = Transaction::where(function ($q) use ($docIds) {
             $q->whereIn('quotation_document_id', $docIds)
-              ->orWhereIn('purchase_order_document_id', $docIds);
+                ->orWhereIn('purchase_order_document_id', $docIds);
         })->first();
 
         return [

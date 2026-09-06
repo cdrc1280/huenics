@@ -2,8 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\SalesOverviewWidget;
-use App\Filament\Widgets\SalesRevenueChartWidget;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Services\ExportExecutiveReportPdf;
@@ -20,23 +18,27 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use UnitEnum;
 
-class SalesDashboard extends Page implements HasTable, HasForms
+class SalesDashboard extends Page implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-chart-bar-square';
+
     protected static UnitEnum|string|null $navigationGroup = 'Dashboards & Analytics';
+
     protected static ?string $navigationLabel = 'Sales Analytics & Leaderboard';
+
     protected static ?string $title = 'Sales & Performance Dashboard';
+
     protected string $view = 'filament.pages.sales-dashboard';
+
     protected static ?int $navigationSort = 2;
 
     public ?array $filterData = [];
@@ -92,12 +94,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         if ((bool) $get('filterInhouse')) {
                                             $q->where('is_owner', true);
                                         }
+
                                         return $q->pluck('name', 'id');
                                     })
                                     ->placeholder('All Sales Executives')
                                     ->searchable()
                                     ->live()
-                                    ->disabled(fn($get) => (bool) $get('filterInhouse'))
+                                    ->disabled(fn ($get) => (bool) $get('filterInhouse'))
                                     ->columnSpan(['default' => 12, 'sm' => 8, 'md' => 8, 'lg' => 8]),
 
                                 Toggle::make('filterInhouse')
@@ -141,7 +144,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                 DatePicker::make('selectedDate')
                                     ->label('Select Day')
                                     ->default(now()->toDateString())
-                                    ->visible(fn($get) => $get('periodType') === 'days')
+                                    ->visible(fn ($get) => $get('periodType') === 'days')
                                     ->live()
                                     ->columnSpan(['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]),
 
@@ -155,10 +158,11 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                             $wEnd = $wStart->copy()->endOfWeek();
                                             $weeks[$w] = "Week {$w} ({$wStart->format('M d')} - {$wEnd->format('M d')})";
                                         }
+
                                         return $weeks;
                                     })
                                     ->default((int) now()->weekOfYear)
-                                    ->visible(fn($get) => $get('periodType') === 'weeks')
+                                    ->visible(fn ($get) => $get('periodType') === 'weeks')
                                     ->live()
                                     ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
@@ -179,7 +183,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         12 => 'December',
                                     ])
                                     ->default((int) now()->month)
-                                    ->visible(fn($get) => $get('periodType') === 'month')
+                                    ->visible(fn ($get) => $get('periodType') === 'month')
                                     ->live()
                                     ->columnSpan(['default' => 12, 'sm' => 4, 'md' => 4, 'lg' => 4]),
 
@@ -190,12 +194,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
                                         for ($y = now()->year - 3; $y <= now()->year + 2; $y++) {
                                             $years[$y] = (string) $y;
                                         }
+
                                         return $years;
                                     })
                                     ->default((int) now()->year)
-                                    ->visible(fn($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
+                                    ->visible(fn ($get) => in_array($get('periodType'), ['weeks', 'month', 'years']))
                                     ->live()
-                                    ->columnSpan(fn($get) => $get('periodType') === 'years'
+                                    ->columnSpan(fn ($get) => $get('periodType') === 'years'
                                         ? ['default' => 12, 'sm' => 6, 'md' => 6, 'lg' => 6]
                                         : ['default' => 12, 'sm' => 2, 'md' => 2, 'lg' => 2]),
                             ]),
@@ -210,9 +215,10 @@ class SalesDashboard extends Page implements HasTable, HasForms
 
         switch ($periodType) {
             case 'days':
-                $date = !empty($this->filterData['selectedDate'])
+                $date = ! empty($this->filterData['selectedDate'])
                     ? Carbon::parse($this->filterData['selectedDate'])->startOfDay()
                     : now()->startOfDay();
+
                 return [
                     $date,
                     $date->copy()->endOfDay(),
@@ -223,15 +229,17 @@ class SalesDashboard extends Page implements HasTable, HasForms
                 $week = (int) ($this->filterData['selectedWeek'] ?? now()->weekOfYear);
                 $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
                 $end = $start->copy()->endOfWeek();
+
                 return [
                     $start,
                     $end,
-                    "Week {$week} (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
+                    "Week {$week} (".$start->format('M d').' – '.$end->format('M d, Y').')',
                 ];
 
             case 'years':
                 $start = Carbon::create($year, 1, 1)->startOfYear();
                 $end = Carbon::create($year, 12, 31)->endOfYear();
+
                 return [
                     $start,
                     $end,
@@ -243,6 +251,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                 $month = (int) ($this->filterData['selectedMonth'] ?? now()->month);
                 $start = Carbon::create($year, $month, 1)->startOfMonth();
                 $end = $start->copy()->endOfMonth();
+
                 return [
                     $start,
                     $end,
@@ -284,11 +293,11 @@ class SalesDashboard extends Page implements HasTable, HasForms
                 ->action(function (ExportExecutiveReportPdf $service) {
                     $data = $service->buildReportData($this->filterData);
                     $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $data['periodLabel']);
-                    $filename = 'huenics-sales-analytics-' . strtolower($periodLabel) . '-' . date('Ymd-His') . '.csv';
+                    $filename = 'huenics-sales-analytics-'.strtolower($periodLabel).'-'.date('Ymd-His').'.csv';
 
                     return response()->streamDownload(function () use ($data) {
                         $handle = fopen('php://output', 'w');
-                        fputs($handle, "\xEF\xBB\xBF");
+                        fwrite($handle, "\xEF\xBB\xBF");
 
                         // 1. Executive Header
                         fputcsv($handle, ['HUENICS INDUSTRIAL SALES INC. — COMPREHENSIVE SALES & PERFORMANCE REPORT']);
@@ -299,13 +308,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
                         // 2. High-Level KPI Summary
                         fputcsv($handle, ['=== EXECUTIVE SUMMARY & KPIS ===']);
                         fputcsv($handle, ['Metric', 'Value']);
-                        fputcsv($handle, ['Total Sales Achieved', 'PHP ' . number_format($data['kpis']['total_sales'], 2)]);
-                        fputcsv($handle, ['Total Realized Gross Profit', 'PHP ' . number_format($data['kpis']['total_profit'], 2)]);
+                        fputcsv($handle, ['Total Sales Achieved', 'PHP '.number_format($data['kpis']['total_sales'], 2)]);
+                        fputcsv($handle, ['Total Realized Gross Profit', 'PHP '.number_format($data['kpis']['total_profit'], 2)]);
                         fputcsv($handle, ['Total Quotations Generated', $data['kpis']['total_quotations']]);
                         fputcsv($handle, ['Total Purchase Orders Won', $data['kpis']['total_pos']]);
-                        fputcsv($handle, ['Quotation-to-PO Win Rate', $data['kpis']['win_rate'] . '%']);
+                        fputcsv($handle, ['Quotation-to-PO Win Rate', $data['kpis']['win_rate'].'%']);
                         $avgDeal = $data['kpis']['total_pos'] > 0 ? $data['kpis']['total_sales'] / $data['kpis']['total_pos'] : 0;
-                        fputcsv($handle, ['Average Deal Size (PO)', 'PHP ' . number_format($avgDeal, 2)]);
+                        fputcsv($handle, ['Average Deal Size (PO)', 'PHP '.number_format($avgDeal, 2)]);
                         fputcsv($handle, []);
 
                         // 3. Sales Leaderboard Rankings
@@ -331,12 +340,12 @@ class SalesDashboard extends Page implements HasTable, HasForms
                             number_format($data['kpis']['total_profit'], 2, '.', ''),
                             $data['kpis']['total_quotations'],
                             $data['kpis']['total_pos'],
-                            $data['kpis']['win_rate'] . '%',
+                            $data['kpis']['win_rate'].'%',
                         ]);
                         fputcsv($handle, []);
 
                         // 4. Monthly Trend Breakdown
-                        if (!empty($data['monthlyTrends'])) {
+                        if (! empty($data['monthlyTrends'])) {
                             fputcsv($handle, ['=== MONTHLY TREND BREAKDOWN ===']);
                             fputcsv($handle, ['Month', 'Confirmed Sales (PHP)', 'Gross Profit (PHP)', 'POs Count', 'Quotations Count']);
                             foreach ($data['monthlyTrends'] as $m) {
@@ -373,11 +382,11 @@ class SalesDashboard extends Page implements HasTable, HasForms
                 ->action(function (ExportExecutiveReportPdf $service) {
                     $data = $service->buildReportData($this->filterData);
                     $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $data['periodLabel']);
-                    $filename = 'sales-leaderboard-' . strtolower($periodLabel) . '-' . date('Ymd') . '.csv';
+                    $filename = 'sales-leaderboard-'.strtolower($periodLabel).'-'.date('Ymd').'.csv';
 
                     return response()->streamDownload(function () use ($data) {
                         $handle = fopen('php://output', 'w');
-                        fputs($handle, "\xEF\xBB\xBF");
+                        fwrite($handle, "\xEF\xBB\xBF");
 
                         fputcsv($handle, ['Rank', 'Sales Executive', 'Account Type', 'Sales Achieved (PHP)', 'Realized Profit (PHP)', 'Quotations Count', 'POs Won', 'Win Rate']);
 
@@ -403,7 +412,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
                             number_format($data['kpis']['total_profit'], 2, '.', ''),
                             $data['kpis']['total_quotations'],
                             $data['kpis']['total_pos'],
-                            $data['kpis']['win_rate'] . '%',
+                            $data['kpis']['win_rate'].'%',
                         ]);
 
                         fclose($handle);
@@ -433,7 +442,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
         $poDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
             $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $sub->whereBetween('order_date', [$startStr, $endStr])
-                    ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                    ->orWhere(fn ($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
                     ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
                     ->orWhereBetween('completed_at', [$startStr, $endStr])
                     ->orWhereBetween('created_at', [$startStr, $endStr]);
@@ -443,7 +452,7 @@ class SalesDashboard extends Page implements HasTable, HasForms
         $qDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
             $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $sub->whereBetween('quotation_date', [$startStr, $endStr])
-                    ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                    ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
                     ->orWhereBetween('created_at', [$startStr, $endStr]);
             });
         };
@@ -457,13 +466,13 @@ class SalesDashboard extends Page implements HasTable, HasForms
             ])
             ->withCount([
                 'quotations as period_quotations' => $qDateScope,
-                'purchaseOrders as period_pos' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_pos' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ])
             ->withSum([
-                'purchaseOrders as period_achieved' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_achieved' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'order_amount')
             ->withSum([
-                'purchaseOrders as period_profit' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_profit' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'realized_profit');
 
         if ($filterInhouse) {
@@ -477,46 +486,46 @@ class SalesDashboard extends Page implements HasTable, HasForms
             ->columns([
                 TextColumn::make('rank')
                     ->label('#')
-                    ->state(fn($record, $rowLoop) => $rowLoop->iteration)
-                    ->tooltip(fn($record, $rowLoop): string => "Rank #{$rowLoop->iteration} sales performer"),
+                    ->state(fn ($record, $rowLoop) => $rowLoop->iteration)
+                    ->tooltip(fn ($record, $rowLoop): string => "Rank #{$rowLoop->iteration} sales performer"),
 
                 TextColumn::make('name')
                     ->label('Sales Agent')
                     ->searchable()
                     ->weight('bold')
-                    ->description(fn(User $record): string => $record->is_owner ? 'Inhouse (Owner)' : ucfirst(str_replace('_', ' ', $record->role)))
-                    ->tooltip(fn(User $record): string => "Sales Executive: {$record->name} ({$record->email})"),
+                    ->description(fn (User $record): string => $record->is_owner ? 'Inhouse (Owner)' : ucfirst(str_replace('_', ' ', $record->role)))
+                    ->tooltip(fn (User $record): string => "Sales Executive: {$record->name} ({$record->email})"),
 
                 TextColumn::make('period_achieved')
                     ->label('Sales Achieved')
                     ->money('PHP')
                     ->sortable()
                     ->alignEnd()
-                    ->state(fn(User $record) => (float) ($record->period_achieved ?? 0))
-                    ->color(fn($state) => (float) $state > 0 ? 'success' : 'gray')
+                    ->state(fn (User $record) => (float) ($record->period_achieved ?? 0))
+                    ->color(fn ($state) => (float) $state > 0 ? 'success' : 'gray')
                     ->weight('bold')
-                    ->tooltip(fn(User $record): string => "Confirmed converted PO sales during {$periodLabel}: ₱" . number_format((float) ($record->period_achieved ?? 0), 2)),
+                    ->tooltip(fn (User $record): string => "Confirmed converted PO sales during {$periodLabel}: ₱".number_format((float) ($record->period_achieved ?? 0), 2)),
 
                 TextColumn::make('period_profit')
                     ->label('Realized Profit')
                     ->money('PHP')
                     ->sortable()
                     ->alignEnd()
-                    ->state(fn(User $record) => (float) ($record->period_profit ?? 0))
-                    ->color(fn($state) => (float) $state > 0 ? 'primary' : 'gray')
-                    ->tooltip(fn(User $record): string => "Realized net gross profit during {$periodLabel}: ₱" . number_format((float) ($record->period_profit ?? 0), 2)),
+                    ->state(fn (User $record) => (float) ($record->period_profit ?? 0))
+                    ->color(fn ($state) => (float) $state > 0 ? 'primary' : 'gray')
+                    ->tooltip(fn (User $record): string => "Realized net gross profit during {$periodLabel}: ₱".number_format((float) ($record->period_profit ?? 0), 2)),
 
                 TextColumn::make('period_quotations')
                     ->label('Quotations')
                     ->sortable()
                     ->alignCenter()
-                    ->tooltip(fn(User $record): string => "Total customer quotations created during {$periodLabel}"),
+                    ->tooltip(fn (User $record): string => "Total customer quotations created during {$periodLabel}"),
 
                 TextColumn::make('period_pos')
                     ->label('POs Won')
                     ->sortable()
                     ->alignCenter()
-                    ->tooltip(fn(User $record): string => "Total quotations converted into Purchase Orders during {$periodLabel}"),
+                    ->tooltip(fn (User $record): string => "Total quotations converted into Purchase Orders during {$periodLabel}"),
 
                 TextColumn::make('win_rate')
                     ->label('Win Rate')
@@ -524,16 +533,18 @@ class SalesDashboard extends Page implements HasTable, HasForms
                     ->state(function (User $record): string {
                         $quotes = (int) ($record->period_quotations ?? 0);
                         $pos = (int) ($record->period_pos ?? 0);
-                        return ($quotes > 0 ? round(($pos / $quotes) * 100, 1) : 0) . '%';
+
+                        return ($quotes > 0 ? round(($pos / $quotes) * 100, 1) : 0).'%';
                     })
                     ->badge()
                     ->color(function (User $record): string {
                         $quotes = (int) ($record->period_quotations ?? 0);
                         $pos = (int) ($record->period_pos ?? 0);
                         $rate = $quotes > 0 ? ($pos / $quotes) * 100 : 0;
+
                         return $rate >= 50 ? 'success' : ($rate > 0 ? 'warning' : 'gray');
                     })
-                    ->tooltip(fn(User $record): string => "Conversion win rate efficiency during {$periodLabel}"),
+                    ->tooltip(fn (User $record): string => "Conversion win rate efficiency during {$periodLabel}"),
             ])
             ->heading("Sales Leaderboard — {$periodLabel}")
             ->emptyStateHeading('No sales activity found for this period')

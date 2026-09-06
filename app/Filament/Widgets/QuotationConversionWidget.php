@@ -4,7 +4,6 @@ namespace App\Filament\Widgets;
 
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
@@ -13,15 +12,23 @@ use Livewire\Attributes\On;
 class QuotationConversionWidget extends ChartWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
+
     protected ?string $maxHeight = '280px';
 
     public string $periodType = 'month';
+
     public ?string $selectedDate = null;
+
     public ?int $selectedWeek = null;
+
     public ?int $selectedMonth = null;
+
     public ?int $selectedYear = null;
+
     public ?int $selectedAgentId = null;
+
     public bool $filterInhouse = false;
 
     public function mount(
@@ -82,7 +89,7 @@ class QuotationConversionWidget extends ChartWidget
         };
     }
 
-    public function getHeading(): string | Htmlable | null
+    public function getHeading(): string|Htmlable|null
     {
         return 'Quotation Conversion & Pipeline Distribution';
     }

@@ -3,28 +3,33 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
-use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, Notifiable, SoftDeletes;
 
     public const ROLE_ADMIN = UserRole::Admin->value;
+
     public const ROLE_OPERATIONS_MANAGER = UserRole::OperationsManager->value;
+
     public const ROLE_SALES_EXECUTIVE = UserRole::SalesExecutive->value;
+
     public const ROLE_CEO = UserRole::Ceo->value;
 
     public static function getAvailableRoles(): array
     {
         try {
-            $roles = \App\Models\Role::pluck('name', 'slug')->toArray();
-            if (!empty($roles)) {
+            $roles = Role::pluck('name', 'slug')->toArray();
+            if (! empty($roles)) {
                 return $roles;
             }
         } catch (\Throwable $e) {
@@ -68,18 +73,18 @@ class User extends Authenticatable implements FilamentUser
         parent::boot();
 
         static::saving(function (User $user) {
-            if (!empty($user->role)) {
+            if (! empty($user->role)) {
                 try {
-                    $roleRecord = \App\Models\Role::where('slug', $user->role)->first();
+                    $roleRecord = Role::where('slug', $user->role)->first();
                     if ($roleRecord) {
                         $user->role_id = $roleRecord->id;
                     }
                 } catch (\Throwable $e) {
                     // ignore if table not migrated
                 }
-            } elseif (!empty($user->role_id)) {
+            } elseif (! empty($user->role_id)) {
                 try {
-                    $roleRecord = \App\Models\Role::find($user->role_id);
+                    $roleRecord = Role::find($user->role_id);
                     if ($roleRecord) {
                         $user->role = $roleRecord->slug;
                     }
@@ -121,9 +126,9 @@ class User extends Authenticatable implements FilamentUser
         return in_array($this->role, $roles, true);
     }
 
-    public function roleRelation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function roleRelation(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Role::class, 'role_id');
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     /**
@@ -138,9 +143,9 @@ class User extends Authenticatable implements FilamentUser
 
         // Check assigned Role relation permissions
         $role = $this->roleRelation;
-        if (!$role && $this->role) {
+        if (! $role && $this->role) {
             try {
-                $role = \App\Models\Role::where('slug', $this->role)->first();
+                $role = Role::where('slug', $this->role)->first();
             } catch (\Throwable $e) {
                 $role = null;
             }
@@ -271,11 +276,11 @@ class User extends Authenticatable implements FilamentUser
      */
     public function getESignatureUrl(): ?string
     {
-        if (!$this->e_signature_path) {
+        if (! $this->e_signature_path) {
             return null;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('local')->url($this->e_signature_path);
+        return Storage::disk('local')->url($this->e_signature_path);
     }
 
     /**
@@ -283,13 +288,13 @@ class User extends Authenticatable implements FilamentUser
      */
     public function getESignatureAbsolutePath(): ?string
     {
-        if (!$this->e_signature_path) {
+        if (! $this->e_signature_path) {
             return null;
         }
 
         $candidates = [
-            storage_path('app/private/' . $this->e_signature_path),
-            storage_path('app/' . $this->e_signature_path),
+            storage_path('app/private/'.$this->e_signature_path),
+            storage_path('app/'.$this->e_signature_path),
         ];
 
         foreach ($candidates as $path) {
@@ -302,19 +307,18 @@ class User extends Authenticatable implements FilamentUser
     }
 
     // Relationships
-    public function quotations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function quotations(): HasMany
     {
-        return $this->hasMany(\App\Models\Quotation::class, 'sales_agent_id');
+        return $this->hasMany(Quotation::class, 'sales_agent_id');
     }
 
-
-    public function purchaseOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function purchaseOrders(): HasMany
     {
-        return $this->hasMany(\App\Models\PurchaseOrder::class, 'sales_agent_id');
+        return $this->hasMany(PurchaseOrder::class, 'sales_agent_id');
     }
 
-    public function salesQuotas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function salesQuotas(): HasMany
     {
-        return $this->hasMany(\App\Models\SalesQuota::class);
+        return $this->hasMany(SalesQuota::class);
     }
 }

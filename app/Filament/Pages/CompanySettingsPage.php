@@ -5,8 +5,8 @@ namespace App\Filament\Pages;
 use App\Models\CompanySetting;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -21,10 +21,15 @@ class CompanySettingsPage extends Page implements HasForms
     use InteractsWithForms;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
+
     protected static UnitEnum|string|null $navigationGroup = 'Settings & System';
+
     protected static ?string $navigationLabel = 'Company & Business Settings';
+
     protected static ?string $title = 'Company & Business Settings';
+
     protected string $view = 'filament.pages.company-settings-page';
+
     protected static ?int $navigationSort = 10;
 
     public ?array $data = [];
@@ -72,7 +77,7 @@ class CompanySettingsPage extends Page implements HasForms
                                 ->required()
                                 ->minValue(1900)
                                 ->maxValue((int) date('Y'))
-                                ->helperText('The system automatically calculates longevity (e.g. Current Year ' . date('Y') . ' - Founding Year).'),
+                                ->helperText('The system automatically calculates longevity (e.g. Current Year '.date('Y').' - Founding Year).'),
 
                             TextInput::make('years_in_business_override')
                                 ->label('Manual Years Override (Optional)')

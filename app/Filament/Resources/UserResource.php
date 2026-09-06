@@ -30,8 +30,11 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'User Accounts & RBAC';
+
     protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
@@ -74,13 +77,13 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('password')
                             ->label('Password')
                             ->password()
-                            ->dehydrateStateUsing(fn($state) => !empty($state) ? Hash::make($state) : null)
-                            ->dehydrated(fn($state) => filled($state))
-                            ->required(fn(string $operation): bool => $operation === 'create'),
+                            ->dehydrateStateUsing(fn ($state) => ! empty($state) ? Hash::make($state) : null)
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $operation): bool => $operation === 'create'),
 
                         Forms\Components\Select::make('role')
                             ->label('Assigned System Role')
-                            ->options(fn() => User::getAvailableRoles())
+                            ->options(fn () => User::getAvailableRoles())
                             ->required()
                             ->default(User::ROLE_OPERATIONS_MANAGER)
                             ->helperText('Defines permissions across ingestion, review queue, and financial views.'),
@@ -111,14 +114,14 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
                     ->badge()
-                    ->formatStateUsing(fn(string $state, User $record): string => $record->roleRelation?->name ?? match ($state) {
+                    ->formatStateUsing(fn (string $state, User $record): string => $record->roleRelation?->name ?? match ($state) {
                         User::ROLE_ADMIN => 'Admin',
                         User::ROLE_OPERATIONS_MANAGER => 'Operations Manager',
                         User::ROLE_SALES_EXECUTIVE => 'Sales Executive',
                         User::ROLE_CEO => 'CEO / Executive',
                         default => ucwords(str_replace('_', ' ', $state)),
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         User::ROLE_ADMIN => 'primary',
                         User::ROLE_OPERATIONS_MANAGER => 'warning',
                         User::ROLE_SALES_EXECUTIVE => 'info',
@@ -137,22 +140,22 @@ class UserResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
-                    ->options(fn() => User::getAvailableRoles()),
+                    ->options(fn () => User::getAvailableRoles()),
                 TrashedFilter::make(),
             ])
             ->actions([
                 ActionGroup::make([
                     EditAction::make(),
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(User $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(User $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (User $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (User $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

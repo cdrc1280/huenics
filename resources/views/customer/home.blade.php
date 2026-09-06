@@ -216,9 +216,9 @@
                         </div>
 
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
-                        <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center gap-1.5 transition-all duration-300 pointer-events-none z-20">
-                            <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span id="luminaire-status-text">CITIZEN COB LED • 3000K WARM AMBER • 36° FLOOD • CRI 97+</span>
+                        <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit max-w-[88%] sm:max-w-[85%] bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8px] xs:text-[9px] sm:text-[10px] font-black uppercase tracking-normal sm:tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-300 pointer-events-none z-20 overflow-hidden text-ellipsis whitespace-nowrap">
+                            <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                            <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K WARM AMBER • 36° FLOOD • CRI 97+</span>
                         </div>
                     </div>
 
@@ -248,53 +248,62 @@
                 </div>
 
                 <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Citizen COB CCT Selection") -->
-                <div class="mt-4 sm:mt-6 w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[480px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
-                    <!-- Power Switch (ON / OFF) -->
-                    <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
-                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
-                        <i data-lucide="power" class="w-3 sm:w-3.5 h-3 sm:h-3.5"></i>
-                        <span id="luminaire-power-label"><span class="hidden sm:inline">COB: </span>ON</span>
-                    </button>
+                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[380px] sm:max-w-[480px] lg:max-w-[500px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2 z-20">
+                    
+                    <!-- Console Tier 1: Primary Power Engine & Kelvin CCT Selector -->
+                    <div class="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
+                        <!-- Power Switch (ON / OFF) -->
+                        <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
+                                class="flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
+                            <i data-lucide="power" class="w-3 sm:w-3.5 h-3 sm:h-3.5"></i>
+                            <span id="luminaire-power-label"><span class="hidden sm:inline">COB: </span>ON</span>
+                        </button>
 
-                    <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
-                    <div class="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60 shrink-0">
-                        <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
-                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
-                                title="3000K Warm White (Architectural Amber • 36° Flood)">
-                            3000K
-                        </button>
-                        <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
-                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="3500K Neutral Warm (Hospitality Sunset • 36° Flood)">
-                            3500K
-                        </button>
-                        <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
-                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="4000K Natural White (Commercial Crisp • 36° Flood)">
-                            4000K
-                        </button>
-                        <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
-                                class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="5000K Cool White (Industrial Daylight • 36° Flood)">
-                            5000K
+                        <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
+                        <div class="flex-1 sm:flex-initial flex items-center justify-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
+                            <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
+                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer text-center"
+                                    title="3000K Warm White (Architectural Amber • 36° Flood)">
+                                3000K
+                            </button>
+                            <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
+                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    title="3500K Neutral Warm (Hospitality Sunset • 36° Flood)">
+                                3500K
+                            </button>
+                            <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
+                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    title="4000K Natural White (Commercial Crisp • 36° Flood)">
+                                4000K
+                            </button>
+                            <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
+                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    title="5000K Cool White (Industrial Daylight • 36° Flood)">
+                                5000K
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Console Tier 2: 36° Optic Flood Reflector & Interactive High-Voltage Surge Ignition -->
+                    <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-t-0">
+                        <!-- 36° Architectural Optic Badge -->
+                        <div class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300 whitespace-nowrap" 
+                             title="Precision 36° Architectural Collimated Optic Flood Reflector">
+                            <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                            </svg>
+                            <span>36&deg; Optic Flood</span>
+                        </div>
+
+                        <!-- Cool Interactive Surge / Pulse Animation Button -->
+                        <button type="button" onclick="window.triggerLuminaireSurge()"
+                                class="flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                                title="Trigger High-Voltage Photonic Ignition Surge">
+                            <i data-lucide="zap" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400 shrink-0"></i>
+                            <span>Surge</span>
                         </button>
                     </div>
 
-                    <!-- 36° Architectural Optic Badge -->
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9px] sm:text-[10px] font-mono font-bold text-amber-300 shrink-0" title="Precision 36° Architectural Collimated Optic Flood Reflector">
-                        <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
-                        </svg>
-                        <span>36&deg; Optic</span>
-                    </div>
-
-                    <!-- Cool Interactive Surge / Pulse Animation Button -->
-                    <button type="button" onclick="window.triggerLuminaireSurge()"
-                            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
-                            title="Trigger High-Voltage Photonic Ignition Surge">
-                        <i data-lucide="zap" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400"></i>
-                        <span>Surge</span>
-                    </button>
                 </div>
             </div>
 
@@ -1241,6 +1250,7 @@
                 ambientTint: 0x241408, // Warm room bounce
                 halo: 'radial-gradient(circle, rgba(255, 140, 26, 0.70) 0%, rgba(234, 88, 12, 0.35) 38%, rgba(180, 83, 9, 0.12) 65%, transparent 80%)',
                 badgeText: 'CITIZEN COB • 3000K WARM AMBER • 36° FLOOD • CRI 97+',
+                shortBadgeText: '3000K AMBER • 36° • CRI 97+',
                 name: '3000K Warm White (Architectural Amber)',
                 btnClass: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
                 powerScale: 0.94,
@@ -1254,6 +1264,7 @@
                 ambientTint: 0x20150c,
                 halo: 'radial-gradient(circle, rgba(255, 171, 94, 0.65) 0%, rgba(249, 115, 22, 0.30) 38%, rgba(194, 65, 12, 0.10) 65%, transparent 80%)',
                 badgeText: 'CITIZEN COB • 3500K SOFT WHITE • 36° FLOOD • CRI 97+',
+                shortBadgeText: '3500K WHITE • 36° • CRI 97+',
                 name: '3500K Neutral Warm (Hospitality Sunset)',
                 btnClass: 'bg-orange-500 text-white shadow-md shadow-orange-500/30',
                 powerScale: 1.00,
@@ -1267,6 +1278,7 @@
                 ambientTint: 0x181a24,
                 halo: 'radial-gradient(circle, rgba(254, 240, 138, 0.62) 0%, rgba(250, 204, 21, 0.26) 38%, rgba(148, 163, 184, 0.10) 65%, transparent 80%)',
                 badgeText: 'CITIZEN COB • 4000K NATURAL WHITE • 36° FLOOD • CRI 95+',
+                shortBadgeText: '4000K CRISP • 36° • CRI 95+',
                 name: '4000K Natural White (Commercial Crisp)',
                 btnClass: 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30',
                 powerScale: 1.08,
@@ -1280,6 +1292,7 @@
                 ambientTint: 0x0a182a,
                 halo: 'radial-gradient(circle, rgba(186, 230, 253, 0.72) 0%, rgba(56, 189, 248, 0.38) 38%, rgba(14, 165, 233, 0.14) 65%, transparent 80%)',
                 badgeText: 'CITIZEN COB • 5000K COOL DAYLIGHT • 36° FLOOD • CRI 92+',
+                shortBadgeText: '5000K ARCTIC • 36° • CRI 92+',
                 name: '5000K Cool White (Industrial Daylight)',
                 btnClass: 'bg-sky-400 text-slate-950 shadow-md shadow-sky-400/30',
                 powerScale: 1.18,
@@ -2025,7 +2038,20 @@
             }
 
             animate();
+            updateLuminaireStatusText();
         };
+
+        function updateLuminaireStatusText() {
+            const text = document.getElementById('luminaire-status-text');
+            if (!text) return;
+            if (!isPowerOn) {
+                text.innerText = window.innerWidth < 640 ? 'COB STANDBY' : 'CITIZEN COB LED • STANDBY MODE';
+                return;
+            }
+            const profile = cctProfiles[currentCCT];
+            if (!profile) return;
+            text.innerText = window.innerWidth < 640 ? (profile.shortBadgeText || profile.badgeText) : profile.badgeText;
+        }
 
         // Industrial Power Switch (ON / OFF) with Incandescent Warm-up & Phosphor Decay
         window.toggleLuminairePower = function() {
@@ -2033,16 +2059,15 @@
             const btn = document.getElementById('luminaire-power-btn');
             const label = document.getElementById('luminaire-power-label');
             const dot = document.getElementById('luminaire-status-dot');
-            const text = document.getElementById('luminaire-status-text');
             const halo = document.getElementById('luminaire-ambient-halo');
 
             if (isPowerOn) {
                 if (btn) {
-                    btn.className = 'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer whitespace-nowrap';
+                    btn.className = 'flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap';
                 }
-                if (label) label.innerText = 'COB: ON';
-                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse';
-                if (text) text.innerText = cctProfiles[currentCCT].badgeText;
+                if (label) label.innerHTML = '<span class="hidden sm:inline">COB: </span>ON';
+                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0';
+                updateLuminaireStatusText();
                 if (halo) {
                     halo.style.opacity = '0.85';
                     halo.style.background = cctProfiles[currentCCT].halo;
@@ -2050,11 +2075,11 @@
                 window.triggerLuminaireSurge();
             } else {
                 if (btn) {
-                    btn.className = 'flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-slate-600 active:scale-95 cursor-pointer whitespace-nowrap';
+                    btn.className = 'flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-bold transition-all duration-200 bg-slate-700 text-slate-300 hover:bg-slate-600 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap';
                 }
-                if (label) label.innerText = 'COB: OFF';
-                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-500';
-                if (text) text.innerText = 'CITIZEN COB LED • STANDBY MODE';
+                if (label) label.innerHTML = '<span class="hidden sm:inline">COB: </span>OFF';
+                if (dot) dot.className = 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-500 shrink-0';
+                updateLuminaireStatusText();
                 if (halo) {
                     halo.style.opacity = '0.12';
                 }
@@ -2069,10 +2094,10 @@
 
             // Update CCT Buttons with High-Contrast Active State
             document.querySelectorAll('.cct-btn').forEach(b => {
-                b.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer';
+                b.className = 'cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center';
             });
             if (btnEl) {
-                btnEl.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 ' + profile.btnClass + ' cursor-pointer';
+                btnEl.className = 'cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 ' + profile.btnClass + ' cursor-pointer text-center';
             }
 
             // Update Ambient Halo & Tech Badge
@@ -2080,14 +2105,13 @@
             if (halo && isPowerOn) {
                 halo.style.background = profile.halo;
             }
-            const text = document.getElementById('luminaire-status-text');
-            if (text && isPowerOn) {
-                text.innerText = profile.badgeText;
-            }
+            updateLuminaireStatusText();
 
             // Trigger brief photonic surge to dramatize the CCT transition
             window.triggerLuminaireSurge();
         };
+
+        window.addEventListener('resize', updateLuminaireStatusText);
 
         // Photonic Ignition Surge Animation
         window.triggerLuminaireSurge = function() {

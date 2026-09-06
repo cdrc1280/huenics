@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -21,22 +22,24 @@ use Illuminate\Support\Str;
  * @property int|null $delivery_receipt_document_id
  * @property int|null $sales_invoice_document_id
  * @property float $final_amount
- * @property \Illuminate\Support\Carbon|null $order_date
- * @property \Illuminate\Support\Carbon|null $delivery_date
+ * @property Carbon|null $order_date
+ * @property Carbon|null $delivery_date
  * @property string $status
  * @property bool $is_completed
  * @property string|null $notes
  * @property int|null $created_by
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class Transaction extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
-    public const STATUS_PENDING   = TransactionStatus::PendingDelivery->value;
+    public const STATUS_PENDING = TransactionStatus::PendingDelivery->value;
+
     public const STATUS_DELIVERED = TransactionStatus::Delivered->value;
+
     public const STATUS_CANCELLED = TransactionStatus::Cancelled->value;
 
     protected $fillable = [
@@ -129,10 +132,10 @@ class Transaction extends Model
      */
     public function hasFullLifecycleDocuments(): bool
     {
-        return !empty($this->quotation_document_id)
-            && !empty($this->purchase_order_document_id)
-            && !empty($this->delivery_receipt_document_id)
-            && !empty($this->sales_invoice_document_id);
+        return ! empty($this->quotation_document_id)
+            && ! empty($this->purchase_order_document_id)
+            && ! empty($this->delivery_receipt_document_id)
+            && ! empty($this->sales_invoice_document_id);
     }
 
     /**
@@ -140,7 +143,7 @@ class Transaction extends Model
      */
     public function hasFulfillmentDocuments(): bool
     {
-        return !empty($this->delivery_receipt_document_id)
-            && !empty($this->sales_invoice_document_id);
+        return ! empty($this->delivery_receipt_document_id)
+            && ! empty($this->sales_invoice_document_id);
     }
 }

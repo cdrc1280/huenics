@@ -3,17 +3,14 @@
 namespace App\Filament\Resources\QuotationResource\Pages;
 
 use App\Actions\IngestDocumentAction;
-use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\QuotationResource;
 use App\Models\Document;
-use App\Models\Project;
-use App\Models\Vendor;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Storage;
 
 class ListQuotations extends ListRecords
 {
@@ -59,7 +56,7 @@ class ListQuotations extends ListRecords
                             projectId: null
                         );
 
-                        if (!empty($document->is_duplicate)) {
+                        if (! empty($document->is_duplicate)) {
                             $docRef = $document->document_number ? " (Reference: {$document->document_number})" : '';
                             Notification::make()
                                 ->title('Duplicate Quotation Detected')
@@ -67,6 +64,7 @@ class ListQuotations extends ListRecords
                                 ->warning()
                                 ->duration(8000)
                                 ->send();
+
                             return;
                         }
 
@@ -76,7 +74,7 @@ class ListQuotations extends ListRecords
                             ->success()
                             ->send();
                     } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Storage::disk('local')->delete($data['disk_path']);
+                        Storage::disk('local')->delete($data['disk_path']);
 
                         Notification::make()
                             ->title('Upload Rejected')

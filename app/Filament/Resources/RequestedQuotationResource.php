@@ -35,9 +35,13 @@ class RequestedQuotationResource extends Resource
     protected static ?string $model = RequestedQuotation::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-inbox-arrow-down';
+
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+
     protected static ?string $navigationParentItem = 'Quotations';
+
     protected static ?string $navigationLabel = 'Requested Quotations';
+
     protected static ?int $navigationSort = 2;
 
     public static function canAccess(): bool
@@ -48,6 +52,7 @@ class RequestedQuotationResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = RequestedQuotation::where('status', Quotation::STATUS_PENDING)->count();
+
         return $count > 0 ? (string) $count : null;
     }
 
@@ -94,7 +99,7 @@ class RequestedQuotationResource extends Resource
 
                     Select::make('status')
                         ->options([
-                            Quotation::STATUS_PENDING  => 'Pending Review',
+                            Quotation::STATUS_PENDING => 'Pending Review',
                             Quotation::STATUS_APPROVED => 'Approved / Converted',
                             Quotation::STATUS_REJECTED => 'Rejected',
                         ])
@@ -179,12 +184,12 @@ class RequestedQuotationResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('medium')
-                    ->description(fn(RequestedQuotation $r) => $r->customer_company ?: 'Individual / Direct'),
+                    ->description(fn (RequestedQuotation $r) => $r->customer_company ?: 'Individual / Direct'),
 
                 TextColumn::make('customer_email')
                     ->label('Contact')
                     ->searchable()
-                    ->description(fn(RequestedQuotation $r) => $r->phone_no ?: 'No Phone')
+                    ->description(fn (RequestedQuotation $r) => $r->phone_no ?: 'No Phone')
                     ->copyable(),
 
                 TextColumn::make('project_name')
@@ -192,7 +197,7 @@ class RequestedQuotationResource extends Resource
                     ->searchable()
                     ->wrap()
                     ->default('General Project')
-                    ->description(fn(RequestedQuotation $r) => $r->project_location ?: 'Metro Manila'),
+                    ->description(fn (RequestedQuotation $r) => $r->project_location ?: 'Metro Manila'),
 
                 TextColumn::make('line_items_count')
                     ->label('Items')
@@ -211,14 +216,14 @@ class RequestedQuotationResource extends Resource
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        Quotation::STATUS_PENDING  => 'warning',
+                    ->color(fn (string $state): string => match ($state) {
+                        Quotation::STATUS_PENDING => 'warning',
                         Quotation::STATUS_APPROVED, Quotation::STATUS_CONVERTED => 'success',
                         Quotation::STATUS_REJECTED => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        Quotation::STATUS_PENDING  => 'Pending Review',
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        Quotation::STATUS_PENDING => 'Pending Review',
                         Quotation::STATUS_APPROVED => 'Approved / Official',
                         Quotation::STATUS_CONVERTED => 'Converted to PO',
                         Quotation::STATUS_REJECTED => 'Rejected',
@@ -238,7 +243,7 @@ class RequestedQuotationResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->options([
-                        Quotation::STATUS_PENDING  => 'Pending Review',
+                        Quotation::STATUS_PENDING => 'Pending Review',
                         Quotation::STATUS_APPROVED => 'Approved / Official',
                         Quotation::STATUS_REJECTED => 'Rejected',
                     ]),
@@ -248,11 +253,11 @@ class RequestedQuotationResource extends Resource
                     ->label('Convert to Official')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(RequestedQuotation $record) => $record->is_online_request)
+                    ->visible(fn (RequestedQuotation $record) => $record->is_online_request)
                     ->form([
                         Select::make('sales_agent_id')
                             ->label('Assign Sales Agent')
-                            ->options(fn() => User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->pluck('name', 'id'))
+                            ->options(fn () => User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->pluck('name', 'id'))
                             ->default(auth()->id())
                             ->required()
                             ->helperText('Select the internal sales executive assigned to manage this quotation and follow-up with the client.'),
@@ -264,8 +269,8 @@ class RequestedQuotationResource extends Resource
                     ])
                     ->action(function (RequestedQuotation $record, array $data): void {
                         $record->convertToOfficialQuotation($data['sales_agent_id']);
-                        if (!empty($data['remarks'])) {
-                            $record->notes = ($record->notes ? $record->notes . "\n" : '') . "Approval Notes: " . $data['remarks'];
+                        if (! empty($data['remarks'])) {
+                            $record->notes = ($record->notes ? $record->notes."\n" : '').'Approval Notes: '.$data['remarks'];
                             $record->save();
                         }
 
@@ -280,7 +285,7 @@ class RequestedQuotationResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn(RequestedQuotation $record) => $record->status === Quotation::STATUS_PENDING)
+                    ->visible(fn (RequestedQuotation $record) => $record->status === Quotation::STATUS_PENDING)
                     ->form([
                         Textarea::make('rejection_reason')
                             ->label('Reason for Rejection')
@@ -316,7 +321,7 @@ class RequestedQuotationResource extends Resource
     {
         return [
             'index' => Pages\ListRequestedQuotations::route('/'),
-            'view'  => Pages\ViewRequestedQuotation::route('/{record}'),
+            'view' => Pages\ViewRequestedQuotation::route('/{record}'),
         ];
     }
 }

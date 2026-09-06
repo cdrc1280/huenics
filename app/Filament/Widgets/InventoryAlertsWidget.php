@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\InventoryItem;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 class InventoryAlertsWidget extends BaseWidget
 {
@@ -12,7 +13,7 @@ class InventoryAlertsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $stats = \Illuminate\Support\Facades\Cache::remember('widget_inventory_alerts_stats', 60, function () {
+        $stats = Cache::remember('widget_inventory_alerts_stats', 60, function () {
             $totalSkus = InventoryItem::count();
 
             $lowStock = InventoryItem::whereNotNull('reorder_point')
@@ -26,10 +27,10 @@ class InventoryAlertsWidget extends BaseWidget
             $zeroStock = InventoryItem::where('quantity_on_hand', '<=', 0)->count();
 
             return [
-                'total_skus'  => $totalSkus,
-                'low_stock'   => $lowStock,
+                'total_skus' => $totalSkus,
+                'low_stock' => $lowStock,
                 'total_value' => $totalValue,
-                'zero_stock'  => $zeroStock,
+                'zero_stock' => $zeroStock,
             ];
         });
 
@@ -52,12 +53,11 @@ class InventoryAlertsWidget extends BaseWidget
                 ->color($stats['zero_stock'] > 0 ? 'danger' : 'success')
                 ->extraAttributes(['title' => 'Out-of-stock items requiring replenishment']),
 
-            Stat::make('Inventory Value', '₱' . number_format($stats['total_value'], 2))
+            Stat::make('Inventory Value', '₱'.number_format($stats['total_value'], 2))
                 ->description('Estimated at base cost')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary')
                 ->extraAttributes(['title' => 'Total monetary valuation of current stock on hand calculated at product base cost']),
         ];
     }
-
 }

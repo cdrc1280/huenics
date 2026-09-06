@@ -59,6 +59,7 @@ enum UnitOfMeasure: string implements HasLabel
         foreach (self::cases() as $case) {
             $options[$case->value] = $case->getLabel();
         }
+
         return $options;
     }
 }

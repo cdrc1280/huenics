@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Http\Request;
+
 // Catch ALL errors including fatal ones
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -7,7 +9,7 @@ ini_set('display_errors', '1');
 register_shutdown_function(function () {
     $error = error_get_last();
     if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        if (!headers_sent()) {
+        if (! headers_sent()) {
             header('Content-Type: application/json', true, 500);
         }
         echo json_encode(['fatal_error' => $error['message'], 'file' => $error['file'], 'line' => $error['line']]);
@@ -37,7 +39,7 @@ try {
         '/tmp/storage/logs',
         '/tmp/cache',
     ] as $dir) {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
     }
@@ -49,19 +51,19 @@ try {
 
     if ($isLocalDb) {
         $dbTarget = '/tmp/database.sqlite';
-        $baseDb = dirname(__DIR__) . '/database/base.sqlite';
+        $baseDb = dirname(__DIR__).'/database/base.sqlite';
         if (file_exists($baseDb) && filesize($baseDb) > 0) {
             // If target doesn't exist or is smaller/older than baseDb, refresh from baseDb
-            if (!file_exists($dbTarget) || filesize($dbTarget) < filesize($baseDb) || filemtime($baseDb) > filemtime($dbTarget)) {
+            if (! file_exists($dbTarget) || filesize($dbTarget) < filesize($baseDb) || filemtime($baseDb) > filemtime($dbTarget)) {
                 copy($baseDb, $dbTarget);
             }
-        } elseif (!file_exists($dbTarget) || filesize($dbTarget) === 0) {
+        } elseif (! file_exists($dbTarget) || filesize($dbTarget) === 0) {
             touch($dbTarget);
         }
         putenv('DB_CONNECTION=sqlite');
         putenv("DB_DATABASE={$dbTarget}");
-        $_ENV['DB_CONNECTION']  = $_SERVER['DB_CONNECTION']  = 'sqlite';
-        $_ENV['DB_DATABASE']    = $_SERVER['DB_DATABASE']    = $dbTarget;
+        $_ENV['DB_CONNECTION'] = $_SERVER['DB_CONNECTION'] = 'sqlite';
+        $_ENV['DB_DATABASE'] = $_SERVER['DB_DATABASE'] = $dbTarget;
     }
 
     // ─── Session: cookie (Serverless Lambdas must use cookie to persist state) ─
@@ -84,9 +86,9 @@ try {
     $cachePaths = [
         'APP_SERVICES_CACHE' => '/tmp/cache/services.php',
         'APP_PACKAGES_CACHE' => '/tmp/cache/packages.php',
-        'APP_CONFIG_CACHE'   => '/tmp/cache/config.php',
-        'APP_ROUTES_CACHE'   => '/tmp/cache/routes-v7.php',
-        'APP_EVENTS_CACHE'   => '/tmp/cache/events.php',
+        'APP_CONFIG_CACHE' => '/tmp/cache/config.php',
+        'APP_ROUTES_CACHE' => '/tmp/cache/routes-v7.php',
+        'APP_EVENTS_CACHE' => '/tmp/cache/events.php',
     ];
     foreach ($cachePaths as $envKey => $path) {
         putenv("{$envKey}={$path}");
@@ -95,29 +97,29 @@ try {
 
     // ─── Bootstrap Laravel ───────────────────────────────────────────────
     define('LARAVEL_START', microtime(true));
-    require __DIR__ . '/../vendor/autoload.php';
+    require __DIR__.'/../vendor/autoload.php';
 
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    $app = require_once __DIR__.'/../bootstrap/app.php';
     $app->useStoragePath('/tmp/storage');
 
     $app->handleRequest(
-        \Illuminate\Http\Request::capture()
+        Request::capture()
     );
 
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     $root = $e;
     while ($root->getPrevious()) {
         $root = $root->getPrevious();
     }
 
-    if (!headers_sent()) {
+    if (! headers_sent()) {
         header('Content-Type: application/json', true, 500);
     }
     echo json_encode([
-        'error'      => $e->getMessage(),
+        'error' => $e->getMessage(),
         'root_error' => ($root !== $e) ? $root->getMessage() : null,
-        'root_file'  => ($root !== $e) ? $root->getFile() . ':' . $root->getLine() : null,
-        'file'       => $e->getFile() . ':' . $e->getLine(),
-        'trace'      => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+        'root_file' => ($root !== $e) ? $root->getFile().':'.$root->getLine() : null,
+        'file' => $e->getFile().':'.$e->getLine(),
+        'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
     ]);
 }

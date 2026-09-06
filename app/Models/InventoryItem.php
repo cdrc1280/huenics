@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryItem extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_id',
@@ -33,13 +33,13 @@ class InventoryItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity_on_hand'  => 'decimal:4',
+            'quantity_on_hand' => 'decimal:4',
             'quantity_reserved' => 'decimal:4',
-            'reorder_point'     => 'decimal:4',
-            'date_released'     => 'date',
-            'inbound_date'      => 'date',
-            'last_counted_at'   => 'datetime',
-            'is_owned'          => 'boolean',
+            'reorder_point' => 'decimal:4',
+            'date_released' => 'date',
+            'inbound_date' => 'date',
+            'last_counted_at' => 'datetime',
+            'is_owned' => 'boolean',
         ];
     }
 

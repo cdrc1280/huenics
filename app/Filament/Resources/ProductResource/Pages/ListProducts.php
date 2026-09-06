@@ -63,12 +63,12 @@ class ListProducts extends ListRecords
 
                     Toggle::make('update_existing')
                         ->label('Update Existing Products')
-                        ->helperText('When enabled, existing products matching Code or Name will be updated with the latest specifications and prices.')
+                        ->helperText('When enabled, existing products matching Code or Name will be updated with the latest specifications and prices.'),
                 ])
                 ->action(function (array $data): void {
                     $disk = Storage::disk('local');
                     $fileKey = $data['file'] ?? $data['csv_file'] ?? null;
-                    if (!$fileKey) {
+                    if (! $fileKey) {
                         return;
                     }
                     $filePath = $disk->path($fileKey);
@@ -79,8 +79,8 @@ class ListProducts extends ListRecords
                         $result = $service->importFile($filePath, $updateExisting);
 
                         $msg = "Imported {$result['imported']} new product(s), updated {$result['updated']} product(s).";
-                        if (!empty($result['errors'])) {
-                            $msg .= " (" . count($result['errors']) . " row(s) had notes or warnings)";
+                        if (! empty($result['errors'])) {
+                            $msg .= ' ('.count($result['errors']).' row(s) had notes or warnings)';
                         }
 
                         Notification::make()

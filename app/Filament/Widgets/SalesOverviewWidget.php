@@ -7,6 +7,7 @@ use App\Models\Quotation;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\On;
 
 class SalesOverviewWidget extends BaseWidget
@@ -14,11 +15,17 @@ class SalesOverviewWidget extends BaseWidget
     protected static ?int $sort = 1;
 
     public ?int $agentId = null;
+
     public bool $isInhouse = false;
+
     public string $periodType = 'month';
+
     public ?string $selectedDate = null;
+
     public ?int $selectedWeek = null;
+
     public ?int $selectedMonth = null;
+
     public ?int $selectedYear = null;
 
     public function mount(
@@ -57,7 +64,8 @@ class SalesOverviewWidget extends BaseWidget
 
         switch ($this->periodType) {
             case 'days':
-                $date = !empty($this->selectedDate) ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay();
+                $date = ! empty($this->selectedDate) ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay();
+
                 return [
                     $date,
                     $date->copy()->endOfDay(),
@@ -68,15 +76,17 @@ class SalesOverviewWidget extends BaseWidget
                 $week = (int) ($this->selectedWeek ?: now()->weekOfYear);
                 $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
                 $end = $start->copy()->endOfWeek();
+
                 return [
                     $start,
                     $end,
-                    "Week {$week} (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
+                    "Week {$week} (".$start->format('M d').' – '.$end->format('M d, Y').')',
                 ];
 
             case 'years':
                 $start = Carbon::create($year, 1, 1)->startOfYear();
                 $end = Carbon::create($year, 12, 31)->endOfYear();
+
                 return [
                     $start,
                     $end,
@@ -88,6 +98,7 @@ class SalesOverviewWidget extends BaseWidget
                 $month = (int) ($this->selectedMonth ?: now()->month);
                 $start = Carbon::create($year, $month, 1)->startOfMonth();
                 $end = $start->copy()->endOfMonth();
+
                 return [
                     $start,
                     $end,
@@ -96,7 +107,7 @@ class SalesOverviewWidget extends BaseWidget
         }
     }
 
-    protected function getColumns(): int | array | null
+    protected function getColumns(): int|array|null
     {
         return [
             'default' => 1,
@@ -118,12 +129,12 @@ class SalesOverviewWidget extends BaseWidget
         $selectedMonth = $this->selectedMonth;
         $selectedYear = $this->selectedYear;
 
-        $lastUpdated = PurchaseOrder::max('updated_at') . '_' . Quotation::max('updated_at');
-        $cacheKey = 'sales_overview_' . md5(json_encode([
+        $lastUpdated = PurchaseOrder::max('updated_at').'_'.Quotation::max('updated_at');
+        $cacheKey = 'sales_overview_'.md5(json_encode([
             $agentId, $isInhouse, $periodType, $selectedDate, $selectedWeek, $selectedMonth, $selectedYear, $lastUpdated,
         ]));
 
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($startDate, $endDate, $agentId, $isInhouse) {
+        $data = Cache::remember($cacheKey, 60, function () use ($startDate, $endDate, $agentId, $isInhouse) {
             $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
             $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
             $startDateOnly = $startDate->toDateString();
@@ -131,22 +142,22 @@ class SalesOverviewWidget extends BaseWidget
 
             $quotationQuery = Quotation::where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $q->whereBetween('quotation_date', [$startStr, $endStr])
-                  ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
-                  ->orWhereBetween('created_at', [$startStr, $endStr]);
+                    ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                    ->orWhereBetween('created_at', [$startStr, $endStr]);
             });
 
             $poQuery = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
                 ->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                     $q->whereBetween('order_date', [$startStr, $endStr])
-                      ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
-                      ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
-                      ->orWhereBetween('completed_at', [$startStr, $endStr])
-                      ->orWhereBetween('created_at', [$startStr, $endStr]);
+                        ->orWhere(fn ($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                        ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
+                        ->orWhereBetween('completed_at', [$startStr, $endStr])
+                        ->orWhereBetween('created_at', [$startStr, $endStr]);
                 });
 
             if ($isInhouse) {
-                $quotationQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
-                $poQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $quotationQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $poQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
             } elseif ($agentId) {
                 $quotationQuery->where('sales_agent_id', $agentId);
                 $poQuery->where('sales_agent_id', $agentId);
@@ -169,8 +180,8 @@ class SalesOverviewWidget extends BaseWidget
                 ->where('is_completed', false);
 
             if ($isInhouse) {
-                $warrantyQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
-                $overdueQuery->where(fn($q) => $q->whereHas('salesAgent', fn($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $warrantyQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
+                $overdueQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($sub) => $sub->where('is_owner', true))->orWhereNull('sales_agent_id'));
             } elseif ($agentId) {
                 $warrantyQuery->where('sales_agent_id', $agentId);
                 $overdueQuery->where('sales_agent_id', $agentId);
@@ -182,8 +193,8 @@ class SalesOverviewWidget extends BaseWidget
             $avgOrderValue = $convertedPos > 0 ? ($totalRevenue / $convertedPos) : 0.0;
 
             $pendingApprovalCount = PurchaseOrder::where('status', PurchaseOrder::STATUS_PENDING)
-                ->when($isInhouse, fn($q) => $q->where(fn($sub) => $sub->whereHas('salesAgent', fn($s) => $s->where('is_owner', true))->orWhereNull('sales_agent_id')))
-                ->when(!$isInhouse && $agentId, fn($q) => $q->where('sales_agent_id', $agentId))
+                ->when($isInhouse, fn ($q) => $q->where(fn ($sub) => $sub->whereHas('salesAgent', fn ($s) => $s->where('is_owner', true))->orWhereNull('sales_agent_id')))
+                ->when(! $isInhouse && $agentId, fn ($q) => $q->where('sales_agent_id', $agentId))
                 ->count();
 
             return [
@@ -200,7 +211,7 @@ class SalesOverviewWidget extends BaseWidget
         });
 
         $periodPrefix = match ($this->periodType) {
-            'days'  => 'Selected Day',
+            'days' => 'Selected Day',
             'weeks' => 'Selected Week',
             'years' => 'Selected Year',
             default => 'Selected Month',
@@ -219,8 +230,8 @@ class SalesOverviewWidget extends BaseWidget
                 ->color('success')
                 ->extraAttributes(['title' => "Quotations converted into confirmed Purchase Orders during {$periodLabel} ({$data['winRate']}% conversion rate)"]),
 
-            Stat::make('Total Gross Revenue', '₱' . number_format($data['totalRevenue'], 2))
-                ->description("Net Profit: ₱" . number_format($data['totalProfit'], 2))
+            Stat::make('Total Gross Revenue', '₱'.number_format($data['totalRevenue'], 2))
+                ->description('Net Profit: ₱'.number_format($data['totalProfit'], 2))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary')
                 ->extraAttributes(['title' => "Gross sales revenue & realized gross profit for confirmed orders during {$periodLabel}"]),
@@ -237,7 +248,7 @@ class SalesOverviewWidget extends BaseWidget
                 ->color($data['overdueDeliveries'] > 0 ? 'danger' : 'success')
                 ->extraAttributes(['title' => 'Confirmed Purchase Orders exceeding expected delivery date']),
 
-            Stat::make('Avg. Order Value', '₱' . number_format($data['avgOrderValue'], 2))
+            Stat::make('Avg. Order Value', '₱'.number_format($data['avgOrderValue'], 2))
                 ->description($data['pendingApprovalCount'] > 0
                     ? "{$data['pendingApprovalCount']} PO(s) Pending Approval"
                     : 'All Orders Processed')

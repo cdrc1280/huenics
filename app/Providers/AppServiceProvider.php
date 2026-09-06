@@ -2,14 +2,18 @@
 
 namespace App\Providers;
 
+use App\Database\ExtendedSQLiteConnection;
 use App\Listeners\LogAuthenticationActivity;
 use App\Models\PurchaseOrder;
 use App\Observers\PurchaseOrderObserver;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,15 +48,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Register ExtendedSQLiteConnection resolver to guarantee json_extract polyfill
         // on all SQLite connections (crucial for AWS Lambda / Vercel PHP without JSON1)
-        \Illuminate\Database\Connection::resolverFor('sqlite', function ($connection, $database, $prefix, $config) {
-            return new \App\Database\ExtendedSQLiteConnection($connection, $database, $prefix, $config);
+        Connection::resolverFor('sqlite', function ($connection, $database, $prefix, $config) {
+            return new ExtendedSQLiteConnection($connection, $database, $prefix, $config);
         });
 
         // Ensure Filament frontend notifications are dispatched directly to the browser
         // without relying on multi-request session round-trips (crucial for serverless Vercel)
-        if (class_exists(\Livewire\Livewire::class)) {
-            \Livewire\on('dehydrate', function (\Livewire\Component $component): void {
-                if (! \Livewire\Livewire::isLivewireRequest()) {
+        if (class_exists(Livewire::class)) {
+            \Livewire\on('dehydrate', function (Component $component): void {
+                if (! Livewire::isLivewireRequest()) {
                     return;
                 }
 
@@ -61,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
                         ?? session()->get('filament.claimed_notifications')
                         ?? [];
 
-                    if (!empty($notifications) && is_array($notifications)) {
+                    if (! empty($notifications) && is_array($notifications)) {
                         foreach ($notifications as $notification) {
                             if (is_array($notification)) {
                                 $component->dispatch('notificationSent', notification: $notification);

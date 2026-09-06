@@ -18,7 +18,7 @@ class ExportExecutiveReportPdf
      */
     public function generate(array $filterData = []): string
     {
-        $options = new Options();
+        $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
         $options->set('defaultFont', 'Helvetica');
@@ -43,7 +43,7 @@ class ExportExecutiveReportPdf
     {
         $pdfContent = $this->generate($filterData);
         $periodLabel = preg_replace('/[^a-zA-Z0-9_-]/', '_', $this->resolvePeriodLabel($filterData));
-        $filename = 'huenics-executive-sales-report-' . strtolower($periodLabel) . '-' . date('Ymd') . '.pdf';
+        $filename = 'huenics-executive-sales-report-'.strtolower($periodLabel).'-'.date('Ymd').'.pdf';
 
         return response()->streamDownload(
             function () use ($pdfContent) {
@@ -51,8 +51,8 @@ class ExportExecutiveReportPdf
             },
             $filename,
             [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]
         );
     }
@@ -60,6 +60,7 @@ class ExportExecutiveReportPdf
     protected function resolvePeriodLabel(array $filterData): string
     {
         [$startDate, $endDate, $periodLabel] = $this->getDateRange($filterData);
+
         return $periodLabel;
     }
 
@@ -70,9 +71,10 @@ class ExportExecutiveReportPdf
 
         switch ($periodType) {
             case 'days':
-                $date = !empty($filterData['selectedDate'])
+                $date = ! empty($filterData['selectedDate'])
                     ? Carbon::parse($filterData['selectedDate'])->startOfDay()
                     : now()->startOfDay();
+
                 return [
                     $date,
                     $date->copy()->endOfDay(),
@@ -83,15 +85,17 @@ class ExportExecutiveReportPdf
                 $week = (int) ($filterData['selectedWeek'] ?? now()->weekOfYear);
                 $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
                 $end = $start->copy()->endOfWeek();
+
                 return [
                     $start,
                     $end,
-                    "Week {$week} (" . $start->format('M d') . " – " . $end->format('M d, Y') . ")",
+                    "Week {$week} (".$start->format('M d').' – '.$end->format('M d, Y').')',
                 ];
 
             case 'years':
                 $start = Carbon::create($year, 1, 1)->startOfYear();
                 $end = Carbon::create($year, 12, 31)->endOfYear();
+
                 return [
                     $start,
                     $end,
@@ -103,6 +107,7 @@ class ExportExecutiveReportPdf
                 $month = (int) ($filterData['selectedMonth'] ?? now()->month);
                 $start = Carbon::create($year, $month, 1)->startOfMonth();
                 $end = $start->copy()->endOfMonth();
+
                 return [
                     $start,
                     $end,
@@ -125,7 +130,7 @@ class ExportExecutiveReportPdf
         $poDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
             $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $sub->whereBetween('order_date', [$startStr, $endStr])
-                    ->orWhere(fn($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                    ->orWhere(fn ($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
                     ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
                     ->orWhereBetween('completed_at', [$startStr, $endStr])
                     ->orWhereBetween('created_at', [$startStr, $endStr]);
@@ -135,7 +140,7 @@ class ExportExecutiveReportPdf
         $qDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
             $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $sub->whereBetween('quotation_date', [$startStr, $endStr])
-                    ->orWhere(fn($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                    ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
                     ->orWhereBetween('created_at', [$startStr, $endStr]);
             });
         };
@@ -149,13 +154,13 @@ class ExportExecutiveReportPdf
             ])
             ->withCount([
                 'quotations as period_quotations' => $qDateScope,
-                'purchaseOrders as period_pos' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_pos' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ])
             ->withSum([
-                'purchaseOrders as period_achieved' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_achieved' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'order_amount')
             ->withSum([
-                'purchaseOrders as period_profit' => fn($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
+                'purchaseOrders as period_profit' => fn ($q) => $q->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])->where($poDateScope),
             ], 'realized_profit');
 
         if ($filterInhouse) {
@@ -185,22 +190,22 @@ class ExportExecutiveReportPdf
             $totalPos += $posCount;
 
             $leaderboard[] = [
-                'name'           => $user->name,
-                'is_owner'       => $user->is_owner,
-                'role_label'     => $user->is_owner ? 'Inhouse (Owner)' : ucfirst(str_replace('_', ' ', $user->role)),
+                'name' => $user->name,
+                'is_owner' => $user->is_owner,
+                'role_label' => $user->is_owner ? 'Inhouse (Owner)' : ucfirst(str_replace('_', ' ', $user->role)),
                 'sales_achieved' => $achieved,
-                'profit'         => $profit,
-                'quotations'     => $quotesCount,
-                'pos'            => $posCount,
-                'win_rate'       => $winRate . '%',
-                'win_rate_val'   => $winRate,
+                'profit' => $profit,
+                'quotations' => $quotesCount,
+                'pos' => $posCount,
+                'win_rate' => $winRate.'%',
+                'win_rate_val' => $winRate,
             ];
         }
 
         // Overall Quotation pipeline amount
         $quoteQuery = Quotation::whereNotIn('status', [Quotation::STATUS_REJECTED])->where($qDateScope);
         if ($filterInhouse) {
-            $quoteQuery->whereHas('salesAgent', fn($u) => $u->where('is_owner', true));
+            $quoteQuery->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true));
         } elseif ($selectedAgentId) {
             $quoteQuery->where('sales_agent_id', $selectedAgentId);
         }
@@ -211,7 +216,7 @@ class ExportExecutiveReportPdf
             ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where($poDateScope);
         if ($filterInhouse) {
-            $deliveredPoQuery->whereHas('salesAgent', fn($u) => $u->where('is_owner', true));
+            $deliveredPoQuery->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true));
         } elseif ($selectedAgentId) {
             $deliveredPoQuery->where('sales_agent_id', $selectedAgentId);
         }
@@ -226,24 +231,24 @@ class ExportExecutiveReportPdf
             $scopeLabel = 'Inhouse / Owner Accounts Only';
         } elseif ($selectedAgentId) {
             $agent = User::find($selectedAgentId);
-            $scopeLabel = 'Sales Executive: ' . ($agent?->name ?? "Agent #{$selectedAgentId}");
+            $scopeLabel = 'Sales Executive: '.($agent?->name ?? "Agent #{$selectedAgentId}");
         }
 
         return [
             'periodLabel' => $periodLabel,
-            'scopeLabel'  => $scopeLabel,
+            'scopeLabel' => $scopeLabel,
             'generatedAt' => now()->format('F d, Y h:i A'),
             'leaderboard' => $leaderboard,
-            'kpis'        => [
-                'total_sales'         => $totalSales,
-                'total_profit'        => $totalProfit,
-                'margin_pct'          => $overallMarginPct,
-                'total_quotations'    => $totalQuotes,
-                'total_pos'           => $totalPos,
-                'win_rate'            => $overallWinRate,
+            'kpis' => [
+                'total_sales' => $totalSales,
+                'total_profit' => $totalProfit,
+                'margin_pct' => $overallMarginPct,
+                'total_quotations' => $totalQuotes,
+                'total_pos' => $totalPos,
+                'win_rate' => $overallWinRate,
                 'total_quoted_amount' => $totalQuotedAmount,
-                'delivered_pos'       => $deliveredCount,
-                'delivered_amount'    => $deliveredAmount,
+                'delivered_pos' => $deliveredCount,
+                'delivered_amount' => $deliveredAmount,
             ],
         ];
     }

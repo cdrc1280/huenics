@@ -9,10 +9,11 @@ use App\Models\QuotationLineItem;
 use App\Models\User;
 use App\Services\ExportUnofficialQuotationPdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class CustomerPortalController extends Controller implements HasMiddleware
 {
@@ -25,8 +26,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
 
     public function __construct(
         protected ExportUnofficialQuotationPdf $pdfExporter
-    ) {
-    }
+    ) {}
 
     /**
      * Get active product categories
@@ -61,10 +61,10 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $yearsInBusiness = CompanySetting::getYearsInBusiness();
 
         return view('customer.home', [
-            'featuredProducts'   => $featuredProducts,
-            'categories'         => $categories,
+            'featuredProducts' => $featuredProducts,
+            'categories' => $categories,
             'totalProductsCount' => $totalProductsCount,
-            'yearsInBusiness'    => $yearsInBusiness,
+            'yearsInBusiness' => $yearsInBusiness,
         ]);
     }
 
@@ -86,16 +86,16 @@ class CustomerPortalController extends Controller implements HasMiddleware
 
         $query = Product::query()->where('is_active', true);
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('canonical_name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('product_code', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('product_code', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        if (!empty($selectedCategory) && $selectedCategory !== 'all') {
+        if (! empty($selectedCategory) && $selectedCategory !== 'all') {
             $query->where('category', $selectedCategory);
         }
 
@@ -104,10 +104,10 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $categories = $this->getActiveCategories();
 
         return view('customer.products', [
-            'products'         => $products,
-            'categories'       => $categories,
+            'products' => $products,
+            'categories' => $categories,
             'selectedCategory' => $selectedCategory,
-            'search'           => $search,
+            'search' => $search,
         ]);
     }
 
@@ -134,29 +134,29 @@ class CustomerPortalController extends Controller implements HasMiddleware
     {
         $clientIp = $request->ip() ?: '127.0.0.1';
         $sanitizedIp = str_replace([':', '.'], '_', $clientIp);
-        $dailyIpKey = 'quotation_daily_ip_' . $sanitizedIp . '_' . date('Y-m-d');
+        $dailyIpKey = 'quotation_daily_ip_'.$sanitizedIp.'_'.date('Y-m-d');
 
         if (Cache::has($dailyIpKey)) {
             return back()->withInput()->with('error', 'Daily Submission Limit Reached: Only 1 quotation inquiry per day is permitted from your IP address. Our sales engineering team has already received your previous inquiry and is reviewing it. For urgent project bidding, please call us directly at (02) 8561-6836.');
         }
 
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:150',
+            'customer_name' => 'required|string|max:150',
             'customer_company' => 'required|string|max:150',
             'customer_address' => 'nullable|string|max:255',
-            'email'            => 'nullable|email|max:150',
-            'phone_no'         => 'required|string|max:50',
-            'project_name'     => 'nullable|string|max:150',
+            'email' => 'nullable|email|max:150',
+            'phone_no' => 'required|string|max:50',
+            'project_name' => 'nullable|string|max:150',
             'project_location' => 'nullable|string|max:255',
-            'notes'            => 'nullable|string|max:1000',
-            'items'            => 'required|array|min:1',
-            'items.*.product_id'  => 'nullable|integer',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'nullable|integer',
             'items.*.description' => 'required|string|max:255',
-            'items.*.quantity'    => 'required|numeric|min:0.01',
-            'items.*.unit_price'  => 'nullable|numeric|min:0',
-            'items.*.unit'        => 'nullable|string|max:20',
-            'items.*.item_code'   => 'nullable|string|max:50',
-            'action'              => 'nullable|string|in:download_pdf,view',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.unit' => 'nullable|string|max:20',
+            'items.*.item_code' => 'nullable|string|max:50',
+            'action' => 'nullable|string|in:download_pdf,view',
         ]);
 
         $subtotal = 0.0;
@@ -165,7 +165,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
 
         foreach ($validated['items'] as $index => $item) {
             $qty = (float) ($item['quantity'] ?? 1);
-            $productId = !empty($item['product_id']) ? (int) $item['product_id'] : null;
+            $productId = ! empty($item['product_id']) ? (int) $item['product_id'] : null;
             $product = $productId ? Product::find($productId) : null;
 
             $unitPrice = (float) ($item['unit_price'] ?? 0);
@@ -189,19 +189,19 @@ class CustomerPortalController extends Controller implements HasMiddleware
             $subtotal += $lineTotal;
             $subtotalUndiscounted += $undiscountedTotal;
 
-            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('HISI-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
+            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('HISI-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
             $desc = $item['description'] ?: ($product?->canonical_name ?? 'Product Line Item');
 
             $items[] = [
-                'product_id'       => $productId,
-                'item_code'        => $itemCode,
-                'description'      => $desc,
-                'quantity'         => $qty,
-                'unit'             => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
-                'unit_price'       => $unitPrice,
+                'product_id' => $productId,
+                'item_code' => $itemCode,
+                'description' => $desc,
+                'quantity' => $qty,
+                'unit' => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
+                'unit_price' => $unitPrice,
                 'discounted_price' => $discountedPrice,
-                'line_total'       => $lineTotal,
-                'base64_image'     => $product?->base64_image,
+                'line_total' => $lineTotal,
+                'base64_image' => $product?->base64_image,
             ];
         }
 
@@ -209,28 +209,28 @@ class CustomerPortalController extends Controller implements HasMiddleware
         $grandTotal = round($subtotal, 2);
 
         // Reference number format matching Huenics Vendors Agreement Form (e.g. 260904-P)
-        $refNumber = date('ymd') . strtoupper(substr(uniqid(), -3)) . ' - P';
+        $refNumber = date('ymd').strtoupper(substr(uniqid(), -3)).' - P';
 
         $quoteData = [
-            'quotation_number'      => $refNumber,
-            'customer_name'         => $validated['customer_name'] ?? 'Walk-in Client',
-            'customer_company'      => $validated['customer_company'],
-            'customer_address'      => $validated['customer_address'] ?? ($validated['project_location'] ?? 'Metro Manila'),
-            'email'                 => !empty($validated['email']) ? $validated['email'] : 'N/A',
-            'phone_no'              => $validated['phone_no'],
-            'project_name'          => !empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement Project',
-            'project_location'      => !empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
-            'quotation_date'        => now()->format('Y-m-d'),
-            'valid_until'           => now()->addDays(15)->format('Y-m-d'),
-            'notes'                 => $validated['notes'] ?? '',
-            'items'                 => $items,
-            'subtotal'              => $subtotal,
+            'quotation_number' => $refNumber,
+            'customer_name' => $validated['customer_name'] ?? 'Walk-in Client',
+            'customer_company' => $validated['customer_company'],
+            'customer_address' => $validated['customer_address'] ?? ($validated['project_location'] ?? 'Metro Manila'),
+            'email' => ! empty($validated['email']) ? $validated['email'] : 'N/A',
+            'phone_no' => $validated['phone_no'],
+            'project_name' => ! empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement Project',
+            'project_location' => ! empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
+            'quotation_date' => now()->format('Y-m-d'),
+            'valid_until' => now()->addDays(15)->format('Y-m-d'),
+            'notes' => $validated['notes'] ?? '',
+            'items' => $items,
+            'subtotal' => $subtotal,
             'subtotal_undiscounted' => $subtotalUndiscounted,
-            'total_amount'          => $subtotalUndiscounted,
-            'negotiated_amount'     => $subtotal,
-            'vat_amount'            => $vatAmount,
-            'grand_total'           => $grandTotal,
-            'is_encoded'            => false,
+            'total_amount' => $subtotalUndiscounted,
+            'negotiated_amount' => $subtotal,
+            'vat_amount' => $vatAmount,
+            'grand_total' => $grandTotal,
+            'is_encoded' => false,
         ];
 
         // Persist to admin side Quotations database
@@ -238,37 +238,37 @@ class CustomerPortalController extends Controller implements HasMiddleware
             $defaultSalesAgent = User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->first();
 
             $adminQuotation = Quotation::create([
-                'quotation_number'      => $refNumber,
-                'sales_agent_id'        => $defaultSalesAgent?->id ?? null,
-                'customer_name'         => $quoteData['customer_name'],
-                'customer_company'      => $quoteData['customer_company'],
-                'customer_email'        => $validated['email'] ?? null,
-                'phone_no'              => $quoteData['phone_no'],
-                'project_name'          => $quoteData['project_name'],
-                'project_location'      => $quoteData['project_location'],
-                'total_amount'          => $quoteData['total_amount'],
-                'negotiated_amount'     => $quoteData['negotiated_amount'],
-                'status'                => Quotation::STATUS_PENDING,
-                'is_online_request'     => true,
-                'client_ip'             => $clientIp,
-                'quotation_date'        => $quoteData['quotation_date'],
-                'valid_until'           => $quoteData['valid_until'],
-                'notes'                 => ($quoteData['notes'] ? $quoteData['notes'] . " | " : "") . "Client IP: {$clientIp} (Online Quotation Builder)",
-                'is_official_po'        => false,
+                'quotation_number' => $refNumber,
+                'sales_agent_id' => $defaultSalesAgent?->id ?? null,
+                'customer_name' => $quoteData['customer_name'],
+                'customer_company' => $quoteData['customer_company'],
+                'customer_email' => $validated['email'] ?? null,
+                'phone_no' => $quoteData['phone_no'],
+                'project_name' => $quoteData['project_name'],
+                'project_location' => $quoteData['project_location'],
+                'total_amount' => $quoteData['total_amount'],
+                'negotiated_amount' => $quoteData['negotiated_amount'],
+                'status' => Quotation::STATUS_PENDING,
+                'is_online_request' => true,
+                'client_ip' => $clientIp,
+                'quotation_date' => $quoteData['quotation_date'],
+                'valid_until' => $quoteData['valid_until'],
+                'notes' => ($quoteData['notes'] ? $quoteData['notes'].' | ' : '')."Client IP: {$clientIp} (Online Quotation Builder)",
+                'is_official_po' => false,
             ]);
 
             foreach ($items as $idx => $line) {
                 QuotationLineItem::create([
-                    'quotation_id'     => $adminQuotation->id,
-                    'line_no'          => $idx + 1,
-                    'item_code'        => $line['item_code'] ?? null,
-                    'product_id'       => $line['product_id'] ?? null,
-                    'description'      => $line['description'],
-                    'qty'              => $line['quantity'],
-                    'unit'             => $line['unit'],
-                    'unit_price'       => $line['unit_price'],
+                    'quotation_id' => $adminQuotation->id,
+                    'line_no' => $idx + 1,
+                    'item_code' => $line['item_code'] ?? null,
+                    'product_id' => $line['product_id'] ?? null,
+                    'description' => $line['description'],
+                    'qty' => $line['quantity'],
+                    'unit' => $line['unit'],
+                    'unit_price' => $line['unit_price'],
                     'discounted_price' => $line['discounted_price'],
-                    'line_total'       => $line['line_total'],
+                    'line_total' => $line['line_total'],
                 ]);
             }
 
@@ -277,7 +277,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
             Cache::put($dailyIpKey, true, $secondsUntilMidnight);
             $quoteData['is_encoded'] = true;
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Quotation admin sync warning: ' . $e->getMessage());
+            Log::warning('Quotation admin sync warning: '.$e->getMessage());
         }
 
         // Store last generated quotation in session for quick re-downloads
@@ -301,14 +301,14 @@ class CustomerPortalController extends Controller implements HasMiddleware
     {
         $quoteData = session('last_unofficial_quote');
 
-        if (!$quoteData && $request->has('payload')) {
+        if (! $quoteData && $request->has('payload')) {
             $decoded = json_decode(base64_decode($request->query('payload')), true);
             if (is_array($decoded)) {
                 $quoteData = $decoded;
             }
         }
 
-        if (!$quoteData) {
+        if (! $quoteData) {
             abort(404, 'No quotation data found to export. Please generate a quotation first.');
         }
 
@@ -337,7 +337,7 @@ class CustomerPortalController extends Controller implements HasMiddleware
         if ($request->expectsJson() || $request->is('api/*')) {
             return response()->json([
                 'status' => 404,
-                'error'  => 'Not Found',
+                'error' => 'Not Found',
                 'message' => 'The requested endpoint was not found on this server.',
             ], 404);
         }

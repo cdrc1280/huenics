@@ -5,10 +5,10 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
-use App\Models\PoItemSelectedComponent;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\Notifications\LowStockNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -75,13 +75,13 @@ class InventoryService
 
             $transaction = InventoryTransaction::create([
                 'inventory_item_id' => $item->id,
-                'transaction_type'  => $type,
-                'reference_type'    => $referenceType,
-                'reference_id'      => $referenceId,
-                'quantity'          => $quantity,
-                'notes'             => $notes,
-                'performed_by'      => $userId,
-                'created_at'        => now(),
+                'transaction_type' => $type,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'quantity' => $quantity,
+                'notes' => $notes,
+                'performed_by' => $userId,
+                'created_at' => now(),
             ]);
 
             // Invalidate dashboard stats cache so stock changes reflect immediately
@@ -105,11 +105,11 @@ class InventoryService
                 if ($isAddition) {
                     $logEvent = AuditLog::EVENT_STOCK_ADDED;
                     $logAction = 'stock_added';
-                    $summary = "Added " . number_format($quantity, 2) . " {$unit} to stock for {$prodName} (Stock: " . number_format($oldStock, 2) . " → " . number_format($newStock, 2) . "). Notes: {$notes}";
+                    $summary = 'Added '.number_format($quantity, 2)." {$unit} to stock for {$prodName} (Stock: ".number_format($oldStock, 2).' → '.number_format($newStock, 2)."). Notes: {$notes}";
                 } else {
                     $logEvent = AuditLog::EVENT_STOCK_DEDUCTED;
                     $logAction = 'stock_deducted';
-                    $summary = "Deducted " . number_format($quantity, 2) . " {$unit} from stock for {$prodName} (Stock: " . number_format($oldStock, 2) . " → " . number_format($newStock, 2) . "). Notes: {$notes}";
+                    $summary = 'Deducted '.number_format($quantity, 2)." {$unit} from stock for {$prodName} (Stock: ".number_format($oldStock, 2).' → '.number_format($newStock, 2)."). Notes: {$notes}";
                 }
 
                 AuditLog::logActivity(
@@ -121,23 +121,23 @@ class InventoryService
                         'quantity_on_hand' => $newStock,
                         'quantity_changed' => $quantity,
                         'transaction_type' => $type,
-                        'reference_type'   => $referenceType,
-                        'reference_id'     => $referenceId,
-                        'notes'            => $notes,
+                        'reference_type' => $referenceType,
+                        'reference_id' => $referenceId,
+                        'notes' => $notes,
                     ],
                     properties: [
-                        'product_id'        => $product?->id,
-                        'product_code'      => $product?->product_code,
-                        'sku'               => $product?->sku,
-                        'unit'              => $unit,
+                        'product_id' => $product?->id,
+                        'product_code' => $product?->product_code,
+                        'sku' => $product?->sku,
+                        'unit' => $unit,
                         'inventory_item_id' => $item->id,
-                        'transaction_id'    => $transaction->id,
+                        'transaction_id' => $transaction->id,
                     ],
                     user: $actor,
                     action: $logAction
                 );
             } catch (\Throwable $ex) {
-                Log::warning("Activity log failed for stock adjustment: " . $ex->getMessage());
+                Log::warning('Activity log failed for stock adjustment: '.$ex->getMessage());
             }
 
             return $transaction;
@@ -167,7 +167,7 @@ class InventoryService
                 if ($lineItem->selectedComponents()->count() > 0) {
                     foreach ($lineItem->selectedComponents()->where('is_deducted_from_inventory', false)->get() as $selected) {
                         $component = $selected->component;
-                        if (!$component || !$component->componentProduct) {
+                        if (! $component || ! $component->componentProduct) {
                             continue;
                         }
 
@@ -194,7 +194,7 @@ class InventoryService
                             );
                             $selected->update(['is_deducted_from_inventory' => true]);
                         } catch (\Throwable $e) {
-                            Log::warning("BOM component deduction warning: " . $e->getMessage());
+                            Log::warning('BOM component deduction warning: '.$e->getMessage());
                         }
                     }
                 }
@@ -224,7 +224,7 @@ class InventoryService
                                 $po->id
                             );
                         } catch (\Throwable $e) {
-                            Log::warning("Product stock deduction warning: " . $e->getMessage());
+                            Log::warning('Product stock deduction warning: '.$e->getMessage());
                         }
                     }
                 }
@@ -249,7 +249,7 @@ class InventoryService
      */
     public function restorePurchaseOrderStock(PurchaseOrder $po): void
     {
-        if (!$po->is_inventory_deducted && !(bool) $po->fresh()?->is_inventory_deducted) {
+        if (! $po->is_inventory_deducted && ! (bool) $po->fresh()?->is_inventory_deducted) {
             return;
         }
 
@@ -271,7 +271,7 @@ class InventoryService
                             $po->id
                         );
                     } catch (\Throwable $e) {
-                        Log::warning("Stock restore warning: " . $e->getMessage());
+                        Log::warning('Stock restore warning: '.$e->getMessage());
                     }
                 }
             }
@@ -295,14 +295,13 @@ class InventoryService
 
     protected function triggerLowStockNotification(InventoryItem $item): void
     {
-        $admins = \App\Models\User::whereIn('role', [
-            \App\Models\User::ROLE_ADMIN,
-            \App\Models\User::ROLE_OPERATIONS_MANAGER,
+        $admins = User::whereIn('role', [
+            User::ROLE_ADMIN,
+            User::ROLE_OPERATIONS_MANAGER,
         ])->get();
 
         foreach ($admins as $user) {
-            $user->notify(new \App\Notifications\LowStockNotification($item));
+            $user->notify(new LowStockNotification($item));
         }
     }
 }
-

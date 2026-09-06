@@ -4,21 +4,18 @@ namespace App\Services;
 
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
+use App\Models\QuotationLineItem;
 
 class PoQuotationReconciler
 {
     /**
      * Reconcile line items between a Purchase Order and its linked Quotation.
-     *
-     * @param PurchaseOrder $po
-     * @param Quotation|null $quotation
-     * @return array
      */
     public function reconcile(PurchaseOrder $po, ?Quotation $quotation = null): array
     {
         $quotation = $quotation ?: $po->quotation;
 
-        if (!$quotation) {
+        if (! $quotation) {
             return [
                 'has_linked_quotation' => false,
                 'quotation_number' => null,
@@ -99,7 +96,7 @@ class PoQuotationReconciler
 
                 $poPrice = (float) $poLine->unit_price;
                 $qPrice = (float) $matchedQLine->unit_price;
-                $qDiscPrice = !empty($matchedQLine->discounted_price) ? (float) $matchedQLine->discounted_price : null;
+                $qDiscPrice = ! empty($matchedQLine->discounted_price) ? (float) $matchedQLine->discounted_price : null;
                 $effectiveQPrice = $qDiscPrice ?: $qPrice;
 
                 // Price matching logic
@@ -126,31 +123,31 @@ class PoQuotationReconciler
                 $totalMatch = $priceMatch && $qtyMatch;
 
                 $discrepancyNotes = [];
-                if (!$qtyMatch) {
+                if (! $qtyMatch) {
                     $qtyDiff = $cumPoQty - $qQty;
                     $sign = $qtyDiff > 0 ? '+' : '';
                     $discrepancyNotes[] = "Qty discrepancy: PO total {$cumPoQty} {$poLine->unit} vs Quoted {$qQty} {$matchedQLine->unit} ({$sign}{$qtyDiff})";
                     $qtyMismatchesCount++;
                 }
 
-                if (!$priceMatch) {
+                if (! $priceMatch) {
                     $priceDiff = $poPrice - $effectiveQPrice;
                     $sign = $priceDiff > 0 ? '+' : '';
                     $formattedDiff = number_format(abs($priceDiff), 2);
-                    $discrepancyNotes[] = "Price discrepancy: PO unit price ₱" . number_format($poPrice, 2) . " vs Quoted ₱" . number_format($effectiveQPrice, 2) . " ({$sign}₱{$formattedDiff})";
+                    $discrepancyNotes[] = 'Price discrepancy: PO unit price ₱'.number_format($poPrice, 2).' vs Quoted ₱'.number_format($effectiveQPrice, 2)." ({$sign}₱{$formattedDiff})";
                     $priceMismatchesCount++;
                 } elseif ($isNegotiatedPrice) {
-                    $discrepancyNotes[] = "Reflects approved quotation negotiated commercial discount.";
+                    $discrepancyNotes[] = 'Reflects approved quotation negotiated commercial discount.';
                 }
 
                 if ($qtyMatch && $priceMatch) {
                     $status = 'exact_match';
                     $statusLabel = 'Exact Match';
                     $exactMatchesCount++;
-                } elseif (!$qtyMatch && !$priceMatch) {
+                } elseif (! $qtyMatch && ! $priceMatch) {
                     $status = 'both_mismatch';
                     $statusLabel = 'Qty & Price Mismatch';
-                } elseif (!$qtyMatch) {
+                } elseif (! $qtyMatch) {
                     $status = 'qty_mismatch';
                     $statusLabel = 'Quantity Mismatch';
                 } else {
@@ -214,11 +211,11 @@ class PoQuotationReconciler
         // Check for quotation items not ordered in PO
         $missingInPoCount = 0;
         foreach ($qLines as $qLine) {
-            if (!isset($matchedQCounts[$qLine->id])) {
+            if (! isset($matchedQCounts[$qLine->id])) {
                 $missingInPoCount++;
                 $qQty = (float) $qLine->qty;
                 $qPrice = (float) $qLine->unit_price;
-                $qDiscPrice = !empty($qLine->discounted_price) ? (float) $qLine->discounted_price : null;
+                $qDiscPrice = ! empty($qLine->discounted_price) ? (float) $qLine->discounted_price : null;
                 $effectiveQPrice = $qDiscPrice ?: $qPrice;
                 $qTotal = (float) ($qLine->line_total ?: round($qQty * $effectiveQPrice, 2));
 
@@ -272,10 +269,10 @@ class PoQuotationReconciler
     /**
      * Find best quotation match for a PO line item.
      */
-    protected function findBestQuotationMatch($poLine, array $qNormMap, array $fulfilledQQtys = []): ?\App\Models\QuotationLineItem
+    protected function findBestQuotationMatch($poLine, array $qNormMap, array $fulfilledQQtys = []): ?QuotationLineItem
     {
         // 1. Match by product_id
-        if (!empty($poLine->product_id)) {
+        if (! empty($poLine->product_id)) {
             foreach ($qNormMap as $entry) {
                 if ($entry['line']->product_id == $poLine->product_id) {
                     return $entry['line'];
@@ -284,10 +281,10 @@ class PoQuotationReconciler
         }
 
         // 2. Match by item_code
-        if (!empty($poLine->item_code)) {
+        if (! empty($poLine->item_code)) {
             $cleanCode = strtolower(trim($poLine->item_code));
             foreach ($qNormMap as $entry) {
-                if (!empty($entry['line']->item_code) && strtolower(trim($entry['line']->item_code)) === $cleanCode) {
+                if (! empty($entry['line']->item_code) && strtolower(trim($entry['line']->item_code)) === $cleanCode) {
                     return $entry['line'];
                 }
             }
@@ -363,6 +360,7 @@ class PoQuotationReconciler
         // Punctuation
         $d = preg_replace('/[,\.\-\/\\(\):_Øø]/', ' ', $d);
         $d = preg_replace('/\s+/', ' ', trim($d));
+
         return $d;
     }
 
@@ -376,10 +374,11 @@ class PoQuotationReconciler
         $tokens = [];
         foreach ($words as $w) {
             $w = trim($w);
-            if (strlen($w) >= 2 && !in_array($w, $stopwords)) {
+            if (strlen($w) >= 2 && ! in_array($w, $stopwords)) {
                 $tokens[] = $w;
             }
         }
+
         return array_values(array_unique($tokens));
     }
 
@@ -388,15 +387,19 @@ class PoQuotationReconciler
      */
     protected function scoreMatch(array $poTokens, array $qTokens): float
     {
-        if (empty($poTokens) || empty($qTokens)) return 0.0;
-        
+        if (empty($poTokens) || empty($qTokens)) {
+            return 0.0;
+        }
+
         $common = array_intersect($poTokens, $qTokens);
-        if (empty($common)) return 0.0;
+        if (empty($common)) {
+            return 0.0;
+        }
 
         $discriminators = ['white', 'black', 'movable', '3m', '2m', '1m', '100w', '200w', '90deg', 'straight', 'cap', 'driver'];
-        
+
         $score = count($common) / max(count($poTokens), count($qTokens));
-        
+
         foreach ($discriminators as $disc) {
             $inPo = in_array($disc, $poTokens);
             $inQ = in_array($disc, $qTokens);

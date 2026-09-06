@@ -4,25 +4,31 @@ namespace App\Filament\Widgets;
 
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLineItem;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 
 class TopSellingProductsWidget extends ChartWidget
 {
     protected static ?int $sort = 4;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
+
     protected ?string $maxHeight = '280px';
 
     public string $periodType = 'month';
+
     public ?string $selectedDate = null;
+
     public ?int $selectedWeek = null;
+
     public ?int $selectedMonth = null;
+
     public ?int $selectedYear = null;
+
     public ?int $selectedAgentId = null;
+
     public bool $filterInhouse = false;
 
     public function mount(
@@ -83,7 +89,7 @@ class TopSellingProductsWidget extends ChartWidget
         };
     }
 
-    public function getHeading(): string | Htmlable | null
+    public function getHeading(): string|Htmlable|null
     {
         return 'Top Products by Revenue';
     }
@@ -163,7 +169,7 @@ class TopSellingProductsWidget extends ChartWidget
 
         $grouped = $rawItems->groupBy(function ($item) {
             return $item->product?->canonical_name
-                ?: ($item->description ?: ($item->item_code ?: 'Item #' . $item->id));
+                ?: ($item->description ?: ($item->item_code ?: 'Item #'.$item->id));
         })->map(function ($items, $name) {
             return [
                 'name' => (string) $name,
@@ -177,7 +183,7 @@ class TopSellingProductsWidget extends ChartWidget
 
         foreach ($grouped as $item) {
             $productName = $item['name'];
-            $shortName = strlen($productName) > 24 ? substr($productName, 0, 22) . '..' : $productName;
+            $shortName = strlen($productName) > 24 ? substr($productName, 0, 22).'..' : $productName;
             $labels[] = $shortName;
             $data[] = round((float) $item['revenue'], 2);
         }

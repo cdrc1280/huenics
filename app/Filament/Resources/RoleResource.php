@@ -17,7 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
 class RoleResource extends Resource
@@ -25,19 +25,24 @@ class RoleResource extends Resource
     protected static ?string $model = Role::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-shield-check';
+
     protected static ?string $navigationLabel = 'Dynamic Roles & Permissions';
+
     protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
+
         return $user && ($user->isAdmin() || $user->isCeo() || $user->canConfigureRoles());
     }
 
     public static function shouldRegisterNavigation(): bool
     {
         $user = auth()->user();
+
         return $user && ($user->isAdmin() || $user->isCeo() || $user->canConfigureRoles());
     }
 
@@ -63,7 +68,7 @@ class RoleResource extends Resource
                             ->label('System Role Slug')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->disabled(fn(?Role $record) => $record?->is_system ?? false)
+                            ->disabled(fn (?Role $record) => $record?->is_system ?? false)
                             ->dehydrated()
                             ->helperText('Unique system identifier (e.g. sales_executive, operations_manager).'),
 
@@ -86,7 +91,7 @@ class RoleResource extends Resource
                         Forms\Components\CheckboxList::make('permissions')
                             ->relationship('permissions', 'name')
                             ->descriptions(
-                                fn() => Permission::pluck('description', 'id')->toArray()
+                                fn () => Permission::pluck('description', 'id')->toArray()
                             )
                             ->columns(2)
                             ->searchable()
@@ -118,7 +123,7 @@ class RoleResource extends Resource
                     ->counts('permissions')
                     ->label('Assigned Permissions')
                     ->badge()
-                    ->color(fn(int $state): string => match (true) {
+                    ->color(fn (int $state): string => match (true) {
                         $state >= 15 => 'success',
                         $state >= 8 => 'warning',
                         $state >= 1 => 'info',
@@ -146,15 +151,15 @@ class RoleResource extends Resource
                     EditAction::make(),
                     DeleteAction::make()
                         ->requiresConfirmation()
-                        ->hidden(fn(Role $record): bool => $record->is_system),
+                        ->hidden(fn (Role $record): bool => $record->is_system),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $records->filter(fn(Role $r) => !$r->is_system)->each->delete();
+                        ->action(function (Collection $records) {
+                            $records->filter(fn (Role $r) => ! $r->is_system)->each->delete();
                         }),
                 ]),
             ]);

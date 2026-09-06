@@ -34,9 +34,9 @@ class ProductComponent extends Model
     {
         return [
             'additional_cost' => 'decimal:2',
-            'cost_price'      => 'decimal:2',
-            'quantity'        => 'decimal:4',
-            'is_default'      => 'boolean',
+            'cost_price' => 'decimal:2',
+            'quantity' => 'decimal:4',
+            'is_default' => 'boolean',
         ];
     }
 
@@ -56,7 +56,7 @@ class ProductComponent extends Model
 
         static::saved(function (ProductComponent $component) {
             if ($component->component_product_id) {
-                \App\Models\InventoryItem::firstOrCreate(
+                InventoryItem::firstOrCreate(
                     ['product_id' => $component->component_product_id],
                     [
                         'quantity_on_hand' => 0,

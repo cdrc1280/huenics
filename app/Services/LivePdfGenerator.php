@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Dompdf\Cpdf;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -10,33 +11,37 @@ class LivePdfGenerator
     public function generate(array $data): string
     {
         // Custom autoloader fallback for Dompdf if needed
-        if (!class_exists(\Dompdf\Dompdf::class)) {
+        if (! class_exists(Dompdf::class)) {
             spl_autoload_register(function ($class) {
                 if (str_starts_with($class, 'Dompdf\\')) {
-                    $file = base_path('vendor/dompdf/dompdf/src/' . str_replace('\\', '/', substr($class, 7)) . '.php');
+                    $file = base_path('vendor/dompdf/dompdf/src/'.str_replace('\\', '/', substr($class, 7)).'.php');
                     if (file_exists($file)) {
                         require_once $file;
+
                         return;
                     }
                 }
                 if (str_starts_with($class, 'FontLib\\')) {
-                    $file = base_path('vendor/dompdf/php-font-lib/src/FontLib/' . str_replace('\\', '/', substr($class, 8)) . '.php');
+                    $file = base_path('vendor/dompdf/php-font-lib/src/FontLib/'.str_replace('\\', '/', substr($class, 8)).'.php');
                     if (file_exists($file)) {
                         require_once $file;
+
                         return;
                     }
                 }
                 if (str_starts_with($class, 'Svg\\')) {
-                    $file = base_path('vendor/dompdf/php-svg-lib/src/Svg/' . str_replace('\\', '/', substr($class, 4)) . '.php');
+                    $file = base_path('vendor/dompdf/php-svg-lib/src/Svg/'.str_replace('\\', '/', substr($class, 4)).'.php');
                     if (file_exists($file)) {
                         require_once $file;
+
                         return;
                     }
                 }
                 if (str_starts_with($class, 'Sabberworm\\CSS\\')) {
-                    $file = base_path('vendor/sabberworm/php-css-parser/src/' . str_replace('\\', '/', substr($class, 15)) . '.php');
+                    $file = base_path('vendor/sabberworm/php-css-parser/src/'.str_replace('\\', '/', substr($class, 15)).'.php');
                     if (file_exists($file)) {
                         require_once $file;
+
                         return;
                     }
                 }
@@ -44,11 +49,11 @@ class LivePdfGenerator
         }
 
         $cpdfPath = base_path('vendor/dompdf/dompdf/lib/Cpdf.php');
-        if (file_exists($cpdfPath) && !class_exists(\Dompdf\Cpdf::class)) {
+        if (file_exists($cpdfPath) && ! class_exists(Cpdf::class)) {
             require_once $cpdfPath;
         }
 
-        $options = new Options();
+        $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
         $options->set('defaultFont', 'DejaVu Sans');
@@ -75,6 +80,7 @@ class LivePdfGenerator
         if (is_string($data)) {
             // Replace non-ASCII/Unicode alternative slashes with standard ASCII '/'
             $data = str_replace(["\xE2\x88\x95", "\xE2\x81\x84", "\xEF\xBC\x8F", '∕', '⁄', '／'], '/', $data);
+
             return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
         }
 

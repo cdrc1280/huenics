@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_code',
@@ -35,11 +36,11 @@ class Product extends Model
     {
         return [
             'is_huenics_owned' => 'boolean',
-            'is_composite'     => 'boolean',
-            'is_active'        => 'boolean',
-            'default_price'    => 'decimal:2',
-            'base_cost_price'  => 'decimal:2',
-            'selling_price'    => 'decimal:2',
+            'is_composite' => 'boolean',
+            'is_active' => 'boolean',
+            'default_price' => 'decimal:2',
+            'base_cost_price' => 'decimal:2',
+            'selling_price' => 'decimal:2',
         ];
     }
 
@@ -143,7 +144,7 @@ class Product extends Model
             }
         }
 
-        return !empty($capacities) ? (float) min($capacities) : null;
+        return ! empty($capacities) ? (float) min($capacities) : null;
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────
@@ -177,12 +178,13 @@ class Product extends Model
         if ((float) $this->selling_price <= 0) {
             return 0.0;
         }
+
         return round((((float) $this->selling_price - (float) $this->base_cost_price) / (float) $this->selling_price) * 100, 1);
     }
 
     public function getImageUrlAttribute(): ?string
     {
-        if (!$this->image_path) {
+        if (! $this->image_path) {
             return null;
         }
 
@@ -194,20 +196,20 @@ class Product extends Model
             return asset($this->image_path);
         }
 
-        if (file_exists(public_path('storage/' . $this->image_path))) {
-            return asset('storage/' . $this->image_path);
+        if (file_exists(public_path('storage/'.$this->image_path))) {
+            return asset('storage/'.$this->image_path);
         }
 
-        if (file_exists(storage_path('app/public/' . $this->image_path))) {
-            return asset('storage/' . $this->image_path);
+        if (file_exists(storage_path('app/public/'.$this->image_path))) {
+            return asset('storage/'.$this->image_path);
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image_path);
+        return Storage::disk('public')->url($this->image_path);
     }
 
     public function getBase64ImageAttribute(): ?string
     {
-        if (!$this->image_path) {
+        if (! $this->image_path) {
             return null;
         }
 
@@ -216,20 +218,22 @@ class Product extends Model
             $fullPath = $this->image_path;
         } elseif (file_exists(public_path($this->image_path))) {
             $fullPath = public_path($this->image_path);
-        } elseif (file_exists(public_path('storage/' . $this->image_path))) {
-            $fullPath = public_path('storage/' . $this->image_path);
-        } elseif (file_exists(storage_path('app/public/' . $this->image_path))) {
-            $fullPath = storage_path('app/public/' . $this->image_path);
-        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->image_path)) {
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($this->image_path);
+        } elseif (file_exists(public_path('storage/'.$this->image_path))) {
+            $fullPath = public_path('storage/'.$this->image_path);
+        } elseif (file_exists(storage_path('app/public/'.$this->image_path))) {
+            $fullPath = storage_path('app/public/'.$this->image_path);
+        } elseif (Storage::disk('public')->exists($this->image_path)) {
+            $fullPath = Storage::disk('public')->path($this->image_path);
         }
 
         if ($fullPath && file_exists($fullPath)) {
             $type = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-            if ($type === 'jpg') $type = 'jpeg';
+            if ($type === 'jpg') {
+                $type = 'jpeg';
+            }
             $data = @file_get_contents($fullPath);
-            if ($data !== false && !empty($data)) {
-                return 'data:image/' . $type . ';base64,' . base64_encode($data);
+            if ($data !== false && ! empty($data)) {
+                return 'data:image/'.$type.';base64,'.base64_encode($data);
             }
         }
 

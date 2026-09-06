@@ -6,6 +6,8 @@ use App\Filament\Resources\ActivityLogResource\Pages;
 use App\Models\AuditLog;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
+use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
@@ -33,9 +35,13 @@ class ActivityLogResource extends Resource
     protected static ?string $model = AuditLog::class;
 
     protected static \UnitEnum|string|null $navigationGroup = 'System Administration';
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-finger-print';
+
     protected static ?string $navigationLabel = 'Activity Logs & Audit Trail';
+
     protected static ?int $navigationSort = 2;
+
     protected static ?string $slug = 'activity-logs';
 
     public static function getEloquentQuery(): Builder
@@ -96,7 +102,7 @@ class ActivityLogResource extends Resource
                 TextColumn::make('event')
                     ->label('Activity')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match (strtolower($state)) {
+                    ->formatStateUsing(fn (string $state): string => match (strtolower($state)) {
                         'created' => 'Created',
                         'updated', 'line_item_adjusted' => 'Updated',
                         'deleted' => 'Deleted',
@@ -115,12 +121,12 @@ class ActivityLogResource extends Resource
                         default => ucwords(str_replace('_', ' ', $state)),
                     })
                     ->colors([
-                        'success' => fn($state) => in_array($state, ['created', 'verified', 'converted', 'restored', 'delivered', 'order_marked_delivered', 'fulfilled', 'documents_attached', 'stock_added']),
-                        'info' => fn($state) => in_array($state, ['updated', 'line_item_adjusted', 'stock_deducted', 'inventory_deducted']),
-                        'danger' => fn($state) => in_array($state, ['deleted', 'force_deleted', 'document_rejected']),
-                        'primary' => fn($state) => in_array($state, ['login']),
-                        'gray' => fn($state) => in_array($state, ['logout', 'custom']),
-                        'warning' => fn($state) => in_array($state, ['transaction_updated', 'status_changed', 'stock_restored', 'inventory_restored']),
+                        'success' => fn ($state) => in_array($state, ['created', 'verified', 'converted', 'restored', 'delivered', 'order_marked_delivered', 'fulfilled', 'documents_attached', 'stock_added']),
+                        'info' => fn ($state) => in_array($state, ['updated', 'line_item_adjusted', 'stock_deducted', 'inventory_deducted']),
+                        'danger' => fn ($state) => in_array($state, ['deleted', 'force_deleted', 'document_rejected']),
+                        'primary' => fn ($state) => in_array($state, ['login']),
+                        'gray' => fn ($state) => in_array($state, ['logout', 'custom']),
+                        'warning' => fn ($state) => in_array($state, ['transaction_updated', 'status_changed', 'stock_restored', 'inventory_restored']),
                     ])
                     ->sortable()
                     ->searchable(),
@@ -139,11 +145,11 @@ class ActivityLogResource extends Resource
                     ->wrap()
                     ->searchable()
                     ->color('gray')
-                    ->tooltip(fn(AuditLog $record): string => $record->description ?: $record->action),
+                    ->tooltip(fn (AuditLog $record): string => $record->description ?: $record->action),
 
                 TextColumn::make('user.name')
                     ->label('Actor')
-                    ->description(fn(AuditLog $record): string => $record->user ? ucwords(str_replace('_', ' ', $record->user->role)) : 'Automated Trigger')
+                    ->description(fn (AuditLog $record): string => $record->user ? ucwords(str_replace('_', ' ', $record->user->role)) : 'Automated Trigger')
                     ->searchable()
                     ->sortable()
                     ->default('System'),
@@ -151,7 +157,7 @@ class ActivityLogResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Time')
                     ->since()
-                    ->tooltip(fn(AuditLog $record): string => $record->created_at?->format('F d, Y h:i:s A') ?? '')
+                    ->tooltip(fn (AuditLog $record): string => $record->created_at?->format('F d, Y h:i:s A') ?? '')
                     ->sortable(),
 
                 TextColumn::make('ip_address')
@@ -191,8 +197,8 @@ class ActivityLogResource extends Resource
                         DeliveryReceipt::class => 'Delivery Receipts',
                         SalesInvoice::class => 'Sales Invoices',
                         Transaction::class => 'Transactions Ledger',
-                        \App\Models\InventoryTransaction::class => 'Inventory Movements / Deductions',
-                        \App\Models\InventoryItem::class => 'Inventory Stocks',
+                        InventoryTransaction::class => 'Inventory Movements / Deductions',
+                        InventoryItem::class => 'Inventory Stocks',
                         Project::class => 'Projects',
                         Vendor::class => 'Vendors',
                     ]),
@@ -209,12 +215,12 @@ class ActivityLogResource extends Resource
                         ->label('Inspect')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        ->modalHeading(fn(AuditLog $record): string => "Audit Inspection — " . $record->subject_type_label)
-                        ->modalDescription(fn(AuditLog $record): string => $record->subject_identifier . ($record->description ? ' • ' . $record->description : ''))
+                        ->modalHeading(fn (AuditLog $record): string => 'Audit Inspection — '.$record->subject_type_label)
+                        ->modalDescription(fn (AuditLog $record): string => $record->subject_identifier.($record->description ? ' • '.$record->description : ''))
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Close')
                         ->modalWidth('3xl')
-                        ->modalContent(fn(AuditLog $record): HtmlString => new HtmlString(
+                        ->modalContent(fn (AuditLog $record): HtmlString => new HtmlString(
                             view('filament.modals.activity-log-diff', ['record' => $record])->render()
                         )),
                 ]),
@@ -223,7 +229,7 @@ class ActivityLogResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                        ->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

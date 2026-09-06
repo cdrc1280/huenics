@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum ProjectStatus: string implements HasLabel, HasColor, HasIcon
+enum ProjectStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Active = 'active';
     case Completed = 'completed';

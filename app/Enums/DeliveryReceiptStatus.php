@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum DeliveryReceiptStatus: string implements HasLabel, HasColor, HasIcon
+enum DeliveryReceiptStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Draft = 'draft';
     case Delivered = 'delivered';

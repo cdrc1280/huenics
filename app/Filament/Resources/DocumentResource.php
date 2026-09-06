@@ -6,10 +6,7 @@ use App\Actions\ReconcileDocumentTotals;
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\DocumentResource\Pages;
 use App\Models\Document;
-use App\Models\Project;
-use App\Models\Vendor;
 use App\Services\DocumentParsers\DynamicDocumentParser;
-use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -19,8 +16,6 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Enums\RecordActionsPosition;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -29,11 +24,13 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use UnitEnum;
 
 class DocumentResource extends Resource
 {
@@ -54,7 +51,7 @@ class DocumentResource extends Resource
         return auth()->user()?->canCreateDocuments() ?? true;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return auth()->user()?->canDeleteRecords() ?? true;
     }
@@ -97,18 +94,16 @@ class DocumentResource extends Resource
                         Forms\Components\Hidden::make('file_hash'),
 
                         Forms\Components\Hidden::make('uploaded_by')
-                            ->default(fn() => auth()->id() ?: 1),
+                            ->default(fn () => auth()->id() ?: 1),
 
                         Grid::make(1)
                             ->components([
                                 Forms\Components\Select::make('document_type')
                                     ->label('Document Type')
                                     ->options([
-                                        Document::TYPE_PURCHASE_ORDER =>
-                                            'Purchase Order (Customer PO)',
+                                        Document::TYPE_PURCHASE_ORDER => 'Purchase Order (Customer PO)',
 
-                                        Document::TYPE_VENDORS_AGREEMENT =>
-                                            'Vendors Agreement Form (Quotation)',
+                                        Document::TYPE_VENDORS_AGREEMENT => 'Vendors Agreement Form (Quotation)',
                                     ])
                                     ->default(Document::TYPE_PURCHASE_ORDER)
                                     ->required()
@@ -117,7 +112,7 @@ class DocumentResource extends Resource
                                 Forms\Components\Toggle::make('is_conforme_po')
                                     ->label('Conforme PO (No Quotation Required)')
                                     ->helperText('Check if this is a signed conforme purchase order that does not require a matching quotation.')
-                                    ->visible(fn($get) => $get('document_type') === Document::TYPE_PURCHASE_ORDER)
+                                    ->visible(fn ($get) => $get('document_type') === Document::TYPE_PURCHASE_ORDER)
                                     ->default(false),
                             ]),
                     ])
@@ -141,44 +136,42 @@ class DocumentResource extends Resource
                     ->label('Type')
                     ->badge()
                     ->formatStateUsing(
-                        fn(string $state): string => match ($state) {
-                            Document::TYPE_PURCHASE_ORDER =>
-                            'Purchase Order',
+                        fn (string $state): string => match ($state) {
+                            Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
 
-                            Document::TYPE_VENDORS_AGREEMENT =>
-                            'Quotation / Agreement',
+                            Document::TYPE_VENDORS_AGREEMENT => 'Quotation / Agreement',
 
                             default => $state,
                         }
                     )
                     ->color(
-                        fn(string $state): string => match ($state) {
+                        fn (string $state): string => match ($state) {
                             Document::TYPE_PURCHASE_ORDER => 'primary',
                             Document::TYPE_VENDORS_AGREEMENT => 'warning',
                             default => 'gray',
                         }
                     )
-                    ->tooltip(fn (Document $record): string => "Document Type: " . strtoupper(str_replace('_', ' ', $record->document_type))),
+                    ->tooltip(fn (Document $record): string => 'Document Type: '.strtoupper(str_replace('_', ' ', $record->document_type))),
 
                 Tables\Columns\TextColumn::make('vendor.name')
                     ->label('Vendor')
                     ->searchable()
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn (Document $record): string => "Vendor / Supplier: " . ($record->vendor?->name ?? 'Unassigned')),
+                    ->tooltip(fn (Document $record): string => 'Vendor / Supplier: '.($record->vendor?->name ?? 'Unassigned')),
 
                 Tables\Columns\TextColumn::make('project.name')
                     ->label('Project')
                     ->searchable()
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn (Document $record): string => "Project Site: " . ($record->project?->name ?? 'Unassigned')),
+                    ->tooltip(fn (Document $record): string => 'Project Site: '.($record->project?->name ?? 'Unassigned')),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(
-                        fn(string $state): string => match ($state) {
+                        fn (string $state): string => match ($state) {
                             Document::STATUS_UPLOADED => 'gray',
                             Document::STATUS_PROCESSING => 'info',
                             Document::STATUS_REQUIRES_REVIEW => 'warning',
@@ -192,7 +185,7 @@ class DocumentResource extends Resource
                 Tables\Columns\IconColumn::make('mismatch_flag')
                     ->label('Issues')
                     ->state(
-                        fn(Document $record): bool => $record->hasMismatches()
+                        fn (Document $record): bool => $record->hasMismatches()
                     )
                     ->boolean()
                     ->trueIcon('heroicon-s-exclamation-triangle')
@@ -200,8 +193,7 @@ class DocumentResource extends Resource
                     ->trueColor('danger')
                     ->falseColor('success')
                     ->tooltip(
-                        fn(Document $record): string =>
-                        $record->hasMismatches()
+                        fn (Document $record): string => $record->hasMismatches()
                         ? 'Arithmetic or VAT mismatch detected'
                         : 'Clean / Reconciled'
                     ),
@@ -211,7 +203,7 @@ class DocumentResource extends Resource
                     ->money('PHP')
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn (Document $record): string => "Printed total amount: ₱" . number_format((float) ($record->totals?->printed_total ?? 0), 2)),
+                    ->tooltip(fn (Document $record): string => 'Printed total amount: ₱'.number_format((float) ($record->totals?->printed_total ?? 0), 2)),
 
                 Tables\Columns\TextColumn::make('extraction_confidence')
                     ->label('Confidence')
@@ -231,26 +223,20 @@ class DocumentResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('document_type')
                     ->options([
-                        Document::TYPE_PURCHASE_ORDER =>
-                            'Purchase Order',
+                        Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
 
-                        Document::TYPE_VENDORS_AGREEMENT =>
-                            'Quotation / Agreement',
+                        Document::TYPE_VENDORS_AGREEMENT => 'Quotation / Agreement',
                     ]),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        Document::STATUS_REQUIRES_REVIEW =>
-                            'Requires Review',
+                        Document::STATUS_REQUIRES_REVIEW => 'Requires Review',
 
-                        Document::STATUS_VERIFIED =>
-                            'Verified',
+                        Document::STATUS_VERIFIED => 'Verified',
 
-                        Document::STATUS_PROCESSING =>
-                            'Processing',
+                        Document::STATUS_PROCESSING => 'Processing',
 
-                        Document::STATUS_FAILED =>
-                            'Failed',
+                        Document::STATUS_FAILED => 'Failed',
                     ]),
 
                 Tables\Filters\SelectFilter::make('vendor_id')
@@ -265,14 +251,12 @@ class DocumentResource extends Resource
                         ->icon('heroicon-o-eye')
                         ->color('warning')
                         ->url(
-                            fn(Document $record): string =>
-                            ReviewQueuePage::getUrl([
+                            fn (Document $record): string => ReviewQueuePage::getUrl([
                                 'document_id' => $record->id,
                             ])
                         )
                         ->visible(
-                            fn(Document $record): bool =>
-                            !$record->trashed() &&
+                            fn (Document $record): bool => ! $record->trashed() &&
                             in_array(
                                 $record->status,
                                 [
@@ -289,7 +273,7 @@ class DocumentResource extends Resource
                         ->label('Re-Parse')
                         ->icon('heroicon-o-arrow-path')
                         ->color('gray')
-                        ->visible(fn(Document $record): bool => !$record->trashed())
+                        ->visible(fn (Document $record): bool => ! $record->trashed())
                         ->requiresConfirmation()
                         ->action(
                             function (Document $record, DynamicDocumentParser $parser, ReconcileDocumentTotals $reconciler): void {
@@ -316,15 +300,15 @@ class DocumentResource extends Resource
                         ),
 
                     DeleteAction::make()->requiresConfirmation(),
-                    RestoreAction::make()->requiresConfirmation()->visible(fn(Document $record): bool => $record->trashed()),
-                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Document $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                    RestoreAction::make()->requiresConfirmation()->visible(fn (Document $record): bool => $record->trashed()),
+                    ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Document $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }

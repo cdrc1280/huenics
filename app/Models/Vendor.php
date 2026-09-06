@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Vendor extends Model
 {
-    use HasFactory, SoftDeletes, \App\Traits\LogsActivity;
+    use \App\Traits\LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',

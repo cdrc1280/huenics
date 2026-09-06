@@ -27,7 +27,7 @@ class ViewQuotation extends ViewRecord
                 ->icon('heroicon-m-shopping-cart')
                 ->color('primary')
                 ->tooltip('Convert this approved quotation into an active Purchase Order')
-                ->visible(fn(): bool => !$this->record->trashed() && $this->record->isReadyForConversion() && !$this->record->isConverted())
+                ->visible(fn (): bool => ! $this->record->trashed() && $this->record->isReadyForConversion() && ! $this->record->isConverted())
                 ->modalHeading('Convert Quotation to Purchase Order')
                 ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
                 ->modalSubmitActionLabel('Convert to PO')
@@ -58,8 +58,8 @@ class ViewQuotation extends ViewRecord
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
                 ->tooltip('Download Quotation PDF with e-signatures')
-                ->visible(fn(): bool => !$this->record->trashed())
-                ->url(fn() => route('quotations.export-pdf', $this->record))
+                ->visible(fn (): bool => ! $this->record->trashed())
+                ->url(fn () => route('quotations.export-pdf', $this->record))
                 ->openUrlInNewTab(),
 
             Action::make('preview_pdf')
@@ -67,8 +67,8 @@ class ViewQuotation extends ViewRecord
                 ->icon('heroicon-o-eye')
                 ->color('gray')
                 ->tooltip('Preview Quotation PDF in browser')
-                ->visible(fn(): bool => !$this->record->trashed())
-                ->url(fn() => route('quotations.preview-pdf', $this->record))
+                ->visible(fn (): bool => ! $this->record->trashed())
+                ->url(fn () => route('quotations.preview-pdf', $this->record))
                 ->openUrlInNewTab(),
         ];
     }
@@ -83,11 +83,11 @@ class ViewQuotation extends ViewRecord
                     TextEntry::make('customer_name')->label('Customer Name'),
                     TextEntry::make('customer_company')->label('Company')->default('—'),
                     TextEntry::make('salesAgent.name')->label('Sales Agent')->default('Unassigned'),
-                    TextEntry::make('project.name')->label('Project Site')->default(fn(Quotation $r) => $r->project_name ?? '—'),
+                    TextEntry::make('project.name')->label('Project Site')->default(fn (Quotation $r) => $r->project_name ?? '—'),
                     TextEntry::make('phone_no')->label('Contact No.')->default('—'),
                     TextEntry::make('quotation_date')->label('Quotation Date')->date('M j, Y'),
                     TextEntry::make('status')->label('Status')->badge()
-                        ->color(fn(string $state) => match ($state) {
+                        ->color(fn (string $state) => match ($state) {
                             Quotation::STATUS_APPROVED => 'success',
                             Quotation::STATUS_CONVERTED => 'info',
                             Quotation::STATUS_REJECTED => 'danger',
@@ -101,7 +101,7 @@ class ViewQuotation extends ViewRecord
                     TextEntry::make('total_amount')->label('Total Amount')->money('PHP'),
                     TextEntry::make('negotiated_amount')->label('Negotiated Amount')->money('PHP')->placeholder('—'),
                     TextEntry::make('estimated_profit')->label('Estimated Profit')->money('PHP')
-                        ->color(fn($state) => $state > 0 ? 'success' : 'danger'),
+                        ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
                 ]),
 
             Section::make('Terms, Payment & Delivery')

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ProductAliasResource\Pages;
 
 use App\Filament\Resources\ProductAliasResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditProductAlias extends EditRecord

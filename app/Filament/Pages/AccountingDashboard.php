@@ -7,10 +7,8 @@ use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Services\AccountingReportService;
 use BackedEnum;
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -18,7 +16,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -29,22 +26,30 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use UnitEnum;
 
-class AccountingDashboard extends Page implements HasTable, HasForms
+class AccountingDashboard extends Page implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-calculator';
+
     protected static UnitEnum|string|null $navigationGroup = 'Dashboards & Analytics';
+
     protected static ?string $navigationLabel = 'Accounting & Receivables';
+
     protected static ?string $title = 'Accounting Dashboard & Receivables Ledger';
+
     protected string $view = 'filament.pages.accounting-dashboard';
+
     protected static ?int $navigationSort = 4;
 
     // ─── Interactive Email Template Section Properties ─────────────────
     public ?int $selectedPoId = null;
+
     public string $emailRecipient = '';
+
     public string $emailSubject = '';
+
     public string $emailBody = '';
 
     // ─── Interactive Tab Filter ────────────────────────────────────────
@@ -69,7 +74,7 @@ class AccountingDashboard extends Page implements HasTable, HasForms
         // Auto-select the highest priority order requiring follow-up
         $urgentPo = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
-            ->when($this->isSalesExecutiveScoped(), fn($q) => $q->where('sales_agent_id', auth()->id()))
+            ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()))
             ->orderByRaw('CASE WHEN payment_due_date < ? THEN 1 WHEN payment_due_date <= ? THEN 2 ELSE 3 END', [
                 now()->toDateString(),
                 now()->addDays(10)->toDateString(),
@@ -90,52 +95,54 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                     ->label('Download Receivables Aging Report (PDF)')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('primary')
-                    ->action(fn() => app(AccountingReportService::class)->downloadReceivablesPdf()),
+                    ->action(fn () => app(AccountingReportService::class)->downloadReceivablesPdf()),
 
                 Action::make('export_receivables_csv')
                     ->label('Export Receivables Aging Report (CSV)')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success')
-                    ->action(fn() => app(AccountingReportService::class)->exportReceivablesCsv()),
+                    ->action(fn () => app(AccountingReportService::class)->exportReceivablesCsv()),
 
                 Action::make('download_history_pdf')
                     ->label('Download Settled Payment History (PDF)')
                     ->icon('heroicon-o-document-text')
                     ->color('info')
-                    ->action(fn() => app(AccountingReportService::class)->downloadPaymentHistoryPdf()),
+                    ->action(fn () => app(AccountingReportService::class)->downloadPaymentHistoryPdf()),
 
                 Action::make('export_history_csv')
                     ->label('Export Settled Payment History (CSV)')
                     ->icon('heroicon-o-table-cells')
                     ->color('gray')
-                    ->action(fn() => app(AccountingReportService::class)->exportPaymentHistoryCsv()),
+                    ->action(fn () => app(AccountingReportService::class)->exportPaymentHistoryCsv()),
             ])
-            ->label('Download Accounting Reports')
-            ->icon('heroicon-o-arrow-down-tray')
-            ->color('primary')
-            ->button(),
+                ->label('Download Accounting Reports')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->button(),
         ];
     }
 
     protected function isSalesExecutiveScoped(): bool
     {
         $user = auth()->user();
-        return $user && $user->isSalesExecutive() && !$user->isAdmin() && !$user->is_owner && !$user->isOperationsManager() && !$user->isCeo();
+
+        return $user && $user->isSalesExecutive() && ! $user->isAdmin() && ! $user->is_owner && ! $user->isOperationsManager() && ! $user->isCeo();
     }
 
     public function loadEmailTemplateForPo(?int $poId): void
     {
         $this->selectedPoId = $poId;
 
-        if (!$poId) {
+        if (! $poId) {
             $this->emailRecipient = '';
             $this->emailSubject = '';
             $this->emailBody = '';
+
             return;
         }
 
         $po = PurchaseOrder::with(['project', 'quotation'])->find($poId);
-        if (!$po) {
+        if (! $po) {
             return;
         }
 
@@ -152,7 +159,7 @@ class AccountingDashboard extends Page implements HasTable, HasForms
 
     public function getSelectedPoProperty(): ?PurchaseOrder
     {
-        if (!$this->selectedPoId) {
+        if (! $this->selectedPoId) {
             return null;
         }
 
@@ -163,7 +170,7 @@ class AccountingDashboard extends Page implements HasTable, HasForms
     {
         $query = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
             ->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
-            ->when($this->isSalesExecutiveScoped(), fn($q) => $q->where('sales_agent_id', auth()->id()))
+            ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()))
             ->with(['project', 'quotation'])
             ->orderByRaw('CASE WHEN payment_due_date < ? THEN 1 WHEN payment_due_date <= ? THEN 2 ELSE 3 END', [
                 now()->toDateString(),
@@ -176,27 +183,29 @@ class AccountingDashboard extends Page implements HasTable, HasForms
 
     public function sendEmailReminderFromSection(): void
     {
-        if (!$this->selectedPoId) {
+        if (! $this->selectedPoId) {
             Notification::make()
                 ->title('No Purchase Order Selected')
                 ->body('Please select an outstanding purchase order first.')
                 ->warning()
                 ->send();
+
             return;
         }
 
         $po = PurchaseOrder::find($this->selectedPoId);
-        if (!$po) {
+        if (! $po) {
             return;
         }
 
-        if (!$po->canSendPaymentReminderToday()) {
+        if (! $po->canSendPaymentReminderToday()) {
             $lastSent = $po->last_payment_reminder_sent_at ? $po->last_payment_reminder_sent_at->format('M d, Y h:i A') : 'earlier today';
             Notification::make()
                 ->title('Anti-Spam Daily Limit Exceeded')
                 ->body("A reminder was already dispatched today at {$lastSent}. Strictly 1 email per PO per day is permitted to avoid spamming the client.")
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -235,11 +244,11 @@ class AccountingDashboard extends Page implements HasTable, HasForms
     public function getSummaryStats(): array
     {
         $query = PurchaseOrder::whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
-            ->when($this->isSalesExecutiveScoped(), fn($q) => $q->where('sales_agent_id', auth()->id()));
+            ->when($this->isSalesExecutiveScoped(), fn ($q) => $q->where('sales_agent_id', auth()->id()));
 
         $allOrders = $query->get();
-        $deliveredOrders = $allOrders->filter(fn($po) => $po->isDelivered());
-        $pendingDeliveryOrders = $allOrders->filter(fn($po) => !$po->isDelivered());
+        $deliveredOrders = $allOrders->filter(fn ($po) => $po->isDelivered());
+        $pendingDeliveryOrders = $allOrders->filter(fn ($po) => ! $po->isDelivered());
 
         $totalReceivables = (float) $allOrders->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)->sum('order_amount');
         $totalCollected = (float) $allOrders->where('payment_status', PurchaseOrder::PAYMENT_STATUS_PAID)->sum('order_amount');
@@ -250,7 +259,7 @@ class AccountingDashboard extends Page implements HasTable, HasForms
         $warningAmount = 0.0;
 
         foreach ($allOrders as $order) {
-            if (!$order->isPaid() && $order->days_until_due !== null) {
+            if (! $order->isPaid() && $order->days_until_due !== null) {
                 if ($order->days_until_due < 0) {
                     $overdueCount++;
                     $overdueAmount += (float) $order->order_amount;
@@ -262,17 +271,17 @@ class AccountingDashboard extends Page implements HasTable, HasForms
         }
 
         return [
-            'totalReceivables'     => $totalReceivables,
-            'totalCollected'       => $totalCollected,
-            'overdueCount'         => $overdueCount,
-            'overdueAmount'        => $overdueAmount,
-            'warningCount'         => $warningCount,
-            'warningAmount'        => $warningAmount,
-            'totalDelivered'       => $deliveredOrders->count(),
+            'totalReceivables' => $totalReceivables,
+            'totalCollected' => $totalCollected,
+            'overdueCount' => $overdueCount,
+            'overdueAmount' => $overdueAmount,
+            'warningCount' => $warningCount,
+            'warningAmount' => $warningAmount,
+            'totalDelivered' => $deliveredOrders->count(),
             'totalPendingDelivery' => $pendingDeliveryOrders->count(),
-            'totalOrders'          => $allOrders->count(),
-            'paidCount'            => $allOrders->where('payment_status', PurchaseOrder::PAYMENT_STATUS_PAID)->count(),
-            'pendingCount'         => $allOrders->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)->count(),
+            'totalOrders' => $allOrders->count(),
+            'paidCount' => $allOrders->where('payment_status', PurchaseOrder::PAYMENT_STATUS_PAID)->count(),
+            'pendingCount' => $allOrders->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)->count(),
         ];
     }
 
@@ -310,7 +319,7 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                     ->weight('semibold')
                     ->searchable()
                     ->sortable()
-                    ->description(fn(PurchaseOrder $r) => $r->payment_account ? "Account Tag: {$r->payment_account}" : null),
+                    ->description(fn (PurchaseOrder $r) => $r->payment_account ? "Account Tag: {$r->payment_account}" : null),
 
                 TextColumn::make('project.name')
                     ->label('Project')
@@ -327,12 +336,12 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                 TextColumn::make('delivery_status')
                     ->label('Fulfillment Stage')
                     ->badge()
-                    ->formatStateUsing(fn(string $state, PurchaseOrder $record): string => match (true) {
+                    ->formatStateUsing(fn (string $state, PurchaseOrder $record): string => match (true) {
                         $record->isDelivered() => 'Delivered',
                         $state === PurchaseOrder::DELIVERY_TRANSIT => 'In Transit',
                         default => 'Pending Delivery',
                     })
-                    ->color(fn(string $state, PurchaseOrder $record): string => match (true) {
+                    ->color(fn (string $state, PurchaseOrder $record): string => match (true) {
                         $record->isDelivered() => 'success',
                         $state === PurchaseOrder::DELIVERY_TRANSIT => 'info',
                         default => 'warning',
@@ -342,8 +351,8 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                 TextColumn::make('payment_term_type')
                     ->label('Payment Terms')
                     ->badge()
-                    ->formatStateUsing(fn(?string $state) => $state ? (PurchaseOrder::getPaymentTermOptions()[$state] ?? strtoupper($state)) : 'Not Set')
-                    ->color(fn(?string $state) => match ($state) {
+                    ->formatStateUsing(fn (?string $state) => $state ? (PurchaseOrder::getPaymentTermOptions()[$state] ?? strtoupper($state)) : 'Not Set')
+                    ->color(fn (?string $state) => match ($state) {
                         PurchaseOrder::PAYMENT_TERM_COD => 'success',
                         PurchaseOrder::PAYMENT_TERM_PDC_7, PurchaseOrder::PAYMENT_TERM_PDC_15, PurchaseOrder::PAYMENT_TERM_PDC_30 => 'info',
                         PurchaseOrder::PAYMENT_TERM_CREDIT_30 => 'warning',
@@ -365,21 +374,22 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                 TextColumn::make('payment_status')
                     ->label('Settlement Status')
                     ->badge()
-                    ->color(fn(PurchaseOrder $r) => $r->due_status_color)
-                    ->formatStateUsing(fn(?string $state, PurchaseOrder $r): string => match ($state) {
+                    ->color(fn (PurchaseOrder $r) => $r->due_status_color)
+                    ->formatStateUsing(fn (?string $state, PurchaseOrder $r): string => match ($state) {
                         'paid' => 'PAID',
                         'unpaid' => ($r->days_until_due !== null && $r->days_until_due < 0)
-                            ? 'OVERDUE (' . abs($r->days_until_due) . 'd ago)'
-                            : ($r->days_until_due !== null ? 'UNPAID (' . $r->days_until_due . 'd left)' : 'UNPAID'),
+                            ? 'OVERDUE ('.abs($r->days_until_due).'d ago)'
+                            : ($r->days_until_due !== null ? 'UNPAID ('.$r->days_until_due.'d left)' : 'UNPAID'),
                         default => strtoupper($state ?: 'unpaid'),
                     })
                     ->tooltip(function (PurchaseOrder $r): string {
                         if ($r->isPaid()) {
-                            return 'Payment received & cleared: ' . ($r->paid_at ? $r->paid_at->format('M d, Y h:i A') : 'Settled');
+                            return 'Payment received & cleared: '.($r->paid_at ? $r->paid_at->format('M d, Y h:i A') : 'Settled');
                         }
                         if ($r->days_until_due !== null && $r->days_until_due <= 10) {
                             return 'Action Required: Due within 10 days! Send email payment follow-up to client.';
                         }
+
                         return 'Standard payment lifecycle';
                     }),
 
@@ -411,14 +421,16 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                 SelectFilter::make('payment_status')
                     ->label('Payment Status')
                     ->options([
-                        'unpaid'  => 'Unpaid / Pending Receivables',
-                        'paid'    => 'Paid / Cleared Transactions',
+                        'unpaid' => 'Unpaid / Pending Receivables',
+                        'paid' => 'Paid / Cleared Transactions',
                         'overdue' => 'Overdue Receivables Only',
-                        'due_10'  => 'Due in 10 Days or Less (Follow-Up Needed)',
+                        'due_10' => 'Due in 10 Days or Less (Follow-Up Needed)',
                     ])
                     ->query(function (Builder $query, array $data) {
                         $value = $data['value'] ?? null;
-                        if (!$value) return;
+                        if (! $value) {
+                            return;
+                        }
 
                         if ($value === 'unpaid') {
                             $query->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID);
@@ -426,13 +438,13 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                             $query->where('payment_status', PurchaseOrder::PAYMENT_STATUS_PAID);
                         } elseif ($value === 'overdue') {
                             $query->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
-                                  ->whereNotNull('payment_due_date')
-                                  ->where('payment_due_date', '<', now()->toDateString());
+                                ->whereNotNull('payment_due_date')
+                                ->where('payment_due_date', '<', now()->toDateString());
                         } elseif ($value === 'due_10') {
                             $query->where('payment_status', '!=', PurchaseOrder::PAYMENT_STATUS_PAID)
-                                  ->whereNotNull('payment_due_date')
-                                  ->where('payment_due_date', '<=', now()->addDays(10)->toDateString())
-                                  ->where('payment_due_date', '>=', now()->toDateString());
+                                ->whereNotNull('payment_due_date')
+                                ->where('payment_due_date', '<=', now()->addDays(10)->toDateString())
+                                ->where('payment_due_date', '>=', now()->toDateString());
                         }
                     }),
 
@@ -444,38 +456,42 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                     ->label('Fulfillment Stage')
                     ->options([
                         'delivered' => 'Delivered Orders',
-                        'pending'   => 'Pending Delivery / In Progress',
+                        'pending' => 'Pending Delivery / In Progress',
                     ])
                     ->query(function (Builder $query, array $data) {
                         $val = $data['value'] ?? null;
-                        if (!$val) return;
+                        if (! $val) {
+                            return;
+                        }
                         if ($val === 'delivered') {
-                            $query->where(fn($q) => $q->where('delivery_status', PurchaseOrder::DELIVERY_DELIVERED)->orWhere('status', PurchaseOrder::STATUS_DELIVERED));
+                            $query->where(fn ($q) => $q->where('delivery_status', PurchaseOrder::DELIVERY_DELIVERED)->orWhere('status', PurchaseOrder::STATUS_DELIVERED));
                         } elseif ($val === 'pending') {
                             $query->whereNotIn('delivery_status', [PurchaseOrder::DELIVERY_DELIVERED, 'delivered'])
-                                  ->where('status', '!=', PurchaseOrder::STATUS_DELIVERED);
+                                ->where('status', '!=', PurchaseOrder::STATUS_DELIVERED);
                         }
                     }),
 
                 SelectFilter::make('sales_agent_id')
                     ->label('Sales Executive / Account')
-                    ->options(fn() => User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->pluck('name', 'id'))
-                    ->visible(fn() => auth()->user()?->canManageQuotations() ?? false),
+                    ->options(fn () => User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->pluck('name', 'id'))
+                    ->visible(fn () => auth()->user()?->canManageQuotations() ?? false),
             ])
             ->actions([
                 // 1-Click Email Client Action with daily anti-spam check
                 Action::make('email_client')
                     ->label('Email Client')
                     ->icon('heroicon-m-envelope')
-                    ->color(fn(PurchaseOrder $r) => $r->due_status_color === 'danger' ? 'danger' : ($r->due_status_color === 'warning' ? 'warning' : 'primary'))
-                    ->visible(fn(PurchaseOrder $r) => !$r->isPaid())
-                    ->modalHeading(fn(PurchaseOrder $r): string => "Follow-Up Payment Reminder: PO #{$r->po_number}")
+                    ->color(fn (PurchaseOrder $r) => $r->due_status_color === 'danger' ? 'danger' : ($r->due_status_color === 'warning' ? 'warning' : 'primary'))
+                    ->visible(fn (PurchaseOrder $r) => ! $r->isPaid())
+                    ->modalHeading(fn (PurchaseOrder $r): string => "Follow-Up Payment Reminder: PO #{$r->po_number}")
                     ->modalDescription(function (PurchaseOrder $r): string {
-                        if (!$r->canSendPaymentReminderToday()) {
+                        if (! $r->canSendPaymentReminderToday()) {
                             $lastSent = $r->last_payment_reminder_sent_at ? $r->last_payment_reminder_sent_at->format('M d, Y h:i A') : 'earlier today';
+
                             return "Anti-Spam Limitation: A payment follow-up email was already sent for this PO today ({$lastSent}). Strictly 1 email per PO per day is permitted to avoid spamming the client.";
                         }
-                        return "Review and dispatch an official Huenics payment follow-up email to this client. Maximum 1 send per day.";
+
+                        return 'Review and dispatch an official Huenics payment follow-up email to this client. Maximum 1 send per day.';
                     })
                     ->modalWidth('2xl')
                     ->form(function (PurchaseOrder $r) {
@@ -487,29 +503,30 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                                 ->email()
                                 ->required()
                                 ->default($template['recipient'])
-                                ->disabled(!$r->canSendPaymentReminderToday()),
+                                ->disabled(! $r->canSendPaymentReminderToday()),
 
                             TextInput::make('email_subject')
                                 ->label('Email Subject')
                                 ->required()
                                 ->default($template['subject'])
-                                ->disabled(!$r->canSendPaymentReminderToday()),
+                                ->disabled(! $r->canSendPaymentReminderToday()),
 
                             Textarea::make('email_body')
                                 ->label('Email Template Body')
                                 ->required()
                                 ->rows(10)
                                 ->default($template['body'])
-                                ->disabled(!$r->canSendPaymentReminderToday()),
+                                ->disabled(! $r->canSendPaymentReminderToday()),
                         ];
                     })
                     ->action(function (PurchaseOrder $record, array $data): void {
-                        if (!$record->canSendPaymentReminderToday()) {
+                        if (! $record->canSendPaymentReminderToday()) {
                             Notification::make()
                                 ->title('Email Limit Exceeded')
                                 ->body('Only 1 reminder email per PO per day is permitted to avoid spamming.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -545,16 +562,16 @@ class AccountingDashboard extends Page implements HasTable, HasForms
                     ->label('Mark Paid')
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
-                    ->visible(fn(PurchaseOrder $r) => !$r->isPaid())
+                    ->visible(fn (PurchaseOrder $r) => ! $r->isPaid())
                     ->requiresConfirmation()
-                    ->modalHeading(fn(PurchaseOrder $r) => "Confirm Settlement for PO #{$r->po_number}")
+                    ->modalHeading(fn (PurchaseOrder $r) => "Confirm Settlement for PO #{$r->po_number}")
                     ->modalDescription('Confirm that full payment for this purchase order has been cleared and deposited.')
                     ->action(function (PurchaseOrder $record): void {
                         $record->update([
                             'payment_status' => PurchaseOrder::PAYMENT_STATUS_PAID,
-                            'paid_at'        => now(),
-                            'is_completed'   => true,
-                            'completed_at'   => $record->completed_at ?? now(),
+                            'paid_at' => now(),
+                            'is_completed' => true,
+                            'completed_at' => $record->completed_at ?? now(),
                         ]);
 
                         Notification::make()

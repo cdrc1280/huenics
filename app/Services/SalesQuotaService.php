@@ -15,15 +15,15 @@ class SalesQuotaService
     public function recordConversion(PurchaseOrder $po): void
     {
         $agent = $po->salesAgent;
-        if (!$agent) {
+        if (! $agent) {
             return;
         }
 
         $quota = SalesQuota::firstOrCreate(
             [
                 'user_id' => $agent->id,
-                'month'   => $po->order_date->month,
-                'year'    => $po->order_date->year,
+                'month' => $po->order_date->month,
+                'year' => $po->order_date->year,
             ],
             ['target_amount' => 0, 'achieved_amount' => 0]
         );
@@ -44,15 +44,15 @@ class SalesQuotaService
             ->get()
             ->map(function (SalesQuota $quota, int $rank) {
                 return [
-                    'rank'             => $rank + 1,
-                    'agent'            => $quota->user->name ?? 'Unknown',
-                    'role'             => $quota->user->role ?? '',
-                    'target'           => (float) $quota->target_amount,
-                    'achieved'         => (float) $quota->achieved_amount,
-                    'quota_pct'        => $quota->quota_percentage,
+                    'rank' => $rank + 1,
+                    'agent' => $quota->user->name ?? 'Unknown',
+                    'role' => $quota->user->role ?? '',
+                    'target' => (float) $quota->target_amount,
+                    'achieved' => (float) $quota->achieved_amount,
+                    'quota_pct' => $quota->quota_percentage,
                     'total_quotations' => $quota->total_quotations,
-                    'converted_pos'    => $quota->converted_pos,
-                    'conversion_rate'  => (float) $quota->conversion_rate,
+                    'converted_pos' => $quota->converted_pos,
+                    'conversion_rate' => (float) $quota->conversion_rate,
                 ];
             });
     }

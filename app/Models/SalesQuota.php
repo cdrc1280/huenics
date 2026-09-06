@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,7 @@ class SalesQuota extends Model
     protected function casts(): array
     {
         return [
-            'target_amount'   => 'decimal:2',
+            'target_amount' => 'decimal:2',
             'achieved_amount' => 'decimal:2',
             'conversion_rate' => 'decimal:2',
         ];
@@ -54,12 +55,13 @@ class SalesQuota extends Model
         if ((float) $this->target_amount <= 0) {
             return 0.0;
         }
+
         return round(((float) $this->achieved_amount / (float) $this->target_amount) * 100, 1);
     }
 
     public function getMonthLabelAttribute(): string
     {
-        return \Carbon\Carbon::createFromDate($this->year, $this->month, 1)->format('F Y');
+        return Carbon::createFromDate($this->year, $this->month, 1)->format('F Y');
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────

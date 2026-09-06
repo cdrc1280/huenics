@@ -31,12 +31,12 @@ class RecentDocumentsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('document_type')
                     ->label('Type')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
                         Document::TYPE_VENDORS_AGREEMENT => 'Quotation',
                         default => $state,
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'primary',
                         Document::TYPE_VENDORS_AGREEMENT => 'warning',
                         default => 'gray',
@@ -53,7 +53,7 @@ class RecentDocumentsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         Document::STATUS_UPLOADED => 'gray',
                         Document::STATUS_PROCESSING => 'info',
                         Document::STATUS_REQUIRES_REVIEW => 'warning',
@@ -64,7 +64,7 @@ class RecentDocumentsWidget extends BaseWidget
 
                 Tables\Columns\IconColumn::make('mismatch')
                     ->label('Reconciled')
-                    ->state(fn(Document $record): bool => !$record->hasMismatches())
+                    ->state(fn (Document $record): bool => ! $record->hasMismatches())
                     ->boolean()
                     ->trueIcon('heroicon-s-check-circle')
                     ->falseIcon('heroicon-s-exclamation-triangle')
@@ -86,7 +86,7 @@ class RecentDocumentsWidget extends BaseWidget
                         ->label('Review')
                         ->icon('heroicon-o-eye')
                         ->color('warning')
-                        ->url(fn(Document $record): string => ReviewQueuePage::getUrl(['document_id' => $record->id])),
+                        ->url(fn (Document $record): string => ReviewQueuePage::getUrl(['document_id' => $record->id])),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns);
     }

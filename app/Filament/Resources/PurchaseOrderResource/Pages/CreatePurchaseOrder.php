@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\PurchaseOrderResource\Pages;
 
 use App\Filament\Resources\PurchaseOrderResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Models\Quotation;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreatePurchaseOrder extends CreateRecord
 {
@@ -18,15 +19,16 @@ class CreatePurchaseOrder extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Auto-compute VAT and profit
-        $data['computed_vat']    = round((float) ($data['order_amount'] ?? 0) / 1.12 * 0.12, 2);
+        $data['computed_vat'] = round((float) ($data['order_amount'] ?? 0) / 1.12 * 0.12, 2);
         $data['realized_profit'] = round((float) ($data['order_amount'] ?? 0) - (float) ($data['total_cost'] ?? 0), 2);
+
         return $data;
     }
 
     protected function afterCreate(): void
     {
-        if ($this->record->quotation_id && $quotation = \App\Models\Quotation::find($this->record->quotation_id)) {
-            $quotation->update(['status' => \App\Models\Quotation::STATUS_CONVERTED]);
+        if ($this->record->quotation_id && $quotation = Quotation::find($this->record->quotation_id)) {
+            $quotation->update(['status' => Quotation::STATUS_CONVERTED]);
         }
 
         Notification::make()

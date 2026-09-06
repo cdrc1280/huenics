@@ -10,11 +10,7 @@ class FieldExtractor
     /**
      * Extract a single field value given the mapping definition and document text / line context.
      *
-     * @param VendorLayoutFieldMapping $mapping
-     * @param string $fullText
-     * @param array<int, string> $lines
-     * @param string|null $currentLine
-     * @return mixed
+     * @param  array<int, string>  $lines
      */
     public function extractField(VendorLayoutFieldMapping $mapping, string $fullText, array $lines, ?string $currentLine = null): mixed
     {
@@ -62,10 +58,8 @@ class FieldExtractor
      * Extract a field value using an array of extraction rules (from layout header_rules JSON).
      * This supports the vendor-specific layout configurations stored in vendor_document_layouts.header_rules.
      *
-     * @param string $fullText
-     * @param array<int, string> $lines
-     * @param array|string $rules  Either a single rule array or an array of rule arrays
-     * @return string|null
+     * @param  array<int, string>  $lines
+     * @param  array|string  $rules  Either a single rule array or an array of rule arrays
      */
     public function extractByRules(string $fullText, array $lines, array|string $rules): ?string
     {
@@ -102,7 +96,7 @@ class FieldExtractor
                             $length = ($colEnd !== null && $colEnd > $start) ? ($colEnd - $start) : null;
                             $extracted = ($length !== null) ? substr($line, $start, $length) : substr($line, $start);
                             $extracted = trim($extracted);
-                            if (!empty($extracted) && preg_match('/\d/', $extracted)) {
+                            if (! empty($extracted) && preg_match('/\d/', $extracted)) {
                                 $rawValue = $extracted;
                                 break;
                             }
@@ -153,6 +147,7 @@ class FieldExtractor
         try {
             $cleaned = trim(preg_replace('/[^\w\s\/\-\,\.]/', '', $str));
             $carbon = Carbon::parse($cleaned);
+
             return $carbon->format('Y-m-d');
         } catch (\Throwable) {
             return null;
@@ -164,6 +159,7 @@ class FieldExtractor
         if (preg_match('/(?:Payment\s*Terms?|Terms?\s*of\s*Payment)\s*[:\-\.]?\s*([^\n\r]+)/i', $text, $matches)) {
             return trim($matches[1]);
         }
+
         return null;
     }
 
@@ -172,6 +168,7 @@ class FieldExtractor
         if (preg_match('/(?:Delivery\s*Terms?|Terms?\s*of\s*Delivery)\s*[:\-\.]?\s*([^\n\r]+)/i', $text, $matches)) {
             return trim($matches[1]);
         }
+
         return null;
     }
 
@@ -180,6 +177,7 @@ class FieldExtractor
         if (preg_match('/Terms\s*(?:and|&)\s*Conditions\s*[:\-\.]?\s*(.*?)(?=\n\s*(?:Total|Signed|Approved|Conforme|Prepared)|$)/is', $text, $matches)) {
             return trim($matches[1]);
         }
+
         return null;
     }
 }

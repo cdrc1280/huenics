@@ -24,10 +24,12 @@ class CompanySetting extends Model
         try {
             return Cache::remember("company_setting_{$key}", 3600, function () use ($key, $default) {
                 $record = static::where('key', $key)->first();
+
                 return $record?->value ?? $default;
             });
         } catch (\Throwable $e) {
             report($e);
+
             return $default;
         }
     }
@@ -71,6 +73,7 @@ class CompanySetting extends Model
             });
         } catch (\Throwable $e) {
             report($e);
+
             return max(1, (int) date('Y') - 2022);
         }
     }

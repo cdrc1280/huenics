@@ -5,15 +5,20 @@ namespace App\Filament\Pages;
 use App\Actions\CrossReferenceDocuments;
 use App\Actions\ReconcileDocumentTotals;
 use App\Actions\VerifyDocument;
+use App\Enums\UnitOfMeasure;
+use App\Filament\Resources\PurchaseOrderResource;
+use App\Filament\Resources\QuotationResource;
+use App\Filament\Widgets\ReviewQueueStatsWidget;
 use App\Models\Document;
 use App\Models\Product;
-use App\Models\ProductAlias;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Vendor;
 use App\Services\DocumentParsers\DynamicDocumentParser;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -27,32 +32,38 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
-class ReviewQueuePage extends Page implements HasTable, HasForms
+class ReviewQueuePage extends Page implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     protected static bool $shouldRegisterNavigation = false;
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard-document-check';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+
     protected static ?string $navigationLabel = 'Document Verification Queue';
+
     protected static ?string $title = 'Document Verification & Review';
+
     protected string $view = 'filament.pages.review-queue-page';
+
     protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         return $user->canVerifyDocuments() || $user->isSalesExecutive() || $user->canCreateDocuments();
     }
-
 
     protected function getHeaderWidgets(): array
     {
@@ -61,12 +72,13 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         }
 
         return [
-            \App\Filament\Widgets\ReviewQueueStatsWidget::class,
+            ReviewQueueStatsWidget::class,
         ];
     }
 
     // Active Verification Workspace State
     public ?int $selectedDocumentId = null;
+
     public ?Document $currentDocument = null;
 
     // Editable Line Items
@@ -74,42 +86,70 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     // Editable Totals & Header Metadata
     public ?string $documentNumber = null;
+
     public ?string $documentDate = null;
+
     public ?string $customerName = null;
+
     public ?string $customerCompany = null;
+
     public ?string $projectName = null;
+
     public ?string $projectLocation = null;
+
     public ?string $phoneNo = null;
+
     public ?int $vendorId = null;
+
     public ?int $projectId = null;
+
     public ?float $printedSubtotal = null;
+
     public ?float $printedVat = null;
+
     public ?float $printedTotal = null;
+
     public ?float $negotiatedAmount = null;
 
     // Terms & Official PO / Conforme
     public ?string $termsAndConditions = '';
+
     public ?string $paymentTerms = '';
+
     public ?string $deliveryTerms = '';
+
     public bool $isOfficialPo = false;
+
     public ?string $customerSignatureName = '';
+
     public ?string $customerSignedAt = '';
 
     // Structured Terms & Conditions Checkboxes (Matching authentic Huenics Quotation / VAF form)
     public string $tcValidity = '15 days';
+
     public bool $tcStock = false;
+
     public bool $tcNonStock = true;
+
     public bool $tcDelivery4To7 = false;
+
     public bool $tcDelivery10To15 = false;
+
     public bool $tcDelivery45To60 = true;
+
     public bool $tcPaymentCodDp = true;
+
     public bool $tcPaymentApproved = false;
+
     public bool $tcRemarksOfficialPo = false;
+
     public bool $tcRemarksNonReturnable = true;
 
     // Real-Time Synchronized Preview State
     public string $previewMode = 'live'; // 'live' or 'pdf'
+
     public array $originalState = [];
+
     public ?string $rejectionReason = '';
 
     // Deletion Modal State
@@ -117,8 +157,11 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     // Photo Preview Modal State
     public ?string $previewPhotoUrl = null;
+
     public ?string $previewPhotoTitle = null;
+
     public ?string $previewPhotoSku = null;
+
     public ?int $previewPhotoLineNo = null;
 
     public function setPreviewMode(string $mode): void
@@ -150,7 +193,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         if ($this->tcPaymentApproved) {
             $payments[] = 'Approved Terms';
         }
-        if (!empty($payments)) {
+        if (! empty($payments)) {
             $this->paymentTerms = implode(', ', $payments);
         }
 
@@ -165,7 +208,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         if ($this->tcDelivery45To60) {
             $deliveries[] = '45-60 days';
         }
-        if (!empty($deliveries)) {
+        if (! empty($deliveries)) {
             $this->deliveryTerms = implode(', ', $deliveries);
         }
 
@@ -189,6 +232,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     {
         $orig = $this->originalState[$field] ?? null;
         $curr = $this->{$field} ?? null;
+
         return (string) $orig !== (string) $curr;
     }
 
@@ -197,7 +241,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         $origLine = $this->originalState['editableItems'][$index] ?? null;
         $currLine = $this->editableItems[$index] ?? null;
 
-        if (!$origLine || !$currLine) {
+        if (! $origLine || ! $currLine) {
             return true;
         }
 
@@ -210,7 +254,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getLivePdfUrl(): string
     {
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return '#';
         }
 
@@ -261,12 +305,15 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
         $json = json_encode($payload);
         $encoded = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
+
         return route('documents.live-pdf', ['document' => $this->currentDocument->id, 'payload' => $encoded, 'v' => substr(md5($encoded), 0, 8)]);
     }
 
     // Cross reference details
     public ?Document $crossRefQuotation = null;
+
     public ?Document $crossRefPO = null;
+
     public ?Transaction $existingTransaction = null;
 
     public function mount(?int $document_id = null): void
@@ -293,44 +340,44 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                     ->sortable()
                     ->weight('bold')
                     ->default('—')
-                    ->description(fn(Document $record): string => $record->original_filename ? \Illuminate\Support\Str::limit($record->original_filename, 30) : '')
-                    ->tooltip(fn(Document $record): string => "Document #{$record->document_number} — File: {$record->original_filename}"),
+                    ->description(fn (Document $record): string => $record->original_filename ? Str::limit($record->original_filename, 30) : '')
+                    ->tooltip(fn (Document $record): string => "Document #{$record->document_number} — File: {$record->original_filename}"),
 
                 Tables\Columns\TextColumn::make('document_type')
                     ->label('Document Type')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'Purchase Order',
                         Document::TYPE_VENDORS_AGREEMENT => 'Vendors Agreement',
                         default => 'Purchase Order',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         Document::TYPE_PURCHASE_ORDER => 'primary',
                         Document::TYPE_VENDORS_AGREEMENT => 'warning',
                         default => 'gray',
                     })
-                    ->tooltip(fn(Document $record): string => "Document category: " . strtoupper(str_replace('_', ' ', $record->document_type))),
+                    ->tooltip(fn (Document $record): string => 'Document category: '.strtoupper(str_replace('_', ' ', $record->document_type))),
 
                 Tables\Columns\TextColumn::make('vendor.name')
                     ->label('Vendor')
                     ->searchable()
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn(Document $record): string => "Vendor / Supplier: " . ($record->vendor?->name ?? 'Unassigned')),
+                    ->tooltip(fn (Document $record): string => 'Vendor / Supplier: '.($record->vendor?->name ?? 'Unassigned')),
 
                 Tables\Columns\TextColumn::make('project.name')
                     ->label('Project / Site')
                     ->searchable()
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn(Document $record): string => "Project Site: " . ($record->project?->name ?? 'Unassigned')),
+                    ->tooltip(fn (Document $record): string => 'Project Site: '.($record->project?->name ?? 'Unassigned')),
 
                 Tables\Columns\TextColumn::make('totals.printed_total')
                     ->label('Printed Total')
                     ->money('PHP')
                     ->sortable()
                     ->default('—')
-                    ->tooltip(fn(Document $record): string => "Printed Gross Amount: ₱" . number_format($record->totals?->printed_total ?? 0, 2)),
+                    ->tooltip(fn (Document $record): string => 'Printed Gross Amount: ₱'.number_format($record->totals?->printed_total ?? 0, 2)),
 
                 Tables\Columns\TextColumn::make('reconciliation_status')
                     ->label('Math & VAT Check')
@@ -346,21 +393,23 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                             if ($record->lineItems()->where('total_mismatch', true)->exists()) {
                                 $issues[] = 'Line Math Error';
                             }
+
                             return count($issues) > 0 ? implode(', ', $issues) : 'Discrepancy Detected';
                         }
+
                         return 'Clean Math';
                     })
                     ->badge()
-                    ->color(fn(string $state): string => $state === 'Clean Math' ? 'success' : 'danger')
-                    ->icon(fn(string $state): string => $state === 'Clean Math' ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-triangle')
-                    ->tooltip(fn(Document $record): string => $record->hasMismatches()
+                    ->color(fn (string $state): string => $state === 'Clean Math' ? 'success' : 'danger')
+                    ->icon(fn (string $state): string => $state === 'Clean Math' ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-triangle')
+                    ->tooltip(fn (Document $record): string => $record->hasMismatches()
                         ? 'Discrepancies detected: Click "Verify & Reconcile" to review line arithmetic (.85 error) and 12% PH VAT accuracy.'
                         : 'All line calculations, arithmetic sums, and 12% Philippine VAT match perfectly.'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         Document::STATUS_REQUIRES_REVIEW => 'Needs Review',
                         Document::STATUS_VERIFIED => 'Verified',
                         Document::STATUS_FAILED => 'Failed',
@@ -369,14 +418,14 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                         Document::STATUS_REJECTED => 'Rejected',
                         default => $state,
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         Document::STATUS_REQUIRES_REVIEW => 'warning',
                         Document::STATUS_VERIFIED => 'success',
                         Document::STATUS_FAILED, Document::STATUS_REJECTED => 'danger',
                         Document::STATUS_PROCESSING => 'info',
                         default => 'gray',
                     })
-                    ->tooltip(fn(Document $record): string => "Current document lifecycle status: {$record->status}"),
+                    ->tooltip(fn (Document $record): string => "Current document lifecycle status: {$record->status}"),
 
                 Tables\Columns\TextColumn::make('document_date')
                     ->label('Doc Date')
@@ -386,10 +435,10 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
                 Tables\Columns\TextColumn::make('extraction_confidence')
                     ->label('Confidence')
-                    ->formatStateUsing(fn($state) => $state ? "{$state}%" : '—')
+                    ->formatStateUsing(fn ($state) => $state ? "{$state}%" : '—')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->tooltip(fn(Document $record): string => "AI extraction parser confidence score: {$record->extraction_confidence}%"),
+                    ->tooltip(fn (Document $record): string => "AI extraction parser confidence score: {$record->extraction_confidence}%"),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -411,45 +460,45 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
                 Tables\Filters\SelectFilter::make('vendor_id')
                     ->label('Vendor')
-                    ->options(fn() => $this->vendors),
+                    ->options(fn () => $this->vendors),
 
                 Tables\Filters\SelectFilter::make('project_id')
                     ->label('Project')
-                    ->options(fn() => $this->projects),
+                    ->options(fn () => $this->projects),
             ])
             ->actions([
                 ActionGroup::make([
                     Action::make('verify_workspace')
-                        ->label(fn() => auth()->user()?->canVerifyDocuments() ? 'Verify & Reconcile' : 'View & Check Math')
-                        ->icon(fn() => auth()->user()?->canVerifyDocuments() ? 'heroicon-m-check-badge' : 'heroicon-m-eye')
-                        ->color(fn() => auth()->user()?->canVerifyDocuments() ? 'primary' : 'info')
-                        ->tooltip(fn() => auth()->user()?->canVerifyDocuments() ? 'Open the interactive split-screen PDF verification workspace' : 'View document extraction and arithmetic status (Viewing Mode)')
-                        ->action(fn(Document $record) => $this->loadDocument($record->id)),
+                        ->label(fn () => auth()->user()?->canVerifyDocuments() ? 'Verify & Reconcile' : 'View & Check Math')
+                        ->icon(fn () => auth()->user()?->canVerifyDocuments() ? 'heroicon-m-check-badge' : 'heroicon-m-eye')
+                        ->color(fn () => auth()->user()?->canVerifyDocuments() ? 'primary' : 'info')
+                        ->tooltip(fn () => auth()->user()?->canVerifyDocuments() ? 'Open the interactive split-screen PDF verification workspace' : 'View document extraction and arithmetic status (Viewing Mode)')
+                        ->action(fn (Document $record) => $this->loadDocument($record->id)),
 
                     Action::make('quick_approve')
                         ->label('Quick Approve')
                         ->icon('heroicon-m-check')
                         ->color('success')
                         ->tooltip('Fast-track approve clean document and post directly to financial ledger')
-                        ->visible(fn(Document $record): bool => (auth()->user()?->canVerifyDocuments() ?? false) && $record->status === Document::STATUS_REQUIRES_REVIEW && !$record->hasMismatches())
+                        ->visible(fn (Document $record): bool => (auth()->user()?->canVerifyDocuments() ?? false) && $record->status === Document::STATUS_REQUIRES_REVIEW && ! $record->hasMismatches())
                         ->requiresConfirmation()
                         ->modalHeading('Quick Approve Document')
                         ->modalDescription('Are you sure you want to approve this document? It will create a transaction and mark the document as verified.')
                         ->action(function (Document $record) {
                             $docType = $record->document_type;
                             $verifier = app(VerifyDocument::class);
-                            $trx = $verifier->execute($record, auth()->user() ?: \App\Models\User::first());
+                            $trx = $verifier->execute($record, auth()->user() ?: User::first());
 
                             Notification::make()
                                 ->title('Document Verified')
-                                ->body("Transaction {$trx->transaction_code} created for ₱" . number_format($trx->final_amount, 2))
+                                ->body("Transaction {$trx->transaction_code} created for ₱".number_format($trx->final_amount, 2))
                                 ->success()
                                 ->send();
 
                             if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
-                                $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
+                                $this->redirect(QuotationResource::getUrl());
                             } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
-                                $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
+                                $this->redirect(PurchaseOrderResource::getUrl());
                             }
                         }),
 
@@ -468,7 +517,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
                                 Notification::make()
                                     ->title('Re-Extraction Completed')
-                                    ->body("Extracted with latest dynamic layout rules.")
+                                    ->body('Extracted with latest dynamic layout rules.')
                                     ->success()
                                     ->send();
                             } catch (\Throwable $e) {
@@ -485,7 +534,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                         ->icon('heroicon-m-document-text')
                         ->color('gray')
                         ->tooltip('Open original uploaded PDF in a new tab')
-                        ->url(fn(Document $record): string => route('documents.preview', $record), shouldOpenInNewTab: true),
+                        ->url(fn (Document $record): string => route('documents.preview', $record), shouldOpenInNewTab: true),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
 
@@ -519,8 +568,9 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     public function loadDocument(int $documentId): void
     {
         $doc = Document::with(['lineItems', 'totals', 'vendor', 'project'])->find($documentId);
-        if (!$doc) {
+        if (! $doc) {
             Notification::make()->title('Document not found')->danger()->send();
+
             return;
         }
 
@@ -574,7 +624,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $this->tcRemarksOfficialPo = (bool) ($tcJson['remarks_official_po'] ?? false);
             $this->tcRemarksNonReturnable = (bool) ($tcJson['remarks_non_returnable'] ?? true);
         } else {
-            $combinedText = ($doc->raw_extracted_text ?? '') . ' ' . $rawTc;
+            $combinedText = ($doc->raw_extracted_text ?? '').' '.$rawTc;
 
             // Validity
             if (preg_match('/Validity\s*[:\.]?\s*(\d+\s*days)/i', $combinedText, $m)) {
@@ -585,12 +635,12 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
             // Stock Availability
             $this->tcStock = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*Stock\b|Stock\s*[✔✓v\[x\]■])/i', $combinedText);
-            $this->tcNonStock = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*Non-Stock|Non-Stock.*?Special.*?Items)/i', $combinedText) || !$this->tcStock);
+            $this->tcNonStock = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*Non-Stock|Non-Stock.*?Special.*?Items)/i', $combinedText) || ! $this->tcStock);
 
             // Terms of Delivery
             $this->tcDelivery4To7 = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*4-7\s*days|4-7\s*days\s*[✔✓v\[x\]■])/i', $combinedText);
             $this->tcDelivery10To15 = (bool) preg_match('/(?:[✔✓v\[x\]■]\s*10-15\s*days|10-15\s*days\s*[✔✓v\[x\]■])/i', $combinedText);
-            $this->tcDelivery45To60 = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*(?:45-60|30-45)\s*days|(?:45-60|30-45)\s*days\s*[✔✓v\[x\]■])/i', $combinedText) || (!$this->tcDelivery4To7 && !$this->tcDelivery10To15));
+            $this->tcDelivery45To60 = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*(?:45-60|30-45)\s*days|(?:45-60|30-45)\s*days\s*[✔✓v\[x\]■])/i', $combinedText) || (! $this->tcDelivery4To7 && ! $this->tcDelivery10To15));
 
             // Payment Terms
             $this->tcPaymentCodDp = (bool) (preg_match('/(?:[✔✓v\[x\]■]\s*(?:COD|50\%\s*DP)|(?:COD|50\%\s*DP).*?PDC)/i', $combinedText) || true);
@@ -666,14 +716,16 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         $this->currentDocument = null;
 
         if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
-            $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
+            $this->redirect(QuotationResource::getUrl());
+
             return;
         } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
-            $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
+            $this->redirect(PurchaseOrderResource::getUrl());
+
             return;
         }
 
-        $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
+        $this->redirect(QuotationResource::getUrl());
     }
 
     public function loadNextDocument(): void
@@ -704,17 +756,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getIsReadOnlyProperty(): bool
     {
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return true;
         }
 
         // Only Sales Executive, Operations Manager, and Admin can edit
-        if (!$user->canEditQuotationDocument()) {
+        if (! $user->canEditQuotationDocument()) {
             return true;
         }
 
@@ -723,13 +775,13 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getIsUnlinkedNormalPoProperty(): bool
     {
-        if (!$this->currentDocument || $this->currentDocument->document_type !== \App\Models\Document::TYPE_PURCHASE_ORDER) {
+        if (! $this->currentDocument || $this->currentDocument->document_type !== Document::TYPE_PURCHASE_ORDER) {
             return false;
         }
 
-        $po = \App\Models\PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
+        $po = PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
         if ($po) {
-            return !$po->is_conforme_po && !$po->quotation_id;
+            return ! $po->is_conforme_po && ! $po->quotation_id;
         }
 
         return false;
@@ -737,14 +789,15 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getReconciliationProperty(): ?array
     {
-        if (!$this->currentDocument || $this->currentDocument->document_type !== \App\Models\Document::TYPE_PURCHASE_ORDER) {
+        if (! $this->currentDocument || $this->currentDocument->document_type !== Document::TYPE_PURCHASE_ORDER) {
             return null;
         }
 
-        $po = \App\Models\PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
+        $po = PurchaseOrder::where('document_id', $this->currentDocument->id)->first();
         if ($po && $po->quotation_id) {
             $po->unsetRelation('quotation');
             $po->unsetRelation('lineItems');
+
             return $po->getReconciliationReport();
         }
 
@@ -758,6 +811,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     // Undo / Redo History Stacks
     public array $undoStack = [];
+
     public array $redoStack = [];
 
     public function getCurrentStateSnapshot(): array
@@ -797,6 +851,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     {
         if (empty($this->undoStack)) {
             Notification::make()->title('Nothing to undo')->info()->send();
+
             return;
         }
 
@@ -810,6 +865,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
     {
         if (empty($this->redoStack)) {
             Notification::make()->title('Nothing to redo')->info()->send();
+
             return;
         }
 
@@ -832,7 +888,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function reExtractCurrentDocument(): void
     {
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return;
         }
 
@@ -897,7 +953,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 'printedSubtotal',
                 'printedVat',
                 'printedTotal',
-                'negotiatedAmount'
+                'negotiatedAmount',
             ]) || str_starts_with($property, 'editableItems')
         ) {
             $this->pushStateToUndo();
@@ -957,7 +1013,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                     $quotation->lineItems()->delete();
                     foreach ($this->editableItems as $idx => $line) {
                         $lineTot = (float) ($line['printed_total'] ?? $line['computed_total']);
-                        $effPrice = (float) (!empty($line['discounted_price']) && (float) $line['discounted_price'] > 0 ? $line['discounted_price'] : ($line['unit_price'] ?? 0));
+                        $effPrice = (float) (! empty($line['discounted_price']) && (float) $line['discounted_price'] > 0 ? $line['discounted_price'] : ($line['unit_price'] ?? 0));
                         $baseCost = round($effPrice * 0.7, 2);
                         $quotation->lineItems()->create([
                             'line_no' => $line['line_no'] ?? ($idx + 1),
@@ -1054,7 +1110,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         if (isset($this->editableItems[$index])) {
             $this->pushStateToUndo();
             $this->editableItems[$index]['material_code'] = $sku;
-            if (!empty($sku)) {
+            if (! empty($sku)) {
                 $product = Product::where('sku', $sku)->first();
                 if ($product) {
                     $this->editableItems[$index]['product_id'] = $product->id;
@@ -1127,13 +1183,13 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $productId = $item['product_id'] ?? null;
             $sku = $item['material_code'] ?? null;
 
-            $thumbUrl = !empty($productId) ? ($this->productThumbnails[$productId] ?? null) : null;
-            if (!$thumbUrl && !empty($sku)) {
-                $thumbUrl = $this->productThumbnails['sku:' . $sku] ?? null;
+            $thumbUrl = ! empty($productId) ? ($this->productThumbnails[$productId] ?? null) : null;
+            if (! $thumbUrl && ! empty($sku)) {
+                $thumbUrl = $this->productThumbnails['sku:'.$sku] ?? null;
             }
 
             $this->previewPhotoUrl = $thumbUrl;
-            $this->previewPhotoTitle = !empty($item['description']) ? $item['description'] : ($this->products[$productId] ?? ($sku ?? 'Product Photo'));
+            $this->previewPhotoTitle = ! empty($item['description']) ? $item['description'] : ($this->products[$productId] ?? ($sku ?? 'Product Photo'));
             $this->previewPhotoSku = $sku;
             $this->previewPhotoLineNo = $item['line_no'] ?? ($index + 1);
 
@@ -1147,7 +1203,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $this->pushStateToUndo();
 
             $deletedItem = $this->editableItems[$index];
-            $deletedDesc = !empty($deletedItem['description']) ? $deletedItem['description'] : ($deletedItem['material_code'] ?? 'Line Item');
+            $deletedDesc = ! empty($deletedItem['description']) ? $deletedItem['description'] : ($deletedItem['material_code'] ?? 'Line Item');
             $lineNo = $deletedItem['line_no'] ?? ($index + 1);
 
             $itemId = $deletedItem['id'] ?? null;
@@ -1162,7 +1218,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
             Notification::make()
                 ->title("Line #{$lineNo} Deleted")
-                ->body("Deleted: {$deletedDesc}. Figures recomputed: Subtotal ₱" . number_format($this->printedSubtotal, 2) . ", 12% VAT ₱" . number_format($this->printedVat, 2) . ", Grand Total ₱" . number_format($this->printedTotal, 2) . ".")
+                ->body("Deleted: {$deletedDesc}. Figures recomputed: Subtotal ₱".number_format($this->printedSubtotal, 2).', 12% VAT ₱'.number_format($this->printedVat, 2).', Grand Total ₱'.number_format($this->printedTotal, 2).'.')
                 ->success()
                 ->send();
         }
@@ -1170,7 +1226,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function saveDraft(): void
     {
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return;
         }
 
@@ -1195,7 +1251,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 $quotation->update([
                     'is_official_po' => (bool) $this->isOfficialPo,
                     'customer_signature_name' => $this->customerSignatureName ?: null,
-                    'customer_signed_at' => $this->customerSignedAt ? \Carbon\Carbon::parse($this->customerSignedAt) : null,
+                    'customer_signed_at' => $this->customerSignedAt ? Carbon::parse($this->customerSignedAt) : null,
                     'terms_and_conditions' => $this->termsAndConditions,
                     'payment_terms' => $this->paymentTerms,
                     'delivery_terms' => $this->deliveryTerms,
@@ -1216,11 +1272,11 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
         // Sync line items
         foreach ($this->editableItems as $item) {
-            $desc = !empty($item['description'])
+            $desc = ! empty($item['description'])
                 ? $item['description']
-                : (!empty($item['product_id']) ? (Product::find($item['product_id'])?->canonical_name ?? '') : '');
+                : (! empty($item['product_id']) ? (Product::find($item['product_id'])?->canonical_name ?? '') : '');
 
-            if (!empty($item['id'])) {
+            if (! empty($item['id'])) {
                 $this->currentDocument->lineItems()->where('id', $item['id'])->update([
                     'line_no' => $item['line_no'],
                     'material_code' => $item['material_code'],
@@ -1255,16 +1311,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function approveAndVerify(): void
     {
-        if (!auth()->user()?->canVerifyDocuments()) {
+        if (! auth()->user()?->canVerifyDocuments()) {
             Notification::make()
                 ->title('Viewing Mode Only')
                 ->body('Only Operations Managers and Administrators can commit verified transactions to the master ledger.')
                 ->warning()
                 ->send();
+
             return;
         }
 
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return;
         }
 
@@ -1274,6 +1331,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 ->body('This is a normal purchase order and must be linked to an approved quotation before it can be verified and committed.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -1283,6 +1341,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
                 ->body('This purchase order has line item or pricing discrepancies with its linked quotation. Discrepancies must be resolved before verification and approval.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -1293,7 +1352,7 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
             $verifier = app(VerifyDocument::class);
             $transaction = $verifier->execute(
                 $this->currentDocument,
-                auth()->user() ?: \App\Models\User::first(),
+                auth()->user() ?: User::first(),
                 $this->editableItems,
                 [
                     'is_official_po' => $this->isOfficialPo,
@@ -1304,15 +1363,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
             Notification::make()
                 ->title('Document Verified & Committed')
-                ->body("Reconciled into Transaction {$transaction->transaction_code} for ₱" . number_format($transaction->final_amount, 2))
+                ->body("Reconciled into Transaction {$transaction->transaction_code} for ₱".number_format($transaction->final_amount, 2))
                 ->success()
                 ->send();
 
             if ($docType === Document::TYPE_VENDORS_AGREEMENT) {
-                $this->redirect(\App\Filament\Resources\QuotationResource::getUrl());
+                $this->redirect(QuotationResource::getUrl());
+
                 return;
             } elseif ($docType === Document::TYPE_PURCHASE_ORDER) {
-                $this->redirect(\App\Filament\Resources\PurchaseOrderResource::getUrl());
+                $this->redirect(PurchaseOrderResource::getUrl());
+
                 return;
             }
 
@@ -1328,20 +1389,21 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function rejectDocument(): void
     {
-        if (!auth()->user()?->canVerifyDocuments()) {
+        if (! auth()->user()?->canVerifyDocuments()) {
             Notification::make()
                 ->title('Viewing Mode Only')
                 ->body('Only Operations Managers and Administrators can reject ingested documents.')
                 ->warning()
                 ->send();
+
             return;
         }
 
-        if (!$this->currentDocument) {
+        if (! $this->currentDocument) {
             return;
         }
 
-        $reason = !empty(trim($this->rejectionReason ?? ''))
+        $reason = ! empty(trim($this->rejectionReason ?? ''))
             ? trim($this->rejectionReason)
             : 'Rejected by reviewer during verification.';
 
@@ -1372,7 +1434,6 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
         $this->loadNextDocument();
     }
 
-
     public function getPendingCountProperty(): int
     {
         return Document::where('status', Document::STATUS_REQUIRES_REVIEW)->count();
@@ -1389,17 +1450,17 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getVendorsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_vendors_list', 120, fn() => Vendor::pluck('name', 'id')->toArray());
+        return Cache::remember('lookup_vendors_list', 120, fn () => Vendor::pluck('name', 'id')->toArray());
     }
 
     public function getProjectsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_projects_list', 120, fn() => Project::pluck('name', 'id')->toArray());
+        return Cache::remember('lookup_projects_list', 120, fn () => Project::pluck('name', 'id')->toArray());
     }
 
     public function getProductsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_products_list', 120, fn() => Product::pluck('canonical_name', 'id')->toArray());
+        return Cache::remember('lookup_products_list', 120, fn () => Product::pluck('canonical_name', 'id')->toArray());
     }
 
     public function getSkuOptionsProperty(): array
@@ -1409,24 +1470,24 @@ class ReviewQueuePage extends Page implements HasTable, HasForms
 
     public function getUnitOptionsProperty(): array
     {
-        return \App\Enums\UnitOfMeasure::options();
+        return UnitOfMeasure::options();
     }
 
     public function getProductThumbnailsProperty(): array
     {
-        return \Illuminate\Support\Facades\Cache::remember('lookup_product_thumbnails', 120, function () {
+        return Cache::remember('lookup_product_thumbnails', 120, function () {
             $map = [];
             foreach (Product::all(['id', 'sku', 'image_path']) as $p) {
                 $url = $p->image_url;
                 if ($url) {
                     $map[$p->id] = $url;
-                    if (!empty($p->sku)) {
-                        $map['sku:' . $p->sku] = $url;
+                    if (! empty($p->sku)) {
+                        $map['sku:'.$p->sku] = $url;
                     }
                 }
             }
+
             return $map;
         });
     }
 }
-

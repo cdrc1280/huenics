@@ -21,14 +21,14 @@ class CreateDocument extends CreateRecord
                 diskPath: $data['disk_path'],
                 originalFilename: $data['original_filename'] ?? basename($data['disk_path']),
                 documentType: $data['document_type'] ?? Document::TYPE_PURCHASE_ORDER,
-                vendorId: !empty($data['vendor_id']) ? (int) $data['vendor_id'] : null,
-                projectId: !empty($data['project_id']) ? (int) $data['project_id'] : null,
+                vendorId: ! empty($data['vendor_id']) ? (int) $data['vendor_id'] : null,
+                projectId: ! empty($data['project_id']) ? (int) $data['project_id'] : null,
                 userId: auth()->id() ?: 1,
                 quotationId: null,
                 isConformePo: (bool) ($data['is_conforme_po'] ?? false)
             );
 
-            if (!empty($record->is_duplicate)) {
+            if (! empty($record->is_duplicate)) {
                 $docRef = $record->document_number ? " (Reference: {$record->document_number})" : '';
                 Notification::make()
                     ->title('Duplicate Document Detected')
@@ -39,7 +39,7 @@ class CreateDocument extends CreateRecord
             } else {
                 Notification::make()
                     ->title('PDF Ingested & Extracted')
-                    ->body("Extracted line items and arithmetic checks completed.")
+                    ->body('Extracted line items and arithmetic checks completed.')
                     ->success()
                     ->send();
             }

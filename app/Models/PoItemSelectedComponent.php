@@ -22,10 +22,10 @@ class PoItemSelectedComponent extends Model
     protected function casts(): array
     {
         return [
-            'unit_cost'                   => 'decimal:2',
-            'total_cost'                  => 'decimal:2',
-            'is_deducted_from_inventory'  => 'boolean',
-            'created_at'                  => 'datetime',
+            'unit_cost' => 'decimal:2',
+            'total_cost' => 'decimal:2',
+            'is_deducted_from_inventory' => 'boolean',
+            'created_at' => 'datetime',
         ];
     }
 

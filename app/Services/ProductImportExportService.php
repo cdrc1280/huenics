@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\InventoryItem;
 use App\Models\Product;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenSpout\Common\Entity\Row;
@@ -216,7 +215,7 @@ class ProductImportExportService
     protected function iterateRowsFromFile(string $filePath): \Generator
     {
         if ($this->isXlsxFile($filePath)) {
-            $reader = new XlsxReader();
+            $reader = new XlsxReader;
             $reader->open($filePath);
 
             foreach ($reader->getSheetIterator() as $sheet) {
@@ -229,6 +228,7 @@ class ProductImportExportService
                         if ($val instanceof \DateTimeInterface) {
                             return $val->format('Y-m-d');
                         }
+
                         return trim((string) $val);
                     }, $cells);
 
@@ -239,12 +239,13 @@ class ProductImportExportService
             }
 
             $reader->close();
+
             return;
         }
 
         // Delimited plain text / CSV stream
         $handle = fopen($filePath, 'r');
-        if (!$handle) {
+        if (! $handle) {
             throw new \RuntimeException("Failed to open file for streaming: {$filePath}");
         }
 
@@ -275,7 +276,7 @@ class ProductImportExportService
         }
 
         while (($row = fgetcsv($handle, 8192, $delimiter)) !== false) {
-            $normalized = array_map(fn($val) => trim((string) $val), $row);
+            $normalized = array_map(fn ($val) => trim((string) $val), $row);
             yield $normalized;
         }
 
@@ -288,14 +289,14 @@ class ProductImportExportService
      */
     public function importFile(string $filePath, bool $updateExisting = true): array
     {
-        if (!file_exists($filePath) || !is_readable($filePath)) {
+        if (! file_exists($filePath) || ! is_readable($filePath)) {
             throw new \InvalidArgumentException("Catalog file does not exist or is not readable: {$filePath}");
         }
 
         $importedCount = 0;
-        $updatedCount  = 0;
-        $skippedCount  = 0;
-        $errors        = [];
+        $updatedCount = 0;
+        $skippedCount = 0;
+        $errors = [];
         $currentCategory = 'General';
 
         $headerMap = null;
@@ -305,7 +306,7 @@ class ProductImportExportService
             $rowIndex++;
 
             // Skip completely blank rows
-            if (empty(array_filter($trimmedRow, fn($v) => $v !== ''))) {
+            if (empty(array_filter($trimmedRow, fn ($v) => $v !== ''))) {
                 continue;
             }
 
@@ -314,28 +315,30 @@ class ProductImportExportService
                 $possibleHeader = $this->parseHeaderRow($trimmedRow);
                 if ($possibleHeader !== null) {
                     $headerMap = $possibleHeader;
+
                     continue;
                 }
             }
 
             // Check if this row is a Category Section Header (e.g. "SMD LED STRIP LIGHT INDOOR" with empty other cells)
             $firstCell = strtoupper($trimmedRow[0] ?? '');
-            $nonEmptyCount = count(array_filter($trimmedRow, fn($v) => $v !== ''));
+            $nonEmptyCount = count(array_filter($trimmedRow, fn ($v) => $v !== ''));
 
-            if ($nonEmptyCount <= 2 && !empty($firstCell) && !str_starts_with($firstCell, 'HISI-') && !is_numeric(str_replace([',', '.'], '', $firstCell))) {
+            if ($nonEmptyCount <= 2 && ! empty($firstCell) && ! str_starts_with($firstCell, 'HISI-') && ! is_numeric(str_replace([',', '.'], '', $firstCell))) {
                 $currentCategory = $firstCell;
+
                 continue;
             }
 
             if ($headerMap === null) {
                 // Fallback default map if no explicit header row was present
                 $headerMap = [
-                    'code'        => 1,
-                    'wattage'     => 2,
+                    'code' => 1,
+                    'wattage' => 2,
                     'description' => 3,
-                    'voltage'     => 4,
-                    'color'       => 5,
-                    'price'       => 6,
+                    'voltage' => 4,
+                    'color' => 5,
+                    'price' => 6,
                 ];
             }
 
@@ -343,6 +346,7 @@ class ProductImportExportService
 
             if (empty($record['product_code']) && empty($record['canonical_name']) && empty($record['description'])) {
                 $skippedCount++;
+
                 continue;
             }
 
@@ -350,29 +354,29 @@ class ProductImportExportService
                 DB::transaction(function () use ($record, $updateExisting, &$importedCount, &$updatedCount) {
                     $product = null;
 
-                    if (!empty($record['product_code'])) {
+                    if (! empty($record['product_code'])) {
                         $product = Product::where('product_code', $record['product_code'])->first();
                     }
 
-                    if (!$product && !empty($record['canonical_name'])) {
+                    if (! $product && ! empty($record['canonical_name'])) {
                         $product = Product::where('canonical_name', $record['canonical_name'])->first();
                     }
 
                     if ($product) {
                         if ($updateExisting) {
                             $product->update([
-                                'canonical_name'    => $record['canonical_name'] ?: $product->canonical_name,
-                                'description'       => $record['description'] ?: $product->description,
-                                'sku'               => $record['sku'] ?: $product->sku,
-                                'category'          => $record['category'] ?: $product->category,
-                                'wattage'           => $record['wattage'] ?: $product->wattage,
-                                'voltage'           => $record['voltage'] ?: $product->voltage,
+                                'canonical_name' => $record['canonical_name'] ?: $product->canonical_name,
+                                'description' => $record['description'] ?: $product->description,
+                                'sku' => $record['sku'] ?: $product->sku,
+                                'category' => $record['category'] ?: $product->category,
+                                'wattage' => $record['wattage'] ?: $product->wattage,
+                                'voltage' => $record['voltage'] ?: $product->voltage,
                                 'color_temperature' => $record['color_temperature'] ?: $product->color_temperature,
-                                'unit_default'      => $record['unit_default'] ?: $product->unit_default,
-                                'selling_price'     => $record['price'] > 0 ? $record['price'] : $product->selling_price,
-                                'default_price'     => $record['price'] > 0 ? $record['price'] : $product->default_price,
-                                'image_path'        => $record['image_path'] ?: $product->image_path,
-                                'is_active'         => true,
+                                'unit_default' => $record['unit_default'] ?: $product->unit_default,
+                                'selling_price' => $record['price'] > 0 ? $record['price'] : $product->selling_price,
+                                'default_price' => $record['price'] > 0 ? $record['price'] : $product->default_price,
+                                'image_path' => $record['image_path'] ?: $product->image_path,
+                                'is_active' => true,
                             ]);
 
                             if ($record['stock'] !== null && $product->inventoryItem) {
@@ -384,35 +388,35 @@ class ProductImportExportService
                             $updatedCount++;
                         }
                     } else {
-                        $code = $record['product_code'] ?: ('PRD-' . strtoupper(substr(uniqid(), -6)));
+                        $code = $record['product_code'] ?: ('PRD-'.strtoupper(substr(uniqid(), -6)));
                         $name = $record['canonical_name'] ?: ($record['description'] ?: $code);
 
                         $product = Product::create([
-                            'product_code'      => $code,
-                            'canonical_name'    => $name,
-                            'description'       => $record['description'] ?: $name,
-                            'sku'               => $record['sku'] ?: null,
-                            'category'          => $record['category'] ?: 'General',
-                            'wattage'           => $record['wattage'],
-                            'voltage'           => $record['voltage'],
+                            'product_code' => $code,
+                            'canonical_name' => $name,
+                            'description' => $record['description'] ?: $name,
+                            'sku' => $record['sku'] ?: null,
+                            'category' => $record['category'] ?: 'General',
+                            'wattage' => $record['wattage'],
+                            'voltage' => $record['voltage'],
                             'color_temperature' => $record['color_temperature'],
-                            'unit_default'      => $record['unit_default'] ?: 'pcs',
-                            'selling_price'     => $record['price'],
-                            'default_price'     => $record['price'],
-                            'base_cost_price'   => round($record['price'] * 0.7, 2),
-                            'image_path'        => $record['image_path'],
-                            'is_huenics_owned'  => true,
-                            'is_active'         => true,
+                            'unit_default' => $record['unit_default'] ?: 'pcs',
+                            'selling_price' => $record['price'],
+                            'default_price' => $record['price'],
+                            'base_cost_price' => round($record['price'] * 0.7, 2),
+                            'image_path' => $record['image_path'],
+                            'is_huenics_owned' => true,
+                            'is_active' => true,
                         ]);
 
                         // Initialize inventory item
                         InventoryItem::firstOrCreate(
                             ['product_id' => $product->id],
                             [
-                                'quantity_on_hand'  => $record['stock'] ?? 0,
+                                'quantity_on_hand' => $record['stock'] ?? 0,
                                 'quantity_reserved' => 0,
-                                'reorder_point'     => 10,
-                                'unit'              => $product->unit_default,
+                                'reorder_point' => 10,
+                                'unit' => $product->unit_default,
                             ]
                         );
 
@@ -420,16 +424,16 @@ class ProductImportExportService
                     }
                 });
             } catch (\Throwable $e) {
-                $errors[] = "Row {$rowIndex}: " . $e->getMessage();
-                Log::warning("Product import error at row {$rowIndex}: " . $e->getMessage());
+                $errors[] = "Row {$rowIndex}: ".$e->getMessage();
+                Log::warning("Product import error at row {$rowIndex}: ".$e->getMessage());
             }
         }
 
         return [
             'imported' => $importedCount,
-            'updated'  => $updatedCount,
-            'skipped'  => $skippedCount,
-            'errors'   => $errors,
+            'updated' => $updatedCount,
+            'skipped' => $skippedCount,
+            'errors' => $errors,
         ];
     }
 
@@ -446,8 +450,8 @@ class ProductImportExportService
      */
     public function generateSampleExcelTemplate(): string
     {
-        $tempFile = tempnam(sys_get_temp_dir(), 'excel_tmpl_') . '.xlsx';
-        $writer = new XlsxWriter();
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_tmpl_').'.xlsx';
+        $writer = new XlsxWriter;
         $writer->openToFile($tempFile);
 
         $writer->addRow(Row::fromValues([
@@ -569,8 +573,8 @@ class ProductImportExportService
     {
         $products = $products ?: Product::with('inventoryItem')->orderBy('category')->orderBy('product_code')->get();
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'excel_export_') . '.xlsx';
-        $writer = new XlsxWriter();
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_export_').'.xlsx';
+        $writer = new XlsxWriter;
         $writer->openToFile($tempFile);
 
         $writer->addRow(Row::fromValues([
@@ -674,7 +678,7 @@ class ProductImportExportService
     {
         $code = isset($map['code']) && isset($row[$map['code']]) ? trim($row[$map['code']]) : null;
         $sku = isset($map['sku']) && isset($row[$map['sku']]) ? trim($row[$map['sku']]) : null;
-        if (empty($code) && !empty($sku)) {
+        if (empty($code) && ! empty($sku)) {
             $code = $sku;
         }
         $wattage = isset($map['wattage']) && isset($row[$map['wattage']]) ? trim($row[$map['wattage']]) : null;
@@ -683,9 +687,9 @@ class ProductImportExportService
         $color = isset($map['color']) && isset($row[$map['color']]) ? trim($row[$map['color']]) : null;
         $rawPrice = isset($map['price']) && isset($row[$map['price']]) ? trim($row[$map['price']]) : '';
         $rawUnit = isset($map['unit']) && isset($row[$map['unit']]) ? trim($row[$map['unit']]) : null;
-        $category = isset($map['category']) && !empty($row[$map['category']]) ? trim($row[$map['category']]) : $currentCategory;
-        $picture = isset($map['picture']) && !empty($row[$map['picture']]) ? trim($row[$map['picture']]) : null;
-        $name = isset($map['name']) && !empty($row[$map['name']]) ? trim($row[$map['name']]) : null;
+        $category = isset($map['category']) && ! empty($row[$map['category']]) ? trim($row[$map['category']]) : $currentCategory;
+        $picture = isset($map['picture']) && ! empty($row[$map['picture']]) ? trim($row[$map['picture']]) : null;
+        $name = isset($map['name']) && ! empty($row[$map['name']]) ? trim($row[$map['name']]) : null;
 
         $rawStock = isset($map['stock']) && isset($row[$map['stock']]) ? trim($row[$map['stock']]) : null;
         $stockVal = null;
@@ -708,7 +712,7 @@ class ProductImportExportService
         $price = 0.0;
         $unit = $rawUnit;
 
-        if (!empty($rawPrice)) {
+        if (! empty($rawPrice)) {
             if (str_contains($rawPrice, '/')) {
                 [$pricePart, $unitPart] = explode('/', $rawPrice, 2);
                 $cleanedPriceStr = preg_replace('/[^0-9.]/', '', str_replace(',', '', trim($pricePart)));
@@ -735,9 +739,9 @@ class ProductImportExportService
 
         // Synthesize a clean canonical name if missing
         if (empty($name)) {
-            if (!empty($desc)) {
+            if (! empty($desc)) {
                 $name = ucwords(strtolower($desc));
-            } elseif (!empty($code)) {
+            } elseif (! empty($code)) {
                 $name = "Product {$code}";
             } else {
                 $name = "Item {$category}";
@@ -745,18 +749,18 @@ class ProductImportExportService
         }
 
         return [
-            'product_code'      => $code,
-            'canonical_name'    => $name,
-            'description'       => $desc ?: $name,
-            'sku'               => $sku,
-            'category'          => $category ?: 'General',
-            'wattage'           => $wattage,
-            'voltage'           => $voltage,
+            'product_code' => $code,
+            'canonical_name' => $name,
+            'description' => $desc ?: $name,
+            'sku' => $sku,
+            'category' => $category ?: 'General',
+            'wattage' => $wattage,
+            'voltage' => $voltage,
             'color_temperature' => $color,
-            'unit_default'      => $normalizedUnit,
-            'price'             => $price,
-            'stock'             => $stockVal,
-            'image_path'        => $picture,
+            'unit_default' => $normalizedUnit,
+            'price' => $price,
+            'stock' => $stockVal,
+            'image_path' => $picture,
         ];
     }
 }

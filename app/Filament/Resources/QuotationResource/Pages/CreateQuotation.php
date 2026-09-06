@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\QuotationResource\Pages;
 
 use App\Filament\Resources\QuotationResource;
-use App\Services\QuotationService;
-use Filament\Resources\Pages\CreateRecord;
+use App\Models\SalesQuota;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateQuotation extends CreateRecord
 {
@@ -19,6 +19,7 @@ class CreateQuotation extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['sales_agent_id'] = $data['sales_agent_id'] ?? auth()->id();
+
         return $data;
     }
 
@@ -27,7 +28,7 @@ class CreateQuotation extends CreateRecord
         // Increment quota quotation count
         $agent = auth()->user();
         if ($agent) {
-            \App\Models\SalesQuota::firstOrCreate(
+            SalesQuota::firstOrCreate(
                 ['user_id' => $agent->id, 'month' => now()->month, 'year' => now()->year],
                 ['target_amount' => 0, 'achieved_amount' => 0]
             )->increment('total_quotations');

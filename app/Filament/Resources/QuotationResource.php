@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UnitOfMeasure;
 use App\Filament\Pages\ReviewQueuePage;
-use App\Filament\Resources\PurchaseOrderResource;
 use App\Filament\Resources\QuotationResource\Pages;
 use App\Models\Product;
 use App\Models\Project;
-use App\Models\PurchaseOrder;
 use App\Models\Quotation;
 use App\Models\User;
 use App\Services\QuotationService;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -33,14 +33,15 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class QuotationResource extends Resource
@@ -48,8 +49,11 @@ class QuotationResource extends Resource
     protected static ?string $model = Quotation::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-currency-dollar';
+
     protected static UnitEnum|string|null $navigationGroup = 'Sales & Order Lifecycle';
+
     protected static ?string $navigationLabel = 'Quotations';
+
     protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
@@ -82,7 +86,7 @@ class QuotationResource extends Resource
                 ->schema([
                     TextInput::make('quotation_number')
                         ->label('Quotation #')
-                        ->default(fn() => Quotation::generateNumber())
+                        ->default(fn () => Quotation::generateNumber())
                         // ->disabled()
                         ->dehydrated()
                         ->required(),
@@ -96,7 +100,7 @@ class QuotationResource extends Resource
                             User::ROLE_CEO,
                         ])->pluck('name', 'id'))
                         ->placeholder('Select Sales Executive / Inhouse')
-                        ->default(fn() => auth()->id())
+                        ->default(fn () => auth()->id())
                         ->searchable(),
 
                     TextInput::make('customer_name')
@@ -149,7 +153,7 @@ class QuotationResource extends Resource
 
                     Textarea::make('rejection_reason')
                         ->label('Rejection Reason')
-                        ->visible(fn($get) => $get('status') === Quotation::STATUS_REJECTED)
+                        ->visible(fn ($get) => $get('status') === Quotation::STATUS_REJECTED)
                         ->nullable()
                         ->columnSpanFull(),
 
@@ -171,13 +175,13 @@ class QuotationResource extends Resource
                     TextInput::make('customer_signature_name')
                         ->label("Customer's Name Over Signature")
                         ->placeholder('e.g. Engr. Juan Dela Cruz')
-                        ->visible(fn($get) => (bool) $get('is_official_po'))
-                        ->required(fn($get) => (bool) $get('is_official_po')),
+                        ->visible(fn ($get) => (bool) $get('is_official_po'))
+                        ->required(fn ($get) => (bool) $get('is_official_po')),
 
                     DatePicker::make('customer_signed_at')
                         ->label('Date Signed')
                         ->default(now())
-                        ->visible(fn($get) => (bool) $get('is_official_po')),
+                        ->visible(fn ($get) => (bool) $get('is_official_po')),
                 ])
                 ->columnSpanFull(),
 
@@ -262,15 +266,16 @@ class QuotationResource extends Resource
                                 ->label('Photo')
                                 ->content(function ($get) {
                                     $pId = $get('product_id');
-                                    if (!$pId) {
-                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    if (! $pId) {
+                                        return new HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
                                     }
                                     $product = Product::find($pId);
                                     $url = $product?->image_url;
-                                    if (!$url) {
-                                        return new \Illuminate\Support\HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
+                                    if (! $url) {
+                                        return new HtmlString('<div class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 text-[10px]">—</div>');
                                     }
-                                    return new \Illuminate\Support\HtmlString('<img src="' . e($url) . '" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
+
+                                    return new HtmlString('<img src="'.e($url).'" alt="Product" class="w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700 bg-white p-0.5" />');
                                 })
                                 ->columnSpan(1),
 
@@ -280,12 +285,12 @@ class QuotationResource extends Resource
                                 ->default(1)
                                 ->minValue(0.0001)
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $state * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $get('unit_price')), 2)))
                                 ->columnSpan(1),
 
                             Select::make('unit')
                                 ->label('Unit')
-                                ->options(\App\Enums\UnitOfMeasure::class)
+                                ->options(UnitOfMeasure::class)
                                 ->default('pcs')
                                 ->required()
                                 ->columnSpan(1),
@@ -295,7 +300,7 @@ class QuotationResource extends Resource
                                 ->numeric()
                                 ->prefix('₱')
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $state), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $get('discounted_price') > 0 ? (float) $get('discounted_price') : (float) $state), 2)))
                                 ->columnSpan(2),
 
                             TextInput::make('discounted_price')
@@ -304,7 +309,7 @@ class QuotationResource extends Resource
                                 ->prefix('₱')
                                 ->nullable()
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $state > 0 ? (float) $state : (float) $get('unit_price')), 2)))
+                                ->afterStateUpdated(fn ($state, $set, $get) => $set('line_total', round((float) $get('qty') * ((float) $state > 0 ? (float) $state : (float) $get('unit_price')), 2)))
                                 ->columnSpan(2),
 
                             TextInput::make('line_total')
@@ -338,7 +343,7 @@ class QuotationResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->requiresConfirmation(),
                     RestoreBulkAction::make()->requiresConfirmation(),
-                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn(): bool => auth()->user()?->canDeleteRecords() ?? false),
+                    ForceDeleteBulkAction::make()->requiresConfirmation()->visible(fn (): bool => auth()->user()?->canDeleteRecords() ?? false),
                 ]),
             ]);
     }
@@ -348,7 +353,7 @@ class QuotationResource extends Resource
         if ($record->isRejected()) {
             return 'Rejected';
         }
-        if ($record->is_official_po && !empty($record->customer_signature_name)) {
+        if ($record->is_official_po && ! empty($record->customer_signature_name)) {
             return 'Official PO (Signed)';
         }
         if ($state === Quotation::STATUS_CONVERTED) {
@@ -363,6 +368,7 @@ class QuotationResource extends Resource
         if ($record->isReviewed()) {
             return 'Reviewed';
         }
+
         return match ($state) {
             Quotation::STATUS_PENDING => 'Pending',
             Quotation::STATUS_APPROVED => 'Approved',
@@ -383,6 +389,7 @@ class QuotationResource extends Resource
         if ($record->isReviewed()) {
             return 'info';
         }
+
         return match ($state) {
             Quotation::STATUS_PENDING => 'warning',
             Quotation::STATUS_REVIEWED => 'info',
@@ -408,16 +415,16 @@ class QuotationResource extends Resource
                 ->label('Customer Name')
                 ->searchable()
                 ->sortable()
-                ->description(fn(Quotation $record): string => $record->customer_company ?: '')
-                ->tooltip(fn(Quotation $record): string => "Customer: {$record->customer_name}" . ($record->customer_company ? " ({$record->customer_company})" : '')),
+                ->description(fn (Quotation $record): string => $record->customer_company ?: '')
+                ->tooltip(fn (Quotation $record): string => "Customer: {$record->customer_name}".($record->customer_company ? " ({$record->customer_company})" : '')),
 
             TextColumn::make('project_name')
                 ->label('Project Name')
                 ->searchable()
                 ->sortable()
-                ->default(fn(Quotation $record) => $record->project?->name ?? 'Palanza Tower')
-                ->description(fn(Quotation $record): string => $record->project_location ?: '')
-                ->tooltip(fn(Quotation $record): string => "Project: " . ($record->project_name ?? $record->project?->name ?? 'Palanza Tower')),
+                ->default(fn (Quotation $record) => $record->project?->name ?? 'Palanza Tower')
+                ->description(fn (Quotation $record): string => $record->project_location ?: '')
+                ->tooltip(fn (Quotation $record): string => 'Project: '.($record->project_name ?? $record->project?->name ?? 'Palanza Tower')),
 
             TextColumn::make('phone_no')
                 ->label('Phone No.')
@@ -429,21 +436,21 @@ class QuotationResource extends Resource
                 ->label('Total Amount')
                 ->money('PHP')
                 ->sortable()
-                ->tooltip(fn(Quotation $record): string => "Quotation total sum: ₱" . number_format((float) $record->total_amount, 2)),
+                ->tooltip(fn (Quotation $record): string => 'Quotation total sum: ₱'.number_format((float) $record->total_amount, 2)),
 
             TextColumn::make('estimated_profit')
                 ->label('Est. Profit')
                 ->money('PHP')
                 ->sortable()
-                ->color(fn($state) => $state > 0 ? 'success' : 'danger')
-                ->tooltip(fn(Quotation $record): string => "Estimated gross profit (Total ₱" . number_format((float) $record->total_amount, 2) . " minus Cost ₱" . number_format((float) $record->total_cost, 2) . ")"),
+                ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                ->tooltip(fn (Quotation $record): string => 'Estimated gross profit (Total ₱'.number_format((float) $record->total_amount, 2).' minus Cost ₱'.number_format((float) $record->total_cost, 2).')'),
 
             TextColumn::make('status')
                 ->label('Status')
                 ->badge()
-                ->formatStateUsing(fn(string $state, Quotation $record): string => static::getStatusBadgeLabel($state, $record))
-                ->color(fn(string $state, Quotation $record): string => static::getStatusBadgeColor($state, $record))
-                ->tooltip(fn(Quotation $record): string => "Status: " . ucfirst($record->status)),
+                ->formatStateUsing(fn (string $state, Quotation $record): string => static::getStatusBadgeLabel($state, $record))
+                ->color(fn (string $state, Quotation $record): string => static::getStatusBadgeColor($state, $record))
+                ->tooltip(fn (Quotation $record): string => 'Status: '.ucfirst($record->status)),
 
             TextColumn::make('quotation_date')
                 ->label('Date')
@@ -454,8 +461,8 @@ class QuotationResource extends Resource
                 ->label('Valid Until')
                 ->date('M j, Y')
                 ->sortable()
-                ->color(fn(Quotation $record): ?string => $record->valid_until && \Carbon\Carbon::parse($record->valid_until)->isPast() ? 'danger' : null)
-                ->tooltip(fn(Quotation $record): string => $record->valid_until && \Carbon\Carbon::parse($record->valid_until)->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
+                ->color(fn (Quotation $record): ?string => $record->valid_until && Carbon::parse($record->valid_until)->isPast() ? 'danger' : null)
+                ->tooltip(fn (Quotation $record): string => $record->valid_until && Carbon::parse($record->valid_until)->isPast() ? 'Quotation estimate has expired' : 'Quotation validity period'),
         ];
     }
 
@@ -466,9 +473,9 @@ class QuotationResource extends Resource
                 ->label('Status Filter')
                 ->options([
                     'pending_review' => 'Pending & For Review',
-                    'approved'       => 'Approved',
-                    'converted'      => 'Converted to PO',
-                    'rejected'       => 'Rejected / Lost',
+                    'approved' => 'Approved',
+                    'converted' => 'Converted to PO',
+                    'rejected' => 'Rejected / Lost',
                 ])
                 ->query(function (Builder $query, array $data) {
                     $scope = $data['value'] ?? null;
@@ -478,10 +485,10 @@ class QuotationResource extends Resource
 
                     return match ($scope) {
                         'pending_review' => $query->whereIn('status', [Quotation::STATUS_PENDING, Quotation::STATUS_REVIEWED, 'pending', 'reviewed', 'for_review'])->where('is_official_po', false),
-                        'approved'       => $query->where(fn(Builder $q) => $q->where('status', Quotation::STATUS_APPROVED)->orWhere('is_official_po', true)),
-                        'converted'      => $query->where('status', Quotation::STATUS_CONVERTED),
-                        'rejected'       => $query->where('status', Quotation::STATUS_REJECTED),
-                        default          => $query,
+                        'approved' => $query->where(fn (Builder $q) => $q->where('status', Quotation::STATUS_APPROVED)->orWhere('is_official_po', true)),
+                        'converted' => $query->where('status', Quotation::STATUS_CONVERTED),
+                        'rejected' => $query->where('status', Quotation::STATUS_REJECTED),
+                        default => $query,
                     };
                 }),
 
@@ -506,11 +513,12 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-clipboard-document-check')
                     ->color('warning')
                     ->tooltip('Review, verify math and reconcile quotation line items')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isReviewed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed() && ! $r->isReviewed() && ! $r->isApproved() && ! $r->isConverted() && ! $r->isRejected())
                     ->url(function (Quotation $record) {
                         if ($record->document_id) {
                             return ReviewQueuePage::getUrl(['document_id' => $record->document_id]);
                         }
+
                         return null;
                     })
                     ->action(function (Quotation $record) {
@@ -526,7 +534,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
                     ->tooltip('Approve quotation estimate')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed() && ! $r->isApproved() && ! $r->isConverted() && ! $r->isRejected())
                     ->requiresConfirmation()
                     ->action(function (Quotation $record) {
                         app(QuotationService::class)->approve($record);
@@ -538,7 +546,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-x-circle')
                     ->color('danger')
                     ->tooltip('Mark quotation as rejected / lost with reason notes')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed() && !$r->isApproved() && !$r->isConverted() && !$r->isRejected())
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed() && ! $r->isApproved() && ! $r->isConverted() && ! $r->isRejected())
                     ->form([
                         Textarea::make('rejection_reason')
                             ->label('Reason for Rejection')
@@ -555,7 +563,7 @@ class QuotationResource extends Resource
                     ->icon('heroicon-m-shopping-cart')
                     ->color('primary')
                     ->tooltip('Convert this approved quotation into an active Purchase Order')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed() && $r->isReadyForConversion() && !$r->isConverted())
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed() && $r->isReadyForConversion() && ! $r->isConverted())
                     ->modalHeading('Convert Quotation to Purchase Order')
                     ->modalDescription('Are you sure you want to convert this quotation into an active Purchase Order? All line items, pricing, and project details will be transferred.')
                     ->modalSubmitActionLabel('Convert to PO')
@@ -586,8 +594,8 @@ class QuotationResource extends Resource
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
                     ->tooltip('Download Quotation PDF with e-signatures')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed())
-                    ->url(fn(Quotation $r) => route('quotations.export-pdf', $r))
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed())
+                    ->url(fn (Quotation $r) => route('quotations.export-pdf', $r))
                     ->openUrlInNewTab(),
 
                 Action::make('preview_pdf')
@@ -595,19 +603,19 @@ class QuotationResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->color('gray')
                     ->tooltip('Preview Quotation PDF in browser')
-                    ->visible(fn(Quotation $r): bool => !$r->trashed())
-                    ->url(fn(Quotation $r) => route('quotations.preview-pdf', $r))
+                    ->visible(fn (Quotation $r): bool => ! $r->trashed())
+                    ->url(fn (Quotation $r) => route('quotations.preview-pdf', $r))
                     ->openUrlInNewTab(),
 
                 ViewAction::make(),
                 DeleteAction::make()->requiresConfirmation(),
-                RestoreAction::make()->requiresConfirmation()->visible(fn(Quotation $record): bool => $record->trashed()),
-                ForceDeleteAction::make()->requiresConfirmation()->visible(fn(Quotation $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
+                RestoreAction::make()->requiresConfirmation()->visible(fn (Quotation $record): bool => $record->trashed()),
+                ForceDeleteAction::make()->requiresConfirmation()->visible(fn (Quotation $record): bool => $record->trashed() && (auth()->user()?->canDeleteRecords() ?? false)),
             ]),
         ];
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }

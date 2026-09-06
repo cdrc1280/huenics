@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Pages\ReviewQueuePage;
 use App\Models\Document;
 use App\Models\Transaction;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -25,7 +24,7 @@ class DocumentStatsOverview extends BaseWidget
 
         // Mismatch rate calculation
         $allDocs = Document::with('totals', 'lineItems')->get();
-        $mismatchDocsCount = $allDocs->filter(fn($doc) => $doc->hasMismatches())->count();
+        $mismatchDocsCount = $allDocs->filter(fn ($doc) => $doc->hasMismatches())->count();
         $mismatchRate = $totalDocs > 0 ? round(($mismatchDocsCount / $totalDocs) * 100, 1) : 0.0;
 
         return [
@@ -34,7 +33,7 @@ class DocumentStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($pendingCount > 0 ? 'warning' : 'success'),
 
-            Stat::make('Verified Transaction Volume', '₱' . number_format($monthlyVerifiedAmount, 2))
+            Stat::make('Verified Transaction Volume', '₱'.number_format($monthlyVerifiedAmount, 2))
                 ->description('This month\'s confirmed transactions')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
