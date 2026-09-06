@@ -218,7 +218,7 @@
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
                         <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center gap-1.5 transition-all duration-300 pointer-events-none z-20">
                             <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span id="luminaire-status-text">CITIZEN COB LED • CLU048 • 3000K • CRI 97+</span>
+                            <span id="luminaire-status-text">CITIZEN COB LED • 3000K WARM AMBER • 36° FLOOD • CRI 97+</span>
                         </div>
                     </div>
 
@@ -248,7 +248,7 @@
                 </div>
 
                 <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Citizen COB CCT Selection") -->
-                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
+                <div class="mt-4 sm:mt-6 w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[480px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-1.5 sm:p-2.5 shadow-xl backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 z-20">
                     <!-- Power Switch (ON / OFF) -->
                     <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
                             class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
@@ -260,30 +260,38 @@
                     <div class="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60 shrink-0">
                         <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
                                 class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer"
-                                title="3000K Warm White (Architectural Amber)">
+                                title="3000K Warm White (Architectural Amber • 36° Flood)">
                             3000K
                         </button>
                         <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
                                 class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="3500K Neutral Warm (Hospitality Sunset)">
+                                title="3500K Neutral Warm (Hospitality Sunset • 36° Flood)">
                             3500K
                         </button>
                         <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
                                 class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="4000K Natural White (Commercial Crisp)">
+                                title="4000K Natural White (Commercial Crisp • 36° Flood)">
                             4000K
                         </button>
                         <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
                                 class="cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer"
-                                title="5000K Cool White (Industrial Daylight)">
+                                title="5000K Cool White (Industrial Daylight • 36° Flood)">
                             5000K
                         </button>
+                    </div>
+
+                    <!-- 36° Architectural Optic Badge -->
+                    <div class="flex items-center gap-1 px-2 py-1 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9px] sm:text-[10px] font-mono font-bold text-amber-300 shrink-0" title="Precision 36° Architectural Collimated Optic Flood Reflector">
+                        <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                        </svg>
+                        <span>36&deg; Optic</span>
                     </div>
 
                     <!-- Cool Interactive Surge / Pulse Animation Button -->
                     <button type="button" onclick="window.triggerLuminaireSurge()"
                             class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
-                            title="Trigger High-Voltage Photonic Ignition Animation">
+                            title="Trigger High-Voltage Photonic Ignition Surge">
                         <i data-lucide="zap" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400"></i>
                         <span>Surge</span>
                     </button>
@@ -1210,8 +1218,9 @@
      * HUENICS 3D CITIZEN LED COB ENGINE (Photorealistic Studio WebGL)
      * ========================================================================= */
     (function() {
-        let scene, camera, renderer, cobGroup, phosphorMesh, damMesh, ceramicMesh, backplateMesh;
+        let scene, camera, renderer, cobGroup, phosphorMesh, damMesh, ceramicMesh, backplateMesh, colletMesh, opticRimMesh;
         let bloomSprite, particleSystem, shockwaveRing, corePointLight, ambientLight, keyLight, rimLight;
+        let spotLight, spotLightTarget, beamConeMesh;
         let isPowerOn = true;
         let currentCCT = '3000K';
         let currentRotX = 0.20, currentRotY = -0.32;
@@ -1225,32 +1234,56 @@
 
         const cctProfiles = {
             '3000K': {
-                hex: 0xff9e3b,
-                emissive: 0xff8c1a,
-                halo: 'radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(217, 119, 6, 0.18) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'CITIZEN COB LED • CLU048 • 3000K • CRI 97+',
-                name: '3000K Warm White (Architectural Amber)'
+                hex: 0xff8c1a,        // Rich golden amber tungsten
+                emissive: 0xff7300,   // Warm filament glow
+                beamHex: 0xff9926,    // Photonic beam tone
+                targetColor: 0xff8c1a,
+                ambientTint: 0x241408, // Warm room bounce
+                halo: 'radial-gradient(circle, rgba(255, 140, 26, 0.70) 0%, rgba(234, 88, 12, 0.35) 38%, rgba(180, 83, 9, 0.12) 65%, transparent 80%)',
+                badgeText: 'CITIZEN COB • 3000K WARM AMBER • 36° FLOOD • CRI 97+',
+                name: '3000K Warm White (Architectural Amber)',
+                btnClass: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
+                powerScale: 0.94,
+                lumens: '3,450 lm'
             },
             '3500K': {
-                hex: 0xffb56c,
-                emissive: 0xffa550,
-                halo: 'radial-gradient(circle, rgba(251, 146, 60, 0.44) 0%, rgba(234, 88, 12, 0.17) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'CITIZEN COB LED • CLU048 • 3500K • CRI 97+',
-                name: '3500K Neutral Warm (Hospitality Sunset)'
+                hex: 0xffab5e,        // Warm peach champagne (clearly distinct from 3000K amber)
+                emissive: 0xff9944,
+                beamHex: 0xffb570,
+                targetColor: 0xffab5e,
+                ambientTint: 0x20150c,
+                halo: 'radial-gradient(circle, rgba(255, 171, 94, 0.65) 0%, rgba(249, 115, 22, 0.30) 38%, rgba(194, 65, 12, 0.10) 65%, transparent 80%)',
+                badgeText: 'CITIZEN COB • 3500K SOFT WHITE • 36° FLOOD • CRI 97+',
+                name: '3500K Neutral Warm (Hospitality Sunset)',
+                btnClass: 'bg-orange-500 text-white shadow-md shadow-orange-500/30',
+                powerScale: 1.00,
+                lumens: '3,680 lm'
             },
             '4000K': {
-                hex: 0xffcaa2,
-                emissive: 0xffbf90,
-                halo: 'radial-gradient(circle, rgba(254, 215, 170, 0.42) 0%, rgba(245, 158, 11, 0.16) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'CITIZEN COB LED • CLU048 • 4000K • CRI 95+',
-                name: '4000K Natural White (Commercial Crisp)'
+                hex: 0xfff0dd,        // Clean neutral commercial white (crisp daylight balanced)
+                emissive: 0xffe2bf,
+                beamHex: 0xfff3e5,
+                targetColor: 0xfff0dd,
+                ambientTint: 0x181a24,
+                halo: 'radial-gradient(circle, rgba(254, 240, 138, 0.62) 0%, rgba(250, 204, 21, 0.26) 38%, rgba(148, 163, 184, 0.10) 65%, transparent 80%)',
+                badgeText: 'CITIZEN COB • 4000K NATURAL WHITE • 36° FLOOD • CRI 95+',
+                name: '4000K Natural White (Commercial Crisp)',
+                btnClass: 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30',
+                powerScale: 1.08,
+                lumens: '3,920 lm'
             },
             '5000K': {
-                hex: 0xfdf5f0,
-                emissive: 0xf0e6dc,
-                halo: 'radial-gradient(circle, rgba(224, 242, 254, 0.45) 0%, rgba(186, 230, 253, 0.18) 45%, rgba(15, 23, 42, 0.05) 75%, transparent 85%)',
-                badgeText: 'CITIZEN COB LED • CLU048 • 5000K • CRI 90+',
-                name: '5000K Cool White (Industrial Daylight)'
+                hex: 0xc8e6ff,        // Stark cool daylight blue-white (sharp arctic inspection tone)
+                emissive: 0x99ccff,
+                beamHex: 0xbfe0ff,
+                targetColor: 0xc8e6ff,
+                ambientTint: 0x0a182a,
+                halo: 'radial-gradient(circle, rgba(186, 230, 253, 0.72) 0%, rgba(56, 189, 248, 0.38) 38%, rgba(14, 165, 233, 0.14) 65%, transparent 80%)',
+                badgeText: 'CITIZEN COB • 5000K COOL DAYLIGHT • 36° FLOOD • CRI 92+',
+                name: '5000K Cool White (Industrial Daylight)',
+                btnClass: 'bg-sky-400 text-slate-950 shadow-md shadow-sky-400/30',
+                powerScale: 1.18,
+                lumens: '4,150 lm'
             }
         };
 
@@ -1314,25 +1347,57 @@
             return envTexture;
         }
 
-        // Procedural Optical Incandescent Bloom Sprite (Replaces Muddy Brown Ball)
+        // Neutral High-CRI Optical Bloom Texture (True to Active CCT Wavelength)
         function createOpticalBloomTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
+            canvas.width = 256;
+            canvas.height = 256;
             const ctx = canvas.getContext('2d');
             if (!ctx) return null;
 
-            const radGrad = ctx.createRadialGradient(64, 64, 2, 64, 64, 60);
+            const radGrad = ctx.createRadialGradient(128, 128, 4, 128, 128, 120);
             radGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-            radGrad.addColorStop(0.12, 'rgba(255, 250, 230, 0.92)');
-            radGrad.addColorStop(0.32, 'rgba(251, 191, 36, 0.60)');
-            radGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.22)');
-            radGrad.addColorStop(0.78, 'rgba(217, 119, 6, 0.07)');
-            radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            radGrad.addColorStop(0.14, 'rgba(255, 255, 255, 0.88)');
+            radGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.48)');
+            radGrad.addColorStop(0.62, 'rgba(255, 255, 255, 0.16)');
+            radGrad.addColorStop(0.84, 'rgba(255, 255, 255, 0.04)');
+            radGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
             ctx.fillStyle = radGrad;
-            ctx.fillRect(0, 0, 128, 128);
+            ctx.fillRect(0, 0, 256, 256);
 
             return new THREE.CanvasTexture(canvas);
+        }
+
+        // Procedural Volumetric 36° Architectural Beam Texture with Collimation Striations
+        function createVolumetricBeamTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+
+            // Longitudinal falloff along the beam (from origin to extent)
+            const grad = ctx.createLinearGradient(0, 0, 0, 512);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            grad.addColorStop(0.08, 'rgba(255, 255, 255, 0.72)');
+            grad.addColorStop(0.25, 'rgba(255, 255, 255, 0.40)');
+            grad.addColorStop(0.55, 'rgba(255, 255, 255, 0.16)');
+            grad.addColorStop(0.82, 'rgba(255, 255, 255, 0.04)');
+            grad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 128, 512);
+
+            // Subtle striations to simulate faceted reflector beam collimation
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+            for (let x = 16; x < 128; x += 24) {
+                ctx.fillRect(x, 0, 8, 512);
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            return tex;
         }
 
         window.initHuenicsLuminaire3D = function() {
@@ -1504,7 +1569,7 @@
             const phosphorMat = new THREE.MeshStandardMaterial({
                 color: 0xffffff,
                 emissive: cctProfiles[currentCCT].emissive,
-                emissiveIntensity: 5.5,
+                emissiveIntensity: 6.5,
                 roughness: 0.2,
                 metalness: 0.05
             });
@@ -1513,8 +1578,57 @@
             phosphorMesh.position.set(0, 0, 0.07);
             cobGroup.add(phosphorMesh);
 
+            // Precision Architectural 36° Faceted Reflector Collet (Mounting Bezel)
+            const colletGeo = new THREE.CylinderGeometry(1.24, 0.94, 0.16, 32, 1, true);
+            colletGeo.rotateX(Math.PI / 2);
+            const colletMat = new THREE.MeshStandardMaterial({
+                color: 0xe2e8f0,
+                metalness: 0.94,
+                roughness: 0.16,
+                side: THREE.DoubleSide
+            });
+            colletMesh = new THREE.Mesh(colletGeo, colletMat);
+            colletMesh.position.set(0, 0, 0.14);
+            cobGroup.add(colletMesh);
+
+            // Optic Specular Ring Bezel
+            const opticRimGeo = new THREE.RingGeometry(1.22, 1.34, 48);
+            const opticRimMat = new THREE.MeshStandardMaterial({
+                color: 0x94a3b8,
+                metalness: 0.88,
+                roughness: 0.25,
+                side: THREE.DoubleSide
+            });
+            opticRimMesh = new THREE.Mesh(opticRimGeo, opticRimMat);
+            opticRimMesh.position.set(0, 0, 0.22);
+            cobGroup.add(opticRimMesh);
+
             // =========================================================
-            // 4. OPTICAL BLOOM SPRITE (FOCUSED PHOTON GLOW)
+            // 4. PRECISION 36° VOLUMETRIC ARCHITECTURAL BEAM CONE
+            // =========================================================
+            // Calibrated 36° Flood Optic Cone (Half-angle 18°: tan(18°) = 0.3249)
+            const beamLength = 4.2;
+            const radiusOrigin = 0.88;
+            const radiusTerminal = radiusOrigin + beamLength * Math.tan(18 * Math.PI / 180); // ~2.245
+            const beamGeo = new THREE.CylinderGeometry(radiusOrigin, radiusTerminal, beamLength, 36, 1, true);
+            beamGeo.translate(0, -beamLength / 2, 0);
+            beamGeo.rotateX(Math.PI / 2);
+            const beamTexture = createVolumetricBeamTexture();
+            const beamMat = new THREE.MeshBasicMaterial({
+                map: beamTexture,
+                color: cctProfiles[currentCCT].beamHex,
+                transparent: true,
+                opacity: 0.32,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            beamConeMesh = new THREE.Mesh(beamGeo, beamMat);
+            beamConeMesh.position.set(0, 0, 0.12);
+            cobGroup.add(beamConeMesh);
+
+            // =========================================================
+            // 5. OPTICAL BLOOM SPRITE (FOCUSED PHOTON GLOW)
             // =========================================================
             const bloomTexture = createOpticalBloomTexture();
             const bloomMat = new THREE.SpriteMaterial({
@@ -1527,11 +1641,11 @@
             });
             bloomSprite = new THREE.Sprite(bloomMat);
             bloomSprite.position.set(0, 0, 0.25);
-            bloomSprite.scale.set(3.6, 3.6, 1.0);
+            bloomSprite.scale.set(3.8, 3.8, 1.0);
             cobGroup.add(bloomSprite);
 
             // =========================================================
-            // 5. ATMOSPHERIC DUST PARTICLES & SURGE SHOCKWAVE
+            // 6. ATMOSPHERIC DUST PARTICLES & SURGE SHOCKWAVE
             // =========================================================
             const particleCount = 42;
             const particleGeo = new THREE.BufferGeometry();
@@ -1568,20 +1682,32 @@
             cobGroup.add(shockwaveRing);
 
             // =========================================================
-            // 6. PHYSICS-BASED DYNAMIC LIGHTING
+            // 7. PHYSICS-BASED DYNAMIC LIGHTING (36° SPOTLIGHT & AMBIENT)
             // =========================================================
-            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 6.0, 16, 2.0);
-            corePointLight.position.set(0, 0, 0.85);
+            // Core Point Light for High CRI Local Glow
+            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 4.5, 12, 2.0);
+            corePointLight.position.set(0, 0, 0.45);
             cobGroup.add(corePointLight);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+            // Precision 36° Architectural Spotlight (Collimated Optical Cone)
+            // Half-angle = 18 degrees = 0.314159 rad; penumbra = 0.38 for feathered architectural flood
+            spotLight = new THREE.SpotLight(cctProfiles[currentCCT].hex, 8.5, 24, 18 * Math.PI / 180, 0.38, 1.6);
+            spotLight.position.set(0, 0, 0.15);
+            spotLightTarget = new THREE.Object3D();
+            spotLightTarget.position.set(0, 0, 15);
+            cobGroup.add(spotLightTarget);
+            spotLight.target = spotLightTarget;
+            cobGroup.add(spotLight);
+
+            // Studio Ambiance: Dimmed to allow COB & 36° beam to take dramatic center stage
+            ambientLight = new THREE.AmbientLight(0x181c28, 0.22);
             scene.add(ambientLight);
 
-            keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
+            keyLight = new THREE.DirectionalLight(0xffffff, 0.42);
             keyLight.position.set(5, 7, 6);
             scene.add(keyLight);
 
-            rimLight = new THREE.DirectionalLight(0x93c5fd, 0.65);
+            rimLight = new THREE.DirectionalLight(0x93c5fd, 0.35);
             rimLight.position.set(-4, 3, -3);
             scene.add(rimLight);
 
@@ -1806,36 +1932,60 @@
                     thermalPower += (0.0 - thermalPower) * 0.08;
                 }
 
-                // Dynamic Phosphor Color Emission
+                // Dynamic Phosphor Color Emission & 36° Collimated Optic Tuning
+                const profile = cctProfiles[currentCCT];
                 const coldPhosphor = new THREE.Color(0xf59e0b); // Unexcited yellow-amber phosphor
-                const targetColor = new THREE.Color(cctProfiles[currentCCT].hex);
+                const targetColor = new THREE.Color(profile.targetColor);
+                const emissiveColor = new THREE.Color(profile.emissive);
 
                 let displayColor = new THREE.Color();
-                displayColor.lerpColors(coldPhosphor, targetColor, Math.min(1.0, thermalPower * 1.2));
+                displayColor.lerpColors(coldPhosphor, targetColor, Math.min(1.0, thermalPower * 1.25));
+
+                let displayEmissive = new THREE.Color();
+                displayEmissive.lerpColors(new THREE.Color(0x332200), emissiveColor, thermalPower);
 
                 // Update Central Phosphor LES Disc
                 if (phosphorMesh) {
-                    phosphorMesh.material.emissive.copy(displayColor);
-                    const surgeMult = isSurging ? 1.5 : 1.0;
-                    phosphorMesh.material.emissiveIntensity = thermalPower * 6.5 * surgeMult;
-                    phosphorMesh.material.color.lerpColors(coldPhosphor, new THREE.Color(0xffffff), thermalPower);
+                    phosphorMesh.material.emissive.copy(displayEmissive);
+                    const surgeMult = isSurging ? 1.6 : 1.0;
+                    phosphorMesh.material.emissiveIntensity = thermalPower * 7.5 * surgeMult * profile.powerScale;
+                    phosphorMesh.material.color.lerpColors(coldPhosphor, targetColor, thermalPower);
                 }
 
                 // Update Optical Bloom Sprite (Smooth Breathing & Expansion)
                 if (bloomSprite) {
                     const breathe = 1.0 + Math.sin(time * 2.4) * 0.03;
                     const surgeScale = isSurging ? 1.4 : 1.0;
-                    const sW = 3.6 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
-                    const sH = 3.6 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const sW = 3.8 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
+                    const sH = 3.8 * (0.35 + 0.65 * thermalPower) * breathe * surgeScale;
                     bloomSprite.scale.set(sW, sH, 1.0);
                     bloomSprite.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.98 : 0.88);
                     bloomSprite.material.color.copy(displayColor);
                 }
 
-                // Update Core Point Light with High CRI Intensity
+                // Update 36° Architectural Collimated Spotlight
+                if (spotLight) {
+                    spotLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 14.0 : 8.5) * profile.powerScale;
+                    spotLight.color.copy(displayColor);
+                }
+
+                // Update 36° Volumetric Architectural Flood Beam Cone
+                if (beamConeMesh) {
+                    beamConeMesh.material.color.copy(new THREE.Color(profile.beamHex));
+                    beamConeMesh.material.opacity = Math.pow(thermalPower, 1.4) * (isSurging ? 0.65 : 0.32);
+                }
+
+                // Update Core Point Light with High CRI Local Glow
                 if (corePointLight) {
-                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 9.5 : 6.0);
+                    corePointLight.intensity = Math.pow(thermalPower, 1.8) * (isSurging ? 8.0 : 4.5);
                     corePointLight.color.copy(displayColor);
+                }
+
+                // Dynamic Room Ambient Tinting (Reflects active CCT warmth or cool daylight)
+                if (ambientLight) {
+                    const baseAmb = new THREE.Color(0x181c28);
+                    const tintAmb = new THREE.Color(profile.ambientTint).multiplyScalar(thermalPower);
+                    ambientLight.color.copy(baseAmb.add(tintAmb));
                 }
 
                 // Floating Dust Motes Drift in Atmospheric Light Beam
@@ -1917,19 +2067,12 @@
             currentCCT = cct;
             const profile = cctProfiles[cct];
 
-            // Update CCT Buttons
+            // Update CCT Buttons with High-Contrast Active State
             document.querySelectorAll('.cct-btn').forEach(b => {
                 b.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer';
             });
             if (btnEl) {
-                const activeBg = cct === '3000K' 
-                    ? 'bg-amber-500 text-white shadow-sm' 
-                    : (cct === '3500K' 
-                        ? 'bg-orange-500 text-white shadow-sm' 
-                        : (cct === '4000K' 
-                            ? 'bg-yellow-400 text-slate-950 shadow-sm' 
-                            : 'bg-blue-400 text-slate-950 shadow-sm'));
-                btnEl.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 ' + activeBg + ' cursor-pointer';
+                btnEl.className = 'cct-btn px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[11px] font-black transition-all duration-200 ' + profile.btnClass + ' cursor-pointer';
             }
 
             // Update Ambient Halo & Tech Badge
@@ -1942,7 +2085,7 @@
                 text.innerText = profile.badgeText;
             }
 
-            // Trigger brief photonic surge
+            // Trigger brief photonic surge to dramatize the CCT transition
             window.triggerLuminaireSurge();
         };
 
