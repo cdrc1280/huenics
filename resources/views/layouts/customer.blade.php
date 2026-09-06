@@ -1116,6 +1116,19 @@
                 if (!container) return;
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
+                    // Skip re-evaluating external vendor libraries already resident on window
+                    if (oldScript.src) {
+                        if (oldScript.src.includes('three') && typeof window.THREE !== 'undefined') {
+                            return;
+                        }
+                        if (oldScript.src.includes('lucide') && typeof window.lucide !== 'undefined') {
+                            return;
+                        }
+                        if (oldScript.src.includes('gsap') && typeof window.gsap !== 'undefined') {
+                            return;
+                        }
+                    }
+
                     const newScript = document.createElement('script');
                     Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
                     newScript.textContent = oldScript.textContent;

@@ -4,13 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\ActivityLogResource;
-use App\Filament\Resources\DocumentResource;
-use App\Filament\Resources\ProductResource;
-use App\Filament\Resources\QuotationResource;
-use App\Filament\Resources\PurchaseOrderResource;
-use App\Filament\Resources\TransactionResource;
 use App\Filament\Resources\UserResource;
-use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,8 +14,11 @@ class RoleBasedAccessControlTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $opsManager;
+
     protected User $salesExec;
+
     protected User $ceo;
 
     protected function setUp(): void
@@ -29,32 +26,32 @@ class RoleBasedAccessControlTest extends TestCase
         parent::setUp();
 
         $this->admin = User::create([
-            'name'     => 'Admin User',
-            'email'    => 'admin@test.com',
+            'name' => 'Admin User',
+            'email' => 'admin@test.com',
             'password' => bcrypt('password'),
-            'role'     => User::ROLE_ADMIN,
+            'role' => User::ROLE_ADMIN,
             'is_owner' => true,
         ]);
 
         $this->opsManager = User::create([
-            'name'     => 'Ops Manager',
-            'email'    => 'ops@test.com',
+            'name' => 'Ops Manager',
+            'email' => 'ops@test.com',
             'password' => bcrypt('password'),
-            'role'     => User::ROLE_OPERATIONS_MANAGER,
+            'role' => User::ROLE_OPERATIONS_MANAGER,
         ]);
 
         $this->salesExec = User::create([
-            'name'     => 'Sales Exec',
-            'email'    => 'sales@test.com',
+            'name' => 'Sales Exec',
+            'email' => 'sales@test.com',
             'password' => bcrypt('password'),
-            'role'     => User::ROLE_SALES_EXECUTIVE,
+            'role' => User::ROLE_SALES_EXECUTIVE,
         ]);
 
         $this->ceo = User::create([
-            'name'     => 'CEO User',
-            'email'    => 'ceo@test.com',
+            'name' => 'CEO User',
+            'email' => 'ceo@test.com',
             'password' => bcrypt('password'),
-            'role'     => User::ROLE_CEO,
+            'role' => User::ROLE_CEO,
             'is_owner' => true,
         ]);
     }

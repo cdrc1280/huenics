@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use Database\Seeders\HuenicsCompanyProfileProductSeeder;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CustomerPortalTest extends TestCase
@@ -13,7 +16,7 @@ class CustomerPortalTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         Product::create([
             'sku' => 'TEST-PIPE-01',
@@ -148,7 +151,7 @@ class CustomerPortalTest extends TestCase
                     'quantity' => 5,
                     'unit' => 'pcs',
                     'unit_price' => 1880.56,
-                ]
+                ],
             ],
             'action' => 'download_pdf',
         ];
@@ -161,7 +164,7 @@ class CustomerPortalTest extends TestCase
 
     public function test_company_profile_products_are_stored_and_queryable(): void
     {
-        $this->seed(\Database\Seeders\HuenicsCompanyProfileProductSeeder::class);
+        $this->seed(HuenicsCompanyProfileProductSeeder::class);
 
         $response = $this->get('/products?category=Indoor+Downlights');
         $response->assertStatus(200);
@@ -175,13 +178,13 @@ class CustomerPortalTest extends TestCase
 
     public function test_all_products_listed_on_customer_side_originate_from_database(): void
     {
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
 
         // 1. Create a unique new product in the database
-        $uniqueSku = 'DB-TEST-' . uniqid();
+        $uniqueSku = 'DB-TEST-'.uniqid();
         $dbProduct = Product::create([
             'sku' => $uniqueSku,
-            'canonical_name' => 'Database Verified Luminaire ' . $uniqueSku,
+            'canonical_name' => 'Database Verified Luminaire '.$uniqueSku,
             'category' => 'Indoor Downlights',
             'unit_default' => 'set',
             'default_price' => 4599.00,
@@ -191,36 +194,36 @@ class CustomerPortalTest extends TestCase
         ]);
 
         // 2. Product must appear in /products catalog from DB without raw pricing labels
-        $response = $this->get('/products?search=' . $uniqueSku);
+        $response = $this->get('/products?search='.$uniqueSku);
         $response->assertStatus(200);
         $response->assertSee($dbProduct->canonical_name);
         $response->assertDontSee('Pricing:');
 
         // 3. Product must appear in Quotation Builder catalog modal from DB
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
         $builderResponse = $this->get('/quotation/builder');
         $builderResponse->assertStatus(200);
         $builderResponse->assertSee($dbProduct->canonical_name);
 
         // 4. Update the product in the database, and verify customer side immediately reflects DB changes
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
         $dbProduct->update([
-            'canonical_name' => 'Updated DB Luminaire ' . $uniqueSku,
+            'canonical_name' => 'Updated DB Luminaire '.$uniqueSku,
             'selling_price' => 5999.00,
         ]);
 
-        $updatedResponse = $this->get('/products?search=' . $uniqueSku);
+        $updatedResponse = $this->get('/products?search='.$uniqueSku);
         $updatedResponse->assertStatus(200);
-        $updatedResponse->assertSee('Updated DB Luminaire ' . $uniqueSku);
+        $updatedResponse->assertSee('Updated DB Luminaire '.$uniqueSku);
         $updatedResponse->assertDontSee('Pricing:');
 
         // 5. Inactivate product in DB, verify it disappears from customer catalog
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
         $dbProduct->update(['is_active' => false]);
 
-        $inactiveResponse = $this->get('/products?search=' . $uniqueSku);
+        $inactiveResponse = $this->get('/products?search='.$uniqueSku);
         $inactiveResponse->assertStatus(200);
-        $inactiveResponse->assertDontSee('Updated DB Luminaire ' . $uniqueSku);
+        $inactiveResponse->assertDontSee('Updated DB Luminaire '.$uniqueSku);
     }
 
     public function test_dark_theme_is_supported_across_customer_side(): void
@@ -297,21 +300,21 @@ class CustomerPortalTest extends TestCase
     public function test_customer_can_download_and_print_official_quotation_vendors_agreement(): void
     {
         $payload = [
-            'customer_name'    => 'Engr. Ronald Rey Sandoval',
+            'customer_name' => 'Engr. Ronald Rey Sandoval',
             'customer_company' => 'MGS CONSTRUCTION, INC.',
             'customer_address' => '2F Starmall Annex, Alabang-Zapote Road, Las Piñas',
-            'email'            => 'procurement@mgsconstruction.ph',
-            'phone_no'         => '0906-144-2553',
-            'project_name'     => 'Palanza Tower',
+            'email' => 'procurement@mgsconstruction.ph',
+            'phone_no' => '0906-144-2553',
+            'project_name' => 'Palanza Tower',
             'project_location' => 'Palanza St. corner Guirayan st., Dona Imelda, Q.C',
-            'notes'            => 'Special indent order items included.',
+            'notes' => 'Special indent order items included.',
             'items' => [
                 [
-                    'item_code'   => 'HISI-JF-2240-7W',
+                    'item_code' => 'HISI-JF-2240-7W',
                     'description' => 'Led Downlight C.O.B Citizen Japan 3500k Warmwhite 7w',
-                    'quantity'    => 10,
-                    'unit'        => 'pcs',
-                    'unit_price'  => 1950.00,
+                    'quantity' => 10,
+                    'unit' => 'pcs',
+                    'unit_price' => 1950.00,
                 ],
             ],
             'action' => 'download_pdf',
@@ -319,7 +322,7 @@ class CustomerPortalTest extends TestCase
 
         // Clear any previous IP rate limit cache
         $ip = '127.0.0.1';
-        \Illuminate\Support\Facades\Cache::forget('quotation_daily_ip_' . $ip . '_' . now()->toDateString());
+        Cache::forget('quotation_daily_ip_'.$ip.'_'.now()->toDateString());
 
         // 1. Test direct PDF download and admin DB persistence
         $pdfResponse = $this->post('/quotation/generate-unofficial', $payload);

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\ProductImportExportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Tests\TestCase;
 
@@ -22,8 +22,8 @@ class ProductImportExportTest extends TestCase
         parent::setUp();
 
         $this->admin = User::factory()->create([
-            'role'  => User::ROLE_ADMIN,
-            'name'  => 'Admin User',
+            'role' => User::ROLE_ADMIN,
+            'name' => 'Admin User',
             'email' => 'admin@huenics.com',
         ]);
     }
@@ -31,28 +31,28 @@ class ProductImportExportTest extends TestCase
     public function test_product_model_supports_specs_attributes(): void
     {
         $product = Product::create([
-            'product_code'      => 'HISI-LS-9.6W',
-            'canonical_name'    => 'SMD LED Strip Light 9.6W/M Indoor',
-            'description'       => 'SMD LED STRIPS SIZE 2835,120PCS LED/M,IP20 INDOOR',
-            'category'          => 'SMD LED STRIP LIGHT INDOOR',
-            'wattage'           => '9.6W/M',
-            'voltage'           => 'DC12V',
+            'product_code' => 'HISI-LS-9.6W',
+            'canonical_name' => 'SMD LED Strip Light 9.6W/M Indoor',
+            'description' => 'SMD LED STRIPS SIZE 2835,120PCS LED/M,IP20 INDOOR',
+            'category' => 'SMD LED STRIP LIGHT INDOOR',
+            'wattage' => '9.6W/M',
+            'voltage' => 'DC12V',
             'color_temperature' => '3000K/6000K',
-            'unit_default'      => 'roll',
-            'selling_price'     => 850.00,
-            'default_price'     => 850.00,
-            'base_cost_price'   => 595.00,
-            'is_huenics_owned'  => true,
-            'is_active'         => true,
+            'unit_default' => 'roll',
+            'selling_price' => 850.00,
+            'default_price' => 850.00,
+            'base_cost_price' => 595.00,
+            'is_huenics_owned' => true,
+            'is_active' => true,
         ]);
 
         $this->assertDatabaseHas('products', [
-            'product_code'      => 'HISI-LS-9.6W',
-            'wattage'           => '9.6W/M',
-            'voltage'           => 'DC12V',
+            'product_code' => 'HISI-LS-9.6W',
+            'wattage' => '9.6W/M',
+            'voltage' => 'DC12V',
             'color_temperature' => '3000K/6000K',
-            'unit_default'      => 'roll',
-            'selling_price'     => 850.00,
+            'unit_default' => 'roll',
+            'selling_price' => 850.00,
         ]);
 
         $this->assertEquals('9.6W/M', $product->wattage);
@@ -152,19 +152,19 @@ class ProductImportExportTest extends TestCase
     public function test_import_csv_updates_existing_products_when_flag_is_true(): void
     {
         $existing = Product::create([
-            'product_code'      => 'HISI-LS-2835',
-            'canonical_name'    => 'Old Name',
-            'description'       => 'Old Description',
-            'category'          => 'General',
-            'wattage'           => '3W',
-            'voltage'           => '12V',
+            'product_code' => 'HISI-LS-2835',
+            'canonical_name' => 'Old Name',
+            'description' => 'Old Description',
+            'category' => 'General',
+            'wattage' => '3W',
+            'voltage' => '12V',
             'color_temperature' => '3000K',
-            'unit_default'      => 'pcs',
-            'selling_price'     => 500.00,
-            'default_price'     => 500.00,
-            'base_cost_price'   => 350.00,
-            'is_huenics_owned'  => true,
-            'is_active'         => true,
+            'unit_default' => 'pcs',
+            'selling_price' => 500.00,
+            'default_price' => 500.00,
+            'base_cost_price' => 350.00,
+            'is_huenics_owned' => true,
+            'is_active' => true,
         ]);
 
         $csvData = implode("\n", [
@@ -199,19 +199,19 @@ class ProductImportExportTest extends TestCase
     public function test_export_csv_produces_valid_csv_matching_reference(): void
     {
         Product::create([
-            'product_code'      => 'HISI-LS-8W',
-            'canonical_name'    => 'SMD LED Strip Light 8W/M 220V Indoor',
-            'description'       => 'SMD LED STRIPS SIZE 5050, 60PCS LED/M, 220V INDOOR',
-            'category'          => 'SMD LED STRIP LIGHT INDOOR 220V',
-            'wattage'           => '8W/M',
-            'voltage'           => '220V',
+            'product_code' => 'HISI-LS-8W',
+            'canonical_name' => 'SMD LED Strip Light 8W/M 220V Indoor',
+            'description' => 'SMD LED STRIPS SIZE 5050, 60PCS LED/M, 220V INDOOR',
+            'category' => 'SMD LED STRIP LIGHT INDOOR 220V',
+            'wattage' => '8W/M',
+            'voltage' => '220V',
             'color_temperature' => '3000K/6000K',
-            'unit_default'      => 'm',
-            'selling_price'     => 150.00,
-            'default_price'     => 150.00,
-            'base_cost_price'   => 100.00,
-            'is_huenics_owned'  => true,
-            'is_active'         => true,
+            'unit_default' => 'm',
+            'selling_price' => 150.00,
+            'default_price' => 150.00,
+            'base_cost_price' => 100.00,
+            'is_huenics_owned' => true,
+            'is_active' => true,
         ]);
 
         $service = app(ProductImportExportService::class);
@@ -248,19 +248,19 @@ class ProductImportExportTest extends TestCase
     public function test_export_excel_produces_valid_xlsx_with_products(): void
     {
         Product::create([
-            'product_code'      => 'HISI-LS-XLSX-EXP',
-            'canonical_name'    => 'SMD LED Strip Light Excel Export',
-            'description'       => 'High-efficiency 24V strip for Excel export testing',
-            'category'          => 'SMD LED STRIP LIGHT INDOOR',
-            'wattage'           => '14.4W/M',
-            'voltage'           => 'DC24V',
+            'product_code' => 'HISI-LS-XLSX-EXP',
+            'canonical_name' => 'SMD LED Strip Light Excel Export',
+            'description' => 'High-efficiency 24V strip for Excel export testing',
+            'category' => 'SMD LED STRIP LIGHT INDOOR',
+            'wattage' => '14.4W/M',
+            'voltage' => 'DC24V',
             'color_temperature' => '4000K',
-            'unit_default'      => 'roll',
-            'selling_price'     => 1150.00,
-            'default_price'     => 1150.00,
-            'base_cost_price'   => 800.00,
-            'is_huenics_owned'  => true,
-            'is_active'         => true,
+            'unit_default' => 'roll',
+            'selling_price' => 1150.00,
+            'default_price' => 1150.00,
+            'base_cost_price' => 800.00,
+            'is_huenics_owned' => true,
+            'is_active' => true,
         ]);
 
         $service = app(ProductImportExportService::class);
@@ -270,11 +270,11 @@ class ProductImportExportTest extends TestCase
         $this->assertStringStartsWith("PK\x03\x04", $excelContent);
 
         // Verify readable via OpenSpout
-        $tempFile = tempnam(sys_get_temp_dir(), 'exp_test_') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'exp_test_').'.xlsx';
         file_put_contents($tempFile, $excelContent);
 
         try {
-            $reader = new \OpenSpout\Reader\XLSX\Reader();
+            $reader = new Reader;
             $reader->open($tempFile);
             $rows = [];
             foreach ($reader->getSheetIterator() as $sheet) {
@@ -308,8 +308,8 @@ class ProductImportExportTest extends TestCase
 
     public function test_import_file_parses_excel_xlsx_accurately(): void
     {
-        $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_import_') . '.xlsx';
-        $writer = new XlsxWriter();
+        $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_import_').'.xlsx';
+        $writer = new XlsxWriter;
         $writer->openToFile($tempFile);
 
         $writer->addRow(Row::fromValues([
@@ -363,23 +363,23 @@ class ProductImportExportTest extends TestCase
     public function test_import_file_updates_existing_products_from_excel(): void
     {
         $existing = Product::create([
-            'product_code'      => 'HISI-LS-XLSX-UP',
-            'canonical_name'    => 'Initial Name',
-            'description'       => 'Initial Description',
-            'category'          => 'General',
-            'wattage'           => '5W',
-            'voltage'           => '12V',
+            'product_code' => 'HISI-LS-XLSX-UP',
+            'canonical_name' => 'Initial Name',
+            'description' => 'Initial Description',
+            'category' => 'General',
+            'wattage' => '5W',
+            'voltage' => '12V',
             'color_temperature' => '3000K',
-            'unit_default'      => 'pcs',
-            'selling_price'     => 400.00,
-            'default_price'     => 400.00,
-            'base_cost_price'   => 280.00,
-            'is_huenics_owned'  => true,
-            'is_active'         => true,
+            'unit_default' => 'pcs',
+            'selling_price' => 400.00,
+            'default_price' => 400.00,
+            'base_cost_price' => 280.00,
+            'is_huenics_owned' => true,
+            'is_active' => true,
         ]);
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_update_') . '.xlsx';
-        $writer = new XlsxWriter();
+        $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_update_').'.xlsx';
+        $writer = new XlsxWriter;
         $writer->openToFile($tempFile);
 
         $writer->addRow(Row::fromValues([

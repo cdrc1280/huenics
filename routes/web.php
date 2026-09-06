@@ -1,10 +1,17 @@
 <?php
 
 use App\Http\Controllers\CustomerPortalController;
+use App\Models\DeliveryReceipt;
 use App\Models\Document;
+use App\Models\Quotation;
+use App\Models\SalesInvoice;
+use App\Services\ExportQuotationPdf;
+use App\Services\InventoryReportService;
+use App\Services\LivePdfGenerator;
+use App\Services\ProductImportExportService;
+use Dompdf\Dompdf;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
 
 // ─── Public Customer Portal Routes ──────────────────────────────────────────
 Route::get('/', [CustomerPortalController::class, 'index'])->name('customer.home');
@@ -21,21 +28,21 @@ Route::get('/login', function () {
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/documents/{document}/preview', function (Document $document) {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized access.');
         }
 
         // If document has a companion PDF, serve that for seamless browser iframe preview
         if ($document->companion_pdf_path) {
             $compCandidates = [
-                storage_path('app/' . $document->companion_pdf_path),
-                storage_path('app/private/' . $document->companion_pdf_path),
+                storage_path('app/'.$document->companion_pdf_path),
+                storage_path('app/private/'.$document->companion_pdf_path),
             ];
             foreach ($compCandidates as $candidate) {
                 if (file_exists($candidate)) {
                     return response()->file($candidate, [
                         'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . basename($document->original_filename) . '.pdf"',
+                        'Content-Disposition' => 'inline; filename="'.basename($document->original_filename).'.pdf"',
                     ]);
                 }
             }
@@ -43,7 +50,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         $path = $document->getAbsolutePath();
 
-        if (!$path || !file_exists($path)) {
+        if (! $path || ! file_exists($path)) {
             abort(404, 'File not found on server.');
         }
 
@@ -51,19 +58,19 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         return response()->file($path, [
             'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="' . basename($document->original_filename) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($document->original_filename).'"',
         ]);
     })->name('documents.preview');
 
     Route::get('/documents/{document}/download', function (Document $document) {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized access.');
         }
 
         $path = $document->getAbsolutePath();
 
-        if (!$path || !file_exists($path)) {
+        if (! $path || ! file_exists($path)) {
             abort(404, 'PDF file not found on server.');
         }
 
@@ -72,7 +79,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::get('/documents/{document}/live-pdf', function (Document $document) {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -115,7 +122,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             ];
         }
 
-        $generator = app(\App\Services\LivePdfGenerator::class);
+        $generator = app(LivePdfGenerator::class);
         $pdfOutput = $generator->generate($payload);
 
         return response($pdfOutput, 200, [
@@ -128,51 +135,55 @@ Route::middleware(['web', 'auth'])->group(function () {
     })->name('documents.live-pdf');
 
     // Quotation PDF Export & Preview
-    Route::get('/quotations/{quotation}/export-pdf', function (\App\Models\Quotation $quotation) {
-        return app(\App\Services\ExportQuotationPdf::class)->downloadResponse($quotation);
+    Route::get('/quotations/{quotation}/export-pdf', function (Quotation $quotation) {
+        return app(ExportQuotationPdf::class)->downloadResponse($quotation);
     })->name('quotations.export-pdf');
 
-    Route::get('/quotations/{quotation}/preview-pdf', function (\App\Models\Quotation $quotation) {
-        return app(\App\Services\ExportQuotationPdf::class)->previewResponse($quotation);
+    Route::get('/quotations/{quotation}/preview-pdf', function (Quotation $quotation) {
+        return app(ExportQuotationPdf::class)->previewResponse($quotation);
     })->name('quotations.preview-pdf');
 
     // Delivery Receipt PDF Export
-    Route::get('/delivery-receipts/{deliveryReceipt}/export-pdf', function (\App\Models\DeliveryReceipt $deliveryReceipt) {
+    Route::get('/delivery-receipts/{deliveryReceipt}/export-pdf', function (DeliveryReceipt $deliveryReceipt) {
         $html = view('pdf.delivery-receipt-template', ['record' => $deliveryReceipt])->render();
-        $dompdf = new \Dompdf\Dompdf();
+        $dompdf = new Dompdf;
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
+
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="DR-' . $deliveryReceipt->dr_number . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="DR-'.$deliveryReceipt->dr_number.'.pdf"',
         ]);
     })->name('delivery-receipts.export-pdf');
 
     // Sales Invoice PDF Export
-    Route::get('/sales-invoices/{salesInvoice}/export-pdf', function (\App\Models\SalesInvoice $salesInvoice) {
+    Route::get('/sales-invoices/{salesInvoice}/export-pdf', function (SalesInvoice $salesInvoice) {
         $html = view('pdf.sales-invoice-template', ['record' => $salesInvoice])->render();
-        $dompdf = new \Dompdf\Dompdf();
+        $dompdf = new Dompdf;
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
+
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="SI-' . $salesInvoice->si_number . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="SI-'.$salesInvoice->si_number.'.pdf"',
         ]);
     })->name('sales-invoices.export-pdf');
 
     // Products Catalog Excel & CSV Export & Template Download
     Route::get('/products/export-excel', function () {
-        $excel = app(\App\Services\ProductImportExportService::class)->exportExcel();
+        $excel = app(ProductImportExportService::class)->exportExcel();
+
         return response($excel, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-' . date('Ymd-His') . '.xlsx"',
+            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-'.date('Ymd-His').'.xlsx"',
         ]);
     })->name('products.export-excel');
 
     Route::get('/products/download-template-excel', function () {
-        $template = app(\App\Services\ProductImportExportService::class)->generateSampleExcelTemplate();
+        $template = app(ProductImportExportService::class)->generateSampleExcelTemplate();
+
         return response($template, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="huenics-product-import-template.xlsx"',
@@ -180,15 +191,17 @@ Route::middleware(['web', 'auth'])->group(function () {
     })->name('products.download-template-excel');
 
     Route::get('/products/export-csv', function () {
-        $csv = app(\App\Services\ProductImportExportService::class)->exportCsv();
+        $csv = app(ProductImportExportService::class)->exportCsv();
+
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-' . date('Ymd-His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="huenics-products-catalog-'.date('Ymd-His').'.csv"',
         ]);
     })->name('products.export-csv');
 
     Route::get('/products/download-template', function () {
-        $template = app(\App\Services\ProductImportExportService::class)->generateSampleCsvTemplate();
+        $template = app(ProductImportExportService::class)->generateSampleCsvTemplate();
+
         return response($template, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="huenics-product-import-template.csv"',
@@ -197,15 +210,17 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     // Inventory Report CSV Export & Template Download
     Route::get('/inventory/export-report', function () {
-        $csv = app(\App\Services\InventoryReportService::class)->exportInventoryReport();
+        $csv = app(InventoryReportService::class)->exportInventoryReport();
+
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="huenics-inventory-report-' . date('Ymd-His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="huenics-inventory-report-'.date('Ymd-His').'.csv"',
         ]);
     })->name('inventory.export-report');
 
     Route::get('/inventory/download-template', function () {
-        $template = app(\App\Services\InventoryReportService::class)->generateSampleInventoryCsv();
+        $template = app(InventoryReportService::class)->generateSampleInventoryCsv();
+
         return response($template, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="huenics-inventory-template.csv"',
@@ -215,21 +230,18 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 // ─── Public Storage Asset Fallback Route ────────────────────────────────────
 Route::get('/storage/{path}', function (string $path) {
-    $fullPath = storage_path('app/public/' . $path);
-    if (!file_exists($fullPath) || is_dir($fullPath)) {
+    $fullPath = storage_path('app/public/'.$path);
+    if (! file_exists($fullPath) || is_dir($fullPath)) {
         abort(404, 'Asset not found.');
     }
 
     $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
 
     return response()->file($fullPath, [
-        'Content-Type'  => $mime,
+        'Content-Type' => $mime,
         'Cache-Control' => 'public, max-age=86400, immutable',
     ]);
 })->where('path', '.*')->name('storage.local');
 
 // ─── HTTP Fallback Route (Uniform Design & Smart Alias Routing) ─────────────
 Route::fallback([CustomerPortalController::class, 'fallback'])->name('fallback');
-
-
-

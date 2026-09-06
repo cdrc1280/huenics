@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\DeliveryStatus;
 use App\Enums\DocumentType;
+use App\Models\AuditLog;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
 use App\Models\InventoryItem;
@@ -13,7 +13,6 @@ use App\Models\SalesInvoice;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\OrderFulfillmentService;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -24,8 +23,11 @@ class OrderFulfillmentWorkflowTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $agent;
+
     protected Product $product;
+
     protected InventoryItem $inventoryItem;
 
     protected function setUp(): void
@@ -318,14 +320,14 @@ class OrderFulfillmentWorkflowTest extends TestCase
         // Step 3: Verify AuditLog entries exist for the full lifecycle
         $this->assertDatabaseHas('audit_logs', [
             'auditable_type' => PurchaseOrder::class,
-            'auditable_id'   => $po->id,
-            'event'          => \App\Models\AuditLog::EVENT_DOCUMENTS_ATTACHED,
+            'auditable_id' => $po->id,
+            'event' => AuditLog::EVENT_DOCUMENTS_ATTACHED,
         ]);
 
         $this->assertDatabaseHas('audit_logs', [
             'auditable_type' => PurchaseOrder::class,
-            'auditable_id'   => $po->id,
-            'event'          => \App\Models\AuditLog::EVENT_DELIVERED,
+            'auditable_id' => $po->id,
+            'event' => AuditLog::EVENT_DELIVERED,
         ]);
     }
 
@@ -364,14 +366,14 @@ class OrderFulfillmentWorkflowTest extends TestCase
 
         // This must succeed without throwing SQLSTATE[23000]: 1062 Duplicate entry
         $result = $service->attachFulfillmentDocuments($po, [
-            'dr_file'        => $drPath,
-            'dr_number'      => 'DR-DUP-001',
-            'delivery_date'  => now()->toDateString(),
-            'si_file'        => $siPath,
-            'si_number'      => 'SI-DUP-001',
-            'invoice_date'   => now()->toDateString(),
+            'dr_file' => $drPath,
+            'dr_number' => 'DR-DUP-001',
+            'delivery_date' => now()->toDateString(),
+            'si_file' => $siPath,
+            'si_number' => 'SI-DUP-001',
+            'invoice_date' => now()->toDateString(),
             'payment_status' => SalesInvoice::STATUS_PAID,
-            'total_amount'   => 150000.00,
+            'total_amount' => 150000.00,
         ], $this->admin);
 
         $this->assertNotNull($result['delivery_receipt']);
@@ -416,28 +418,28 @@ class OrderFulfillmentWorkflowTest extends TestCase
 
         // Pre-create an existing document record with this exact file hash (simulating past upload)
         $existingDoc = Document::create([
-            'disk_path'          => $filePath,
-            'original_filename'  => 'DR00423.pdf',
+            'disk_path' => $filePath,
+            'original_filename' => 'DR00423.pdf',
             'original_mime_type' => 'application/pdf',
-            'file_size'          => 400,
-            'file_hash'          => $hash,
-            'document_type'      => 'delivery_receipt',
-            'document_number'    => 'DR-2026-0001',
-            'document_date'      => now()->toDateString(),
-            'uploaded_by'        => $this->admin->id,
-            'status'             => Document::STATUS_VERIFIED,
+            'file_size' => 400,
+            'file_hash' => $hash,
+            'document_type' => 'delivery_receipt',
+            'document_number' => 'DR-2026-0001',
+            'document_date' => now()->toDateString(),
+            'uploaded_by' => $this->admin->id,
+            'status' => Document::STATUS_VERIFIED,
         ]);
 
         $service = app(OrderFulfillmentService::class);
 
         // Fulfill using the same file path and hash
         $result = $service->attachFulfillmentDocuments($po, [
-            'dr_file'        => $filePath,
-            'dr_number'      => 'DR-2026-0002',
-            'delivery_date'  => now()->toDateString(),
-            'si_file'        => null,
+            'dr_file' => $filePath,
+            'dr_number' => 'DR-2026-0002',
+            'delivery_date' => now()->toDateString(),
+            'si_file' => null,
             'payment_status' => SalesInvoice::STATUS_PAID,
-            'total_amount'   => 200000.00,
+            'total_amount' => 200000.00,
         ], $this->admin);
 
         $this->assertNotNull($result['delivery_receipt']);

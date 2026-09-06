@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Http\Controllers\CustomerPortalController;
 use App\Models\CompanySetting;
 use App\Models\Product;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CustomerPortalProductionSimulationTest extends TestCase

@@ -5,15 +5,14 @@ namespace Tests\Feature;
 use App\Enums\DeliveryReceiptStatus;
 use App\Enums\SalesInvoiceStatus;
 use App\Models\DeliveryReceipt;
-use App\Models\Document;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderLineItem;
 use App\Models\Quotation;
 use App\Models\SalesInvoice;
 use App\Models\User;
 use App\Services\InventoryService;
+use App\Services\OrderFulfillmentService;
 use App\Services\QuotationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,7 +22,9 @@ class PoInventoryAndSalesIntegrationTest extends TestCase
     use RefreshDatabase;
 
     protected User $agent;
+
     protected Product $product;
+
     protected InventoryItem $inventoryItem;
 
     protected function setUp(): void
@@ -159,7 +160,7 @@ class PoInventoryAndSalesIntegrationTest extends TestCase
         $this->assertEquals(1000, (float) $this->inventoryItem->quantity_on_hand);
 
         // Fulfill with DR & SI
-        app(\App\Services\OrderFulfillmentService::class)->fulfillOrder($po, [
+        app(OrderFulfillmentService::class)->fulfillOrder($po, [
             'dr_number' => 'DR-TEST-001',
             'si_number' => 'SI-TEST-001',
             'delivery_date' => now()->toDateString(),

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('purchase_orders') && !Schema::hasColumn('purchase_orders', 'is_inventory_deducted')) {
+        if (Schema::hasTable('purchase_orders') && ! Schema::hasColumn('purchase_orders', 'is_inventory_deducted')) {
             Schema::table('purchase_orders', function (Blueprint $table) {
                 $table->boolean('is_inventory_deducted')->default(false)->after('status');
             });

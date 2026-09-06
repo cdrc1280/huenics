@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 use App\Actions\ReconcileDocumentTotals;
 use App\Models\Document;
-use App\Models\DocumentLineItem;
-use App\Models\DocumentTotal;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\ProductAlias;
@@ -13,7 +11,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorDocumentLayout;
-use App\Models\VendorLayoutFieldMapping;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -242,173 +239,173 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-    //     // 6. Sample Documents & Fixtures (Demonstrating blueprint validation rules)
-    //     $reconciler = app(ReconcileDocumentTotals::class);
+        //     // 6. Sample Documents & Fixtures (Demonstrating blueprint validation rules)
+        //     $reconciler = app(ReconcileDocumentTotals::class);
 
-    //     // Document 1: Purchase Order #4010027092 (Demonstrates line item .85 printed error)
-    //     $poDoc = Document::firstOrCreate(
-    //         ['file_hash' => 'hash_sample_po_4010027092_palanzatower'],
-    //         [
-    //             'vendor_id' => $mgs->id,
-    //             'project_id' => $palanza->id,
-    //             'uploaded_by' => $owner->id,
-    //             'document_type' => Document::TYPE_PURCHASE_ORDER,
-    //             'document_number' => '4010027092',
-    //             'document_date' => '2026-08-01',
-    //             'original_filename' => 'PO_4010027092_Palanza.pdf',
-    //             'disk_path' => 'documents/uploads/media_1786721108461.pdf',
-    //             'status' => Document::STATUS_REQUIRES_REVIEW,
-    //             'extraction_confidence' => 95.0,
-    //             'processed_at' => now(),
-    //         ]
-    //     );
+        //     // Document 1: Purchase Order #4010027092 (Demonstrates line item .85 printed error)
+        //     $poDoc = Document::firstOrCreate(
+        //         ['file_hash' => 'hash_sample_po_4010027092_palanzatower'],
+        //         [
+        //             'vendor_id' => $mgs->id,
+        //             'project_id' => $palanza->id,
+        //             'uploaded_by' => $owner->id,
+        //             'document_type' => Document::TYPE_PURCHASE_ORDER,
+        //             'document_number' => '4010027092',
+        //             'document_date' => '2026-08-01',
+        //             'original_filename' => 'PO_4010027092_Palanza.pdf',
+        //             'disk_path' => 'documents/uploads/media_1786721108461.pdf',
+        //             'status' => Document::STATUS_REQUIRES_REVIEW,
+        //             'extraction_confidence' => 95.0,
+        //             'processed_at' => now(),
+        //         ]
+        //     );
 
-    //     $poDoc->lineItems()->delete();
-    //     // Line 1: Normal line
-    //     $poDoc->lineItems()->create([
-    //         'line_no' => 1,
-    //         'material_code' => null,
-    //         'description' => 'DEFORMED BAR 12MM',
-    //         'qty' => 500,
-    //         'unit' => 'pcs',
-    //         'unit_price' => 320.00,
-    //         'printed_total' => 160000.00,
-    //         'computed_total' => 160000.00,
-    //         'total_mismatch' => false,
-    //         'product_id' => $steelBar->id,
-    //     ]);
-    //     // Line 30: The famous blueprint line with printed .85 bug (158 * 1,880.56 = 297,128.48, printed as 297,128.85)
-    //     $poDoc->lineItems()->create([
-    //         'line_no' => 30,
-    //         'material_code' => null,
-    //         'description' => '1-1/4" PVC Pipe Sch 40',
-    //         'qty' => 158,
-    //         'unit' => 'pcs',
-    //         'unit_price' => 1880.56,
-    //         'printed_total' => 297128.85, // Discrepancy!
-    //         'computed_total' => 297128.48,
-    //         'total_mismatch' => true,
-    //         'product_id' => $pvcPipe->id,
-    //     ]);
+        //     $poDoc->lineItems()->delete();
+        //     // Line 1: Normal line
+        //     $poDoc->lineItems()->create([
+        //         'line_no' => 1,
+        //         'material_code' => null,
+        //         'description' => 'DEFORMED BAR 12MM',
+        //         'qty' => 500,
+        //         'unit' => 'pcs',
+        //         'unit_price' => 320.00,
+        //         'printed_total' => 160000.00,
+        //         'computed_total' => 160000.00,
+        //         'total_mismatch' => false,
+        //         'product_id' => $steelBar->id,
+        //     ]);
+        //     // Line 30: The famous blueprint line with printed .85 bug (158 * 1,880.56 = 297,128.48, printed as 297,128.85)
+        //     $poDoc->lineItems()->create([
+        //         'line_no' => 30,
+        //         'material_code' => null,
+        //         'description' => '1-1/4" PVC Pipe Sch 40',
+        //         'qty' => 158,
+        //         'unit' => 'pcs',
+        //         'unit_price' => 1880.56,
+        //         'printed_total' => 297128.85, // Discrepancy!
+        //         'computed_total' => 297128.48,
+        //         'total_mismatch' => true,
+        //         'product_id' => $pvcPipe->id,
+        //     ]);
 
-    //     $poDoc->totals()->updateOrCreate(
-    //         ['document_id' => $poDoc->id],
-    //         [
-    //             'printed_subtotal' => 457128.85,
-    //             'printed_vat' => 54855.46,
-    //             'printed_total' => 511984.31,
-    //             'computed_subtotal' => 457128.48,
-    //             'computed_vat' => 54855.42,
-    //             'computed_grand_total' => 511983.90,
-    //             'vat_mismatch' => false,
-    //             'total_mismatch' => true,
-    //         ]
-    //     );
-    //     $reconciler->execute($poDoc);
+        //     $poDoc->totals()->updateOrCreate(
+        //         ['document_id' => $poDoc->id],
+        //         [
+        //             'printed_subtotal' => 457128.85,
+        //             'printed_vat' => 54855.46,
+        //             'printed_total' => 511984.31,
+        //             'computed_subtotal' => 457128.48,
+        //             'computed_vat' => 54855.42,
+        //             'computed_grand_total' => 511983.90,
+        //             'vat_mismatch' => false,
+        //             'total_mismatch' => true,
+        //         ]
+        //     );
+        //     $reconciler->execute($poDoc);
 
-    //     // Document 2: Order Slip S.O.#26005 (Demonstrates copied wrong VAT of 112,500.00 vs computed 101,785.72)
-    //     $osDoc = Document::firstOrCreate(
-    //         ['file_hash' => 'hash_sample_orderslip_26005_palanza'],
-    //         [
-    //             'vendor_id' => $huenics->id,
-    //             'project_id' => $palanza->id,
-    //             'uploaded_by' => $owner->id,
-    //             'document_type' => Document::TYPE_PURCHASE_ORDER,
-    //             'document_number' => 'SO-26005',
-    //             'document_date' => '2026-08-02',
-    //             'original_filename' => 'Order_Slip_26005_Palanza.pdf',
-    //             'disk_path' => 'documents/uploads/media_1786721108462.pdf',
-    //             'status' => Document::STATUS_REQUIRES_REVIEW,
-    //             'extraction_confidence' => 92.0,
-    //             'processed_at' => now(),
-    //         ]
-    //     );
+        //     // Document 2: Order Slip S.O.#26005 (Demonstrates copied wrong VAT of 112,500.00 vs computed 101,785.72)
+        //     $osDoc = Document::firstOrCreate(
+        //         ['file_hash' => 'hash_sample_orderslip_26005_palanza'],
+        //         [
+        //             'vendor_id' => $huenics->id,
+        //             'project_id' => $palanza->id,
+        //             'uploaded_by' => $owner->id,
+        //             'document_type' => Document::TYPE_PURCHASE_ORDER,
+        //             'document_number' => 'SO-26005',
+        //             'document_date' => '2026-08-02',
+        //             'original_filename' => 'Order_Slip_26005_Palanza.pdf',
+        //             'disk_path' => 'documents/uploads/media_1786721108462.pdf',
+        //             'status' => Document::STATUS_REQUIRES_REVIEW,
+        //             'extraction_confidence' => 92.0,
+        //             'processed_at' => now(),
+        //         ]
+        //     );
 
-    //     $osDoc->lineItems()->delete();
-    //     $osDoc->lineItems()->create([
-    //         'line_no' => 1,
-    //         'description' => '1-1/4" PVC Pipe Sch 40',
-    //         'qty' => 451,
-    //         'unit' => 'pcs',
-    //         'unit_price' => 1880.74,
-    //         'printed_total' => 848214.34,
-    //         'computed_total' => 848213.74,
-    //         'total_mismatch' => false,
-    //         'product_id' => $pvcPipe->id,
-    //     ]);
+        //     $osDoc->lineItems()->delete();
+        //     $osDoc->lineItems()->create([
+        //         'line_no' => 1,
+        //         'description' => '1-1/4" PVC Pipe Sch 40',
+        //         'qty' => 451,
+        //         'unit' => 'pcs',
+        //         'unit_price' => 1880.74,
+        //         'printed_total' => 848214.34,
+        //         'computed_total' => 848213.74,
+        //         'total_mismatch' => false,
+        //         'product_id' => $pvcPipe->id,
+        //     ]);
 
-    //     $osDoc->totals()->updateOrCreate(
-    //         ['document_id' => $osDoc->id],
-    //         [
-    //             'printed_subtotal' => 848214.34,
-    //             'printed_vat' => 112500.00, // Discrepancy! Copied from companion order VAT
-    //             'printed_total' => 960714.34,
-    //             'computed_subtotal' => 848213.74,
-    //             'computed_vat' => 101785.65,
-    //             'computed_grand_total' => 949999.39,
-    //             'vat_mismatch' => true,
-    //             'total_mismatch' => true,
-    //         ]
-    //     );
-    //     $reconciler->execute($osDoc);
+        //     $osDoc->totals()->updateOrCreate(
+        //         ['document_id' => $osDoc->id],
+        //         [
+        //             'printed_subtotal' => 848214.34,
+        //             'printed_vat' => 112500.00, // Discrepancy! Copied from companion order VAT
+        //             'printed_total' => 960714.34,
+        //             'computed_subtotal' => 848213.74,
+        //             'computed_vat' => 101785.65,
+        //             'computed_grand_total' => 949999.39,
+        //             'vat_mismatch' => true,
+        //             'total_mismatch' => true,
+        //         ]
+        //     );
+        //     $reconciler->execute($osDoc);
 
-    //     // Document 3: Vendors Agreement Form (Quotation with Negotiated Amount 1,050,000 vs Sum 1,074,060)
-    //     $vafDoc = Document::firstOrCreate(
-    //         ['file_hash' => 'hash_sample_quotation_vaf_1050000'],
-    //         [
-    //             'vendor_id' => $huenics->id,
-    //             'project_id' => $palanza->id,
-    //             'uploaded_by' => $owner->id,
-    //             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
-    //             'document_number' => 'VAF-2026-081',
-    //             'document_date' => '2026-07-28',
-    //             'original_filename' => 'Vendors_Agreement_Palanza.pdf',
-    //             'disk_path' => 'documents/uploads/media_1786721108464.pdf',
-    //             'status' => Document::STATUS_REQUIRES_REVIEW,
-    //             'extraction_confidence' => 98.0,
-    //             'processed_at' => now(),
-    //         ]
-    //     );
+        //     // Document 3: Vendors Agreement Form (Quotation with Negotiated Amount 1,050,000 vs Sum 1,074,060)
+        //     $vafDoc = Document::firstOrCreate(
+        //         ['file_hash' => 'hash_sample_quotation_vaf_1050000'],
+        //         [
+        //             'vendor_id' => $huenics->id,
+        //             'project_id' => $palanza->id,
+        //             'uploaded_by' => $owner->id,
+        //             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
+        //             'document_number' => 'VAF-2026-081',
+        //             'document_date' => '2026-07-28',
+        //             'original_filename' => 'Vendors_Agreement_Palanza.pdf',
+        //             'disk_path' => 'documents/uploads/media_1786721108464.pdf',
+        //             'status' => Document::STATUS_REQUIRES_REVIEW,
+        //             'extraction_confidence' => 98.0,
+        //             'processed_at' => now(),
+        //         ]
+        //     );
 
-    //     $vafDoc->lineItems()->delete();
-    //     $vafDoc->lineItems()->create([
-    //         'line_no' => 1,
-    //         'description' => '1-1/4" PVC Pipe Sch 40 Package',
-    //         'qty' => 500,
-    //         'unit' => 'pcs',
-    //         'unit_price' => 1880.00,
-    //         'printed_total' => 940000.00,
-    //         'computed_total' => 940000.00,
-    //         'total_mismatch' => false,
-    //         'product_id' => $pvcPipe->id,
-    //     ]);
-    //     $vafDoc->lineItems()->create([
-    //         'line_no' => 2,
-    //         'description' => 'Delivery and On-Site Handling Fee',
-    //         'qty' => 1,
-    //         'unit' => 'lot',
-    //         'unit_price' => 134060.00,
-    //         'printed_total' => 134060.00,
-    //         'computed_total' => 134060.00,
-    //         'total_mismatch' => false,
-    //         'product_id' => null,
-    //     ]);
+        //     $vafDoc->lineItems()->delete();
+        //     $vafDoc->lineItems()->create([
+        //         'line_no' => 1,
+        //         'description' => '1-1/4" PVC Pipe Sch 40 Package',
+        //         'qty' => 500,
+        //         'unit' => 'pcs',
+        //         'unit_price' => 1880.00,
+        //         'printed_total' => 940000.00,
+        //         'computed_total' => 940000.00,
+        //         'total_mismatch' => false,
+        //         'product_id' => $pvcPipe->id,
+        //     ]);
+        //     $vafDoc->lineItems()->create([
+        //         'line_no' => 2,
+        //         'description' => 'Delivery and On-Site Handling Fee',
+        //         'qty' => 1,
+        //         'unit' => 'lot',
+        //         'unit_price' => 134060.00,
+        //         'printed_total' => 134060.00,
+        //         'computed_total' => 134060.00,
+        //         'total_mismatch' => false,
+        //         'product_id' => null,
+        //     ]);
 
-    //     $vafDoc->totals()->updateOrCreate(
-    //         ['document_id' => $vafDoc->id],
-    //         [
-    //             'printed_subtotal' => 1074060.00,
-    //             'printed_vat' => 0.00,
-    //             'printed_total' => 1074060.00,
-    //             'negotiated_amount' => 1050000.00, // Authoritative deal amount!
-    //             'computed_subtotal' => 1074060.00,
-    //             'computed_vat' => 128887.20,
-    //             'computed_grand_total' => 1202947.20,
-    //             'vat_mismatch' => false,
-    //             'total_mismatch' => false,
-    //         ]
-    //     );
-    //     $reconciler->execute($vafDoc);
+        //     $vafDoc->totals()->updateOrCreate(
+        //         ['document_id' => $vafDoc->id],
+        //         [
+        //             'printed_subtotal' => 1074060.00,
+        //             'printed_vat' => 0.00,
+        //             'printed_total' => 1074060.00,
+        //             'negotiated_amount' => 1050000.00, // Authoritative deal amount!
+        //             'computed_subtotal' => 1074060.00,
+        //             'computed_vat' => 128887.20,
+        //             'computed_grand_total' => 1202947.20,
+        //             'vat_mismatch' => false,
+        //             'total_mismatch' => false,
+        //         ]
+        //     );
+        //     $reconciler->execute($vafDoc);
 
         // Seed all products from official Company Profile
         $this->call(HuenicsCompanyProfileProductSeeder::class);

@@ -4,15 +4,17 @@ namespace Tests\Feature;
 
 use App\Actions\IngestDocumentAction;
 use App\Enums\WarrantyPeriod;
+use App\Filament\Pages\ReviewQueuePage;
+use App\Filament\Resources\PurchaseOrderResource\Pages\ListPurchaseOrders;
+use App\Filament\Resources\QuotationResource\Pages\ListQuotations;
 use App\Models\Document;
-use App\Models\DocumentLineItem;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Quotation;
-use App\Models\QuotationLineItem;
 use App\Models\User;
 use App\Services\DocumentParsers\FieldExtractor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class NewRequirementsEnhancementTest extends TestCase
@@ -27,7 +29,7 @@ class NewRequirementsEnhancementTest extends TestCase
 
         $this->admin = User::factory()->create([
             'role' => User::ROLE_ADMIN,
-            'email' => 'admin_test_' . uniqid() . '@huenics.com',
+            'email' => 'admin_test_'.uniqid().'@huenics.com',
         ]);
     }
 
@@ -66,9 +68,9 @@ class NewRequirementsEnhancementTest extends TestCase
 
     public function test_field_extractor_captures_payment_and_delivery_terms(): void
     {
-        $extractor = new FieldExtractor();
+        $extractor = new FieldExtractor;
 
-        $sampleText = "
+        $sampleText = '
             HUENICS INDUSTRIAL SUPPLY
             Quotation No: QT-2026-0001
             Date: August 28, 2026
@@ -79,7 +81,7 @@ class NewRequirementsEnhancementTest extends TestCase
             Terms and Conditions:
             1. Prices are subject to change without prior notice.
             2. Deliveries are within Metro Manila only.
-        ";
+        ';
 
         $paymentTerms = $extractor->extractPaymentTerms($sampleText);
         $this->assertNotNull($paymentTerms);
@@ -211,15 +213,15 @@ class NewRequirementsEnhancementTest extends TestCase
     {
         $doc = Document::create([
             'uploaded_by' => $this->admin->id,
-            'file_hash' => 'hash_terms_checkbox_test_' . uniqid(),
+            'file_hash' => 'hash_terms_checkbox_test_'.uniqid(),
             'original_filename' => 'quotation_sample.pdf',
             'disk_path' => 'documents/uploads/quotation_sample.pdf',
             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
             'raw_extracted_text' => 'Terms and Conditions Validity 15 days Stock Availability ✔ Stock Terms Of Delivery 4-7 days Payment Terms COD PDC 30 Days Remarks Serve as an Official P.O.',
         ]);
 
-        $component = \Livewire\Livewire::actingAs($this->admin)
-            ->test(\App\Filament\Pages\ReviewQueuePage::class, ['document_id' => $doc->id])
+        $component = Livewire::actingAs($this->admin)
+            ->test(ReviewQueuePage::class, ['document_id' => $doc->id])
             ->assertSee('Terms and Conditions')
             ->assertSee('Stock Availability')
             ->assertSee('Terms Of Delivery')
@@ -244,7 +246,7 @@ class NewRequirementsEnhancementTest extends TestCase
     public function test_upload_quotation_action_warns_on_duplicate_file(): void
     {
         // First upload
-        $action = app(\App\Actions\IngestDocumentAction::class);
+        $action = app(IngestDocumentAction::class);
         $doc = $action->execute(
             diskPath: 'documents/uploads/dup_test_vaf.pdf',
             originalFilename: 'dup_test_vaf.pdf',
@@ -253,8 +255,8 @@ class NewRequirementsEnhancementTest extends TestCase
         );
 
         // Uploading duplicate via ListQuotations
-        \Livewire\Livewire::actingAs($this->admin)
-            ->test(\App\Filament\Resources\QuotationResource\Pages\ListQuotations::class)
+        Livewire::actingAs($this->admin)
+            ->test(ListQuotations::class)
             ->callAction('upload_quotation', [
                 'disk_path' => ['documents/uploads/dup_test_vaf.pdf'],
                 'original_filename' => 'dup_test_vaf.pdf',
@@ -265,7 +267,7 @@ class NewRequirementsEnhancementTest extends TestCase
     public function test_upload_po_action_warns_on_duplicate_file(): void
     {
         // First upload
-        $action = app(\App\Actions\IngestDocumentAction::class);
+        $action = app(IngestDocumentAction::class);
         $doc = $action->execute(
             diskPath: 'documents/uploads/dup_test_po.pdf',
             originalFilename: 'dup_test_po.pdf',
@@ -274,8 +276,8 @@ class NewRequirementsEnhancementTest extends TestCase
         );
 
         // Uploading duplicate via ListPurchaseOrders
-        \Livewire\Livewire::actingAs($this->admin)
-            ->test(\App\Filament\Resources\PurchaseOrderResource\Pages\ListPurchaseOrders::class)
+        Livewire::actingAs($this->admin)
+            ->test(ListPurchaseOrders::class)
             ->callAction('upload_po', [
                 'disk_path' => ['documents/uploads/dup_test_po.pdf'],
                 'original_filename' => 'dup_test_po.pdf',
@@ -283,5 +285,3 @@ class NewRequirementsEnhancementTest extends TestCase
             ->assertNotified('Duplicate Purchase Order Detected');
     }
 }
-
-

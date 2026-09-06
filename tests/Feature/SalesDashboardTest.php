@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\SalesDashboard;
+use App\Filament\Widgets\QuotationConversionWidget;
 use App\Filament\Widgets\SalesOverviewWidget;
+use App\Filament\Widgets\SalesRevenueChartWidget;
+use App\Filament\Widgets\TopSellingProductsWidget;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderLineItem;
 use App\Models\Quotation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -17,6 +21,7 @@ class SalesDashboardTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $salesRep;
 
     protected function setUp(): void
@@ -317,7 +322,7 @@ class SalesDashboardTest extends TestCase
         ]);
 
         // Test ChartWidget with month view
-        $chart = Livewire::test(\App\Filament\Widgets\SalesRevenueChartWidget::class, [
+        $chart = Livewire::test(SalesRevenueChartWidget::class, [
             'periodType' => 'month',
             'selectedYear' => 2026,
             'selectedMonth' => 8,
@@ -381,7 +386,7 @@ class SalesDashboardTest extends TestCase
         ]);
 
         // 3. Create PO Line Item
-        \App\Models\PurchaseOrderLineItem::create([
+        PurchaseOrderLineItem::create([
             'purchase_order_id' => $po->id,
             'line_no' => 1,
             'item_code' => 'HISI-COB-01',
@@ -393,7 +398,7 @@ class SalesDashboardTest extends TestCase
         ]);
 
         // Test QuotationConversionWidget
-        $convWidget = Livewire::test(\App\Filament\Widgets\QuotationConversionWidget::class, [
+        $convWidget = Livewire::test(QuotationConversionWidget::class, [
             'periodType' => 'month',
             'selectedYear' => 2026,
             'selectedMonth' => 8,
@@ -407,7 +412,7 @@ class SalesDashboardTest extends TestCase
         $this->assertEquals(1, $convData['datasets'][0]['data'][0]);
 
         // Test TopSellingProductsWidget
-        $topWidget = Livewire::test(\App\Filament\Widgets\TopSellingProductsWidget::class, [
+        $topWidget = Livewire::test(TopSellingProductsWidget::class, [
             'periodType' => 'month',
             'selectedYear' => 2026,
             'selectedMonth' => 8,

@@ -1089,8 +1089,22 @@
 
 @push('scripts')
 <!-- Dedicated High-Performance Three.js Engine (Loaded on Home Page Only) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script id="threejs-cdn-script" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script>
+    // Suppress benign DevTools extension warning if external hook inspects THREE
+    (function() {
+        if (!window.__huenicsWarnFiltered) {
+            window.__huenicsWarnFiltered = true;
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (typeof args[0] === 'string' && args[0].includes('Multiple instances of Three.js being imported')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        }
+    })();
+
     // Tab Switcher for Floating Hero Estimator Hub
     window.switchHeroTab = function(tab) {
         const tabs = ['quote', 'fleet', 'indent'];
@@ -1183,31 +1197,33 @@
         }
     };
 
-    // Resilient non-blocking bootstrapper for 3D Luminaire Stage
+    // Resilient singleton bootstrapper for 3D Luminaire Stage
     function bootstrapLuminaire() {
-        if (typeof THREE !== 'undefined') {
-            if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
+        if (typeof window.THREE !== 'undefined') {
+            if (typeof window.initHuenicsLuminaire3D === 'function') {
+                window.initHuenicsLuminaire3D();
+            }
             return;
         }
-        const existingScript = document.querySelector('script[src*="three.min.js"]');
+        const existingScript = document.getElementById('threejs-cdn-script') || document.querySelector('script[src*="three.min.js"]');
         if (existingScript) {
             existingScript.addEventListener('load', () => {
-                if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
-            });
-            setTimeout(() => {
-                if (typeof THREE !== 'undefined' && window.initHuenicsLuminaire3D) {
+                if (typeof window.initHuenicsLuminaire3D === 'function') {
                     window.initHuenicsLuminaire3D();
                 }
-            }, 100);
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-            script.async = true;
-            script.onload = () => {
-                if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
-            };
-            document.head.appendChild(script);
+            }, { once: true });
+            return;
         }
+        const script = document.createElement('script');
+        script.id = 'threejs-cdn-script';
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.defer = true;
+        script.onload = () => {
+            if (typeof window.initHuenicsLuminaire3D === 'function') {
+                window.initHuenicsLuminaire3D();
+            }
+        };
+        document.head.appendChild(script);
     }
 
     // Re-initialize 3D physics and icons when view loads or on SPA page transitions

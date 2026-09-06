@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Resources\PurchaseOrderResource;
+use App\Models\Document;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLineItem;
@@ -10,6 +12,7 @@ use App\Models\Quotation;
 use App\Models\QuotationLineItem;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
+use Filament\Actions\ActionGroup;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +21,9 @@ class LinkPoToQuotationTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Quotation $quotation;
+
     protected PurchaseOrder $po;
 
     protected function setUp(): void
@@ -156,11 +161,11 @@ class LinkPoToQuotationTest extends TestCase
         $this->assertNull($this->po->quotation_id);
 
         $tableActions = collect(PurchaseOrderResource::getTableActions())
-            ->first(fn($a) => $a instanceof \Filament\Actions\ActionGroup)
+            ->first(fn ($a) => $a instanceof ActionGroup)
             ->getActions();
 
-        $approveAction = collect($tableActions)->first(fn($a) => $a->getName() === 'approve_po');
-        $reviewAction = collect($tableActions)->first(fn($a) => $a->getName() === 'review');
+        $approveAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'approve_po');
+        $reviewAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'review');
 
         $approveAction->record($this->po);
         $reviewAction->record($this->po);
@@ -183,11 +188,11 @@ class LinkPoToQuotationTest extends TestCase
         $this->po->update(['is_conforme_po' => true]);
 
         $tableActions = collect(PurchaseOrderResource::getTableActions())
-            ->first(fn($a) => $a instanceof \Filament\Actions\ActionGroup)
+            ->first(fn ($a) => $a instanceof ActionGroup)
             ->getActions();
 
-        $approveAction = collect($tableActions)->first(fn($a) => $a->getName() === 'approve_po');
-        $reviewAction = collect($tableActions)->first(fn($a) => $a->getName() === 'review');
+        $approveAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'approve_po');
+        $reviewAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'review');
 
         $approveAction->record($this->po);
         $reviewAction->record($this->po);
@@ -212,11 +217,11 @@ class LinkPoToQuotationTest extends TestCase
         ]);
 
         $tableActions = collect(PurchaseOrderResource::getTableActions())
-            ->first(fn($a) => $a instanceof \Filament\Actions\ActionGroup)
+            ->first(fn ($a) => $a instanceof ActionGroup)
             ->getActions();
 
-        $approveAction = collect($tableActions)->first(fn($a) => $a->getName() === 'approve_po');
-        $reviewAction = collect($tableActions)->first(fn($a) => $a->getName() === 'review');
+        $approveAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'approve_po');
+        $reviewAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'review');
 
         $approveAction->record($this->po);
         $reviewAction->record($this->po);
@@ -236,19 +241,19 @@ class LinkPoToQuotationTest extends TestCase
         $this->actingAs($this->admin);
 
         // Document for PO
-        $doc = \App\Models\Document::create([
-            'document_type' => \App\Models\Document::TYPE_PURCHASE_ORDER,
+        $doc = Document::create([
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
             'document_number' => 'PO-MEGA-2026-99',
             'original_filename' => 'test.pdf',
             'disk_path' => 'documents/test.pdf',
             'file_hash' => hash('sha256', 'po_test_document_content'),
-            'status' => \App\Models\Document::STATUS_REQUIRES_REVIEW,
+            'status' => Document::STATUS_REQUIRES_REVIEW,
             'uploaded_by' => $this->admin->id,
         ]);
 
         $this->po->update(['document_id' => $doc->id, 'is_conforme_po' => false, 'quotation_id' => null]);
 
-        $page = new \App\Filament\Pages\ReviewQueuePage();
+        $page = new ReviewQueuePage;
         $page->currentDocument = $doc;
 
         // Must detect unlinked normal PO
@@ -392,13 +397,13 @@ class LinkPoToQuotationTest extends TestCase
             'line_total' => 80000.00,
         ]);
 
-        $doc = \App\Models\Document::create([
-            'document_type' => \App\Models\Document::TYPE_PURCHASE_ORDER,
+        $doc = Document::create([
+            'document_type' => Document::TYPE_PURCHASE_ORDER,
             'document_number' => 'PO-DISCREP-001',
             'original_filename' => 'po_discrep.pdf',
             'disk_path' => 'documents/po_discrep.pdf',
             'file_hash' => hash('sha256', 'po_discrep_content'),
-            'status' => \App\Models\Document::STATUS_REQUIRES_REVIEW,
+            'status' => Document::STATUS_REQUIRES_REVIEW,
             'uploaded_by' => $this->admin->id,
         ]);
 
@@ -414,11 +419,11 @@ class LinkPoToQuotationTest extends TestCase
 
         // A. Table actions: approve_po must be HIDDEN, review must be VISIBLE
         $tableActions = collect(PurchaseOrderResource::getTableActions())
-            ->first(fn($a) => $a instanceof \Filament\Actions\ActionGroup)
+            ->first(fn ($a) => $a instanceof ActionGroup)
             ->getActions();
 
-        $approveAction = collect($tableActions)->first(fn($a) => $a->getName() === 'approve_po');
-        $reviewAction = collect($tableActions)->first(fn($a) => $a->getName() === 'review');
+        $approveAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'approve_po');
+        $reviewAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'review');
 
         $approveAction->record($this->po);
         $reviewAction->record($this->po);
@@ -434,14 +439,14 @@ class LinkPoToQuotationTest extends TestCase
         $this->assertNotEquals(PurchaseOrder::STATUS_APPROVED, $this->po->status);
 
         // B. ReviewQueuePage: isPoWithDiscrepancy must be true and approveAndVerify must be blocked
-        $page = new \App\Filament\Pages\ReviewQueuePage();
+        $page = new ReviewQueuePage;
         $page->currentDocument = $doc;
 
         $this->assertTrue($page->getIsPoWithDiscrepancyProperty());
 
         $page->approveAndVerify();
         $doc->refresh();
-        $this->assertNotEquals(\App\Models\Document::STATUS_VERIFIED, $doc->status);
+        $this->assertNotEquals(Document::STATUS_VERIFIED, $doc->status);
 
         // C. Once discrepancy is resolved: approve_po becomes VISIBLE
         $poLine->update(['unit_price' => 45000.00, 'line_total' => 90000.00]);
@@ -452,7 +457,7 @@ class LinkPoToQuotationTest extends TestCase
         $approveAction->record($this->po);
         $this->assertTrue($approveAction->isVisible());
 
-        $freshPage = new \App\Filament\Pages\ReviewQueuePage();
+        $freshPage = new ReviewQueuePage;
         $freshPage->currentDocument = $doc;
         $this->assertFalse($freshPage->getIsPoWithDiscrepancyProperty());
     }
@@ -586,10 +591,10 @@ class LinkPoToQuotationTest extends TestCase
 
         // Approve PO action must now be VISIBLE
         $tableActions = collect(PurchaseOrderResource::getTableActions())
-            ->first(fn($a) => $a instanceof \Filament\Actions\ActionGroup)
+            ->first(fn ($a) => $a instanceof ActionGroup)
             ->getActions();
 
-        $approveAction = collect($tableActions)->first(fn($a) => $a->getName() === 'approve_po');
+        $approveAction = collect($tableActions)->first(fn ($a) => $a->getName() === 'approve_po');
         $approveAction->record($this->po);
         $this->assertTrue($approveAction->isVisible());
     }

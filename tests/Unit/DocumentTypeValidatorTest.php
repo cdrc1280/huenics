@@ -14,12 +14,12 @@ class DocumentTypeValidatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new DocumentTypeValidator();
+        $this->validator = new DocumentTypeValidator;
     }
 
     public function test_validates_quotation_reference_1_correctly(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 VENDORS AGREEMENT FORM
 Quotation No. 25100163 - P rev.2 Date 01/05/25 Customer Name Engr. Ronald Rey Sandoval Company MGS CONSTRUCTION, INC.
 Address 2F Starmall Annex, Alabang-Zapote Road, corner Doña Manuela Avenue, Pamplona III, Las Pinas, For Project Palanza Tower
@@ -46,7 +46,7 @@ OCR;
 
     public function test_validates_quotation_reference_2_correctly(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 VENDORS AGREEMENT FORM
 Quotation No. 261001- P Date 01/05/26
 Customer Name Engr. Ronald Rey Sandoval
@@ -69,7 +69,7 @@ OCR;
 
     public function test_validates_purchase_order_reference_3_correctly(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 No. 4010027093
 MGS CONSTRUCTION, INC.
 2f Starmall Annex, Alabang-Zapote Rd.
@@ -100,7 +100,7 @@ OCR;
 
     public function test_validates_purchase_order_reference_4_correctly(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 No. 4010027092
 MGS CONSTRUCTION, INC.
 PURCHASE ORDER
@@ -121,7 +121,7 @@ OCR;
 
     public function test_rejects_unrecognized_random_document(): void
     {
-        $text = "Receipt No 12345 Customer John Doe Paid Cash 500.00 Thank you for shopping with us.";
+        $text = 'Receipt No 12345 Customer John Doe Paid Cash 500.00 Thank you for shopping with us.';
 
         $this->assertNull($this->validator->detectType($text));
 

@@ -18,9 +18,13 @@ class ReconciliationTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Vendor $vendor;
+
     protected Project $project;
+
     protected Product $product;
+
     protected ReconcileDocumentTotals $reconciler;
 
     protected function setUp(): void

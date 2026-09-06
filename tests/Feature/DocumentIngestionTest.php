@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\CrossReferenceDocuments;
+use App\Actions\IngestDocumentAction;
 use App\Actions\VerifyDocument;
 use App\Models\AuditLog;
 use App\Models\Document;
@@ -16,6 +17,7 @@ use App\Models\Quotation;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\DocumentParsers\DynamicDocumentParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,8 +26,11 @@ class DocumentIngestionTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Vendor $vendor;
+
     protected Project $project;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -87,7 +92,7 @@ class DocumentIngestionTest extends TestCase
                 'unit_price' => 1880.00,
                 'printed_total' => 188000.00,
                 'product_id' => $this->product->id,
-            ]
+            ],
         ]);
 
         // Document verified
@@ -144,7 +149,7 @@ class DocumentIngestionTest extends TestCase
 
     public function test_ingest_document_action_executes_quotation_and_po_with_templates(): void
     {
-        $action = app(\App\Actions\IngestDocumentAction::class);
+        $action = app(IngestDocumentAction::class);
 
         // Ingest quotation
         $quotationDoc = $action->execute(
@@ -205,7 +210,7 @@ class DocumentIngestionTest extends TestCase
 
     public function test_ingesting_document_with_new_product_auto_creates_product_in_database_and_links_it(): void
     {
-        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+        $parser = app(DynamicDocumentParser::class);
         $doc = Document::create([
             'vendor_id' => $this->vendor->id,
             'project_id' => $this->project->id,
@@ -237,7 +242,7 @@ class DocumentIngestionTest extends TestCase
 
     public function test_ingesting_vendors_agreement_with_variations_and_footer_filtering(): void
     {
-        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+        $parser = app(DynamicDocumentParser::class);
         $doc = Document::create([
             'vendor_id' => $this->vendor->id,
             'project_id' => $this->project->id,
@@ -250,7 +255,7 @@ class DocumentIngestionTest extends TestCase
             'status' => Document::STATUS_UPLOADED,
         ]);
 
-        $ocrText = <<<OCR
+        $ocrText = <<<'OCR'
 VENDORS AGREEMENT FORM
 Quotation No. 25100163 - P rev.2 Date 01/05/25 Customer Name Engr. Ronald Rey Sandoval Company MGS CONSTRUCTION, INC.
 Address 2F Starmall Annex, Alabang-Zapote Road, corner Doña Manuela Avenue, Pamplona III, Las Pinas, For Project Palanza Tower
@@ -318,7 +323,7 @@ OCR;
 
     public function test_ingesting_merged_price_numbers_and_downlight_document(): void
     {
-        $parser = app(\App\Services\DocumentParsers\DynamicDocumentParser::class);
+        $parser = app(DynamicDocumentParser::class);
 
         // Document with concatenated numbers without spaces: 3,250.002,925.0043,875.00Led Driver...
         $doc1 = Document::create([
@@ -333,7 +338,7 @@ OCR;
             'status' => Document::STATUS_UPLOADED,
         ]);
 
-        $mergedText = <<<OCR
+        $mergedText = <<<'OCR'
 Item Code Product Description Qty Unit Unit Price Discounted Price Total
 End Cap 8 pcs 300.00270.002,160.00HISI-LD-100W Led Driver for Magnetic Tracklight 100w 15 pcs 3,250.002,925.0043,875.00Led Driver for Magnetic Tracklight 200w
 (to be verified actual with client) 2 pcs 3,685.003,350.006,700.00
@@ -375,7 +380,7 @@ OCR;
             'status' => Document::STATUS_UPLOADED,
         ]);
 
-        $downlightText = <<<OCR
+        $downlightText = <<<'OCR'
 VENDORS AGREEMENT FORM
 Quotation No. 261001- P Date 01/05/26
 Customer Name Engr. Ronald Rey Sandoval
@@ -422,7 +427,7 @@ OCR;
             'quotation_date' => now()->toDateString(),
         ]);
 
-        $action = app(\App\Actions\IngestDocumentAction::class);
+        $action = app(IngestDocumentAction::class);
         $doc = $action->execute(
             diskPath: 'documents/uploads/test_po_upload.pdf',
             originalFilename: 'test_po_upload.pdf',
@@ -439,7 +444,7 @@ OCR;
 
     public function test_duplicate_document_upload_is_flagged_and_does_not_create_duplicate(): void
     {
-        $action = app(\App\Actions\IngestDocumentAction::class);
+        $action = app(IngestDocumentAction::class);
 
         // First upload
         $doc1 = $action->execute(
@@ -468,7 +473,3 @@ OCR;
         $this->assertEquals($initialCount, Document::count());
     }
 }
-
-
-
-

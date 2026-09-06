@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('inventory_items', function (Blueprint $table) {
-            if (!Schema::hasColumn('inventory_items', 'is_owned')) {
+            if (! Schema::hasColumn('inventory_items', 'is_owned')) {
                 $table->boolean('is_owned')->default(true)->after('unit')->index();
             }
         });
 
         Schema::table('inventory_transactions', function (Blueprint $table) {
-            if (!Schema::hasColumn('inventory_transactions', 'is_owned')) {
+            if (! Schema::hasColumn('inventory_transactions', 'is_owned')) {
                 $table->boolean('is_owned')->default(true)->after('quantity')->index();
             }
         });

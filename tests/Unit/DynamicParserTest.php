@@ -2,8 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Enums\UnitOfMeasure;
 use App\Models\Document;
 use App\Models\ProductAlias;
+use App\Models\User;
 use App\Services\DocumentParsers\DynamicDocumentParser;
 use App\Services\DocumentParsers\FieldExtractor;
 use App\Services\DocumentParsers\PdfTextExtractor;
@@ -15,15 +17,16 @@ class DynamicParserTest extends TestCase
     use RefreshDatabase;
 
     protected DynamicDocumentParser $parser;
-    protected \App\Models\User $user;
+
+    protected User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = \App\Models\User::factory()->create();
+        $this->user = User::factory()->create();
         $this->parser = new DynamicDocumentParser(
-            new PdfTextExtractor(),
-            new FieldExtractor()
+            new PdfTextExtractor,
+            new FieldExtractor
         );
     }
 
@@ -41,36 +44,36 @@ class DynamicParserTest extends TestCase
 
     public function test_product_alias_normalization(): void
     {
-        $raw1 = "  1-1/4\" PVC Pipe Sch 40  ";
+        $raw1 = '  1-1/4" PVC Pipe Sch 40  ';
         $this->assertEquals('1-1/4 pvc pipe sch 40', ProductAlias::normalize($raw1));
 
-        $raw2 = "PVC PIPE (1.25 INCH) - HEAVY DUTY";
+        $raw2 = 'PVC PIPE (1.25 INCH) - HEAVY DUTY';
         $this->assertEquals('pvc pipe 1.25 inch - heavy duty', ProductAlias::normalize($raw2));
     }
 
     public function test_field_extractor_post_processing(): void
     {
-        $extractor = new FieldExtractor();
+        $extractor = new FieldExtractor;
 
-        $this->assertEquals(1880.56, $extractor->postProcess("1,880.56", 'parse_decimal'));
-        $this->assertEquals(1050000.00, $extractor->postProcess("PHP 1,050,000.00", 'parse_decimal'));
-        $this->assertEquals(30, $extractor->postProcess("30 items", 'parse_int'));
-        $this->assertEquals('2026-08-01', $extractor->postProcess("August 1, 2026", 'parse_date'));
-        $this->assertEquals('HUENICS SUPPLY', $extractor->postProcess("  huenics supply  ", 'uppercase'));
+        $this->assertEquals(1880.56, $extractor->postProcess('1,880.56', 'parse_decimal'));
+        $this->assertEquals(1050000.00, $extractor->postProcess('PHP 1,050,000.00', 'parse_decimal'));
+        $this->assertEquals(30, $extractor->postProcess('30 items', 'parse_int'));
+        $this->assertEquals('2026-08-01', $extractor->postProcess('August 1, 2026', 'parse_date'));
+        $this->assertEquals('HUENICS SUPPLY', $extractor->postProcess('  huenics supply  ', 'uppercase'));
     }
 
     public function test_unit_of_measure_enum_has_options_and_labels(): void
     {
-        $options = \App\Enums\UnitOfMeasure::options();
+        $options = UnitOfMeasure::options();
         $this->assertArrayHasKey('pcs', $options);
         $this->assertArrayHasKey('set', $options);
         $this->assertArrayHasKey('meter', $options);
-        $this->assertEquals('pcs', \App\Enums\UnitOfMeasure::Pcs->getLabel());
+        $this->assertEquals('pcs', UnitOfMeasure::Pcs->getLabel());
     }
 
     public function test_table_footer_stop_markers_prevent_terms_and_notes_from_being_items(): void
     {
-        $ocrText = <<<OCR
+        $ocrText = <<<'OCR'
 Item Code Product Description References from Client Qty Unit Unit Price Discounted Price Total
 HISI - MTL- 6W Magnetic Tracklight 6w 3000k 158 pcs 2,100.00 1,890.00 298,620.00
 90° L connector 56 pcs 1,100.00 990.00 55,440.00
@@ -80,7 +83,7 @@ NOTES: * Minimum amount of order should be Php 20,000 .00 above for Free Deliver
 * Special order, sale/phase out and non-regular items are not allowed for return.
 OCR;
 
-        $doc = new Document();
+        $doc = new Document;
         $ref = new \ReflectionClass($this->parser);
         $method = $ref->getMethod('extractLineItems');
         $method->setAccessible(true);
@@ -99,7 +102,7 @@ OCR;
 
     public function test_parse_single_page_purchase_order_reference_4010027093(): void
     {
-        $po1Text = <<<OCR
+        $po1Text = <<<'OCR'
 No. 4010027093
 MGS CONSTRUCTION, INC.
 2f Starmall Annex, Alabang-Zapote Rd.
@@ -155,7 +158,7 @@ OCR;
 
     public function test_parse_multi_page_purchase_order_reference_4010027092(): void
     {
-        $po2Text = <<<OCR
+        $po2Text = <<<'OCR'
 No. 4010027092
 MGS CONSTRUCTION, INC.
 2f Starmall Annex, Alabang-Zapote Rd.
@@ -223,7 +226,7 @@ OCR;
 
     public function test_quotation_number_extraction_vaf_dash_format(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 HUENICS INDUSTRIAL SUPPLY
 VENDORS AGREEMENT FORM (QUOTATION)
 Quotation No: VAF-2026-081
@@ -236,7 +239,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_vaf_dash_' . uniqid(),
+            'file_hash' => 'hash_vaf_dash_'.uniqid(),
             'original_filename' => 'VAF-2026-081.pdf',
             'disk_path' => 'documents/uploads/VAF-2026-081.pdf',
             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
@@ -250,7 +253,7 @@ OCR;
 
     public function test_quotation_number_extraction_labeled_format(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 HUENICS INDUSTRIAL SUPPLY
 VENDORS AGREEMENT FORM (QUOTATION)
 Quotation No. 261001- P
@@ -263,7 +266,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_labeled_qtn_' . uniqid(),
+            'file_hash' => 'hash_labeled_qtn_'.uniqid(),
             'original_filename' => 'VAF_261001_P.pdf',
             'disk_path' => 'documents/uploads/VAF_261001_P.pdf',
             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
@@ -277,7 +280,7 @@ OCR;
 
     public function test_po_number_extraction_mgs_10_digit(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 No. 4010027093
 MGS CONSTRUCTION, INC.
 2f Starmall Annex, Alabang-Zapote Rd.
@@ -291,7 +294,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_mgs_po_' . uniqid(),
+            'file_hash' => 'hash_mgs_po_'.uniqid(),
             'original_filename' => 'PO_4010027093.pdf',
             'disk_path' => 'documents/uploads/PO_4010027093.pdf',
             'document_type' => Document::TYPE_PURCHASE_ORDER,
@@ -305,7 +308,7 @@ OCR;
 
     public function test_po_number_extraction_with_po_label(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 ACME BUILDERS CORPORATION
 PURCHASE ORDER
 P.O. No: PO-2026-0045
@@ -317,7 +320,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_po_label_' . uniqid(),
+            'file_hash' => 'hash_po_label_'.uniqid(),
             'original_filename' => 'PO-2026-0045.pdf',
             'disk_path' => 'documents/uploads/PO-2026-0045.pdf',
             'document_type' => Document::TYPE_PURCHASE_ORDER,
@@ -331,7 +334,7 @@ OCR;
 
     public function test_order_slip_number_extraction(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 HUENICS INDUSTRIAL SUPPLY
 ORDER SLIP
 S.O.# 26005
@@ -343,7 +346,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_order_slip_' . uniqid(),
+            'file_hash' => 'hash_order_slip_'.uniqid(),
             'original_filename' => 'OS_26005.pdf',
             'disk_path' => 'documents/uploads/OS_26005.pdf',
             'document_type' => Document::TYPE_PURCHASE_ORDER,
@@ -357,7 +360,7 @@ OCR;
 
     public function test_date_extraction_avoids_delivery_date(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 No. 4010027093
 MGS CONSTRUCTION, INC.
 PURCHASE ORDER
@@ -368,7 +371,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_date_test_' . uniqid(),
+            'file_hash' => 'hash_date_test_'.uniqid(),
             'original_filename' => 'PO_date_test.pdf',
             'disk_path' => 'documents/uploads/PO_date_test.pdf',
             'document_type' => Document::TYPE_PURCHASE_ORDER,
@@ -384,7 +387,7 @@ OCR;
 
     public function test_quotation_number_extraction_vaf_hash_format(): void
     {
-        $text = <<<OCR
+        $text = <<<'OCR'
 HUENICS INDUSTRIAL SUPPLY
 VENDORS AGREEMENT FORM (QUOTATION)
 VAF#251000163- P rev.2 - Palanza Tower - Magnetic Tracklights
@@ -398,7 +401,7 @@ OCR;
 
         $doc = Document::create([
             'uploaded_by' => $this->user->id,
-            'file_hash' => 'hash_vaf_hash_' . uniqid(),
+            'file_hash' => 'hash_vaf_hash_'.uniqid(),
             'original_filename' => 'VAF_251000163.pdf',
             'disk_path' => 'documents/uploads/VAF_251000163.pdf',
             'document_type' => Document::TYPE_VENDORS_AGREEMENT,
@@ -414,7 +417,7 @@ OCR;
 
     public function test_field_extractor_extract_by_rules_works(): void
     {
-        $extractor = new FieldExtractor();
+        $extractor = new FieldExtractor;
         $text = "PURCHASE ORDER\nP.O. No: PO-2026-0045\nDate: August 15, 2026";
         $lines = explode("\n", $text);
 

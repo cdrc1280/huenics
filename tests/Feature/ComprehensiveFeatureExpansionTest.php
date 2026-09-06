@@ -2,6 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Actions\IngestDocumentAction;
+use App\Enums\DeliveryReceiptStatus;
+use App\Enums\DeliveryStatus;
+use App\Enums\DocumentStatus;
+use App\Enums\PurchaseOrderStatus;
+use App\Enums\QuotationStatus;
+use App\Enums\SalesInvoiceStatus;
+use App\Enums\UserRole;
+use App\Enums\WarrantyPeriod;
+use App\Enums\WarrantyStatus;
+use App\Filament\Pages\ReviewQueuePage;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
 use App\Models\Product;
@@ -22,12 +33,19 @@ class ComprehensiveFeatureExpansionTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $opsManager;
+
     protected User $salesExec;
+
     protected User $ceo;
+
     protected User $inhouseOwner;
+
     protected Vendor $vendor;
+
     protected Project $project;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -357,31 +375,31 @@ class ComprehensiveFeatureExpansionTest extends TestCase
     {
         $quotation = Quotation::create([
             'quotation_number' => Quotation::generateNumber(),
-            'sales_agent_id'   => $this->salesExec->id,
-            'customer_name'    => 'Contractor Megawide',
-            'project_id'       => $this->project->id,
-            'total_amount'     => 12000.00,
-            'total_cost'       => 8000.00,
-            'status'           => Quotation::STATUS_APPROVED,
-            'reviewed_by'      => $this->opsManager->id,
-            'reviewed_at'      => now(),
-            'approved_by'      => $this->admin->id,
-            'approved_at'      => now(),
-            'quotation_date'   => now()->toDateString(),
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Contractor Megawide',
+            'project_id' => $this->project->id,
+            'total_amount' => 12000.00,
+            'total_cost' => 8000.00,
+            'status' => Quotation::STATUS_APPROVED,
+            'reviewed_by' => $this->opsManager->id,
+            'reviewed_at' => now(),
+            'approved_by' => $this->admin->id,
+            'approved_at' => now(),
+            'quotation_date' => now()->toDateString(),
         ]);
 
         $lineItem = $quotation->lineItems()->create([
-            'line_no'          => 1,
-            'item_code'        => 'PIPE-PVC-001',
-            'product_id'       => $this->product->id,
-            'description'      => '1-1/4" PVC Pipe Sch 40 High Grade',
-            'qty'              => 10,
-            'unit'             => 'lengths',
-            'unit_price'       => 1500.00,
+            'line_no' => 1,
+            'item_code' => 'PIPE-PVC-001',
+            'product_id' => $this->product->id,
+            'description' => '1-1/4" PVC Pipe Sch 40 High Grade',
+            'qty' => 10,
+            'unit' => 'lengths',
+            'unit_price' => 1500.00,
             'discounted_price' => 1200.00,
-            'base_cost'        => 800.00,
-            'line_total'       => 12000.00,
-            'gross_profit'     => 4000.00,
+            'base_cost' => 800.00,
+            'line_total' => 12000.00,
+            'gross_profit' => 4000.00,
         ]);
 
         $service = app(QuotationService::class);
@@ -406,18 +424,18 @@ class ComprehensiveFeatureExpansionTest extends TestCase
     public function test_clearing_actual_delivery_date_or_delivery_status_reverts_po_status_and_deactivates_warranty(): void
     {
         $po = PurchaseOrder::create([
-            'po_number'            => PurchaseOrder::generateNumber(),
-            'sales_agent_id'       => $this->salesExec->id,
-            'customer_name'        => 'Metro Construction Corp',
-            'order_date'           => now()->toDateString(),
-            'order_amount'         => 25000.00,
-            'status'               => PurchaseOrder::STATUS_DELIVERED,
-            'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
-            'is_completed'         => true,
+            'po_number' => PurchaseOrder::generateNumber(),
+            'sales_agent_id' => $this->salesExec->id,
+            'customer_name' => 'Metro Construction Corp',
+            'order_date' => now()->toDateString(),
+            'order_amount' => 25000.00,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'is_completed' => true,
             'actual_delivery_date' => now()->toDateString(),
-            'delivery_receipt_no'  => 'DR-2026-999',
-            'has_warranty'         => true,
-            'warranty_period'      => PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS,
+            'delivery_receipt_no' => 'DR-2026-999',
+            'has_warranty' => true,
+            'warranty_period' => PurchaseOrder::WARRANTY_2_YEARS_6_MONTHS,
         ]);
 
         $po = $po->fresh();
@@ -430,8 +448,8 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         // 1. User clears actual_delivery_date and sets delivery_status back to pending
         $po->update([
             'actual_delivery_date' => null,
-            'delivery_status'      => PurchaseOrder::DELIVERY_PENDING,
-            'delivery_receipt_no'  => null,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'delivery_receipt_no' => null,
         ]);
 
         $po = $po->fresh();
@@ -444,9 +462,9 @@ class ComprehensiveFeatureExpansionTest extends TestCase
 
         // 2. Re-deliver with 1 year warranty
         $po->update([
-            'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
             'actual_delivery_date' => now()->toDateString(),
-            'warranty_period'      => PurchaseOrder::WARRANTY_1_YEAR,
+            'warranty_period' => PurchaseOrder::WARRANTY_1_YEAR,
         ]);
 
         $po = $po->fresh();
@@ -492,7 +510,7 @@ class ComprehensiveFeatureExpansionTest extends TestCase
             'computed_total' => 9000.00,
         ]);
 
-        $ingestAction = app(\App\Actions\IngestDocumentAction::class);
+        $ingestAction = app(IngestDocumentAction::class);
         $ingestAction->syncInitialResourceRecord($quotationDoc, $this->salesExec->id);
 
         $quotation = Quotation::where('document_id', $quotationDoc->id)->first();
@@ -538,7 +556,7 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         $this->assertEquals('MAT-PO-001', $po->lineItems()->first()->item_code);
 
         // 3. Verify ReviewQueuePage is hidden from sidebar navigation
-        $reviewPageReflection = new \ReflectionClass(\App\Filament\Pages\ReviewQueuePage::class);
+        $reviewPageReflection = new \ReflectionClass(ReviewQueuePage::class);
         $shouldRegisterProp = $reviewPageReflection->getProperty('shouldRegisterNavigation');
         $shouldRegisterProp->setAccessible(true);
         $this->assertFalse($shouldRegisterProp->getValue());
@@ -579,40 +597,40 @@ class ComprehensiveFeatureExpansionTest extends TestCase
         ]);
 
         // Trigger rejection on ReviewQueuePage
-        $page = new \App\Filament\Pages\ReviewQueuePage();
+        $page = new ReviewQueuePage;
         $page->currentDocument = $doc;
         $page->rejectionReason = 'Pricing numbers do not match quote.';
         $page->rejectDocument();
 
-        $this->assertEquals(\App\Enums\DocumentStatus::Rejected->value, $doc->fresh()->status);
+        $this->assertEquals(DocumentStatus::Rejected->value, $doc->fresh()->status);
         $this->assertEquals('Pricing numbers do not match quote.', $doc->fresh()->failure_reason);
 
-        $this->assertEquals(\App\Enums\QuotationStatus::Rejected->value, $quotation->fresh()->status);
+        $this->assertEquals(QuotationStatus::Rejected->value, $quotation->fresh()->status);
         $this->assertEquals('Pricing numbers do not match quote.', $quotation->fresh()->rejection_reason);
 
-        $this->assertEquals(\App\Enums\PurchaseOrderStatus::Rejected->value, $po->fresh()->status);
+        $this->assertEquals(PurchaseOrderStatus::Rejected->value, $po->fresh()->status);
     }
 
     public function test_project_wide_enums_implement_contracts_and_match_model_constants(): void
     {
-        $this->assertEquals(\App\Enums\DocumentStatus::RequiresReview->value, Document::STATUS_REQUIRES_REVIEW);
-        $this->assertEquals(\App\Enums\DocumentStatus::Rejected->value, Document::STATUS_REJECTED);
-        $this->assertEquals(\App\Enums\QuotationStatus::Rejected->value, Quotation::STATUS_REJECTED);
-        $this->assertEquals(\App\Enums\PurchaseOrderStatus::Rejected->value, PurchaseOrder::STATUS_REJECTED);
-        $this->assertEquals(\App\Enums\DeliveryStatus::Delivered->value, PurchaseOrder::DELIVERY_DELIVERED);
-        $this->assertEquals(\App\Enums\WarrantyStatus::Active->value, PurchaseOrder::WARRANTY_ACTIVE);
-        $this->assertEquals(\App\Enums\WarrantyPeriod::OneYear->value, PurchaseOrder::WARRANTY_1_YEAR);
-        $this->assertEquals(\App\Enums\DeliveryReceiptStatus::Draft->value, DeliveryReceipt::STATUS_DRAFT);
-        $this->assertEquals(\App\Enums\SalesInvoiceStatus::Paid->value, SalesInvoice::STATUS_PAID);
-        $this->assertEquals(\App\Enums\UserRole::Admin->value, User::ROLE_ADMIN);
+        $this->assertEquals(DocumentStatus::RequiresReview->value, Document::STATUS_REQUIRES_REVIEW);
+        $this->assertEquals(DocumentStatus::Rejected->value, Document::STATUS_REJECTED);
+        $this->assertEquals(QuotationStatus::Rejected->value, Quotation::STATUS_REJECTED);
+        $this->assertEquals(PurchaseOrderStatus::Rejected->value, PurchaseOrder::STATUS_REJECTED);
+        $this->assertEquals(DeliveryStatus::Delivered->value, PurchaseOrder::DELIVERY_DELIVERED);
+        $this->assertEquals(WarrantyStatus::Active->value, PurchaseOrder::WARRANTY_ACTIVE);
+        $this->assertEquals(WarrantyPeriod::OneYear->value, PurchaseOrder::WARRANTY_1_YEAR);
+        $this->assertEquals(DeliveryReceiptStatus::Draft->value, DeliveryReceipt::STATUS_DRAFT);
+        $this->assertEquals(SalesInvoiceStatus::Paid->value, SalesInvoice::STATUS_PAID);
+        $this->assertEquals(UserRole::Admin->value, User::ROLE_ADMIN);
 
         // Verify Enum contract methods
-        $docStatus = \App\Enums\DocumentStatus::Rejected;
+        $docStatus = DocumentStatus::Rejected;
         $this->assertEquals('Rejected', $docStatus->getLabel());
         $this->assertEquals('danger', $docStatus->getColor());
         $this->assertEquals('heroicon-m-x-circle', $docStatus->getIcon());
 
-        $warrantyPeriod = \App\Enums\WarrantyPeriod::TwoYearsSixMonths;
+        $warrantyPeriod = WarrantyPeriod::TwoYearsSixMonths;
         $this->assertEquals('2 Years and 6 Months', $warrantyPeriod->getLabel());
         $this->assertEquals(30, $warrantyPeriod->getMonths());
     }

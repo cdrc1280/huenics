@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('delivery_receipts')) {
+        if (! Schema::hasTable('delivery_receipts')) {
             Schema::create('delivery_receipts', function (Blueprint $table) {
                 $table->id();
                 $table->string('dr_number')->unique();
@@ -26,7 +26,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('delivery_receipt_items')) {
+        if (! Schema::hasTable('delivery_receipt_items')) {
             Schema::create('delivery_receipt_items', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('delivery_receipt_id')->constrained()->cascadeOnDelete();
@@ -40,7 +40,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('sales_invoices')) {
+        if (! Schema::hasTable('sales_invoices')) {
             Schema::create('sales_invoices', function (Blueprint $table) {
                 $table->id();
                 $table->string('si_number')->unique();
@@ -61,7 +61,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('sales_invoice_items')) {
+        if (! Schema::hasTable('sales_invoice_items')) {
             Schema::create('sales_invoice_items', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('sales_invoice_id')->constrained()->cascadeOnDelete();

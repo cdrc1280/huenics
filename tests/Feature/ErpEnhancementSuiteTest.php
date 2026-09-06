@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\ReviewQueuePage;
 use App\Filament\Pages\SalesDashboard;
-use App\Filament\Resources\InventoryItemResource;
 use App\Models\CompanySetting;
 use App\Models\DeliveryReceipt;
 use App\Models\Document;
@@ -29,6 +28,7 @@ class ErpEnhancementSuiteTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $salesExec;
 
     protected function setUp(): void
@@ -211,7 +211,7 @@ class ErpEnhancementSuiteTest extends TestCase
             'original_filename' => 'quote.pdf',
             'stored_file_path' => 'documents/quote.pdf',
             'disk_path' => 'documents/quote.pdf',
-            'file_hash' => md5('quote.pdf' . time()),
+            'file_hash' => md5('quote.pdf'.time()),
         ]);
 
         DocumentLineItem::create([
@@ -552,7 +552,7 @@ class ErpEnhancementSuiteTest extends TestCase
         // 3. Verify that photo thumbnail lookup resolves by product ID and SKU
         $thumbnails = $component->get('productThumbnails');
         $this->assertArrayHasKey($product->id, $thumbnails);
-        $this->assertArrayHasKey('sku:' . $product->sku, $thumbnails);
+        $this->assertArrayHasKey('sku:'.$product->sku, $thumbnails);
 
         // 4. Test photo preview action
         $component->call('openPhotoPreview', 0)

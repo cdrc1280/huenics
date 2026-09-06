@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -20,8 +19,8 @@ class ProductImageStorageTest extends TestCase
         parent::setUp();
 
         $this->admin = User::factory()->create([
-            'role'  => User::ROLE_ADMIN,
-            'name'  => 'Admin User',
+            'role' => User::ROLE_ADMIN,
+            'name' => 'Admin User',
             'email' => 'admin@huenics.com',
         ]);
     }
@@ -37,10 +36,10 @@ class ProductImageStorageTest extends TestCase
 
         // Create temporary real file in storage/app/public to test the route
         $realDir = storage_path('app/public/products/images');
-        if (!file_exists($realDir)) {
+        if (! file_exists($realDir)) {
             mkdir($realDir, 0755, true);
         }
-        $testFile = $realDir . '/phpunit_test_img.jpg';
+        $testFile = $realDir.'/phpunit_test_img.jpg';
         file_put_contents($testFile, $file->getContent());
 
         try {

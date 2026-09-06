@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documents', function (Blueprint $table) {
-            if (!Schema::hasColumn('documents', 'original_mime_type')) {
+            if (! Schema::hasColumn('documents', 'original_mime_type')) {
                 $table->string('original_mime_type')->nullable();
             }
-            if (!Schema::hasColumn('documents', 'companion_pdf_path')) {
+            if (! Schema::hasColumn('documents', 'companion_pdf_path')) {
                 $table->string('companion_pdf_path')->nullable();
             }
         });
@@ -34,7 +34,7 @@ return new class extends Migration
             if (Schema::hasColumn('documents', 'companion_pdf_path')) {
                 $cols[] = 'companion_pdf_path';
             }
-            if (!empty($cols)) {
+            if (! empty($cols)) {
                 $table->dropColumn($cols);
             }
         });

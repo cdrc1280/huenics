@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\InventoryItem;
-use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\InventoryReportService;
@@ -21,8 +20,8 @@ class InventoryReportExportTest extends TestCase
         parent::setUp();
 
         $this->admin = User::factory()->create([
-            'role'  => User::ROLE_ADMIN,
-            'name'  => 'Admin User',
+            'role' => User::ROLE_ADMIN,
+            'name' => 'Admin User',
             'email' => 'admin@huenics.com',
         ]);
     }
@@ -30,36 +29,36 @@ class InventoryReportExportTest extends TestCase
     public function test_inventory_item_supports_report_fields(): void
     {
         $product = Product::create([
-            'product_code'     => 'CLU028-1204C4-303M2KI',
-            'sku'              => 'CLU028-1204C4-303M2KI',
-            'canonical_name'   => 'CITIZEN CLU028-3000K, CRI80, STANDARD, VER. 5',
-            'unit_default'     => 'pcs',
+            'product_code' => 'CLU028-1204C4-303M2KI',
+            'sku' => 'CLU028-1204C4-303M2KI',
+            'canonical_name' => 'CITIZEN CLU028-3000K, CRI80, STANDARD, VER. 5',
+            'unit_default' => 'pcs',
             'is_huenics_owned' => true,
         ]);
 
         $item = InventoryItem::create([
-            'product_id'       => $product->id,
+            'product_id' => $product->id,
             'quantity_on_hand' => 22,
-            'reorder_point'    => 10,
-            'unit'             => 'pcs',
-            'location'         => 'Mam CBS ROOM INSIDE CABINET',
-            'supplier_name'    => 'SUPREME COMPONENTS INTL PTE.LTD',
-            'po_number'        => '2022-3263',
-            'customer_name'    => 'FOOTACTION INTERNATIONAL MANUFACTURING CORP.',
-            'project_name'     => 'FAIRVIEW MERRELL STORE',
-            'date_released'    => '2024-01-24',
-            'inbound_date'     => '2024-12-01',
-            'remarks'          => 'COMPLETE DELIVERY',
+            'reorder_point' => 10,
+            'unit' => 'pcs',
+            'location' => 'Mam CBS ROOM INSIDE CABINET',
+            'supplier_name' => 'SUPREME COMPONENTS INTL PTE.LTD',
+            'po_number' => '2022-3263',
+            'customer_name' => 'FOOTACTION INTERNATIONAL MANUFACTURING CORP.',
+            'project_name' => 'FAIRVIEW MERRELL STORE',
+            'date_released' => '2024-01-24',
+            'inbound_date' => '2024-12-01',
+            'remarks' => 'COMPLETE DELIVERY',
         ]);
 
         $this->assertDatabaseHas('inventory_items', [
-            'id'            => $item->id,
-            'location'      => 'Mam CBS ROOM INSIDE CABINET',
+            'id' => $item->id,
+            'location' => 'Mam CBS ROOM INSIDE CABINET',
             'supplier_name' => 'SUPREME COMPONENTS INTL PTE.LTD',
-            'po_number'     => '2022-3263',
+            'po_number' => '2022-3263',
             'customer_name' => 'FOOTACTION INTERNATIONAL MANUFACTURING CORP.',
-            'project_name'  => 'FAIRVIEW MERRELL STORE',
-            'remarks'       => 'COMPLETE DELIVERY',
+            'project_name' => 'FAIRVIEW MERRELL STORE',
+            'remarks' => 'COMPLETE DELIVERY',
         ]);
 
         $this->assertEquals('Mam CBS ROOM INSIDE CABINET', $item->location);
@@ -103,20 +102,20 @@ class InventoryReportExportTest extends TestCase
     public function test_export_inventory_report_produces_valid_csv_matching_reference(): void
     {
         $product = Product::create([
-            'product_code'     => 'CLU028-1203C4-403H5M3-F1',
-            'sku'              => 'CLU028-1203C4-403H5M3-F1',
-            'canonical_name'   => 'CITIZEN CLU028-1203C4-403H5M3-F1',
-            'unit_default'     => 'pcs',
+            'product_code' => 'CLU028-1203C4-403H5M3-F1',
+            'sku' => 'CLU028-1203C4-403H5M3-F1',
+            'canonical_name' => 'CITIZEN CLU028-1203C4-403H5M3-F1',
+            'unit_default' => 'pcs',
             'is_huenics_owned' => true,
         ]);
 
         InventoryItem::create([
-            'product_id'       => $product->id,
+            'product_id' => $product->id,
             'quantity_on_hand' => 3,
-            'unit'             => 'pcs',
-            'location'         => 'Mam CBS ROOM INSIDE CABINET',
-            'supplier_name'    => 'SUPREME COMPONENTS INTL PTE.LTD',
-            'inbound_date'     => '2024-12-01',
+            'unit' => 'pcs',
+            'location' => 'Mam CBS ROOM INSIDE CABINET',
+            'supplier_name' => 'SUPREME COMPONENTS INTL PTE.LTD',
+            'inbound_date' => '2024-12-01',
         ]);
 
         $service = app(InventoryReportService::class);
@@ -180,12 +179,12 @@ class InventoryReportExportTest extends TestCase
             // Verify transactions were recorded
             $this->assertDatabaseHas('inventory_transactions', [
                 'inventory_item_id' => $item1->id,
-                'location'          => 'Mam CBS ROOM INSIDE CABINET',
+                'location' => 'Mam CBS ROOM INSIDE CABINET',
             ]);
             $this->assertDatabaseHas('inventory_transactions', [
                 'inventory_item_id' => $item2->id,
-                'po_number'         => '241000010-M',
-                'customer_name'     => 'FOOTACTION INTERNATIONAL MANUFACTURING CORP.',
+                'po_number' => '241000010-M',
+                'customer_name' => 'FOOTACTION INTERNATIONAL MANUFACTURING CORP.',
             ]);
         } finally {
             if (file_exists($tempFile)) {

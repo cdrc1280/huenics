@@ -16,7 +16,9 @@ class RemoveEditFromQuotationAndPoTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Quotation $quotation;
+
     protected PurchaseOrder $po;
 
     protected function setUp(): void

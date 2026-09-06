@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\AccountingDashboard;
 use App\Filament\Resources\QuotationResource;
 use App\Filament\Resources\RequestedQuotationResource;
+use App\Filament\Widgets\AccountingOverviewWidget;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\ProductComponent;
@@ -12,6 +14,7 @@ use App\Models\Quotation;
 use App\Models\RequestedQuotation;
 use App\Models\User;
 use App\Services\AccountingReportService;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -27,29 +30,29 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         parent::setUp();
 
         $this->adminUser = User::create([
-            'name'     => 'Accounting Lead',
-            'email'    => 'accounting@huenics.com',
+            'name' => 'Accounting Lead',
+            'email' => 'accounting@huenics.com',
             'password' => bcrypt('password'),
-            'role'     => User::ROLE_ADMIN,
+            'role' => User::ROLE_ADMIN,
         ]);
     }
 
     public function test_purchase_order_payment_terms_cod_and_pdc_are_considered_paid(): void
     {
         $poCod = PurchaseOrder::create([
-            'po_number'           => 'PO-TEST-COD-01',
-            'order_date'          => now()->subDays(30)->toDateString(),
-            'customer_name'       => 'Megaworld Construction Corp',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 150000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'status'              => PurchaseOrder::STATUS_DELIVERED,
+            'po_number' => 'PO-TEST-COD-01',
+            'order_date' => now()->subDays(30)->toDateString(),
+            'customer_name' => 'Megaworld Construction Corp',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 150000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
             'actual_delivery_date' => now()->toDateString(),
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_COD,
-            'payment_terms'       => 'Cash On Delivery (COD) — Considered Paid',
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_PAID,
-            'paid_at'             => now(),
-            'is_completed'        => true,
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_COD,
+            'payment_terms' => 'Cash On Delivery (COD) — Considered Paid',
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_PAID,
+            'paid_at' => now(),
+            'is_completed' => true,
         ]);
 
         $this->assertTrue($poCod->isPaid());
@@ -57,21 +60,21 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $this->assertEquals('success', $poCod->due_status_color);
 
         $poPdc = PurchaseOrder::create([
-            'po_number'           => 'PO-TEST-PDC-15',
-            'order_date'          => now()->subDays(30)->toDateString(),
-            'customer_name'       => 'DMCI Holdings',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 280000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'status'              => PurchaseOrder::STATUS_DELIVERED,
+            'po_number' => 'PO-TEST-PDC-15',
+            'order_date' => now()->subDays(30)->toDateString(),
+            'customer_name' => 'DMCI Holdings',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 280000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
             'actual_delivery_date' => now()->toDateString(),
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_PDC_15,
-            'payment_terms'       => 'Post Dated Check (PDC) - 15 Days — Considered Paid',
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_PAID,
-            'paid_at'             => now(),
-            'pdc_check_number'    => 'CHK-BDO-98214',
-            'pdc_bank'            => 'BDO Unibank',
-            'is_completed'        => true,
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_PDC_15,
+            'payment_terms' => 'Post Dated Check (PDC) - 15 Days — Considered Paid',
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_PAID,
+            'paid_at' => now(),
+            'pdc_check_number' => 'CHK-BDO-98214',
+            'pdc_bank' => 'BDO Unibank',
+            'is_completed' => true,
         ]);
 
         $this->assertTrue($poPdc->isPaid());
@@ -82,18 +85,18 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     {
         // 1. Due in 5 days -> Warning
         $poWarning = PurchaseOrder::create([
-            'po_number'           => 'PO-TEST-CREDIT-WARN',
-            'order_date'          => now()->subDays(30)->toDateString(),
-            'customer_name'       => 'Ayala Land Premier',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 450000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'status'              => PurchaseOrder::STATUS_DELIVERED,
+            'po_number' => 'PO-TEST-CREDIT-WARN',
+            'order_date' => now()->subDays(30)->toDateString(),
+            'customer_name' => 'Ayala Land Premier',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 450000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
             'actual_delivery_date' => now()->subDays(25)->toDateString(),
-            'payment_due_date'    => now()->addDays(5)->toDateString(),
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_UNPAID,
-            'is_completed'        => false,
+            'payment_due_date' => now()->addDays(5)->toDateString(),
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_UNPAID,
+            'is_completed' => false,
         ]);
 
         $this->assertFalse($poWarning->isPaid());
@@ -102,18 +105,18 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
 
         // 2. Overdue by 4 days -> Danger
         $poOverdue = PurchaseOrder::create([
-            'po_number'           => 'PO-TEST-CREDIT-OVERDUE',
-            'order_date'          => now()->subDays(35)->toDateString(),
-            'customer_name'       => 'Filinvest Land',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 320000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'status'              => PurchaseOrder::STATUS_DELIVERED,
+            'po_number' => 'PO-TEST-CREDIT-OVERDUE',
+            'order_date' => now()->subDays(35)->toDateString(),
+            'customer_name' => 'Filinvest Land',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 320000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
             'actual_delivery_date' => now()->subDays(34)->toDateString(),
-            'payment_due_date'    => now()->subDays(4)->toDateString(),
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_UNPAID,
-            'is_completed'        => false,
+            'payment_due_date' => now()->subDays(4)->toDateString(),
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_UNPAID,
+            'is_completed' => false,
         ]);
 
         $this->assertFalse($poOverdue->isPaid());
@@ -124,15 +127,15 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     public function test_payment_reminder_email_is_rate_limited_to_once_per_day_per_po(): void
     {
         $po = PurchaseOrder::create([
-            'po_number'           => 'PO-TEST-REMINDER-01',
-            'order_date'          => now()->subDays(10)->toDateString(),
-            'customer_name'       => 'Robinsons Land Corp',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 89000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
-            'payment_due_date'    => now()->addDays(3)->toDateString(),
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_UNPAID,
+            'po_number' => 'PO-TEST-REMINDER-01',
+            'order_date' => now()->subDays(10)->toDateString(),
+            'customer_name' => 'Robinsons Land Corp',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 89000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
+            'payment_due_date' => now()->addDays(3)->toDateString(),
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_UNPAID,
         ]);
 
         // Initially no reminder was sent today -> allowed
@@ -148,17 +151,17 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     public function test_accounting_report_service_streams_pdf_and_csv(): void
     {
         PurchaseOrder::create([
-            'po_number'           => 'PO-REPORT-01',
-            'order_date'          => now()->subDays(20)->toDateString(),
-            'customer_name'       => 'San Miguel Properties',
-            'sales_agent_id'      => $this->adminUser->id,
-            'order_amount'        => 500000.00,
-            'delivery_status'     => PurchaseOrder::DELIVERY_DELIVERED,
-            'status'              => PurchaseOrder::STATUS_DELIVERED,
+            'po_number' => 'PO-REPORT-01',
+            'order_date' => now()->subDays(20)->toDateString(),
+            'customer_name' => 'San Miguel Properties',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 500000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
+            'status' => PurchaseOrder::STATUS_DELIVERED,
             'actual_delivery_date' => now()->subDays(10)->toDateString(),
-            'payment_due_date'    => now()->addDays(20)->toDateString(),
-            'payment_term_type'   => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
-            'payment_status'      => PurchaseOrder::PAYMENT_STATUS_UNPAID,
+            'payment_due_date' => now()->addDays(20)->toDateString(),
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_UNPAID,
         ]);
 
         $service = app(AccountingReportService::class);
@@ -178,51 +181,51 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     {
         // 1. Create parent luminaire product
         $parent = Product::create([
-            'sku'            => 'LUM-CITIZEN-50W',
+            'sku' => 'LUM-CITIZEN-50W',
             'canonical_name' => 'Citizen LED High Bay 50W 4000K',
-            'selling_price'  => 3500.00,
-            'is_active'      => true,
+            'selling_price' => 3500.00,
+            'is_active' => true,
         ]);
 
         // 2. Create subcomponent 1: Citizen LED COB chip (stock = 100)
         $cobPart = Product::create([
-            'sku'            => 'PART-COB-CLU048',
+            'sku' => 'PART-COB-CLU048',
             'canonical_name' => 'Citizen CLU048 COB LED 4000K',
-            'selling_price'  => 850.00,
-            'is_active'      => true,
+            'selling_price' => 850.00,
+            'is_active' => true,
         ]);
         InventoryItem::create([
-            'product_id'       => $cobPart->id,
+            'product_id' => $cobPart->id,
             'quantity_on_hand' => 100,
-            'unit'             => 'pcs',
+            'unit' => 'pcs',
         ]);
 
         // 3. Create subcomponent 2: 50W LED Driver (stock = 40)
         $driverPart = Product::create([
-            'sku'            => 'PART-DRV-50W',
+            'sku' => 'PART-DRV-50W',
             'canonical_name' => 'Meanwell 50W IP65 Driver',
-            'selling_price'  => 650.00,
-            'is_active'      => true,
+            'selling_price' => 650.00,
+            'is_active' => true,
         ]);
         InventoryItem::create([
-            'product_id'       => $driverPart->id,
+            'product_id' => $driverPart->id,
             'quantity_on_hand' => 40,
-            'unit'             => 'pcs',
+            'unit' => 'pcs',
         ]);
 
         // 4. Attach both as subcomponents (1 COB, 1 Driver per finished luminaire)
         ProductComponent::create([
-            'parent_product_id'    => $parent->id,
+            'parent_product_id' => $parent->id,
             'component_product_id' => $cobPart->id,
-            'component_name'       => $cobPart->canonical_name,
-            'quantity'             => 1.0,
+            'component_name' => $cobPart->canonical_name,
+            'quantity' => 1.0,
         ]);
 
         ProductComponent::create([
-            'parent_product_id'    => $parent->id,
+            'parent_product_id' => $parent->id,
             'component_product_id' => $driverPart->id,
-            'component_name'       => $driverPart->canonical_name,
-            'quantity'             => 1.0,
+            'component_name' => $driverPart->canonical_name,
+            'quantity' => 1.0,
         ]);
 
         // 5. Parent BOM capacity must bottleneck at the driver (min(100, 40) = 40 units)
@@ -236,26 +239,26 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         Cache::flush();
 
         $product = Product::create([
-            'sku'            => 'TEST-LUM-01',
+            'sku' => 'TEST-LUM-01',
             'canonical_name' => 'High Bay Luminaire 100W',
-            'selling_price'  => 5000.00,
-            'is_active'      => true,
+            'selling_price' => 5000.00,
+            'is_active' => true,
         ]);
 
         $response = $this->post('/quotation/generate-unofficial', [
-            'customer_name'    => 'Apex Engineering',
+            'customer_name' => 'Apex Engineering',
             'customer_company' => 'Apex Construction Group',
-            'email'            => 'procurement@apex.ph',
-            'phone_no'         => '09171234567',
-            'project_name'     => 'Clark Logistics Hub',
+            'email' => 'procurement@apex.ph',
+            'phone_no' => '09171234567',
+            'project_name' => 'Clark Logistics Hub',
             'project_location' => 'Clark Freeport Zone, Pampanga',
-            'action'           => 'view',
-            'items'            => [
+            'action' => 'view',
+            'items' => [
                 [
-                    'product_id'  => $product->id,
+                    'product_id' => $product->id,
                     'description' => $product->canonical_name,
-                    'quantity'    => 10,
-                    'unit_price'  => 5000.00,
+                    'quantity' => 10,
+                    'unit_price' => 5000.00,
                 ],
             ],
         ]);
@@ -264,8 +267,8 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $response->assertViewIs('customer.quotation-success');
 
         $this->assertDatabaseHas('quotations', [
-            'customer_name'     => 'Apex Engineering',
-            'customer_email'    => 'procurement@apex.ph',
+            'customer_name' => 'Apex Engineering',
+            'customer_email' => 'procurement@apex.ph',
             'is_online_request' => true,
         ]);
 
@@ -279,12 +282,12 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     public function test_requested_quotation_conversion_to_official_quotation(): void
     {
         $onlineQuote = RequestedQuotation::create([
-            'quotation_number'  => 'Q-ONLINE-TEST-01',
-            'quotation_date'    => now()->toDateString(),
-            'customer_name'     => 'BGC High Rise Dev Corp',
-            'customer_email'    => 'bgc@construction.ph',
-            'total_amount'      => 75000.00,
-            'status'            => Quotation::STATUS_PENDING,
+            'quotation_number' => 'Q-ONLINE-TEST-01',
+            'quotation_date' => now()->toDateString(),
+            'customer_name' => 'BGC High Rise Dev Corp',
+            'customer_email' => 'bgc@construction.ph',
+            'total_amount' => 75000.00,
+            'status' => Quotation::STATUS_PENDING,
             'is_online_request' => true,
         ]);
 
@@ -304,31 +307,31 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     public function test_inventory_item_ownership_tracking_and_scopes(): void
     {
         $productCompany = Product::create([
-            'sku'            => 'SKU-OWNED-01',
+            'sku' => 'SKU-OWNED-01',
             'canonical_name' => 'Company Owned LED Tube',
-            'selling_price'  => 350.00,
-            'is_active'      => true,
+            'selling_price' => 350.00,
+            'is_active' => true,
         ]);
 
         $itemOwned = InventoryItem::create([
-            'product_id'       => $productCompany->id,
+            'product_id' => $productCompany->id,
             'quantity_on_hand' => 500,
-            'unit'             => 'pcs',
-            'is_owned'         => true,
+            'unit' => 'pcs',
+            'is_owned' => true,
         ]);
 
         $productConsigned = Product::create([
-            'sku'            => 'SKU-CONSIGN-01',
+            'sku' => 'SKU-CONSIGN-01',
             'canonical_name' => 'Consigned Emergency Light Kit',
-            'selling_price'  => 1200.00,
-            'is_active'      => true,
+            'selling_price' => 1200.00,
+            'is_active' => true,
         ]);
 
         $itemConsigned = InventoryItem::create([
-            'product_id'       => $productConsigned->id,
+            'product_id' => $productConsigned->id,
             'quantity_on_hand' => 100,
-            'unit'             => 'pcs',
-            'is_owned'         => false,
+            'unit' => 'pcs',
+            'is_owned' => false,
         ]);
 
         $this->assertTrue((bool) $itemOwned->is_owned);
@@ -346,30 +349,30 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
     public function test_subcomponent_creation_guarantees_inventory_item(): void
     {
         $parent = Product::create([
-            'sku'            => 'LUM-PARENT-01',
+            'sku' => 'LUM-PARENT-01',
             'canonical_name' => 'Solar Streetlight 60W',
-            'selling_price'  => 9500.00,
-            'is_active'      => true,
+            'selling_price' => 9500.00,
+            'is_active' => true,
         ]);
 
         $childPart = Product::create([
-            'sku'            => 'PART-SOLAR-CELL',
+            'sku' => 'PART-SOLAR-CELL',
             'canonical_name' => 'Monocrystalline Solar Panel 60W',
-            'selling_price'  => 3200.00,
-            'is_active'      => true,
+            'selling_price' => 3200.00,
+            'is_active' => true,
         ]);
 
         ProductComponent::create([
-            'parent_product_id'    => $parent->id,
+            'parent_product_id' => $parent->id,
             'component_product_id' => $childPart->id,
-            'component_name'       => $childPart->canonical_name,
-            'quantity'             => 1.0,
-            'unit'                 => 'pcs',
+            'component_name' => $childPart->canonical_name,
+            'quantity' => 1.0,
+            'unit' => 'pcs',
         ]);
 
         $this->assertDatabaseHas('inventory_items', [
             'product_id' => $childPart->id,
-            'is_owned'   => true,
+            'is_owned' => true,
         ]);
     }
 
@@ -378,16 +381,16 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $this->actingAs($this->adminUser);
 
         // Verify AccountingOverviewWidget is registered in getHeaderWidgets of AccountingDashboard
-        $page = new \App\Filament\Pages\AccountingDashboard();
+        $page = new AccountingDashboard;
         $reflection = new \ReflectionClass($page);
         $method = $reflection->getMethod('getHeaderWidgets');
         $method->setAccessible(true);
         $widgets = $method->invoke($page);
 
-        $this->assertContains(\App\Filament\Widgets\AccountingOverviewWidget::class, $widgets);
+        $this->assertContains(AccountingOverviewWidget::class, $widgets);
 
         // Verify AccountingOverviewWidget renders stats cleanly
-        $widget = new \App\Filament\Widgets\AccountingOverviewWidget();
+        $widget = new AccountingOverviewWidget;
         $widgetReflection = new \ReflectionClass($widget);
         $getStatsMethod = $widgetReflection->getMethod('getStats');
         $getStatsMethod->setAccessible(true);
@@ -406,16 +409,16 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
 
         // 1. Create an unpaid purchase order requiring follow-up (due in 5 days)
         $poUrgent = PurchaseOrder::create([
-            'po_number'            => 'PO-EMAIL-TEST-01',
-            'order_date'           => now()->subDays(25)->toDateString(),
-            'customer_name'        => 'Metro Pacific Tollways Corp',
-            'sales_agent_id'       => $this->adminUser->id,
-            'order_amount'         => 185000.00,
-            'delivery_status'      => PurchaseOrder::DELIVERY_DELIVERED,
+            'po_number' => 'PO-EMAIL-TEST-01',
+            'order_date' => now()->subDays(25)->toDateString(),
+            'customer_name' => 'Metro Pacific Tollways Corp',
+            'sales_agent_id' => $this->adminUser->id,
+            'order_amount' => 185000.00,
+            'delivery_status' => PurchaseOrder::DELIVERY_DELIVERED,
             'actual_delivery_date' => now()->subDays(25)->toDateString(),
-            'payment_term_type'    => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
-            'payment_due_date'     => now()->addDays(5)->toDateString(),
-            'payment_status'       => PurchaseOrder::PAYMENT_STATUS_UNPAID,
+            'payment_term_type' => PurchaseOrder::PAYMENT_TERM_CREDIT_30,
+            'payment_due_date' => now()->addDays(5)->toDateString(),
+            'payment_status' => PurchaseOrder::PAYMENT_STATUS_UNPAID,
         ]);
 
         // 2. Verify model's generatePaymentReminderEmail payload
@@ -427,7 +430,7 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $this->assertStringContainsString('BDO Unibank', $emailPayload['body']);
 
         // 3. Initialize AccountingDashboard and test email section auto-selection
-        $dashboard = new \App\Filament\Pages\AccountingDashboard();
+        $dashboard = new AccountingDashboard;
         $dashboard->mount();
 
         $this->assertEquals($poUrgent->id, $dashboard->selectedPoId);
@@ -457,7 +460,7 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $this->assertEquals('payment_history', $dashboard->activeTab);
 
         // 7. Verify both reports are downloadable via AccountingReportService
-        $service = app(\App\Services\AccountingReportService::class);
+        $service = app(AccountingReportService::class);
         $recCsv = $service->exportReceivablesCsv();
         $this->assertEquals(200, $recCsv->getStatusCode());
 
@@ -476,13 +479,13 @@ class AccountingAndPurchaseOrderPaymentTest extends TestCase
         $this->actingAs($this->adminUser);
 
         // Verify RequestedQuotationResource table configuration executes with no missing constant errors
-        $resource = new RequestedQuotationResource();
+        $resource = new RequestedQuotationResource;
         $this->assertNotNull($resource);
 
         // Ensure actions position constant resolves properly to BeforeColumns
         $this->assertEquals(
-            \Filament\Tables\Enums\RecordActionsPosition::BeforeColumns,
-            \Filament\Tables\Enums\RecordActionsPosition::BeforeColumns
+            RecordActionsPosition::BeforeColumns,
+            RecordActionsPosition::BeforeColumns
         );
     }
 }

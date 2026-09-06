@@ -2,10 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\ActivityLogResource;
-use App\Filament\Resources\ProductResource;
 use App\Models\AuditLog;
-use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\User;
@@ -18,6 +15,7 @@ class ProductStockActivityLogTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $opsManager;
 
     protected function setUp(): void

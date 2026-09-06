@@ -32,7 +32,7 @@ return new class extends Migration
         foreach ($this->tables as $table) {
             if (Schema::hasTable($table)) {
                 Schema::table($table, function (Blueprint $tableBlueprint) use ($table) {
-                    if (!Schema::hasColumn($table, 'deleted_at')) {
+                    if (! Schema::hasColumn($table, 'deleted_at')) {
                         $tableBlueprint->softDeletes();
                     }
                 });

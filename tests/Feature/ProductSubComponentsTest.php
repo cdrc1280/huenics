@@ -9,7 +9,8 @@ use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\ProductComponent;
 use App\Models\User;
-use Filament\Tables\Table;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,8 +25,8 @@ class ProductSubComponentsTest extends TestCase
         parent::setUp();
 
         $this->admin = User::factory()->create([
-            'role'  => User::ROLE_ADMIN,
-            'name'  => 'Admin User',
+            'role' => User::ROLE_ADMIN,
+            'name' => 'Admin User',
             'email' => 'admin@huenics.com',
         ]);
     }
@@ -33,48 +34,48 @@ class ProductSubComponentsTest extends TestCase
     public function test_product_component_schema_and_model_persistence(): void
     {
         $parent = Product::create([
-            'product_code'      => 'HISI-BULB-9W',
-            'canonical_name'    => 'LED Bulb 9W Daylight E27',
-            'category'          => 'LED BULB',
-            'wattage'           => '9W',
-            'voltage'           => '220V',
+            'product_code' => 'HISI-BULB-9W',
+            'canonical_name' => 'LED Bulb 9W Daylight E27',
+            'category' => 'LED BULB',
+            'wattage' => '9W',
+            'voltage' => '220V',
             'color_temperature' => '6500K',
-            'unit_default'      => 'pcs',
-            'selling_price'     => 185.00,
-            'base_cost_price'   => 95.00,
-            'is_huenics_owned'  => true,
-            'is_composite'      => true,
-            'is_active'         => true,
+            'unit_default' => 'pcs',
+            'selling_price' => 185.00,
+            'base_cost_price' => 95.00,
+            'is_huenics_owned' => true,
+            'is_composite' => true,
+            'is_active' => true,
         ]);
 
         $component = ProductComponent::create([
             'parent_product_id' => $parent->id,
-            'component_group'   => 'Base Socket',
-            'option_name'       => 'E27 Aluminum Base',
-            'product_code'      => 'BASE-E27-AL',
-            'component_name'    => 'E27 Aluminum Screw Base Cap',
-            'category'          => 'Socket Hardware',
-            'wattage'           => null,
-            'voltage'           => '220V',
+            'component_group' => 'Base Socket',
+            'option_name' => 'E27 Aluminum Base',
+            'product_code' => 'BASE-E27-AL',
+            'component_name' => 'E27 Aluminum Screw Base Cap',
+            'category' => 'Socket Hardware',
+            'wattage' => null,
+            'voltage' => '220V',
             'color_temperature' => null,
-            'unit'              => 'pcs',
-            'cost_price'        => 12.50,
-            'quantity'          => 1.0000,
-            'image_path'        => 'products/components/e27-base.jpg',
-            'notes'             => 'Standard nickel-plated aluminum screw thread',
-            'is_default'        => true,
+            'unit' => 'pcs',
+            'cost_price' => 12.50,
+            'quantity' => 1.0000,
+            'image_path' => 'products/components/e27-base.jpg',
+            'notes' => 'Standard nickel-plated aluminum screw thread',
+            'is_default' => true,
         ]);
 
         $this->assertDatabaseHas('product_components', [
-            'id'                => $component->id,
+            'id' => $component->id,
             'parent_product_id' => $parent->id,
-            'product_code'      => 'BASE-E27-AL',
-            'component_name'    => 'E27 Aluminum Screw Base Cap',
-            'category'          => 'Socket Hardware',
-            'voltage'           => '220V',
-            'unit'              => 'pcs',
-            'cost_price'        => 12.50,
-            'quantity'          => 1.0000,
+            'product_code' => 'BASE-E27-AL',
+            'component_name' => 'E27 Aluminum Screw Base Cap',
+            'category' => 'Socket Hardware',
+            'voltage' => '220V',
+            'unit' => 'pcs',
+            'cost_price' => 12.50,
+            'quantity' => 1.0000,
         ]);
 
         $this->assertEquals('BASE-E27-AL', $component->effective_code);
@@ -88,39 +89,39 @@ class ProductSubComponentsTest extends TestCase
     public function test_component_inherits_specs_from_linked_catalog_product(): void
     {
         $parent = Product::create([
-            'product_code'   => 'HISI-BULB-12W',
+            'product_code' => 'HISI-BULB-12W',
             'canonical_name' => 'LED Bulb 12W Warm White',
-            'unit_default'   => 'pcs',
-            'selling_price'  => 220.00,
+            'unit_default' => 'pcs',
+            'selling_price' => 220.00,
         ]);
 
         $driverCatalog = Product::create([
-            'product_code'      => 'DRV-12W-CC',
-            'canonical_name'    => 'Constant Current LED Driver 12W',
-            'category'          => 'LED Drivers',
-            'wattage'           => '12W',
-            'voltage'           => 'DC12V',
+            'product_code' => 'DRV-12W-CC',
+            'canonical_name' => 'Constant Current LED Driver 12W',
+            'category' => 'LED Drivers',
+            'wattage' => '12W',
+            'voltage' => 'DC12V',
             'color_temperature' => null,
-            'unit_default'      => 'pcs',
-            'base_cost_price'   => 65.00,
-            'selling_price'     => 95.00,
-            'image_path'        => 'products/driver-12w.jpg',
-            'is_huenics_owned'  => true,
+            'unit_default' => 'pcs',
+            'base_cost_price' => 65.00,
+            'selling_price' => 95.00,
+            'image_path' => 'products/driver-12w.jpg',
+            'is_huenics_owned' => true,
         ]);
 
         // Create inventory for the driver catalog part
         InventoryItem::create([
-            'product_id'       => $driverCatalog->id,
+            'product_id' => $driverCatalog->id,
             'quantity_on_hand' => 150.00,
-            'unit'             => 'pcs',
-            'location'         => 'Rack A-2',
+            'unit' => 'pcs',
+            'location' => 'Rack A-2',
         ]);
 
         $component = ProductComponent::create([
-            'parent_product_id'    => $parent->id,
+            'parent_product_id' => $parent->id,
             'component_product_id' => $driverCatalog->id,
-            'quantity'             => 2.0000,
-            'is_default'           => true,
+            'quantity' => 2.0000,
+            'is_default' => true,
         ]);
 
         // Specs should be dynamically inherited from the linked catalog product
@@ -140,48 +141,48 @@ class ProductSubComponentsTest extends TestCase
     public function test_parent_product_calculates_total_bom_assembly_cost(): void
     {
         $bulb = Product::create([
-            'product_code'   => 'HISI-BULB-COMPLETE',
+            'product_code' => 'HISI-BULB-COMPLETE',
             'canonical_name' => 'Complete Modular Bulb Assembly',
-            'unit_default'   => 'pcs',
-            'selling_price'  => 350.00,
-            'is_composite'   => true,
+            'unit_default' => 'pcs',
+            'selling_price' => 350.00,
+            'is_composite' => true,
         ]);
 
         // Component 1: Custom part (Socket: 1 pc @ ₱15.00)
         ProductComponent::create([
             'parent_product_id' => $bulb->id,
-            'component_name'    => 'Aluminum Socket',
-            'cost_price'        => 15.00,
-            'quantity'          => 1.0000,
+            'component_name' => 'Aluminum Socket',
+            'cost_price' => 15.00,
+            'quantity' => 1.0000,
         ]);
 
         // Component 2: Catalog driver (1 pc @ ₱80.00)
         $driver = Product::create([
-            'product_code'    => 'DRV-BOM',
-            'canonical_name'  => 'Isolated Driver',
+            'product_code' => 'DRV-BOM',
+            'canonical_name' => 'Isolated Driver',
             'base_cost_price' => 80.00,
-            'unit_default'    => 'pcs',
+            'unit_default' => 'pcs',
         ]);
         ProductComponent::create([
-            'parent_product_id'    => $bulb->id,
+            'parent_product_id' => $bulb->id,
             'component_product_id' => $driver->id,
-            'quantity'             => 1.0000,
+            'quantity' => 1.0000,
         ]);
 
         // Component 3: Custom LED Chipboard (2 pcs @ ₱45.00 each = ₱90.00)
         ProductComponent::create([
             'parent_product_id' => $bulb->id,
-            'component_name'    => 'SMD Chip Plate',
-            'cost_price'        => 45.00,
-            'quantity'          => 2.0000,
+            'component_name' => 'SMD Chip Plate',
+            'cost_price' => 45.00,
+            'quantity' => 2.0000,
         ]);
 
         // Component 4: Glass Diffuser (1 pc @ ₱25.00)
         ProductComponent::create([
             'parent_product_id' => $bulb->id,
-            'component_name'    => 'Frosted Glass Diffuser',
-            'cost_price'        => 25.00,
-            'quantity'          => 1.0000,
+            'component_name' => 'Frosted Glass Diffuser',
+            'cost_price' => 25.00,
+            'quantity' => 1.0000,
         ]);
 
         $bulb = $bulb->fresh();
@@ -214,32 +215,32 @@ class ProductSubComponentsTest extends TestCase
 
     public function test_sub_components_relation_manager_form_schema_builds_without_missing_classes(): void
     {
-        $relationManager = new SubComponentsRelationManager();
-        $schema = \Filament\Schemas\Schema::make($relationManager);
-        
+        $relationManager = new SubComponentsRelationManager;
+        $schema = Schema::make($relationManager);
+
         $configuredSchema = $relationManager->form($schema);
         $components = $configuredSchema->getComponents();
 
         $this->assertNotEmpty($components, 'SubComponentsRelationManager form schema must contain components');
-        $this->assertInstanceOf(\Filament\Schemas\Components\Section::class, $components[0]);
+        $this->assertInstanceOf(Section::class, $components[0]);
     }
 
     public function test_inventory_items_table_renders_cleanly_with_null_dates(): void
     {
         $product = Product::create([
-            'product_code'   => 'HISI-TEST-NULL-DATE',
+            'product_code' => 'HISI-TEST-NULL-DATE',
             'canonical_name' => 'LED Test Null Date Product',
-            'unit_default'   => 'pcs',
-            'selling_price'  => 100.00,
+            'unit_default' => 'pcs',
+            'selling_price' => 100.00,
         ]);
 
         $inventoryItem = InventoryItem::create([
-            'product_id'        => $product->id,
-            'quantity_on_hand'  => 50,
-            'reorder_point'     => null,
-            'inbound_date'      => null,
-            'date_released'     => null,
-            'unit'              => 'pcs',
+            'product_id' => $product->id,
+            'quantity_on_hand' => 50,
+            'reorder_point' => null,
+            'inbound_date' => null,
+            'date_released' => null,
+            'unit' => 'pcs',
         ]);
 
         $this->actingAs($this->admin);

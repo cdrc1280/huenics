@@ -12,25 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('quotations', function (Blueprint $table) {
-            if (!Schema::hasColumn('quotations', 'approved_by')) {
+            if (! Schema::hasColumn('quotations', 'approved_by')) {
                 $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             }
-            if (!Schema::hasColumn('quotations', 'approved_at')) {
+            if (! Schema::hasColumn('quotations', 'approved_at')) {
                 $table->dateTime('approved_at')->nullable();
             }
-            if (!Schema::hasColumn('quotations', 'reviewed_by')) {
+            if (! Schema::hasColumn('quotations', 'reviewed_by')) {
                 $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             }
-            if (!Schema::hasColumn('quotations', 'reviewed_at')) {
+            if (! Schema::hasColumn('quotations', 'reviewed_at')) {
                 $table->dateTime('reviewed_at')->nullable();
             }
-            if (!Schema::hasColumn('quotations', 'is_official_po')) {
+            if (! Schema::hasColumn('quotations', 'is_official_po')) {
                 $table->boolean('is_official_po')->default(false);
             }
-            if (!Schema::hasColumn('quotations', 'customer_signature_name')) {
+            if (! Schema::hasColumn('quotations', 'customer_signature_name')) {
                 $table->string('customer_signature_name')->nullable();
             }
-            if (!Schema::hasColumn('quotations', 'customer_signed_at')) {
+            if (! Schema::hasColumn('quotations', 'customer_signed_at')) {
                 $table->dateTime('customer_signed_at')->nullable();
             }
         });
@@ -53,13 +53,13 @@ return new class extends Migration
             $cols = [];
             foreach ([
                 'approved_by', 'approved_at', 'reviewed_by', 'reviewed_at',
-                'is_official_po', 'customer_signature_name', 'customer_signed_at'
+                'is_official_po', 'customer_signature_name', 'customer_signed_at',
             ] as $col) {
                 if (Schema::hasColumn('quotations', $col)) {
                     $cols[] = $col;
                 }
             }
-            if (!empty($cols)) {
+            if (! empty($cols)) {
                 $table->dropColumn($cols);
             }
         });

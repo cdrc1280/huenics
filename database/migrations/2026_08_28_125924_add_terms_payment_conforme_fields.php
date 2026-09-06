@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -31,7 +32,7 @@ return new class extends Migration
         });
 
         // Warranty period data migration: convert '2_years_6_months' to '2_years'
-        \Illuminate\Support\Facades\DB::table('purchase_orders')
+        DB::table('purchase_orders')
             ->where('warranty_period', '2_years_6_months')
             ->update(['warranty_period' => '2_years']);
     }
@@ -51,7 +52,7 @@ return new class extends Migration
         });
 
         // Revert warranty period data
-        \Illuminate\Support\Facades\DB::table('purchase_orders')
+        DB::table('purchase_orders')
             ->where('warranty_period', '2_years')
             ->update(['warranty_period' => '2_years_6_months']);
     }
