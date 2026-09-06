@@ -259,25 +259,25 @@
                             <span id="luminaire-power-label"><span class="hidden xs:inline">COB: </span>ON</span>
                         </button>
 
-                        <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
-                        <div class="flex-1 flex items-center justify-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
-                            <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
-                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer text-center"
+                        <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) - Rigid 4-Column Grid Guaranteeing Zero Layout Shift -->
+                        <div class="flex-1 grid grid-cols-4 gap-0.5 bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
+                            <button type="button" data-cct="3000K" onclick="window.setLuminaireCCT('3000K', this)" 
+                                    class="cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-md shadow-amber-500/30 cursor-pointer text-center"
                                     title="3000K Warm White (Architectural Amber • 24° Spot • CRI 80)">
                                 3000K
                             </button>
-                            <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
-                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                            <button type="button" data-cct="3500K" onclick="window.setLuminaireCCT('3500K', this)" 
+                                    class="cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="3500K Neutral Warm (Hospitality Sunset • 24° Spot • CRI 80)">
                                 3500K
                             </button>
-                            <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
-                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                            <button type="button" data-cct="4000K" onclick="window.setLuminaireCCT('4000K', this)" 
+                                    class="cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="4000K Natural White (Commercial Crisp • 24° Spot • CRI 80)">
                                 4000K
                             </button>
-                            <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
-                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                            <button type="button" data-cct="5000K" onclick="window.setLuminaireCCT('5000K', this)" 
+                                    class="cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="5000K Cool White (Industrial Daylight • 24° Spot • CRI 80)">
                                 5000K
                             </button>
@@ -2136,13 +2136,15 @@
             currentCCT = cct;
             const profile = cctProfiles[cct];
 
-            // Update CCT Buttons with High-Contrast Active State
+            // Update CCT Buttons with High-Contrast Active State (Rigid Grid Cells: Zero Shift or Collapse)
             document.querySelectorAll('.cct-btn').forEach(b => {
-                b.className = 'cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center';
+                const isSelected = b.getAttribute('data-cct') === cct || b === btnEl;
+                if (isSelected) {
+                    b.className = 'cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 cursor-pointer text-center ' + profile.btnClass;
+                } else {
+                    b.className = 'cct-btn w-full py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 cursor-pointer text-center text-slate-300 hover:text-white';
+                }
             });
-            if (btnEl) {
-                btnEl.className = 'cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 ' + profile.btnClass + ' cursor-pointer text-center';
-            }
 
             // Update Ambient Halo & Tech Badge
             const halo = document.getElementById('luminaire-ambient-halo');
