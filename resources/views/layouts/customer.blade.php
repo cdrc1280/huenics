@@ -21,14 +21,18 @@
 
     <!-- Compiled Production Tailwind CSS & Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Production Vector Icons (Lucide Icons) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- GSAP 3.12 & ScrollTrigger for High-Performance Motion -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <!-- Three.js for 3D Photonic Luminaire Stage -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- High-Performance CDN Preconnect & DNS-Prefetch -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <!-- Production Vector Icons (Lucide Icons) & Motion (Deferred Non-blocking) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    @stack('styles')
     <style>
         [x-cloak] { display: none !important; }
         
@@ -1700,5 +1704,10 @@
             if (window.lucide) lucide.createIcons();
         });
     </script>
+
+    <!-- Page-Specific Scoped Scripts (Async & SPA Swappable) -->
+    <div id="page-scripts-container">
+        @stack('scripts')
+    </div>
 </body>
 </html>

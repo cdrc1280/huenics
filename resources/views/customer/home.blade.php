@@ -1071,6 +1071,8 @@
 @endsection
 
 @push('scripts')
+<!-- Dedicated High-Performance Three.js Engine (Loaded on Home Page Only) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script>
     // Tab Switcher for Floating Hero Estimator Hub
     window.switchHeroTab = function(tab) {
@@ -1164,11 +1166,44 @@
         }
     };
 
-    // Re-initialize 3D physics and icons when view loads
+    // Resilient non-blocking bootstrapper for 3D Luminaire Stage
+    function bootstrapLuminaire() {
+        if (typeof THREE !== 'undefined') {
+            if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
+            return;
+        }
+        const existingScript = document.querySelector('script[src*="three.min.js"]');
+        if (existingScript) {
+            existingScript.addEventListener('load', () => {
+                if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
+            });
+            setTimeout(() => {
+                if (typeof THREE !== 'undefined' && window.initHuenicsLuminaire3D) {
+                    window.initHuenicsLuminaire3D();
+                }
+            }, 100);
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+            script.async = true;
+            script.onload = () => {
+                if (window.initHuenicsLuminaire3D) window.initHuenicsLuminaire3D();
+            };
+            document.head.appendChild(script);
+        }
+    }
+
+    // Re-initialize 3D physics and icons when view loads or on SPA page transitions
     document.addEventListener('DOMContentLoaded', () => {
         if (window.Huenics3D) Huenics3D.init();
         if (window.lucide) lucide.createIcons();
-        if (window.initHuenicsLuminaire3D) initHuenicsLuminaire3D();
+        bootstrapLuminaire();
+    });
+
+    document.addEventListener('huenics:page-loaded', () => {
+        if (window.Huenics3D) Huenics3D.init();
+        if (window.lucide) lucide.createIcons();
+        bootstrapLuminaire();
     });
 
     /* =========================================================================
@@ -1304,6 +1339,10 @@
             const canvas = document.getElementById('luminaire-3d-canvas');
             if (!canvas || typeof THREE === 'undefined') return;
 
+            // Idempotent: Prevent duplicate initialization loops on the same canvas
+            if (canvas.dataset.initialized === 'true') return;
+            canvas.dataset.initialized = 'true';
+
             const container = canvas.parentElement;
             let width = container.clientWidth || 360;
             let height = container.clientHeight || 360;
@@ -1320,7 +1359,7 @@
                 powerPreference: 'high-performance'
             });
             renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.1;
 

@@ -148,20 +148,24 @@ class ErpEnhancementSuiteTest extends TestCase
             'cost_price' => 850.00,
         ]);
 
-        // Create inventory records
-        $parentItem = InventoryItem::create([
-            'product_id' => $parent->id,
-            'quantity_on_hand' => 10,
-            'location' => 'Section A',
-            'unit' => 'pcs',
-        ]);
+        // Create or update inventory records
+        $parentItem = InventoryItem::updateOrCreate(
+            ['product_id' => $parent->id],
+            [
+                'quantity_on_hand' => 10,
+                'location' => 'Section A',
+                'unit' => 'pcs',
+            ]
+        );
 
-        $childItem = InventoryItem::create([
-            'product_id' => $child->id,
-            'quantity_on_hand' => 50,
-            'location' => 'Section B',
-            'unit' => 'pcs',
-        ]);
+        $childItem = InventoryItem::updateOrCreate(
+            ['product_id' => $child->id],
+            [
+                'quantity_on_hand' => 50,
+                'location' => 'Section B',
+                'unit' => 'pcs',
+            ]
+        );
 
         $standaloneProduct = Product::create([
             'canonical_name' => 'Standalone Bulb E27',
