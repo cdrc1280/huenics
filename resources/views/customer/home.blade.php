@@ -178,8 +178,8 @@
                 <div id="luminaire-ambient-halo" class="w-72 h-72 sm:w-96 sm:h-96 lg:w-[440px] lg:h-[440px] rounded-full absolute pointer-events-none -z-0 blur-3xl transition-all duration-700 opacity-80"
                      style="background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(37, 99, 235, 0.15) 50%, transparent 75%);"></div>
 
-                <!-- Clean Mobile Chip Strip: eliminates collisions and overlaps on small viewports (<640px) -->
-                <div class="flex sm:hidden items-center justify-center flex-wrap gap-1.5 mb-3 w-full px-2">
+                <!-- Clean Mobile & Tablet Chip Strip: eliminates collisions and overlaps on viewports (<1024px) -->
+                <div class="flex lg:hidden items-center justify-center flex-wrap gap-1.5 mb-3 w-full px-2">
                     <span class="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 rounded-full shadow-sm border border-amber-300/30 whitespace-nowrap">
                         <i data-lucide="star" class="w-2.5 h-2.5 text-amber-100"></i>
                         <span>20% OFF Volume</span>
@@ -216,31 +216,31 @@
                         </div>
 
                         <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
-                        <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-4 inset-x-0 mx-auto w-fit max-w-[88%] sm:max-w-[85%] bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8px] xs:text-[9px] sm:text-[10px] font-black uppercase tracking-normal sm:tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-300 pointer-events-none z-20 overflow-hidden text-ellipsis whitespace-nowrap">
+                        <div id="luminaire-tech-tag" class="absolute bottom-2.5 sm:bottom-3.5 inset-x-0 mx-auto w-fit max-w-[90%] sm:max-w-[85%] bg-slate-900/90 dark:bg-[#0c1220]/95 text-white font-mono text-[8px] xs:text-[9px] sm:text-[10px] font-black uppercase tracking-normal sm:tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-blue-500/40 backdrop-blur shadow-md flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-300 pointer-events-none z-20 overflow-hidden text-ellipsis whitespace-nowrap">
                             <span id="luminaire-status-dot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                             <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K WARM AMBER • 24° SPOT • CRI 80</span>
                         </div>
                     </div>
 
-                    <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only) -->
+                    <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only - Top Right) -->
                     <div id="hero-badge-discount"
-                         class="hidden sm:flex absolute -top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-amber-500/30"
+                         class="hidden lg:flex absolute top-2 -right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-full shadow-xl border-2 border-amber-300/40 items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-amber-500/30"
                          style="will-change: transform;">
                         <i data-lucide="star" class="w-3.5 h-3.5 text-amber-100"></i>
-                        <span>20% OFF Contractor Volume</span>
+                        <span>20% OFF Volume</span>
                     </div>
 
-                    <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only) -->
+                    <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only - Mid Left) -->
                     <div id="hero-badge-vat"
-                         class="hidden sm:flex absolute -left-4 top-1/4 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-blue-500/20"
+                         class="hidden lg:flex absolute top-1/3 -left-6 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3 py-1.5 rounded-xl shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-blue-500/20"
                          style="will-change: transform;">
                         <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-blue-500"></i>
                         <span>12% BIR VAT Invoicing</span>
                     </div>
 
-                    <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only) -->
+                    <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only - Lower Right Quadrant, Safely Clear of Status Bar) -->
                     <div id="hero-badge-freight"
-                         class="hidden sm:flex absolute -bottom-3 right-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3.5 py-1.5 rounded-full shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-emerald-500/20"
+                         class="hidden lg:flex absolute top-2/3 -right-6 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-3.5 py-1.5 rounded-full shadow-lg text-[11px] font-bold items-center gap-1.5 z-30 pointer-events-auto whitespace-nowrap transition-shadow duration-300 hover:shadow-emerald-500/20"
                          style="will-change: transform;">
                         <i data-lucide="truck" class="w-3.5 h-3.5 text-emerald-500"></i>
                         <span>Free Freight &ge; &#8369; 20,000</span>
@@ -248,36 +248,36 @@
                 </div>
 
                 <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Citizen COB CCT Selection") -->
-                <div class="mt-4 sm:mt-6 w-full max-w-[320px] xs:max-w-[380px] sm:max-w-[480px] lg:max-w-[500px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2 z-20">
+                <div class="mt-4 sm:mt-5 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[400px] bg-slate-900/90 dark:bg-[#0c1427]/95 border border-blue-500/30 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md flex flex-col gap-2 z-20">
                     
                     <!-- Console Tier 1: Primary Power Engine & Kelvin CCT Selector -->
-                    <div class="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
+                    <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2">
                         <!-- Power Switch (ON / OFF) -->
                         <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
                                 class="flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-bold transition-all duration-200 bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap">
                             <i data-lucide="power" class="w-3 sm:w-3.5 h-3 sm:h-3.5"></i>
-                            <span id="luminaire-power-label"><span class="hidden sm:inline">COB: </span>ON</span>
+                            <span id="luminaire-power-label"><span class="hidden xs:inline">COB: </span>ON</span>
                         </button>
 
                         <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
-                        <div class="flex-1 sm:flex-initial flex items-center justify-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
+                        <div class="flex-1 flex items-center justify-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700/60">
                             <button type="button" onclick="window.setLuminaireCCT('3000K', this)" 
-                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer text-center"
+                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 bg-amber-500 text-white shadow-sm cursor-pointer text-center"
                                     title="3000K Warm White (Architectural Amber • 24° Spot • CRI 80)">
                                 3000K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('3500K', this)" 
-                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="3500K Neutral Warm (Hospitality Sunset • 24° Spot • CRI 80)">
                                 3500K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('4000K', this)" 
-                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="4000K Natural White (Commercial Crisp • 24° Spot • CRI 80)">
                                 4000K
                             </button>
                             <button type="button" onclick="window.setLuminaireCCT('5000K', this)" 
-                                    class="cct-btn flex-1 sm:flex-initial px-2 sm:px-2 py-1 rounded-lg text-[9.5px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
+                                    class="cct-btn flex-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-[11px] font-black transition-all duration-200 text-slate-300 hover:text-white cursor-pointer text-center"
                                     title="5000K Cool White (Industrial Daylight • 24° Spot • CRI 80)">
                                 5000K
                             </button>
@@ -285,9 +285,9 @@
                     </div>
 
                     <!-- Console Tier 2: 24° Optic Spot Reflector & Interactive High-Voltage Surge Ignition -->
-                    <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-t-0">
+                    <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2 pt-1.5 border-t border-slate-800/80">
                         <!-- 24° Architectural Optic Badge -->
-                        <div class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300 whitespace-nowrap" 
+                        <div class="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-[9.5px] xs:text-[10px] sm:text-[10.5px] font-mono font-bold text-amber-300 whitespace-nowrap" 
                              title="Precision 24° Architectural Collimated Optic Spot Reflector • CRI 80">
                             <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
@@ -295,9 +295,9 @@
                             <span>24&deg; Optic Spot</span>
                         </div>
 
-                        <!-- Cool Interactive Surge / Pulse Animation Button -->
+                        <!-- Interactive Surge / Pulse Animation Button -->
                         <button type="button" onclick="window.triggerLuminaireSurge()"
-                                class="flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                                class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                                 title="Trigger High-Voltage Photonic Ignition Surge">
                             <i data-lucide="zap" class="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-400 shrink-0"></i>
                             <span>Surge</span>
@@ -1491,6 +1491,19 @@
             backplateMesh.position.set(0, 0, -0.09);
             cobGroup.add(backplateMesh);
 
+            // Extruded Thermal Heatsink Fin Array (Solid rear occlusion & industrial realism)
+            const finGeo = new THREE.BoxGeometry(2.5, 0.045, 0.16);
+            const finMat = new THREE.MeshStandardMaterial({
+                color: 0x475569,
+                metalness: 0.90,
+                roughness: 0.26
+            });
+            for (let i = -3; i <= 3; i++) {
+                const finMesh = new THREE.Mesh(finGeo, finMat);
+                finMesh.position.set(0, i * 0.36, -0.17);
+                cobGroup.add(finMesh);
+            }
+
             // Corner Mounting Screw Relief Notches / Holes (4 corners)
             const holeMat = new THREE.MeshStandardMaterial({
                 color: 0x1e293b,
@@ -1607,6 +1620,19 @@
             phosphorMesh.position.set(0, 0, 0.07);
             cobGroup.add(phosphorMesh);
 
+            // Opaque Rear Light Barrier Disc (Blocks any internal photonic leakage to the rear)
+            const rearBarrierGeo = new THREE.CircleGeometry(0.92, 32);
+            const rearBarrierMat = new THREE.MeshStandardMaterial({
+                color: 0x0f172a,
+                roughness: 0.8,
+                metalness: 0.1,
+                side: THREE.FrontSide
+            });
+            const rearBarrierMesh = new THREE.Mesh(rearBarrierGeo, rearBarrierMat);
+            rearBarrierMesh.position.set(0, 0, 0.035);
+            rearBarrierMesh.rotation.y = Math.PI; // Normals face backward towards negative Z to block rear viewing
+            cobGroup.add(rearBarrierMesh);
+
             // Precision Architectural 24° Faceted Reflector Collet (Mounting Bezel)
             const colletGeo = new THREE.CylinderGeometry(1.18, 0.94, 0.18, 32, 1, true);
             colletGeo.rotateX(Math.PI / 2);
@@ -1636,24 +1662,26 @@
             // 4. PRECISION 24° VOLUMETRIC ARCHITECTURAL BEAM CONE
             // =========================================================
             // Calibrated 24° Spot Optic Cone (Half-angle 12°: tan(12°) = 0.21255)
+            // Emits exclusively from front LED bulb face forward into +Z space
             const beamLength = 4.4;
             const radiusOrigin = 0.88;
             const radiusTerminal = radiusOrigin + beamLength * Math.tan(12 * Math.PI / 180); // ~1.815
             const beamGeo = new THREE.CylinderGeometry(radiusOrigin, radiusTerminal, beamLength, 36, 1, true);
             beamGeo.translate(0, -beamLength / 2, 0);
-            beamGeo.rotateX(Math.PI / 2);
+            beamGeo.rotateX(-Math.PI / 2); // Forward +Z projection from z = 0 to z = +4.4
             const beamTexture = createVolumetricBeamTexture();
             const beamMat = new THREE.MeshBasicMaterial({
                 map: beamTexture,
                 color: cctProfiles[currentCCT].beamHex,
                 transparent: true,
                 opacity: 0.36,
-                side: THREE.DoubleSide,
+                side: THREE.FrontSide,
                 blending: THREE.AdditiveBlending,
-                depthWrite: false
+                depthWrite: false,
+                depthTest: true
             });
             beamConeMesh = new THREE.Mesh(beamGeo, beamMat);
-            beamConeMesh.position.set(0, 0, 0.12);
+            beamConeMesh.position.set(0, 0, 0.14);
             cobGroup.add(beamConeMesh);
 
             // =========================================================
@@ -1713,9 +1741,9 @@
             // =========================================================
             // 7. PHYSICS-BASED DYNAMIC LIGHTING (24° SPOTLIGHT & AMBIENT)
             // =========================================================
-            // Core Point Light for High CRI Local Glow
-            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 4.2, 12, 2.0);
-            corePointLight.position.set(0, 0, 0.45);
+            // Core Point Light for High CRI Local Glow (Focused exclusively on forward phosphor plane)
+            corePointLight = new THREE.PointLight(cctProfiles[currentCCT].hex, 4.2, 8, 2.0);
+            corePointLight.position.set(0, 0, 0.35);
             cobGroup.add(corePointLight);
 
             // Precision 24° Architectural Spotlight (Collimated Optical Cone)
