@@ -161,6 +161,7 @@ class SalesRevenueChartWidget extends ChartWidget
                 });
 
             $qQuery = Quotation::whereNotIn('status', [Quotation::STATUS_REJECTED])
+                ->where('is_online_request', false)
                 ->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                     $q->whereBetween('quotation_date', [$startStr, $endStr])
                         ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))

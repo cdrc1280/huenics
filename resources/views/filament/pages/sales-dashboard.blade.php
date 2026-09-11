@@ -15,7 +15,7 @@
             @livewire(\App\Filament\Widgets\SalesRevenueChartWidget::class, $this->getWidgetData(), key('sales-revenue-chart-widget'))
         </section>
 
-        {{-- 4. Analytics Deep Dive: Conversion Funnel & Top Revenue Products --}}
+        {{-- 4. Analytics Deep Dive: Conversion Funnel, Top Products & Top Client Accounts --}}
         <section aria-label="Sales Conversion and Product Performance" class="w-full" style="margin-bottom: 0;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
                 <div class="w-full">
@@ -23,6 +23,9 @@
                 </div>
                 <div class="w-full">
                     @livewire(\App\Filament\Widgets\TopSellingProductsWidget::class, $this->getWidgetData(), key('top-selling-products-widget'))
+                </div>
+                <div class="w-full">
+                    @livewire(\App\Filament\Widgets\TopCompaniesBySalesWidget::class, $this->getWidgetData(), key('top-companies-by-sales-widget'))
                 </div>
             </div>
         </section>

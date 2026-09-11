@@ -129,7 +129,7 @@ class SalesOverviewWidget extends BaseWidget
         $selectedMonth = $this->selectedMonth;
         $selectedYear = $this->selectedYear;
 
-        $lastUpdated = PurchaseOrder::max('updated_at').'_'.Quotation::max('updated_at');
+        $lastUpdated = PurchaseOrder::max('updated_at').'_'.Quotation::where('is_online_request', false)->max('updated_at');
         $cacheKey = 'sales_overview_'.md5(json_encode([
             $agentId, $isInhouse, $periodType, $selectedDate, $selectedWeek, $selectedMonth, $selectedYear, $lastUpdated,
         ]));
@@ -140,7 +140,7 @@ class SalesOverviewWidget extends BaseWidget
             $startDateOnly = $startDate->toDateString();
             $endDateOnly = $endDate->toDateString();
 
-            $quotationQuery = Quotation::where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+            $quotationQuery = Quotation::where('is_online_request', false)->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
                 $q->whereBetween('quotation_date', [$startStr, $endStr])
                     ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
                     ->orWhereBetween('created_at', [$startStr, $endStr]);
@@ -166,8 +166,8 @@ class SalesOverviewWidget extends BaseWidget
             $totalQuotations = $quotationQuery->count();
             $convertedPos = (clone $poQuery)->count();
             $winRate = $totalQuotations > 0
-                ? round(($convertedPos / $totalQuotations) * 100, 1)
-                : 0;
+                ? min(100.0, round(($convertedPos / $totalQuotations) * 100, 1))
+                : 0.0;
 
             $totalRevenue = (float) ((clone $poQuery)->sum('order_amount') ?? 0.0);
             $totalProfit = (float) ((clone $poQuery)->sum('realized_profit') ?? 0.0);

@@ -174,12 +174,12 @@
                                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300" style="font-size: 0.8125rem; font-weight: 600;">
                                     Email Message Template (Ready to Send):
                                 </label>
-                                <span class="text-xs text-gray-400" style="font-size: 0.75rem; color: #9ca3af;">Editable before dispatch</span>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Editable before dispatch</span>
                             </div>
                             <textarea
                                 wire:model="emailBody"
                                 rows="8"
-                                class="w-full font-mono text-xs rounded-lg border-gray-300 bg-gray-50/50 p-3 text-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200"
+                                class="w-full font-mono text-xs rounded-lg border-gray-300 bg-gray-50/50 p-3 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
                                 style="width: 100%; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.8125rem; font-family: monospace; border: 1px solid #d1d5db; line-height: 1.5;"
                                 @disabled(!$selectedPo->canSendPaymentReminderToday())
                             ></textarea>
@@ -187,91 +187,229 @@
 
                         {{-- Dispatch Action Footer --}}
                         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2" style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-top: 0.5rem;">
-                            <div class="text-xs text-gray-500 dark:text-gray-400" style="font-size: 0.8125rem; color: #6b7280;">
+                            <div class="text-xs text-gray-700 dark:text-gray-300 font-medium">
                                 Clicking will send this email immediately via corporate SMTP and record the timestamp in the ledger.
                             </div>
 
-                            <button
-                                type="button"
-                                wire:click="sendEmailReminderFromSection"
-                                wire:loading.attr="disabled"
-                                @disabled(!$selectedPo->canSendPaymentReminderToday())
-                                class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                style="display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 0.5rem; background-color: #2563eb; color: white; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer;"
-                            >
-                                <span wire:loading wire:target="sendEmailReminderFromSection" class="inline-block animate-spin">
-                                    <x-filament::icon icon="heroicon-m-arrow-path" class="h-4 w-4" style="width: 1rem; height: 1rem;" />
-                                </span>
-                                <span wire:loading.remove wire:target="sendEmailReminderFromSection">
-                                    <x-filament::icon icon="heroicon-m-paper-airplane" class="h-4 w-4" style="width: 1rem; height: 1rem;" />
-                                </span>
-                                <span>Send 1-Click Payment Reminder</span>
-                            </button>
+                            @if($selectedPo->canSendPaymentReminderToday())
+                                <button
+                                    type="button"
+                                    wire:click="sendEmailReminderFromSection"
+                                    wire:loading.attr="disabled"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    style="display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 0.5rem; background-color: #2563eb; color: white; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer;"
+                                >
+                                    <span wire:loading wire:target="sendEmailReminderFromSection" class="inline-block animate-spin">
+                                        <x-filament::icon icon="heroicon-m-arrow-path" class="h-4 w-4" style="width: 1rem; height: 1rem;" />
+                                    </span>
+                                    <span wire:loading.remove wire:target="sendEmailReminderFromSection">
+                                        <x-filament::icon icon="heroicon-m-paper-airplane" class="h-4 w-4" style="width: 1rem; height: 1rem;" />
+                                    </span>
+                                    <span>Send 1-Click Payment Reminder</span>
+                                </button>
+                            @else
+                                <button
+                                    type="button"
+                                    disabled
+                                    class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm cursor-not-allowed bg-slate-100 text-slate-500 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                                    style="display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 0.5rem; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: not-allowed;"
+                                    title="Anti-spam safeguard: A reminder was already sent today for PO #{{ $selectedPo->po_number }}."
+                                >
+                                    <x-filament::icon icon="heroicon-m-check-circle" class="h-4 w-4 text-emerald-600 dark:text-emerald-400" style="width: 1rem; height: 1rem;" />
+                                    <span>Reminder Dispatched Today (Limit Reached)</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @else
-                    <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400" style="border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
-                        <x-filament::icon icon="heroicon-o-inbox-arrow-down" class="mx-auto h-8 w-8 text-gray-400 mb-2" style="width: 2rem; height: 2rem; margin: 0 auto 0.5rem auto;" />
-                        <p>Select any outstanding purchase order above to automatically generate a tailored payment follow-up email.</p>
+                    <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-700 dark:border-gray-700 dark:text-gray-300" style="border: 2px dashed #d1d5db; border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
+                        <x-filament::icon icon="heroicon-o-inbox-arrow-down" class="mx-auto h-8 w-8 text-gray-500 dark:text-gray-400 mb-2" style="width: 2rem; height: 2rem; margin: 0 auto 0.5rem auto;" />
+                        <p class="font-medium">Select any outstanding purchase order above to automatically generate a tailored payment follow-up email.</p>
                     </div>
                 @endif
             </div>
         </x-filament::section>
 
-        {{-- 3. Interactive Ledger Navigation Tabs (Admin Theme Harmonized) --}}
+        {{-- 3. Interactive Ledger Navigation Tabs (Vercel/Linear Segmented Control) --}}
         <div class="pt-2">
-            <div class="inline-flex items-center gap-1.5 p-1 rounded-xl border border-gray-200 bg-gray-100/80 dark:border-white/10 dark:bg-gray-900/80"
-                 style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(15, 23, 42, 0.6);">
+            <style>
+                .huenics-ledger-tab-bar {
+                    display: inline-flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    padding: 5px;
+                    border-radius: 12px;
+                    background-color: #f1f5f9;
+                    border: 1px solid #e2e8f0;
+                    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+                }
+                .dark .huenics-ledger-tab-bar,
+                :is(.dark) .huenics-ledger-tab-bar {
+                    background-color: rgba(15, 23, 42, 0.75);
+                    border: 1px solid rgba(255, 255, 255, 0.09);
+                    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+                }
+                .huenics-ledger-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 14px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    border: 1px solid transparent;
+                    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+                    user-select: none;
+                    line-height: 1.25;
+                    background: transparent;
+                    color: #64748b;
+                    text-decoration: none;
+                }
+                .dark .huenics-ledger-btn,
+                :is(.dark) .huenics-ledger-btn {
+                    color: #94a3b8;
+                }
+                .huenics-ledger-btn:hover {
+                    color: #0f172a;
+                    background-color: rgba(0, 0, 0, 0.04);
+                }
+                .dark .huenics-ledger-btn:hover,
+                :is(.dark) .huenics-ledger-btn:hover {
+                    color: #f8fafc;
+                    background-color: rgba(255, 255, 255, 0.06);
+                }
+                .huenics-ledger-btn.is-active-all {
+                    background-color: #ffffff;
+                    color: #0284c7;
+                    border-color: #cbd5e1;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+                }
+                .dark .huenics-ledger-btn.is-active-all,
+                :is(.dark) .huenics-ledger-btn.is-active-all {
+                    background-color: #1e293b;
+                    color: #38bdf8;
+                    border-color: rgba(56, 189, 248, 0.35);
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.15);
+                }
+                .huenics-ledger-btn.is-active-action {
+                    background-color: #ffffff;
+                    color: #d97706;
+                    border-color: rgba(217, 119, 6, 0.35);
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+                }
+                .dark .huenics-ledger-btn.is-active-action,
+                :is(.dark) .huenics-ledger-btn.is-active-action {
+                    background-color: #1e293b;
+                    color: #fbbf24;
+                    border-color: rgba(251, 191, 36, 0.4);
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.18);
+                }
+                .huenics-ledger-btn.is-active-settled {
+                    background-color: #ffffff;
+                    color: #16a34a;
+                    border-color: rgba(22, 163, 74, 0.35);
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+                }
+                .dark .huenics-ledger-btn.is-active-settled,
+                :is(.dark) .huenics-ledger-btn.is-active-settled {
+                    background-color: #1e293b;
+                    color: #4ade80;
+                    border-color: rgba(74, 222, 128, 0.4);
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(74, 222, 128, 0.18);
+                }
+                .huenics-tab-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 20px;
+                    height: 20px;
+                    padding: 0 6px;
+                    border-radius: 9999px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+                    line-height: 1;
+                    letter-spacing: -0.02em;
+                    margin-left: 4px;
+                }
+                .huenics-pulse-dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 9999px;
+                    background-color: #f59e0b;
+                    display: inline-block;
+                    animation: huenics-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+                }
+                @keyframes huenics-ping {
+                    75%, 100% {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+            </style>
+
+            <div
+                class="huenics-ledger-tab-bar"
+                style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 5px; border-radius: 12px; background-color: #f1f5f9; border: 1px solid #e2e8f0;"
+            >
                 {{-- Tab 1: All Accounts & Transactions --}}
+                @php $isAllActive = $this->activeTab === 'all'; @endphp
                 <button
                     type="button"
                     wire:click="setActiveTab('all')"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
-                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
-                           {{ $this->activeTab === 'all'
-                               ? 'background-color: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
-                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
+                    class="huenics-ledger-btn {{ $isAllActive ? 'is-active-all' : '' }}"
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; border: 1px solid {{ $isAllActive ? '#cbd5e1' : 'transparent' }}; background-color: {{ $isAllActive ? '#ffffff' : 'transparent' }}; color: {{ $isAllActive ? '#0284c7' : '#64748b' }};"
                 >
-                    <x-filament::icon icon="heroicon-m-banknotes" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    <x-filament::icon icon="heroicon-m-banknotes" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem; flex-shrink: 0;" />
                     <span>All Accounts & Transactions</span>
-                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
-                                 {{ $this->activeTab === 'all' ? 'background-color: rgba(59, 130, 246, 0.3); color: #bfdbfe;' : 'background-color: rgba(148, 163, 184, 0.15); color: #94a3b8;' }}">
+                    <span
+                        class="huenics-tab-count"
+                        style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 9999px; font-size: 11px; font-weight: 800; font-family: monospace; background-color: {{ $isAllActive ? '#e0f2fe' : '#e2e8f0' }}; color: {{ $isAllActive ? '#0369a1' : '#475569' }};"
+                    >
                         {{ $stats['totalOrders'] }}
                     </span>
                 </button>
 
                 {{-- Tab 2: Action Required --}}
+                @php
+                    $isActionActive = $this->activeTab === 'follow_up';
+                    $actionCount = (int) ($stats['warningCount'] + $stats['overdueCount']);
+                @endphp
                 <button
                     type="button"
                     wire:click="setActiveTab('follow_up')"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
-                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
-                           {{ $this->activeTab === 'follow_up'
-                               ? 'background-color: rgba(217, 119, 6, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
-                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
+                    class="huenics-ledger-btn {{ $isActionActive ? 'is-active-action' : '' }}"
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; border: 1px solid {{ $isActionActive ? 'rgba(217, 119, 6, 0.35)' : 'transparent' }}; background-color: {{ $isActionActive ? '#ffffff' : 'transparent' }}; color: {{ $isActionActive ? '#d97706' : '#64748b' }};"
                 >
-                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    @if($actionCount > 0)
+                        <span class="huenics-pulse-dot"></span>
+                    @endif
+                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem; flex-shrink: 0;" />
                     <span>Action Required (≤ 10d & Overdue)</span>
-                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
-                                 {{ $this->activeTab === 'follow_up' ? 'background-color: rgba(245, 158, 11, 0.3); color: #fde68a;' : 'background-color: rgba(217, 119, 6, 0.15); color: #f59e0b;' }}">
-                        {{ $stats['warningCount'] + $stats['overdueCount'] }}
+                    <span
+                        class="huenics-tab-count"
+                        style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 9999px; font-size: 11px; font-weight: 800; font-family: monospace; background-color: {{ $actionCount > 0 ? ($isActionActive ? '#fef3c7' : 'rgba(251, 191, 36, 0.15)') : ($isActionActive ? '#fef3c7' : '#e2e8f0') }}; color: {{ $actionCount > 0 ? '#b45309' : '#475569' }};"
+                    >
+                        {{ $actionCount }}
                     </span>
                 </button>
 
                 {{-- Tab 3: Settled & Cleared --}}
+                @php $isSettledActive = $this->activeTab === 'payment_history'; @endphp
                 <button
                     type="button"
                     wire:click="setActiveTab('payment_history')"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all"
-                    style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; outline: none; transition: all 150ms ease;
-                           {{ $this->activeTab === 'payment_history'
-                               ? 'background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);'
-                               : 'background-color: transparent; color: #94a3b8; border: 1px solid transparent;' }}"
+                    class="huenics-ledger-btn {{ $isSettledActive ? 'is-active-settled' : '' }}"
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; border: 1px solid {{ $isSettledActive ? 'rgba(22, 163, 74, 0.35)' : 'transparent' }}; background-color: {{ $isSettledActive ? '#ffffff' : 'transparent' }}; color: {{ $isSettledActive ? '#16a34a' : '#64748b' }};"
                 >
-                    <x-filament::icon icon="heroicon-m-check-badge" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem;" />
+                    <x-filament::icon icon="heroicon-m-check-badge" class="h-4 w-4 shrink-0" style="width: 1rem; height: 1rem; flex-shrink: 0;" />
                     <span>Payment History (Settled & Cleared)</span>
-                    <span style="display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;
-                                 {{ $this->activeTab === 'payment_history' ? 'background-color: rgba(16, 185, 129, 0.3); color: #a7f3d0;' : 'background-color: rgba(34, 197, 94, 0.15); color: #22c55e;' }}">
+                    <span
+                        class="huenics-tab-count"
+                        style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 9999px; font-size: 11px; font-weight: 800; font-family: monospace; background-color: {{ $isSettledActive ? '#dcfce7' : '#e2e8f0' }}; color: {{ $isSettledActive ? '#15803d' : '#475569' }};"
+                    >
                         {{ $stats['paidCount'] }}
                     </span>
                 </button>

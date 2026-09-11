@@ -1114,16 +1114,6 @@ class PurchaseOrderResource extends Resource
                                         ->default(now())
                                         ->required(),
 
-                                    Select::make('payment_status')
-                                        ->label('Payment Status')
-                                        ->options([
-                                            SalesInvoice::STATUS_PAID => 'Paid',
-                                            SalesInvoice::STATUS_UNPAID => 'Unpaid',
-                                            SalesInvoice::STATUS_PARTIAL => 'Partial',
-                                        ])
-                                        ->default(SalesInvoice::STATUS_PAID)
-                                        ->required(),
-
                                     TextInput::make('total_amount')
                                         ->label('Invoice Total (₱)')
                                         ->numeric()

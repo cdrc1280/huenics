@@ -450,11 +450,12 @@ class SalesDashboard extends Page implements HasForms, HasTable
         };
 
         $qDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
-            $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
-                $sub->whereBetween('quotation_date', [$startStr, $endStr])
-                    ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
-                    ->orWhereBetween('created_at', [$startStr, $endStr]);
-            });
+            $q->where('is_online_request', false)
+                ->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+                    $sub->whereBetween('quotation_date', [$startStr, $endStr])
+                        ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                        ->orWhereBetween('created_at', [$startStr, $endStr]);
+                });
         };
 
         $query = User::query()

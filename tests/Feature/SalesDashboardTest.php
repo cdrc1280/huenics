@@ -6,6 +6,7 @@ use App\Filament\Pages\SalesDashboard;
 use App\Filament\Widgets\QuotationConversionWidget;
 use App\Filament\Widgets\SalesOverviewWidget;
 use App\Filament\Widgets\SalesRevenueChartWidget;
+use App\Filament\Widgets\TopCompaniesBySalesWidget;
 use App\Filament\Widgets\TopSellingProductsWidget;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLineItem;
@@ -425,5 +426,87 @@ class SalesDashboardTest extends TestCase
         $this->assertNotEmpty($topData['labels']);
         $this->assertStringContainsString('Citizen Japan 15W', $topData['labels'][0]);
         $this->assertEquals(120000.00, $topData['datasets'][0]['data'][0]);
+    }
+
+    public function test_requested_quotations_are_excluded_from_sales_analytics_and_top_companies_runs_without_customer_company_column(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 1. Official Quotation (Quotation Resource)
+        $officialQuote = Quotation::create([
+            'quotation_number' => 'HISI-Q-OFFICIAL-01',
+            'quotation_date' => '2026-09-10',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Metro Build Corp',
+            'customer_company' => 'Metro Build Group',
+            'total_amount' => 100000.00,
+            'status' => Quotation::STATUS_APPROVED,
+            'is_online_request' => false,
+        ]);
+
+        // 2. Online Requested Quotation (Portal / RequestedQuotationResource)
+        Quotation::create([
+            'quotation_number' => 'HISI-Q-ONLINE-01',
+            'quotation_date' => '2026-09-10',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Random Online Guest',
+            'customer_company' => 'Online Inquiry Ltd',
+            'total_amount' => 888888.00,
+            'status' => Quotation::STATUS_PENDING,
+            'is_online_request' => true,
+        ]);
+
+        // 3. Official Converted PO linked to official quotation
+        PurchaseOrder::create([
+            'po_number' => 'PO-OFFICIAL-01',
+            'quotation_id' => $officialQuote->id,
+            'order_date' => '2026-09-12',
+            'sales_agent_id' => $this->salesRep->id,
+            'customer_name' => 'Metro Build Corp',
+            'order_amount' => 100000.00,
+            'realized_profit' => 30000.00,
+            'status' => PurchaseOrder::STATUS_APPROVED,
+            'delivery_status' => PurchaseOrder::DELIVERY_PENDING,
+            'is_completed' => false,
+            'is_conforme_po' => false,
+        ]);
+
+        // 4. Test SalesOverviewWidget strictly counts only official quotation
+        $overviewWidget = Livewire::test(SalesOverviewWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 9,
+            'agentId' => $this->salesRep->id,
+        ])->assertSuccessful();
+
+        // Exactly 1 quotation (official) should be counted, not 2
+        $getStatsMethod = new \ReflectionMethod($overviewWidget->instance(), 'getStats');
+        $stats = $getStatsMethod->invoke($overviewWidget->instance());
+        $this->assertEquals(1, $stats[0]->getValue());
+
+        // 5. Test QuotationConversionWidget strictly counts 1 official quotation
+        $convWidget = Livewire::test(QuotationConversionWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 9,
+            'selectedAgentId' => $this->salesRep->id,
+        ])->assertSuccessful();
+        $convData = $convWidget->instance()->getData();
+        $totalQuotesInChart = array_sum($convData['datasets'][0]['data']);
+        $this->assertEquals(1, $totalQuotesInChart);
+
+        // 6. Test TopCompaniesBySalesWidget executes without SQL 1054 customer_company error
+        $topCompaniesWidget = Livewire::test(TopCompaniesBySalesWidget::class, [
+            'periodType' => 'month',
+            'selectedYear' => 2026,
+            'selectedMonth' => 9,
+            'selectedAgentId' => $this->salesRep->id,
+        ])->assertSuccessful();
+
+        $getDataMethod = new \ReflectionMethod($topCompaniesWidget->instance(), 'getData');
+        $companiesData = $getDataMethod->invoke($topCompaniesWidget->instance());
+        $this->assertNotEmpty($companiesData['labels']);
+        $this->assertStringContainsString('Metro Build Group', $companiesData['labels'][0]);
+        $this->assertEquals(100000.00, $companiesData['datasets'][0]['data'][0]);
     }
 }

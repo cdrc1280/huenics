@@ -383,7 +383,7 @@ class RequestedQuotationResource extends Resource
                         ->label('Reject')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->visible(fn (RequestedQuotaztion $record) => $record->status === Quotation::STATUS_PENDING)
+                        // ->visible(fn (RequestedQuotaztion $record) => $record->status === Quotation::STATUS_PENDING)
                         ->form([
                             Textarea::make('rejection_reason')
                                 ->label('Reason for Rejection')

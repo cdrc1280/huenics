@@ -190,16 +190,6 @@ class UploadFulfillmentDocumentsPage extends Page implements HasForms
                                 ->default(now()->toDateString())
                                 ->required(),
 
-                            Select::make('payment_status')
-                                ->label('Payment Status')
-                                ->options([
-                                    SalesInvoice::STATUS_PAID => 'Paid',
-                                    SalesInvoice::STATUS_UNPAID => 'Unpaid',
-                                    SalesInvoice::STATUS_PARTIAL => 'Partial',
-                                ])
-                                ->default(SalesInvoice::STATUS_PAID)
-                                ->required(),
-
                             TextInput::make('total_amount')
                                 ->label('Total Amount (₱)')
                                 ->numeric()

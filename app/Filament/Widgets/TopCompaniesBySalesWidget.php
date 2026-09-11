@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Models\PurchaseOrder;
-use App\Models\Quotation;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\On;
 
-class QuotationConversionWidget extends ChartWidget
+class TopCompaniesBySalesWidget extends ChartWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 5;
 
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 'full';
 
     protected ?string $maxHeight = '360px';
+
+    public const TOP_COMPANIES_LIMIT = 10;
 
     public string $periodType = 'month';
 
@@ -91,7 +94,7 @@ class QuotationConversionWidget extends ChartWidget
 
     public function getHeading(): string|Htmlable|null
     {
-        return 'Quotation Conversion & Pipeline Distribution';
+        return 'Top 10 Client Accounts by Sales';
     }
 
     public function getDescription(): ?string
@@ -104,10 +107,10 @@ class QuotationConversionWidget extends ChartWidget
             default => $start->format('F Y'),
         };
 
-        return "Distribution of pipeline quotes by conversion status in {$periodLabel}";
+        return "Highest revenue contributing corporate accounts in {$periodLabel}";
     }
 
-    public function getData(): array
+    protected function getData(): array
     {
         [$start, $end] = $this->resolveDateRange();
         $startStr = $start->copy()->startOfDay()->toDateTimeString();
@@ -115,123 +118,129 @@ class QuotationConversionWidget extends ChartWidget
         $startDateOnly = $start->toDateString();
         $endDateOnly = $end->toDateString();
 
-        $quotationQuery = Quotation::query()
-            ->where('is_online_request', false);
+        $poQuery = PurchaseOrder::query()
+            ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED]);
 
-        // Scope date range against quotation_date and created_at fallback
-        $quotationQuery->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
-            $q->whereBetween('quotation_date', [$startStr, $endStr])
-                ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+        $poQuery->where(function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+            $q->whereBetween('order_date', [$startStr, $endStr])
+                ->orWhere(fn ($s) => $s->whereDate('order_date', '>=', $startDateOnly)->whereDate('order_date', '<=', $endDateOnly))
+                ->orWhereBetween('actual_delivery_date', [$startDateOnly, $endDateOnly])
+                ->orWhereBetween('completed_at', [$startStr, $endStr])
                 ->orWhereBetween('created_at', [$startStr, $endStr]);
         });
 
-        // Sales executive & inhouse filtering
         if ($this->filterInhouse) {
-            $quotationQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
+            $poQuery->where(fn ($q) => $q->whereHas('salesAgent', fn ($u) => $u->where('is_owner', true))->orWhereNull('sales_agent_id'));
         } elseif ($this->selectedAgentId) {
-            $quotationQuery->where('sales_agent_id', $this->selectedAgentId);
+            $poQuery->where('sales_agent_id', $this->selectedAgentId);
         }
 
-        $allQuotes = $quotationQuery->get(['id', 'status', 'total_amount', 'valid_until']);
+        $orders = $poQuery->with('quotation:id,customer_company,customer_name')
+            ->get(['id', 'quotation_id', 'customer_name', 'order_amount']);
 
-        if ($allQuotes->isEmpty()) {
+        if ($orders->isEmpty()) {
             return [
                 'datasets' => [
                     [
-                        'label' => 'Quotations',
+                        'label' => 'Total Sales (₱)',
                         'data' => [0],
                         'backgroundColor' => ['#94a3b8'],
-                        'borderWidth' => 2,
-                        'borderColor' => 'transparent',
                     ],
                 ],
-                'labels' => ['No Pipeline Quotations in Period (0)'],
+                'labels' => ['No Confirmed Orders in Period'],
             ];
         }
 
-        // Identify quotations that have won purchase orders
-        $wonQuoteIds = PurchaseOrder::query()
-            ->whereIn('quotation_id', $allQuotes->pluck('id'))
-            ->whereNotIn('status', [PurchaseOrder::STATUS_CANCELLED, PurchaseOrder::STATUS_REJECTED])
-            ->pluck('quotation_id')
-            ->flip()
-            ->all();
-
-        $wonCount = 0;
-        $approvedCount = 0;
-        $reviewedCount = 0;
-        $pendingCount = 0;
-        $rejectedCount = 0;
-
-        foreach ($allQuotes as $quote) {
-            $status = strtolower((string) $quote->status);
-
-            if (isset($wonQuoteIds[$quote->id]) || in_array($status, ['converted', 'converted_to_po'], true)) {
-                $wonCount++;
-            } elseif (in_array($status, ['approved'], true)) {
-                $approvedCount++;
-            } elseif (in_array($status, ['reviewed', 'under_review'], true)) {
-                $reviewedCount++;
-            } elseif (in_array($status, ['rejected', 'expired'], true)) {
-                $rejectedCount++;
-            } else {
-                $pendingCount++;
+        $grouped = $orders->groupBy(function ($order) {
+            $company = trim((string) ($order->quotation?->customer_company ?? ''));
+            if ($company !== '' && strtolower($company) !== 'n/a' && strtolower($company) !== 'none') {
+                return $company;
             }
+
+            $customerName = trim((string) ($order->customer_name ?? ''));
+            if ($customerName !== '' && strtolower($customerName) !== 'n/a' && strtolower($customerName) !== 'none') {
+                return $customerName;
+            }
+
+            return 'Individual Client';
+        })->map(function ($items, $account) {
+            return [
+                'account' => (string) $account,
+                'total_sales' => (float) $items->sum('order_amount'),
+                'order_count' => $items->count(),
+            ];
+        })->sortByDesc('total_sales')->take(self::TOP_COMPANIES_LIMIT);
+
+        $labels = [];
+        $data = [];
+
+        foreach ($grouped as $row) {
+            $name = $row['account'];
+            $shortName = strlen($name) > 28 ? substr($name, 0, 26).'..' : $name;
+            $labels[] = $shortName;
+            $data[] = round((float) $row['total_sales'], 2);
         }
+
+        $palette = [
+            '#2563eb', // Blue 600
+            '#3b82f6', // Blue 500
+            '#0ea5e9', // Sky 500
+            '#06b6d4', // Cyan 500
+            '#14b8a6', // Teal 500
+            '#10b981', // Emerald 500
+            '#6366f1', // Indigo 500
+            '#8b5cf6', // Violet 500
+            '#a855f7', // Purple 500
+            '#d946ef', // Fuchsia 500
+        ];
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Quotations',
-                    'data' => [
-                        $wonCount,
-                        $approvedCount,
-                        $reviewedCount,
-                        $pendingCount,
-                        $rejectedCount,
-                    ],
-                    'backgroundColor' => [
-                        '#10b981', // Converted / Won (Green)
-                        '#3b82f6', // Approved (Blue)
-                        '#06b6d4', // Reviewed (Cyan)
-                        '#f59e0b', // Pending / Draft (Amber)
-                        '#ef4444', // Rejected / Expired (Red)
-                    ],
-                    'borderWidth' => 2,
-                    'borderColor' => 'transparent',
+                    'label' => 'Total Sales (₱)',
+                    'data' => $data,
+                    'backgroundColor' => array_slice($palette, 0, count($data)),
+                    'borderRadius' => 6,
                 ],
             ],
-            'labels' => [
-                "Won / Converted ({$wonCount})",
-                "Approved ({$approvedCount})",
-                "Reviewed ({$reviewedCount})",
-                "Pending ({$pendingCount})",
-                "Rejected ({$rejectedCount})",
-            ],
+            'labels' => $labels,
         ];
     }
 
     protected function getType(): string
     {
-        return 'doughnut';
+        return 'bar';
     }
 
     protected function getOptions(): array
     {
         return [
+            'indexAxis' => 'y',
             'plugins' => [
                 'legend' => [
-                    'position' => 'bottom',
-                    'labels' => [
-                        'boxWidth' => 12,
-                        'padding' => 12,
-                        'font' => [
-                            'size' => 11,
-                        ],
+                    'display' => false,
+                ],
+                'tooltip' => [
+                    'callbacks' => [
+                        'label' => 'function(context) { return " ₱" + Number(context.raw).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }',
                     ],
                 ],
             ],
-            'cutout' => '60%',
+            'scales' => [
+                'x' => [
+                    'grid' => [
+                        'display' => true,
+                    ],
+                    'ticks' => [
+                        'callback' => 'function(val) { return "₱" + Number(val).toLocaleString(); }',
+                    ],
+                ],
+                'y' => [
+                    'grid' => [
+                        'display' => false,
+                    ],
+                ],
+            ],
         ];
     }
 }

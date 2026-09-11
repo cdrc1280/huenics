@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 
-use App\Enums\SalesInvoiceStatus;
 use App\Enums\UnitOfMeasure;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
@@ -65,12 +64,6 @@ class SalesInvoicesRelationManager extends RelationManager
                         DatePicker::make('invoice_date')
                             ->label('Invoice Date')
                             ->default(now())
-                            ->required(),
-
-                        Select::make('payment_status')
-                            ->label('Payment Status')
-                            ->options(SalesInvoiceStatus::class)
-                            ->default(SalesInvoiceStatus::Paid)
                             ->required(),
                     ]),
 
@@ -351,16 +344,6 @@ class SalesInvoicesRelationManager extends RelationManager
                     ->weight('bold')
                     ->color('success')
                     ->sortable(),
-
-                TextColumn::make('payment_status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn ($state) => match ($state instanceof SalesInvoiceStatus ? $state->value : (string) $state) {
-                        'paid' => 'success',
-                        'partial' => 'warning',
-                        'unpaid' => 'danger',
-                        default => 'gray',
-                    }),
 
                 IconColumn::make('file_path')
                     ->label('Scanned Copy')

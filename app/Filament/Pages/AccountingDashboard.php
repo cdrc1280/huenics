@@ -492,9 +492,11 @@ class AccountingDashboard extends Page implements HasForms, HasTable
             ->actions([
                 // 1-Click Email Client Action with daily anti-spam check
                 Action::make('email_client')
-                    ->label('Email Client')
-                    ->icon('heroicon-m-envelope')
-                    ->color(fn (PurchaseOrder $r) => $r->due_status_color === 'danger' ? 'danger' : ($r->due_status_color === 'warning' ? 'warning' : 'primary'))
+                    ->label(fn (PurchaseOrder $r) => $r->canSendPaymentReminderToday() ? 'Email Client' : 'Reminder Sent Today')
+                    ->icon(fn (PurchaseOrder $r) => $r->canSendPaymentReminderToday() ? 'heroicon-m-envelope' : 'heroicon-m-check-circle')
+                    ->color(fn (PurchaseOrder $r) => ! $r->canSendPaymentReminderToday() ? 'gray' : ($r->due_status_color === 'danger' ? 'danger' : ($r->due_status_color === 'warning' ? 'warning' : 'primary')))
+                    ->disabled(fn (PurchaseOrder $r) => ! $r->canSendPaymentReminderToday())
+                    ->tooltip(fn (PurchaseOrder $r) => ! $r->canSendPaymentReminderToday() ? 'Email reminder already dispatched today (1 per day limit)' : 'Send 1-click payment follow-up email')
                     ->visible(fn (PurchaseOrder $r) => ! $r->isPaid())
                     ->modalHeading(fn (PurchaseOrder $r): string => "Follow-Up Payment Reminder: PO #{$r->po_number}")
                     ->modalDescription(function (PurchaseOrder $r): string {
