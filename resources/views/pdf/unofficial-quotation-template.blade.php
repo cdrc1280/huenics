@@ -366,8 +366,7 @@
         <tbody>
             @forelse($quote['items'] ?? [] as $item)
                 @php
-                    $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
-                    $prodImg = $item['base64_image'] ?? $prod?->base64_image;
+                    $prodImg = $item['base64_image'] ?? null;
                     $qty = (float) ($item['quantity'] ?? ($item['qty'] ?? 1));
                 @endphp
                 <tr>

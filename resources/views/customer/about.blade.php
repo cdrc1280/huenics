@@ -6,10 +6,6 @@
     <!-- About Header Hero (PDF Design: Crisp White in Light / Sleek Obsidian in Dark) -->
     <section
         class="ambient-mesh-hero lg:py-18 hisi-geometric-accent relative overflow-hidden border-b border-slate-200 bg-white py-14 transition-colors duration-200 dark:border-slate-800/80 dark:bg-[#070b14]">
-        <!-- Diagonal Stripes Accent -->
-        <div
-            class="pointer-events-none absolute right-0 top-0 h-72 w-72 bg-gradient-to-bl from-[#214fe0]/15 via-blue-500/5 to-transparent dark:from-blue-500/10">
-        </div>
         <div class="pointer-events-none absolute -bottom-10 -left-10 h-64 w-64 opacity-30 dark:opacity-20"
             style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);">
         </div>
@@ -17,8 +13,8 @@
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="animate-fade-in-up max-w-3xl space-y-3">
                 <div
-                    class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#214fe0] shadow-sm dark:border-blue-800/60 dark:bg-blue-950/70 dark:text-[#60a5fa]">
-                    <svg class="h-4 w-4 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24"
+                    class="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50/80 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#214fe0] dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-[#60a5fa]">
+                    <svg class="h-3.5 w-3.5 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -91,81 +87,71 @@
 
                 <!-- Core Capabilities: Color, Techniques, Technology -->
                 <div class="space-y-4 lg:col-span-6">
-                    <div
-                        class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm hover:border-blue-300 dark:border-slate-800 dark:bg-[#111827] dark:hover:border-[#3b82f6]">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-lg font-bold text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2">
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f] divide-y divide-slate-200 dark:divide-slate-800">
+                        <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-start gap-4">
+                                <svg class="mt-0.5 h-6 w-6 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="1.75">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M7 21a4 4 0 01-4-4 5 5 0 013-4.582V5a2 2 0 012-2h4a2 2 0 012 2v7.418c1.378.86 2.296 2.378 2.375 4.12A4 4 0 0113 21H7z" />
                                 </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Our
-                                    Unique Feature</span>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Right Color</h3>
-                                <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                                    In the world of Commercial & Industrial, color is everything. The importance of color
-                                    and its impact on these industries cannot be overstated. Whether it is for exclusive or
-                                    simple projects, Huenics LED Technology achieves exacting color temperatures and
-                                    rendering—allowing customers to get the best possible illumination.
-                                </p>
+                                <div>
+                                    <span
+                                        class="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Our
+                                        Unique Feature</span>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Right Color</h3>
+                                    <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                        In the world of Commercial &amp; Industrial, color is everything. The importance of color
+                                        and its impact on these industries cannot be overstated. Whether it is for exclusive or
+                                        simple projects, Huenics LED Technology achieves exacting color temperatures and
+                                        rendering—allowing customers to get the best possible illumination.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div
-                        class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm hover:border-blue-300 dark:border-slate-800 dark:bg-[#111827] dark:hover:border-[#3b82f6]">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg font-bold text-[#214fe0] dark:bg-blue-950/60 dark:text-[#60a5fa]">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2">
+                        <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-start gap-4">
+                                <svg class="mt-0.5 h-6 w-6 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="1.75">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="text-[10px] font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">Our
-                                    Passion</span>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Utilizing Techniques</h3>
-                                <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                                    The moment the client speaks, we listen. Huenics products are designed to the customer's
-                                    greatest advantage—this commitment is further demonstrated by the continuous development
-                                    of techniques.
-                                </p>
+                                <div>
+                                    <span
+                                        class="font-mono text-[10px] font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">Our
+                                        Passion</span>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Utilizing Techniques</h3>
+                                    <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                        The moment the client speaks, we listen. Huenics products are designed to the customer's
+                                        greatest advantage—this commitment is further demonstrated by the continuous development
+                                        of techniques.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div
-                        class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm hover:border-blue-300 dark:border-slate-800 dark:bg-[#111827] dark:hover:border-[#3b82f6]">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-lg font-bold text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2">
+                        <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-start gap-4">
+                                <svg class="mt-0.5 h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="1.75">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                                 </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Our
-                                    Pride</span>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Stand Out Technology</h3>
-                                <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                                    There’s more than just cost—there’s also efficiency, which draws in customers and
-                                    determines whether they return. Offering unmatched quality and efficiency, Huenics is
-                                    becoming the option of choice for customers interested in value engineering and creating
-                                    an ideal brightest atmosphere.
-                                </p>
+                                <div>
+                                    <span
+                                        class="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Our
+                                        Pride</span>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Stand Out Technology</h3>
+                                    <p class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                        There’s more than just cost—there’s also efficiency, which draws in customers and
+                                        determines whether they return. Offering unmatched quality and efficiency, Huenics is
+                                        becoming the option of choice for customers interested in value engineering and creating
+                                        an ideal brightest atmosphere.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -191,57 +177,41 @@
                             service execution.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div
-                            class="card-interactive flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white dark:bg-blue-500">
-                                Q</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white">Quality</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Unmatched precision</div>
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f] divide-y divide-slate-100 dark:divide-slate-800/80">
+                        <div class="flex items-center justify-between p-3.5 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs font-black text-[#214fe0] dark:text-[#60a5fa]">[Q]</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">Quality</span>
                             </div>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">Unmatched precision</span>
                         </div>
-                        <div
-                            class="card-interactive flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-sm font-black text-white">
-                                S</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white">Speed</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Prompt fulfillment</div>
+                        <div class="flex items-center justify-between p-3.5 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">[S]</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">Speed</span>
                             </div>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">Prompt fulfillment</span>
                         </div>
-                        <div
-                            class="card-interactive flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-sm font-black text-white">
-                                D</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white">Dependable</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Consistent execution</div>
+                        <div class="flex items-center justify-between p-3.5 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs font-black text-blue-600 dark:text-blue-400">[D]</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">Dependable</span>
                             </div>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">Consistent execution</span>
                         </div>
-                        <div
-                            class="card-interactive flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-sm font-black text-white">
-                                F</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white">Flexibility</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Custom indent orders</div>
+                        <div class="flex items-center justify-between p-3.5 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs font-black text-amber-500 dark:text-amber-400">[F]</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">Flexibility</span>
                             </div>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">Custom indent orders</span>
                         </div>
-                        <div
-                            class="card-interactive flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:col-span-2 dark:border-slate-800 dark:bg-[#111827]">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-sm font-black text-white dark:bg-blue-600">
-                                C</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white">Cost</div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Value engineering & wholesale
-                                    pricing</div>
+                        <div class="flex items-center justify-between p-3.5 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-xs font-black text-slate-700 dark:text-slate-300">[C]</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">Cost</span>
                             </div>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">Value engineering &amp; wholesale pricing</span>
                         </div>
                     </div>
                 </div>
@@ -345,11 +315,11 @@
         class="border-t border-slate-200 bg-white py-16 transition-colors duration-200 dark:border-slate-800 dark:bg-[#0a0e1a]">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div
-                class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-lg transition-colors duration-200 sm:p-12 dark:border-blue-900/40 dark:bg-gradient-to-br dark:from-[#0c1636] dark:via-[#091129] dark:to-[#050b1d] dark:shadow-2xl">
+                class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-colors duration-200 sm:p-10 dark:border-slate-800 dark:bg-[#0b101f]">
 
                 <div class="relative z-10 max-w-3xl space-y-4">
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/20 dark:text-amber-300">
+                        class="inline-flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -370,53 +340,52 @@
                     </p>
                 </div>
 
-                <!-- Moved outside max-w-3xl so it spans the full card width -->
-                <div class="relative z-10 grid grid-cols-1 gap-4 pt-6 sm:gap-6 md:grid-cols-3">
-                    <div
-                        class="card-interactive space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-blue-800/40 dark:bg-[#111c3a]/90">
-                        <div
-                            class="flex items-center gap-1.5 text-sm font-extrabold uppercase text-amber-600 dark:text-amber-400">
-                            <svg class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-                            </svg> We Repair
+                <!-- 3-Column Engineering Track -->
+                <div class="relative z-10 mt-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 shadow-sm dark:border-slate-800 dark:bg-[#070b14]">
+                    <div class="grid grid-cols-1 divide-y divide-slate-200 md:grid-cols-3 md:divide-y-0 md:divide-x dark:divide-slate-800">
+                        <div class="p-6 transition-colors hover:bg-white/50 dark:hover:bg-slate-900/40">
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                                <svg class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                                </svg> <span>We Repair</span>
+                            </div>
+                            <p class="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                We repair different kinds of fixtures whether it is Downlights, Tracklights, Highbays, etc. as
+                                long as it has its own major parts.
+                            </p>
                         </div>
-                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                            We repair different kinds of fixtures whether it is Downlights, Tracklights, Highbays, etc. as
-                            long as it has its own major parts.
-                        </p>
-                    </div>
 
-                    <div
-                        class="card-interactive space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-blue-800/40 dark:bg-[#111c3a]/90">
-                        <div
-                            class="flex items-center gap-1.5 text-sm font-extrabold uppercase text-emerald-600 dark:text-emerald-400">
-                            <svg class="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg> We Upgrade
+                        <div class="p-6 transition-colors hover:bg-white/50 dark:hover:bg-slate-900/40">
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                <svg class="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg> <span>We Upgrade</span>
+                            </div>
+                            <p class="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                We upgrade existing LED lights into high-quality, high-efficiency LED C.O.B Chips with improved
+                                thermal dissipation.
+                            </p>
                         </div>
-                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                            We upgrade existing LED lights into high-quality, high-efficiency LED C.O.B Chips with improved
-                            thermal dissipation.
-                        </p>
-                    </div>
 
-                    <div
-                        class="card-interactive space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-blue-800/40 dark:bg-[#111c3a]/90">
-                        <div
-                            class="flex items-center gap-1.5 text-sm font-extrabold uppercase text-[#214fe0] dark:text-[#60a5fa]">
-                            <svg class="h-4 w-4 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg> We Retrofit
+                        <div class="p-6 transition-colors hover:bg-white/50 dark:hover:bg-slate-900/40">
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">
+                                <svg class="h-4 w-4 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg> <span>We Retrofit</span>
+                            </div>
+                            <p class="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                We upgrade and retrofit old fixtures or traditional lighting systems and convert them into
+                                high-performance LED C.O.B systems.
+                            </p>
                         </div>
-                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                            We upgrade and retrofit old fixtures or traditional lighting systems and convert them into
-                            high-performance LED C.O.B systems.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -439,50 +408,50 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div
-                    class="card-interactive space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                    <div class="text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">LED
-                        Solutions</div>
-                    <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
-                        <div>Citizen <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">(Micro
-                                HumanTech Japan)</span></div>
-                        <div>OSRAM</div>
-                        <div>Lumileds</div>
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f]">
+                <div class="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4 dark:divide-slate-800">
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#214fe0] dark:text-[#60a5fa]">
+                            LED Solutions
+                        </div>
+                        <div class="mt-3 space-y-1.5 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <div>Citizen <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">(Micro HumanTech Japan)</span></div>
+                            <div>OSRAM</div>
+                            <div>Lumileds</div>
+                        </div>
                     </div>
-                </div>
 
-                <div
-                    class="card-interactive space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Thermal
-                        & Optical</div>
-                    <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
-                        <div>Khatod Optical Solutions</div>
-                        <div>MechaTronix</div>
-                        <div>Darkoo</div>
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                            Thermal &amp; Optical
+                        </div>
+                        <div class="mt-3 space-y-1.5 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <div>Khatod Optical Solutions</div>
+                            <div>MechaTronix</div>
+                            <div>Darkoo</div>
+                        </div>
                     </div>
-                </div>
 
-                <div
-                    class="card-interactive space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                    <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Driver
-                        Solutions</div>
-                    <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
-                        <div>Philips LED Driver</div>
-                        <div>Inventronics</div>
-                        <div>Hyperion Technology</div>
-                        <div>DONE</div>
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="font-mono text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                            Driver Solutions
+                        </div>
+                        <div class="mt-3 space-y-1.5 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <div>Philips LED Driver</div>
+                            <div>Inventronics</div>
+                            <div>Hyperion Technology</div>
+                            <div>DONE</div>
+                        </div>
                     </div>
-                </div>
 
-                <div
-                    class="card-interactive space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#111827]">
-                    <div class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Holders &
-                        Connectors</div>
-                    <div class="space-y-1 text-sm font-bold text-slate-800 dark:text-slate-200">
-                        <div>Molex</div>
-                        <div>BJB <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">(Technology for
-                                Light)</span></div>
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="font-mono text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                            Holders &amp; Connectors
+                        </div>
+                        <div class="mt-3 space-y-1.5 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <div>Molex</div>
+                            <div>BJB <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">(Technology for Light)</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -494,7 +463,7 @@
         class="border-t border-slate-200 bg-white py-16 transition-colors duration-200 dark:border-slate-800 dark:bg-[#0a0e1a]">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div
-                class="relative grid grid-cols-1 items-center gap-8 overflow-hidden rounded-3xl border border-transparent bg-gradient-to-br from-[#1a42be] via-[#153396] to-[#0b1742] p-8 text-white shadow-2xl sm:p-12 lg:grid-cols-12 dark:border-blue-900/50 dark:from-[#0f216b] dark:via-[#0b1742] dark:to-[#070e24]">
+                class="relative grid grid-cols-1 items-center gap-8 overflow-hidden rounded-2xl border border-slate-800 bg-[#080d1a] p-8 text-white shadow-lg sm:p-12 lg:grid-cols-12">
                 <!-- Diagonal pinstripes from brand styling -->
                 <div class="pointer-events-none absolute inset-0 opacity-10"
                     style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);">

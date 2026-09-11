@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\View;
@@ -48,6 +49,20 @@ class ExportUnofficialQuotationPdf
             $subtotalUndiscounted += round($qty * $unitPrice, 2);
         }
         unset($item);
+
+        $productIds = array_filter(array_column($items, 'product_id'));
+        if (! empty($productIds)) {
+            $productImages = Product::whereIn('id', $productIds)
+                ->whereNotNull('base64_image')
+                ->pluck('base64_image', 'id');
+
+            foreach ($items as &$item) {
+                if (empty($item['base64_image']) && ! empty($item['product_id'])) {
+                    $item['base64_image'] = $productImages[$item['product_id']] ?? null;
+                }
+            }
+            unset($item);
+        }
 
         $quotationData['items'] = $items;
         $quotationData['subtotal'] = round($subtotal, 2);

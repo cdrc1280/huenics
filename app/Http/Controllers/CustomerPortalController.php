@@ -1,402 +1,143 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\ProcessUnofficialQuotationAction;
+use App\Http\Requests\GenerateUnofficialQuotationRequest;
 use App\Models\CompanySetting;
 use App\Models\Product;
-use App\Models\Quotation;
-use App\Models\QuotationLineItem;
-use App\Models\User;
+use App\Services\CustomerDailyInquiryService;
 use App\Services\ExportUnofficialQuotationPdf;
-use Filament\Notifications\Actions\Action;
-use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class CustomerPortalController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [
-            new Middleware('throttle:60,1', only: ['generateUnofficial']),
-        ];
+        return [new Middleware('throttle:60,1', only: ['generateUnofficial'])];
     }
 
     public function __construct(
-        protected ExportUnofficialQuotationPdf $pdfExporter
+        protected ExportUnofficialQuotationPdf $pdfExporter,
+        protected CustomerDailyInquiryService $inquiryGuard
     ) {}
 
-    /**
-     * Get active product categories
-     */
-    private function getActiveCategories()
-    {
-        return Product::query()
-            ->where('is_active', true)
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category');
-    }
-
-    /**
-     * Customer Portal Landing Page.
-     */
     public function index()
     {
-        $featuredProducts = Product::query()
-            ->where('is_active', true)
-            ->with(['inventoryItem'])
-            ->orderBy('category')
-            ->orderBy('canonical_name')
-            ->take(16)
-            ->get();
-
-        $categories = $this->getActiveCategories();
-
-        $totalProductsCount = Product::query()->where('is_active', true)->count();
-        $yearsInBusiness = CompanySetting::getYearsInBusiness();
-
         return view('customer.home', [
-            'featuredProducts' => $featuredProducts,
-            'categories' => $categories,
-            'totalProductsCount' => $totalProductsCount,
-            'yearsInBusiness' => $yearsInBusiness,
+            'featuredProducts' => Product::query()->where('is_active', true)->with(['inventoryItem'])->orderBy('category')->orderBy('canonical_name')->take(16)->get(),
+            'categories' => $this->getActiveCategories(),
+            'totalProductsCount' => Product::query()->where('is_active', true)->count(),
+            'yearsInBusiness' => CompanySetting::getYearsInBusiness(),
         ]);
     }
 
-    /**
-     * Customer About Us Page.
-     */
     public function about()
     {
         return view('customer.about');
     }
 
-    /**
-     * Customer Product Showcase / Catalog Page.
-     */
     public function products(Request $request)
     {
         $search = $request->query('search');
         $selectedCategory = $request->query('category');
 
-        $query = Product::query()->where('is_active', true);
-
-        if (! empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('canonical_name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('product_code', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        if (! empty($selectedCategory) && $selectedCategory !== 'all') {
-            $query->where('category', $selectedCategory);
-        }
-
-        $products = $query->orderBy('category')->orderBy('canonical_name')->paginate(12)->withQueryString();
-
-        $categories = $this->getActiveCategories();
+        $products = Product::query()->where('is_active', true)
+            ->when($search, fn ($query, $term) => $query->where(fn ($sub) => $sub->where('canonical_name', 'like', "%{$term}%")
+                ->orWhere('sku', 'like', "%{$term}%")->orWhere('product_code', 'like', "%{$term}%")->orWhere('description', 'like', "%{$term}%")))
+            ->when($selectedCategory && $selectedCategory !== 'all', fn ($query) => $query->where('category', $selectedCategory))
+            ->orderBy('category')->orderBy('canonical_name')->paginate(12)->withQueryString();
 
         return view('customer.products', [
             'products' => $products,
-            'categories' => $categories,
+            'categories' => $this->getActiveCategories(),
             'selectedCategory' => $selectedCategory,
             'search' => $search,
         ]);
     }
 
-    /**
-     * Interactive Quotation Generator / Cart Page.
-     */
     public function quotationBuilder(Request $request)
     {
-        $catalogProducts = Product::query()
-            ->where('is_active', true)
-            ->select(['id', 'sku', 'product_code', 'canonical_name', 'unit_default', 'default_price', 'selling_price', 'category'])
-            ->orderBy('canonical_name')
-            ->get();
-
         return view('customer.quotation-builder', [
-            'catalogProducts' => $catalogProducts,
+            'catalogProducts' => Product::query()->where('is_active', true)
+                ->select(['id', 'sku', 'product_code', 'canonical_name', 'unit_default', 'default_price', 'selling_price', 'category'])
+                ->orderBy('canonical_name')->get(),
+            'hasSentToday' => $this->inquiryGuard->hasSentQuotationToday($request),
+            'clientIp' => $request->ip() ?: '127.0.0.1',
+            'secondsUntilMidnight' => max(0, now()->diffInSeconds(now()->endOfDay())),
         ]);
     }
 
-    /**
-     * Process and Generate Unofficial Quotation (View or PDF).
-     */
-    public function generateUnofficial(Request $request)
+    public function generateUnofficial(GenerateUnofficialQuotationRequest $request, ProcessUnofficialQuotationAction $processor)
     {
-        $clientIp = $request->ip() ?: '127.0.0.1';
-        $sanitizedIp = str_replace([':', '.'], '_', $clientIp);
-        $dailyIpKey = 'quotation_daily_ip_'.$sanitizedIp.'_'.date('Y-m-d');
-
-        if (Cache::has($dailyIpKey)) {
-            return back()->withInput()->with('error', 'Daily Submission Limit Reached: Only 1 quotation inquiry per day is permitted from your IP address. Our sales engineering team has already received your previous inquiry and is reviewing it. For urgent project bidding, please call us directly at (02) 8561-6836.');
+        if ($this->inquiryGuard->hasSentQuotationToday($request)) {
+            return back()->withInput()->with('error', 'Daily Submission Limit Reached: Only 1 quotation inquiry per day is permitted from your IP address / session. Our sales engineering team has already received your previous inquiry and is reviewing it. For urgent project bidding, please call us directly at (02) 8561-6836.');
         }
 
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:150',
-            'customer_company' => 'required|string|max:150',
-            'customer_address' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:150',
-            'phone_no' => 'required|string|max:50',
-            'project_name' => 'nullable|string|max:150',
-            'project_location' => 'nullable|string|max:255',
-            'notes' => 'nullable|string|max:1000',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'nullable|integer',
-            'items.*.description' => 'required|string|max:255',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'nullable|numeric|min:0',
-            'items.*.unit' => 'nullable|string|max:20',
-            'items.*.item_code' => 'nullable|string|max:50',
-            'action' => 'nullable|string|in:download_pdf,view',
-        ]);
+        $quoteSummary = $processor->execute($request->validated(), $request);
 
-        $subtotal = 0.0;
-        $subtotalUndiscounted = 0.0;
-        $items = [];
-
-        foreach ($validated['items'] as $index => $item) {
-            $qty = (float) ($item['quantity'] ?? 1);
-            $productId = ! empty($item['product_id']) ? (int) $item['product_id'] : null;
-            $product = $productId ? Product::find($productId) : null;
-
-            $unitPrice = (float) ($item['unit_price'] ?? 0);
-            if ($unitPrice <= 0 && $product) {
-                $unitPrice = (float) ($product->default_price ?: $product->selling_price ?: 0);
-            }
-
-            // Standard trade discount from list price (matches reference PDF 10% volume schedule)
-            $discountedPrice = $product && (float) $product->selling_price > 0 && (float) $product->selling_price < $unitPrice
-                ? (float) $product->selling_price
-                : ($unitPrice > 0 ? round($unitPrice * 0.90, 2) : 0);
-
-            if ($unitPrice <= 0) {
-                $unitPrice = 0.0;
-                $discountedPrice = 0.0;
-            }
-
-            $lineTotal = round($qty * $discountedPrice, 2);
-            $undiscountedTotal = round($qty * $unitPrice, 2);
-
-            $subtotal += $lineTotal;
-            $subtotalUndiscounted += $undiscountedTotal;
-
-            $itemCode = $item['item_code'] ?? ($product?->sku ?: $product?->product_code ?: ('HISI-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)));
-            $desc = $item['description'] ?: ($product?->canonical_name ?? 'Product Line Item');
-
-            $items[] = [
-                'product_id' => $productId,
-                'item_code' => $itemCode,
-                'description' => $desc,
-                'quantity' => $qty,
-                'unit' => $item['unit'] ?? ($product?->unit_default ?: 'pcs'),
-                'unit_price' => $unitPrice,
-                'discounted_price' => $discountedPrice,
-                'line_total' => $lineTotal,
-                'base64_image' => $product?->base64_image,
-            ];
-        }
-
-        $vatAmount = round($subtotal * 0.12, 2);
-        $grandTotal = round($subtotal, 2);
-
-        // Reference number format matching Huenics Vendors Agreement Form (e.g. 260904-P)
-        $refNumber = date('ymd').strtoupper(substr(uniqid(), -3)).' - P';
-
-        $quoteData = [
-            'quotation_number' => $refNumber,
-            'customer_name' => $validated['customer_name'] ?? 'Walk-in Client',
-            'customer_company' => $validated['customer_company'],
-            'customer_address' => $validated['customer_address'] ?? ($validated['project_location'] ?? 'Metro Manila'),
-            'email' => ! empty($validated['email']) ? $validated['email'] : 'N/A',
-            'phone_no' => $validated['phone_no'],
-            'project_name' => ! empty($validated['project_name']) ? $validated['project_name'] : 'General Procurement Project',
-            'project_location' => ! empty($validated['project_location']) ? $validated['project_location'] : 'Metro Manila',
-            'quotation_date' => now()->format('Y-m-d'),
-            'valid_until' => now()->addDays(15)->format('Y-m-d'),
-            'notes' => $validated['notes'] ?? '',
-            'items' => $items,
-            'subtotal' => $subtotal,
-            'subtotal_undiscounted' => $subtotalUndiscounted,
-            'total_amount' => $subtotalUndiscounted,
-            'negotiated_amount' => $subtotal,
-            'vat_amount' => $vatAmount,
-            'grand_total' => $grandTotal,
-            'is_encoded' => false,
-        ];
-
-        // Persist to admin side Quotations database
-        try {
-            $defaultSalesAgent = User::whereIn('role', [User::ROLE_SALES_EXECUTIVE, User::ROLE_ADMIN])->first();
-
-            // Calculate total acquisition cost and line item gross margins
-            $totalCost = 0.0;
-            foreach ($items as &$line) {
-                $pId = $line['product_id'] ?? null;
-                $prod = $pId ? Product::find($pId) : null;
-                $linePrice = (float) ($line['discounted_price'] > 0 ? $line['discounted_price'] : $line['unit_price']);
-                $baseCost = (float) ($prod?->base_cost_price ?: round($linePrice * 0.70, 2));
-                $lineCost = round((float) $line['quantity'] * $baseCost, 2);
-                $grossProfit = round((float) $line['line_total'] - $lineCost, 2);
-
-                $line['base_cost'] = $baseCost;
-                $line['gross_profit'] = $grossProfit;
-                $totalCost += $lineCost;
-            }
-            unset($line);
-
-            $effectiveTotal = (float) ($quoteData['negotiated_amount'] ?: $quoteData['total_amount']);
-            $estimatedProfit = round($effectiveTotal - $totalCost, 2);
-
-            $adminQuotation = Quotation::create([
-                'quotation_number' => $refNumber,
-                'sales_agent_id' => $defaultSalesAgent?->id ?? null,
-                'customer_name' => $quoteData['customer_name'],
-                'customer_company' => $quoteData['customer_company'],
-                'customer_email' => $validated['email'] ?? null,
-                'phone_no' => $quoteData['phone_no'],
-                'project_name' => $quoteData['project_name'],
-                'project_location' => $quoteData['project_location'],
-                'total_amount' => $quoteData['total_amount'],
-                'negotiated_amount' => $quoteData['negotiated_amount'],
-                'total_cost' => $totalCost,
-                'estimated_profit' => $estimatedProfit,
-                'status' => Quotation::STATUS_PENDING,
-                'is_online_request' => true,
-                'client_ip' => $clientIp,
-                'quotation_date' => $quoteData['quotation_date'],
-                'valid_until' => $quoteData['valid_until'],
-                'notes' => ($quoteData['notes'] ? $quoteData['notes'].' | ' : '')."Client IP: {$clientIp} (Online Quotation Builder)",
-                'is_official_po' => false,
-            ]);
-
-            foreach ($items as $idx => $line) {
-                QuotationLineItem::create([
-                    'quotation_id' => $adminQuotation->id,
-                    'line_no' => $idx + 1,
-                    'item_code' => $line['item_code'] ?? null,
-                    'product_id' => $line['product_id'] ?? null,
-                    'description' => $line['description'],
-                    'qty' => $line['quantity'],
-                    'unit' => $line['unit'],
-                    'unit_price' => $line['unit_price'],
-                    'discounted_price' => $line['discounted_price'],
-                    'base_cost' => $line['base_cost'] ?? 0,
-                    'line_total' => $line['line_total'],
-                    'gross_profit' => $line['gross_profit'] ?? 0,
-                ]);
-            }
-
-            // Enforce 1 submission per day per IP (cached until midnight)
-            $secondsUntilMidnight = max(60, now()->diffInSeconds(now()->endOfDay()));
-            Cache::put($dailyIpKey, true, $secondsUntilMidnight);
-            $quoteData['is_encoded'] = true;
-
-            $this->notifyStaffOfNewQuotationRequest($adminQuotation);
-
-        } catch (\Throwable $e) {
-            Log::warning('Quotation admin sync warning: '.$e->getMessage());
-        }
-
-        // Store last generated quotation in session for quick re-downloads
-        session(['last_unofficial_quote' => $quoteData]);
-
-        $action = $request->input('action', 'download_pdf');
-
-        if ($action === 'view') {
-            return view('customer.quotation-success', [
-                'quote' => $quoteData,
-            ]);
-        }
-
-        return $this->pdfExporter->downloadResponse($quoteData);
+        return $request->input('action') === 'view'
+            ? view('customer.quotation-success', ['quote' => $quoteSummary])
+            : $this->pdfExporter->downloadResponse($quoteSummary);
     }
 
-    /**
-     * Download the most recently generated or encoded unofficial quotation PDF.
-     */
     public function downloadLastPdf(Request $request): Response
     {
-        $quoteData = session('last_unofficial_quote');
-
-        if (! $quoteData && $request->has('payload')) {
+        $quoteSummary = session('last_unofficial_quote');
+        if (! $quoteSummary && $request->has('payload')) {
             $decoded = json_decode(base64_decode($request->query('payload')), true);
             if (is_array($decoded)) {
-                $quoteData = $decoded;
+                $quoteSummary = $decoded;
             }
         }
 
-        if (! $quoteData) {
+        if (! $quoteSummary) {
             abort(404, 'No quotation data found to export. Please generate a quotation first.');
         }
 
-        return $this->pdfExporter->downloadResponse($quoteData);
+        return $this->pdfExporter->downloadResponse($quoteSummary);
     }
 
-    /**
-     * HTTP Fallback for undefined routes with smart aliases.
-     */
     public function fallback(Request $request)
     {
-        $path = trim(strtolower($request->path()), '/');
+        $requestedPath = trim(strtolower($request->path()), '/');
 
-        if (in_array($path, ['quotation-builder', 'quote', 'quote-builder', 'estimator'])) {
-            return redirect()->route('customer.quotation-builder');
-        }
+        $redirectRoute = match (true) {
+            in_array($requestedPath, ['quotation-builder', 'quote', 'quote-builder', 'estimator'], true) => 'customer.quotation-builder',
+            in_array($requestedPath, ['catalog', 'shop', 'items', 'store', 'product-catalog'], true) => 'customer.products',
+            in_array($requestedPath, ['contact', 'contact-us', 'company', 'profile'], true) => 'customer.about',
+            default => null,
+        };
 
-        if (in_array($path, ['catalog', 'shop', 'items', 'store', 'product-catalog'])) {
-            return redirect()->route('customer.products');
-        }
-
-        if (in_array($path, ['contact', 'contact-us', 'company', 'profile'])) {
-            return redirect()->route('customer.about');
+        if ($redirectRoute) {
+            return redirect()->route($redirectRoute);
         }
 
         if ($request->expectsJson() || $request->is('api/*')) {
-            return response()->json([
-                'status' => 404,
-                'error' => 'Not Found',
-                'message' => 'The requested endpoint was not found on this server.',
-            ], 404);
+            return response()->json(['status' => 404, 'error' => 'Not Found', 'message' => 'The requested endpoint was not found on this server.'], 404);
         }
 
         return response()->view('errors.404', [], 404);
     }
 
-    private function notifyStaffOfNewQuotationRequest(Quotation $quotation): void
+    private function getActiveCategories()
     {
-        $staffUsers = User::whereIn('role', [
-            User::ROLE_ADMIN,
-            User::ROLE_OPERATIONS_MANAGER,
-        ])->get();
+        return Product::query()->where('is_active', true)->whereNotNull('category')->where('category', '!=', '')
+            ->distinct()->orderBy('category')->pluck('category');
+    }
 
-        $company = $quotation->customer_company ?: $quotation->customer_name;
-        $itemCount = $quotation->lineItems()->count();
+    public static function hasSentQuotationToday(Request $request): bool
+    {
+        return app(CustomerDailyInquiryService::class)->hasSentQuotationToday($request);
+    }
 
-        $notification = Notification::make()
-            ->title('New Online Quotation Request')
-            ->body("{$quotation->customer_name} ({$company}) submitted a quotation request with {$itemCount} item(s).")
-            ->icon('heroicon-o-document-text')
-            ->iconColor('warning')
-            ->actions([
-                Action::make('view')
-                    ->label('Review Quotation')
-                    ->url(route('filament.admin.resources.quotations.view', ['record' => $quotation->id]))
-                    ->button(),
-            ]);
-
-        foreach ($staffUsers as $user) {
-            $notification->sendToDatabase($user);
-        }
+    public static function recordQuotationSent(Request $request, string $clientIp): void
+    {
+        app(CustomerDailyInquiryService::class)->recordQuotationSent($request, $clientIp);
     }
 }

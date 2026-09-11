@@ -21,11 +21,11 @@
 
                 <!-- Left Column: Kinetic Typography & Floating Estimator Hub -->
                 <div class="space-y-6 text-center lg:col-span-7 lg:text-left">
-                    <!-- Tagline Badge -->
+                    <!-- Tagline Badge: Industrial Datum Tag -->
                     <div
-                        class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-[#214fe0] shadow-sm dark:border-blue-800/70 dark:bg-blue-950/70 dark:text-[#60a5fa]">
-                        <span class="h-2 w-2 animate-pulse rounded-full bg-[#214fe0] dark:bg-[#3b82f6]"></span>
-                        Direct Importer &bull; Wholesale Engineering Supply &bull; HISI
+                        class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-slate-100 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-800 shadow-sm dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-200">
+                        <span class="h-1.5 w-1.5 rounded-sm bg-[#214fe0] dark:bg-[#3b82f6]"></span>
+                        <span>Direct Importer &bull; Wholesale Engineering Supply &bull; HISI</span>
                     </div>
 
                     <!-- Headline -->
@@ -37,10 +37,7 @@
                         <h1
                             class="text-3xl font-black leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl dark:text-white">
                             Industrial Lighting <br class="hidden sm:inline">
-                            <span
-                                class="bg-gradient-to-r from-[#214fe0] via-blue-500 to-indigo-400 bg-clip-text text-transparent">
-                                &amp; Power Systems.
-                            </span><br>
+                            <span class="text-[#214fe0] dark:text-[#3b82f6]">&amp; Power Systems.</span><br>
                             Your Way.
                         </h1>
                     </div>
@@ -190,25 +187,22 @@
                         </div>
                     </div>
 
-                    <!-- Company Stats Strip -->
-                    <div class="grid grid-cols-3 gap-4 border-t border-slate-200 pt-2 dark:border-slate-800">
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="font-mono text-xl font-black tabular-nums text-[#214fe0] sm:text-2xl dark:text-[#60a5fa]">
-                                {{ number_format($totalProductsCount) }}+</div>
-                            <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Active Products</div>
+                    <!-- Company Stats Strip: High-Density Industrial Telemetry Ribbon -->
+                    <div class="flex flex-wrap items-center divide-y divide-slate-200 sm:divide-y-0 sm:divide-x rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 font-mono text-xs shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-[#0b101f]">
+                        <div class="flex-1 min-w-[120px] pb-2 sm:pb-0 sm:pr-4 text-center lg:text-left">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Catalog Inventory</span>
+                            <span class="font-mono text-xl font-black tabular-nums text-slate-900 sm:text-2xl dark:text-white">{{ number_format($totalProductsCount) }}+</span>
+                            <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Verified Line Items</span>
                         </div>
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="font-mono text-xl font-black tabular-nums text-[#214fe0] sm:text-2xl dark:text-[#60a5fa]">
-                                {{ $categories->count() }}</div>
-                            <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Categories</div>
+                        <div class="flex-1 min-w-[120px] py-2 sm:py-0 sm:px-4 text-center lg:text-left">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Product Lines</span>
+                            <span class="font-mono text-xl font-black tabular-nums text-slate-900 sm:text-2xl dark:text-white">{{ $categories->count() }}</span>
+                            <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Master Categories</span>
                         </div>
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="font-mono text-xl font-black tabular-nums text-[#214fe0] sm:text-2xl dark:text-[#60a5fa]">
-                                {{ $yearsInBusiness }} Years</div>
-                            <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Industry Direct</div>
+                        <div class="flex-1 min-w-[120px] pt-2 sm:pt-0 sm:pl-4 text-center lg:text-left">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Wholesale History</span>
+                            <span class="font-mono text-xl font-black tabular-nums text-slate-900 sm:text-2xl dark:text-white">{{ $yearsInBusiness }} Years</span>
+                            <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Direct Importer</span>
                         </div>
                     </div>
                 </div>
@@ -216,25 +210,25 @@
                 <!-- Right Column: Interactive 3D Photonic Light Bulb Stage (Lighting Engineering Core) -->
                 <div id="hero-stage-container"
                     class="relative flex w-full flex-col items-center justify-center px-2 sm:px-0 lg:col-span-5">
-                    <!-- Dynamic Backlight Halo (Reacts to Kelvin CCT and ON/OFF Power) -->
-                    <div class="pointer-events-none absolute -z-0 h-72 w-72 rounded-full opacity-80 blur-3xl transition-all duration-700 sm:h-96 sm:w-96 lg:h-[440px] lg:w-[440px]"
-                        style="background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(37, 99, 235, 0.15) 50%, transparent 75%);">
+                    <!-- Dynamic Backlight Halo (Subtle Photometric Radial Wash, Zero Fuzzy AI Neon Blobs) -->
+                    <div class="pointer-events-none absolute -z-0 h-72 w-72 rounded-full opacity-30 transition-all duration-700 sm:h-96 sm:w-96 lg:h-[440px] lg:w-[440px]"
+                        style="background: radial-gradient(circle, rgba(245, 158, 11, 0.20) 0%, rgba(37, 99, 235, 0.05) 50%, transparent 70%);">
                     </div>
 
-                    <!-- Clean Mobile & Tablet Chip Strip: eliminates collisions and overlaps on viewports (<1024px) -->
+                    <!-- Clean Mobile & Tablet Datum Strip: Precision Engineering Tags (Replaces Pill Badges) -->
                     <div class="mb-3 flex w-full flex-wrap items-center justify-center gap-1.5 px-2 lg:hidden">
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber-300/30 bg-gradient-to-r from-amber-500 to-amber-600 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-sm">
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-500 px-2.5 py-0.5 font-mono text-[10px] font-extrabold text-white shadow-sm">
                             <i data-lucide="star" class="h-2.5 w-2.5 text-amber-100"></i>
                             <span>20% OFF Volume</span>
                         </span>
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-200 bg-white/95 px-2.5 py-0.5 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
                             <i data-lucide="file-check-2" class="h-2.5 w-2.5 text-blue-500"></i>
                             <span>12% BIR VAT</span>
                         </span>
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-200 bg-white/95 px-2.5 py-0.5 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
                             <i data-lucide="truck" class="h-2.5 w-2.5 text-emerald-500"></i>
                             <span>Free Freight &ge; &#8369;20k</span>
                         </span>
@@ -283,7 +277,7 @@
 
                         <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only - Top Right) -->
                         <div id="hero-badge-discount"
-                            class="pointer-events-auto absolute -right-4 top-2 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-amber-300/40 bg-gradient-to-r from-amber-500 to-amber-600 px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xl transition-shadow duration-300 hover:shadow-amber-500/30 lg:flex"
+                            class="pointer-events-auto absolute -right-4 top-2 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-amber-400/50 bg-amber-500 px-3 py-1 font-mono text-[11px] font-extrabold text-white shadow-md lg:flex"
                             style="will-change: transform;">
                             <i data-lucide="star" class="h-3.5 w-3.5 text-amber-100"></i>
                             <span>20% OFF Volume</span>
@@ -291,15 +285,15 @@
 
                         <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only - Mid Left) -->
                         <div id="hero-badge-vat"
-                            class="pointer-events-auto absolute -left-6 top-1/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 text-[11px] font-bold text-slate-800 shadow-lg backdrop-blur transition-shadow duration-300 hover:shadow-blue-500/20 lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
+                            class="pointer-events-auto absolute -left-6 top-1/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-3 py-1 font-mono text-[11px] font-bold text-slate-800 shadow-md backdrop-blur lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
                             style="will-change: transform;">
                             <i data-lucide="file-check-2" class="h-3.5 w-3.5 text-blue-500"></i>
                             <span>12% BIR VAT Invoicing</span>
                         </div>
 
-                        <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only - Lower Right Quadrant, Safely Clear of Status Bar) -->
+                        <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only - Lower Right Quadrant) -->
                         <div id="hero-badge-freight"
-                            class="pointer-events-auto absolute -right-6 top-2/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 bg-white/95 px-3.5 py-1.5 text-[11px] font-bold text-slate-800 shadow-lg backdrop-blur transition-shadow duration-300 hover:shadow-emerald-500/20 lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
+                            class="pointer-events-auto absolute -right-6 top-2/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-3 py-1 font-mono text-[11px] font-bold text-slate-800 shadow-md backdrop-blur lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
                             style="will-change: transform;">
                             <i data-lucide="truck" class="h-3.5 w-3.5 text-emerald-500"></i>
                             <span>Free Freight &ge; &#8369; 20,000</span>
@@ -373,76 +367,54 @@
 
             </div>
 
-            <!-- Hero Bottom Trust Bar (Antixor 4-Point Icon Strip) -->
+            <!-- Hero Bottom Trust Bar: Monolithic Architectural Telemetry Strip (De-cardified) -->
             <div
-                class="xs:grid-cols-2 mt-10 grid grid-cols-1 gap-3 border-t border-slate-200 pt-6 text-slate-700 sm:mt-14 sm:gap-6 sm:pt-8 lg:grid-cols-4 dark:border-slate-800/80 dark:text-slate-300">
+                class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:mt-14 lg:grid lg:grid-cols-4 dark:border-slate-800 dark:bg-[#0b101f]">
                 <div
-                    class="flex items-center gap-2.5 rounded-xl border border-slate-200/50 bg-slate-50/70 p-2 sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 dark:border-slate-800/50 dark:bg-slate-900/50 dark:sm:bg-transparent">
-                    <div
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-[#214fe0] sm:h-10 sm:w-10 dark:border-blue-900/60 dark:bg-blue-950/70 dark:text-[#60a5fa]">
-                        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                    </div>
+                    class="flex items-center gap-3 border-b border-slate-200 p-4 sm:border-b-0 sm:border-r dark:border-slate-800">
+                    <svg class="h-5 w-5 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                     <div class="min-w-0">
-                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">Direct Factory Importer
-                        </div>
-                        <div class="truncate text-[10px] text-slate-500 sm:text-[11px] dark:text-slate-400">Zero
-                            distributor markups</div>
+                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">Direct Factory Importer</div>
+                        <div class="truncate font-mono text-[10px] text-slate-500 dark:text-slate-400">Zero distributor markups</div>
                     </div>
                 </div>
 
                 <div
-                    class="flex items-center gap-2.5 rounded-xl border border-slate-200/50 bg-slate-50/70 p-2 sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 dark:border-slate-800/50 dark:bg-slate-900/50 dark:sm:bg-transparent">
-                    <div
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 sm:h-10 sm:w-10 dark:border-emerald-900/60 dark:bg-emerald-950/70 dark:text-emerald-400">
-                        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+                    class="flex items-center gap-3 border-b border-slate-200 p-4 sm:border-b-0 sm:border-r dark:border-slate-800">
+                    <svg class="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <div class="min-w-0">
-                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">BIR 12% VAT Compliant</div>
-                        <div class="truncate text-[10px] text-slate-500 sm:text-[11px] dark:text-slate-400">Official
-                            serialized SI &amp; DR</div>
+                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">BIR 12% VAT Invoicing</div>
+                        <div class="truncate font-mono text-[10px] text-slate-500 dark:text-slate-400">Official serialized SI &amp; DR</div>
                     </div>
                 </div>
 
                 <div
-                    class="flex items-center gap-2.5 rounded-xl border border-slate-200/50 bg-slate-50/70 p-2 sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 dark:border-slate-800/50 dark:bg-slate-900/50 dark:sm:bg-transparent">
-                    <div
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-purple-100 bg-purple-50 text-purple-600 sm:h-10 sm:w-10 dark:border-purple-900/60 dark:bg-purple-950/70 dark:text-purple-400">
-                        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+                    class="flex items-center gap-3 border-b border-slate-200 p-4 sm:border-b-0 sm:border-r dark:border-slate-800">
+                    <svg class="h-5 w-5 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <div class="min-w-0">
-                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">24/7 Digital Estimation
-                        </div>
-                        <div class="truncate text-[10px] text-slate-500 sm:text-[11px] dark:text-slate-400">Instant PDF
-                            download</div>
+                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">Instant BOQ Estimation</div>
+                        <div class="truncate font-mono text-[10px] text-slate-500 dark:text-slate-400">Exportable itemized PDF</div>
                     </div>
                 </div>
 
                 <div
-                    class="flex items-center gap-2.5 rounded-xl border border-slate-200/50 bg-slate-50/70 p-2 sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 dark:border-slate-800/50 dark:bg-slate-900/50 dark:sm:bg-transparent">
-                    <div
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600 sm:h-10 sm:w-10 dark:border-amber-900/60 dark:bg-amber-950/70 dark:text-amber-400">
-                        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
+                    class="flex items-center gap-3 p-4">
+                    <svg class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                     <div class="min-w-0">
-                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">Jobsite Delivery Fleet</div>
-                        <div class="truncate text-[10px] text-slate-500 sm:text-[11px] dark:text-slate-400">Coordinated
-                            site dispatch</div>
+                        <div class="truncate text-xs font-bold text-slate-900 dark:text-white">Jobsite Dispatch Fleet</div>
+                        <div class="truncate font-mono text-[10px] text-slate-500 dark:text-slate-400">Direct site delivery</div>
                     </div>
                 </div>
             </div>
@@ -469,77 +441,64 @@
                 </p>
             </div>
 
-            <div class="stagger-cards grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Card 1: Direct Wholesale Volume -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div
-                        class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-[#214fe0] dark:border-blue-900/60 dark:bg-blue-950/70 dark:text-[#60a5fa]">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+            <!-- Integrated Monolithic Engineering Ledger (De-cardified continuous plane with 1px internal gridlines) -->
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f]">
+                <div class="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4 dark:divide-slate-800">
+                    <!-- Column 1: Direct Wholesale Volume -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/20">
+                        <div class="flex items-center justify-between">
+                            <span class="font-mono text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">01 // SOURCING</span>
+                            <svg class="h-4 w-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-3 text-sm font-bold text-slate-900 dark:text-white">Direct Wholesale Indent</h3>
+                        <p class="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            Zero middlemen or secondary broker markups. We import directly from verified manufacturing lines for competitive project margins.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Direct Wholesale Pricing</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Zero middlemen or secondary broker markups. We import directly from verified manufacturing lines to
-                        give contractors competitive BOQ margins.
-                    </p>
-                </div>
 
-                <!-- Card 2: Citizen Japan COB -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div
-                        class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 text-amber-600 dark:border-amber-900/60 dark:bg-amber-950/70 dark:text-amber-400">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
+                    <!-- Column 2: Citizen Japan COB -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/20">
+                        <div class="flex items-center justify-between">
+                            <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">02 // OPTOELECTRONICS</span>
+                            <svg class="h-4 w-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-3 text-sm font-bold text-slate-900 dark:text-white">Citizen Japan C.O.B Fidelity</h3>
+                        <p class="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            Powered by genuine Citizen Japan arrays. Ra &ge; 90 high CRI, MacAdam ellipse binning, and 50,000-hour L70 life.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Citizen Japan C.O.B Fidelity</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Powered by genuine Citizen Japan optoelectronic arrays. Ra &ge; 90 high color rendering index,
-                        MacAdam ellipse binning, and 50,000-hour L70 life.
-                    </p>
-                </div>
 
-                <!-- Card 3: Instant Automated Estimation -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div
-                        class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/70 dark:text-emerald-400">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                    <!-- Column 3: Instant Automated Estimation -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/20">
+                        <div class="flex items-center justify-between">
+                            <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">03 // AUTOMATION</span>
+                            <svg class="h-4 w-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-3 text-sm font-bold text-slate-900 dark:text-white">Instant 60s Quotations</h3>
+                        <p class="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            Select specifications, customize volume tiers, and download an official itemized PDF quotation with BIR VAT calculations immediately.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Instant 60s Quotations</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Select specifications, customize volume tiers, and download an official itemized PDF quotation
-                        complete with BIR VAT calculations immediately.
-                    </p>
-                </div>
 
-                <!-- Card 4: Lighting Clinic & Technical Lab -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div
-                        class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/70 dark:text-indigo-400">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
+                    <!-- Column 4: Lighting Clinic Support -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/20">
+                        <div class="flex items-center justify-between">
+                            <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">04 // CLINIC SUPPORT</span>
+                            <svg class="h-4 w-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-3 text-sm font-bold text-slate-900 dark:text-white">Lighting Clinic &amp; Lab</h3>
+                        <p class="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            On-staff electrical engineers for driver diagnostics, custom indent orders, Dialux lux simulations, and fixture retrofitting.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Lighting Clinic Support</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        On-staff electrical engineers for component repair, custom indent orders, Dialux photometric lux
-                        planning, and legacy fixture retrofitting.
-                    </p>
                 </div>
             </div>
         </div>
@@ -715,28 +674,27 @@
     <!-- ==========================================================================
                  SECTION 4: SPECIAL CONTRACTOR DISCOUNT BANNER (Antixor Special Offer Banner)
                  ========================================================================== -->
-    <section class="relative overflow-hidden bg-gradient-to-r from-[#152e80] via-[#1a42be] to-[#0d1d52] py-14 text-white">
-        <!-- Diagonal Geometric Accents -->
-        <div class="pointer-events-none absolute inset-0 opacity-10"
-            style="background: repeating-linear-gradient(45deg, #ffffff, #ffffff 3px, transparent 3px, transparent 15px);">
+    <section class="relative overflow-hidden border-y border-slate-800 bg-[#080d1a] py-14 text-white">
+        <!-- Precision Grid Accent -->
+        <div class="pointer-events-none absolute inset-0 opacity-5"
+            style="background-image: linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px); background-size: 32px 32px;">
         </div>
-        <div class="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl"></div>
 
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col items-center justify-between gap-8 lg:flex-row">
                 <div class="space-y-3 text-center lg:text-left">
                     <div
-                        class="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/20 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                        class="inline-flex items-center gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
                         <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
                             <path
                                 d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                         </svg>
                         <span>Contractor Volume Program</span>
                     </div>
-                    <h2 class="text-2xl font-black tracking-tight sm:text-4xl">
+                    <h2 class="text-2xl font-black tracking-tight sm:text-4xl text-white">
                         Get Up to 20% OFF Your First Commercial Project BOQ
                     </h2>
-                    <p class="max-w-2xl text-xs font-normal leading-relaxed text-blue-100 sm:text-sm">
+                    <p class="max-w-2xl text-xs font-normal leading-relaxed text-slate-300 sm:text-sm">
                         Submitting a Bill of Quantities for commercial towers, hotels, or retail rollouts? Unlock direct
                         indent overseas pricing, dedicated technical account handling, and prioritized jobsite dispatch.
                     </p>
@@ -744,11 +702,11 @@
 
                 <div class="flex shrink-0 flex-col items-center gap-3.5 sm:flex-row">
                     <div
-                        class="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 font-mono text-xs font-bold text-amber-300 backdrop-blur">
+                        class="rounded-md border border-slate-700 bg-slate-900/90 px-3.5 py-2 font-mono text-xs font-bold text-amber-300">
                         CODE: HUENICS2026
                     </div>
                     <a href="{{ route('customer.quotation-builder') }}"
-                        class="flex transform items-center gap-2 rounded-xl bg-amber-400 px-6 py-3 text-xs font-bold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-300 active:scale-95 sm:text-sm">
+                        class="flex items-center gap-2 rounded-md bg-amber-400 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-amber-300 active:scale-95 sm:text-sm">
                         <span>Assemble Project BOQ</span>
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -778,63 +736,55 @@
                 </p>
             </div>
 
-            <div class="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-                <!-- Step 1 -->
-                <div class="card-interactive relative rounded-2xl border border-slate-200 bg-slate-50 p-7 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="6">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-4 font-mono text-4xl font-black text-blue-200 dark:text-slate-800">01</div>
-                    <div
-                        class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-[#214fe0] dark:border-blue-900/60 dark:bg-blue-950/70 dark:text-[#60a5fa]">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f]">
+                <div class="grid grid-cols-1 divide-y divide-slate-200 md:grid-cols-3 md:divide-y-0 md:divide-x dark:divide-slate-800">
+                    <!-- Step 1 -->
+                    <div class="p-7 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-4 flex items-center justify-between">
+                            <span class="font-mono text-xs font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa]">PHASE // 01</span>
+                            <svg class="h-5 w-5 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Select Hardware &amp; Specs</h3>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                            Pick your fixture types, Citizen C.O.B wattages, beam angles, and required quantities directly from
+                            our live catalog.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Select Hardware &amp; Specs</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Pick your fixture types, Citizen C.O.B wattages, beam angles, and required quantities directly from
-                        our live catalog.
-                    </p>
-                </div>
 
-                <!-- Step 2 -->
-                <div class="card-interactive relative rounded-2xl border border-slate-200 bg-slate-50 p-7 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="6">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-4 font-mono text-4xl font-black text-blue-200 dark:text-slate-800">02</div>
-                    <div
-                        class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-purple-100 bg-purple-50 text-purple-600 dark:border-purple-900/60 dark:bg-purple-950/70 dark:text-purple-400">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                    <!-- Step 2 -->
+                    <div class="p-7 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-4 flex items-center justify-between">
+                            <span class="font-mono text-xs font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa]">PHASE // 02</span>
+                            <svg class="h-5 w-5 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Instant PDF Estimation</h3>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                            Our quotation engine calculates itemized subtotals and 12% VAT, generating an exportable PDF ready
+                            for client sign-off.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Instant PDF Estimation</h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Our quotation engine calculates itemized subtotals and 12% VAT, generating an exportable PDF ready
-                        for client sign-off.
-                    </p>
-                </div>
 
-                <!-- Step 3 -->
-                <div class="card-interactive relative rounded-2xl border border-slate-200 bg-slate-50 p-7 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="6">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-4 font-mono text-4xl font-black text-blue-200 dark:text-slate-800">03</div>
-                    <div
-                        class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/70 dark:text-emerald-400">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                        </svg>
+                    <!-- Step 3 -->
+                    <div class="p-7 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-4 flex items-center justify-between">
+                            <span class="font-mono text-xs font-black tracking-widest text-emerald-600 dark:text-emerald-400">PHASE // 03</span>
+                            <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                            </svg>
+                        </div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Official SI &amp; Jobsite Dispatch</h3>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                            Our sales desk issues official serialized BIR Sales Invoices and coordinates delivery straight to
+                            your construction site receiver.
+                        </p>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Official SI &amp; Jobsite Dispatch
-                    </h3>
-                    <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Our sales desk issues official serialized BIR Sales Invoices and coordinates delivery straight to
-                        your construction site receiver.
-                    </p>
                 </div>
             </div>
         </div>
@@ -992,75 +942,62 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Project 1: High Rise -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-1 font-mono text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">Taguig City &bull; BGC
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0b101f]">
+                <div class="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4 dark:divide-slate-800">
+                    <!-- Project 1: High Rise -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-1 font-mono text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa]">Taguig City &bull; BGC</div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Commercial Office Tower</h3>
+                        <p class="mb-4 text-xs text-slate-600 dark:text-slate-400">
+                            1,200+ Citizen C.O.B downlights, low-glare darklight reflectors, and DALI-2 dimmable driver arrays
+                            across 28 storeys.
+                        </p>
+                        <div class="flex justify-between border-t border-slate-100 pt-3 font-mono text-[11px] text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
+                            <span>Downlights &amp; Linear</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">100% On-Time</span>
+                        </div>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Commercial Office Tower</h3>
-                    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                        1,200+ Citizen C.O.B downlights, low-glare darklight reflectors, and DALI-2 dimmable driver arrays
-                        across 28 storeys.
-                    </p>
-                    <div
-                        class="flex justify-between border-t border-slate-200 pt-3 font-mono text-[11px] text-slate-600 dark:border-slate-800 dark:text-slate-400">
-                        <span>Downlights &amp; Linear</span>
-                        <span class="font-bold text-emerald-500">100% On-Time</span>
-                    </div>
-                </div>
 
-                <!-- Project 2: Retail Boutique -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-1 font-mono text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">Makati City</div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Luxury Fashion Boutique</h3>
-                    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                        High-CRI Ra &ge; 95 tracklight spotlights, 3000K warm CCT, and precision honeycomb louvers for exact
-                        fabric fidelity.
-                    </p>
-                    <div
-                        class="flex justify-between border-t border-slate-200 pt-3 font-mono text-[11px] text-slate-600 dark:border-slate-800 dark:text-slate-400">
-                        <span>Ra &ge; 95 Spotlight</span>
-                        <span class="font-bold text-emerald-500">Completed</span>
+                    <!-- Project 2: Retail Boutique -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-1 font-mono text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa]">Makati City</div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Luxury Fashion Boutique</h3>
+                        <p class="mb-4 text-xs text-slate-600 dark:text-slate-400">
+                            High-CRI Ra &ge; 95 tracklight spotlights, 3000K warm CCT, and precision honeycomb louvers for exact
+                            fabric fidelity.
+                        </p>
+                        <div class="flex justify-between border-t border-slate-100 pt-3 font-mono text-[11px] text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
+                            <span>Ra &ge; 95 Spotlight</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">Completed</span>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Project 3: Industrial Logistics -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-1 font-mono text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">Laguna Technopark
+                    <!-- Project 3: Industrial Logistics -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-1 font-mono text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa]">Laguna Technopark</div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Cold Storage &amp; Warehouse</h3>
+                        <p class="mb-4 text-xs text-slate-600 dark:text-slate-400">
+                            150W IP65 highbay luminaires, industrial surge-protected drivers (6kV), and high-bay microwave
+                            occupancy sensors.
+                        </p>
+                        <div class="flex justify-between border-t border-slate-100 pt-3 font-mono text-[11px] text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
+                            <span>150W Highbay</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+                        </div>
                     </div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Cold Storage &amp; Warehouse</h3>
-                    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                        150W IP65 highbay luminaires, industrial surge-protected drivers (6kV), and high-bay microwave
-                        occupancy sensors.
-                    </p>
-                    <div
-                        class="flex justify-between border-t border-slate-200 pt-3 font-mono text-[11px] text-slate-600 dark:border-slate-800 dark:text-slate-400">
-                        <span>150W Highbay</span>
-                        <span class="font-bold text-emerald-500">Active</span>
-                    </div>
-                </div>
 
-                <!-- Project 4: Hospitality Lobby -->
-                <div class="card-interactive rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-[#111827]"
-                    data-3d-tilt data-max-tilt="8">
-                    <div class="glare-sheen"></div>
-                    <div class="mb-1 font-mono text-xs font-bold text-[#214fe0] dark:text-[#60a5fa]">Pasay City</div>
-                    <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Hospitality Atrium &amp; Lounge
-                    </h3>
-                    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                        Architectural recessed cove linear profiles, 24V constant voltage flicker-free dimming, and seamless
-                        corner joiners.
-                    </p>
-                    <div
-                        class="flex justify-between border-t border-slate-200 pt-3 font-mono text-[11px] text-slate-600 dark:border-slate-800 dark:text-slate-400">
-                        <span>24V Linear Cove</span>
-                        <span class="font-bold text-emerald-500">Completed</span>
+                    <!-- Project 4: Hospitality Lobby -->
+                    <div class="p-6 transition-colors hover:bg-slate-50/60 dark:hover:bg-slate-900/30">
+                        <div class="mb-1 font-mono text-[11px] font-bold text-[#214fe0] dark:text-[#60a5fa]">Pasay City</div>
+                        <h3 class="mb-2 text-base font-bold text-slate-900 dark:text-white">Hospitality Atrium &amp; Lounge</h3>
+                        <p class="mb-4 text-xs text-slate-600 dark:text-slate-400">
+                            Architectural recessed cove linear profiles, 24V constant voltage flicker-free dimming, and seamless
+                            corner joiners.
+                        </p>
+                        <div class="flex justify-between border-t border-slate-100 pt-3 font-mono text-[11px] text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
+                            <span>24V Linear Cove</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">Completed</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1077,7 +1014,7 @@
 
                 <div class="space-y-6 lg:col-span-6">
                     <div
-                        class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-[#214fe0] dark:border-blue-800/60 dark:bg-blue-950/70 dark:text-[#60a5fa]">
+                        class="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50/80 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#214fe0] dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-[#60a5fa]">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -1099,37 +1036,28 @@
 
                     <div class="space-y-3 pt-2">
                         <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[#214fe0] dark:bg-blue-900/60 dark:text-[#60a5fa]">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
+                            <svg class="h-4 w-4 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
                             <span class="text-xs font-semibold text-slate-800 sm:text-sm dark:text-slate-200">Instant PDF
                                 download with serialized reference numbers</span>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[#214fe0] dark:bg-blue-900/60 dark:text-[#60a5fa]">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
+                            <svg class="h-4 w-4 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
                             <span class="text-xs font-semibold text-slate-800 sm:text-sm dark:text-slate-200">100% BIR 12%
                                 VAT itemized subtotal calculations</span>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[#214fe0] dark:bg-blue-900/60 dark:text-[#60a5fa]">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
+                            <svg class="h-4 w-4 shrink-0 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
                             <span class="text-xs font-semibold text-slate-800 sm:text-sm dark:text-slate-200">One-click
                                 handover to our sales desk for formal billing &amp; dispatch</span>
                         </div>
@@ -1557,6 +1485,8 @@
             let currentCCT = '3000K';
             let currentRotX = 0.20,
                 currentRotY = -0.32;
+            let basePitch = 0.20,
+                baseYaw = -0.32;
             let isDragging = false;
             let previousMousePosition = {
                 x: 0,
@@ -2168,21 +2098,16 @@
                         isDragging = false;
                     });
 
-                    // Ergonomic 3D Viewing Envelope (Prevents Disorienting Inversion & Backside Occlusion)
-                    const MIN_ROT_X = -0.38; // ~ -22 deg (downward tilt constraint)
-                    const MAX_ROT_X = 0.52; // ~ +30 deg (upward tilt constraint)
-                    const MIN_ROT_Y = -0.85; // ~ -48 deg (left yaw constraint)
-                    const MAX_ROT_Y = 0.55; // ~ +32 deg (right yaw constraint)
-
+                    // 360-Degree Continuous Viewing & Freedom Tilting Physics
                     stageContainer.addEventListener('mousemove', (e) => {
                         const coords = getStageNormalizedCoords(e.clientX, e.clientY);
                         if (isDragging) {
                             const deltaX = e.clientX - previousMousePosition.x;
                             const deltaY = e.clientY - previousMousePosition.y;
-                            currentRotY = Math.max(MIN_ROT_Y, Math.min(MAX_ROT_Y, currentRotY + deltaX *
-                                0.012));
-                            currentRotX = Math.max(MIN_ROT_X, Math.min(MAX_ROT_X, currentRotX + deltaY *
-                                0.012));
+                            baseYaw = (baseYaw + deltaX * 0.015) % (Math.PI * 2);
+                            basePitch = Math.max(-Math.PI * 0.95, Math.min(Math.PI * 0.95, basePitch + deltaY * 0.015));
+                            currentRotX = basePitch;
+                            currentRotY = baseYaw;
                             previousMousePosition = {
                                 x: e.clientX,
                                 y: e.clientY
@@ -2200,7 +2125,7 @@
                         isDragging = false;
                     });
 
-                    // Touch physics for mobile/tablets
+                    // Touch physics for mobile/tablets with 360-degree freedom
                     stageContainer.addEventListener('touchstart', (e) => {
                         if (e.touches.length > 0) {
                             isDragging = true;
@@ -2217,10 +2142,10 @@
                         if (e.touches.length > 0 && isDragging) {
                             const deltaX = e.touches[0].clientX - previousMousePosition.x;
                             const deltaY = e.touches[0].clientY - previousMousePosition.y;
-                            currentRotY = Math.max(MIN_ROT_Y, Math.min(MAX_ROT_Y, currentRotY + deltaX *
-                                0.014));
-                            currentRotX = Math.max(MIN_ROT_X, Math.min(MAX_ROT_X, currentRotX + deltaY *
-                                0.014));
+                            baseYaw = (baseYaw + deltaX * 0.016) % (Math.PI * 2);
+                            basePitch = Math.max(-Math.PI * 0.95, Math.min(Math.PI * 0.95, basePitch + deltaY * 0.016));
+                            currentRotX = basePitch;
+                            currentRotY = baseYaw;
                             previousMousePosition = {
                                 x: e.touches[0].clientX,
                                 y: e.touches[0].clientY
@@ -2293,23 +2218,22 @@
                     currentMouseY += (targetMouseY - currentMouseY) * 0.07;
 
                     // -----------------------------------------------------
-                    // 1. Citizen LED COB Model 3D Rotation Physics
+                    // 1. Citizen LED COB Model 3D Rotation Physics (Full 360° Viewing)
                     // -----------------------------------------------------
                     if (!isDragging) {
-                        // Base resting perspective with elegant gentle gyroscopic breathing
-                        const idleRotX = 0.20 + Math.sin(time * 0.5) * 0.05;
-                        const idleRotY = -0.32 + Math.sin(time * 0.35) * 0.10;
+                        // Ambient showcase rotation: 360-degree continuous slow turn when not hovering
+                        if (!isHoveringStage) {
+                            baseYaw = (baseYaw + 0.0035) % (Math.PI * 2);
+                        }
 
-                        // Mouse-guided 3D tilt target (clean, ergonomic responsiveness)
-                        const hoverRotX = 0.20 + (-currentMouseY * 0.35);
-                        const hoverRotY = -0.32 + (currentMouseX * 0.45);
+                        // Gyroscopic micro-breathing & mouse-guided dynamic parallax tilt
+                        const hoverTiltX = (-currentMouseY * 0.35) * mouseInfluence;
+                        const hoverTiltY = (currentMouseX * 0.45) * mouseInfluence;
+                        const targetX = basePitch + hoverTiltX + Math.sin(time * 0.5) * 0.02;
+                        const targetY = baseYaw + hoverTiltY;
 
-                        // Continuous spring blend: eliminates boundary vibration
-                        const targetX = idleRotX * (1.0 - mouseInfluence) + hoverRotX * mouseInfluence;
-                        const targetY = idleRotY * (1.0 - mouseInfluence) + hoverRotY * mouseInfluence;
-
-                        currentRotX += (targetX - currentRotX) * 0.065;
-                        currentRotY += (targetY - currentRotY) * 0.065;
+                        currentRotX += (targetX - currentRotX) * 0.075;
+                        currentRotY += (targetY - currentRotY) * 0.075;
                     }
 
                     cobGroup.rotation.x = currentRotX;

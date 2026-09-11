@@ -172,8 +172,7 @@
                             </span>
                         </td>
                         @php
-                            $prod = !empty($item['product_id']) ? \App\Models\Product::find($item['product_id']) : null;
-                            $prodImg = $prod?->base64_image;
+                            $prodImg = $item['base64_image'] ?? null;
                             $itemDesc = $item['description'] ?? ($item['product_name'] ?? ($item['canonical_name'] ?? '—'));
                         @endphp
                         <td style="border-right: 1px solid #000; padding: 4px; vertical-align: top;">

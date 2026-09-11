@@ -138,11 +138,12 @@ class ExportExecutiveReportPdf
         };
 
         $qDateScope = function ($q) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
-            $q->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
-                $sub->whereBetween('quotation_date', [$startStr, $endStr])
-                    ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
-                    ->orWhereBetween('created_at', [$startStr, $endStr]);
-            });
+            $q->where('is_online_request', false)
+                ->where(function ($sub) use ($startStr, $endStr, $startDateOnly, $endDateOnly) {
+                    $sub->whereBetween('quotation_date', [$startStr, $endStr])
+                        ->orWhere(fn ($s) => $s->whereDate('quotation_date', '>=', $startDateOnly)->whereDate('quotation_date', '<=', $endDateOnly))
+                        ->orWhereBetween('created_at', [$startStr, $endStr]);
+                });
         };
 
         $query = User::query()
@@ -182,7 +183,7 @@ class ExportExecutiveReportPdf
             $profit = (float) ($user->period_profit ?? 0);
             $quotesCount = (int) ($user->period_quotations ?? 0);
             $posCount = (int) ($user->period_pos ?? 0);
-            $winRate = $quotesCount > 0 ? round(($posCount / $quotesCount) * 100, 1) : 0;
+            $winRate = $quotesCount > 0 ? min(100.0, round(($posCount / $quotesCount) * 100, 1)) : 0.0;
 
             $totalSales += $achieved;
             $totalProfit += $profit;
@@ -223,8 +224,8 @@ class ExportExecutiveReportPdf
         $deliveredCount = $deliveredPoQuery->count();
         $deliveredAmount = (float) $deliveredPoQuery->sum('order_amount');
 
-        $overallMarginPct = $totalSales > 0 ? round(($totalProfit / $totalSales) * 100, 1) : 0;
-        $overallWinRate = $totalQuotes > 0 ? round(($totalPos / $totalQuotes) * 100, 1) : 0;
+        $overallMarginPct = $totalSales > 0 ? round(($totalProfit / $totalSales) * 100, 1) : 0.0;
+        $overallWinRate = $totalQuotes > 0 ? min(100.0, round(($totalPos / $totalQuotes) * 100, 1)) : 0.0;
 
         $scopeLabel = 'All Accounts & Sales Executives';
         if ($filterInhouse) {

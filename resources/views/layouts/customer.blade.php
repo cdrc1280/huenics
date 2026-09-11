@@ -65,12 +65,7 @@
         .dark .glare-sheen {
             background: radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.16) 0%, transparent 60%);
         }
-        .hero-halo-glow {
-            background: radial-gradient(circle, rgba(33, 79, 224, 0.22) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 72%);
-        }
-        .dark .hero-halo-glow {
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(30, 58, 138, 0.12) 52%, transparent 72%);
-        }
+
         [data-3d-depth] {
             transform: translateZ(calc(var(--depth, 15) * 1px));
             transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);

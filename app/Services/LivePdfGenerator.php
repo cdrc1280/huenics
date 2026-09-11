@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use Dompdf\Cpdf;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -62,6 +63,22 @@ class LivePdfGenerator
 
         // Normalize data to clean UTF-8 and standard ASCII slashes to avoid '?' rendering
         $cleanedData = $this->normalizePdfData($data);
+
+        if (isset($cleanedData['items']) && is_array($cleanedData['items'])) {
+            $productIds = array_filter(array_column($cleanedData['items'], 'product_id'));
+            if (! empty($productIds)) {
+                $productImages = Product::whereIn('id', $productIds)
+                    ->whereNotNull('base64_image')
+                    ->pluck('base64_image', 'id');
+
+                foreach ($cleanedData['items'] as &$lineItem) {
+                    if (empty($lineItem['base64_image']) && ! empty($lineItem['product_id'])) {
+                        $lineItem['base64_image'] = $productImages[$lineItem['product_id']] ?? null;
+                    }
+                }
+                unset($lineItem);
+            }
+        }
 
         $html = view('pdf.live-document-template', $cleanedData)->render();
         $dompdf->loadHtml($html, 'UTF-8');

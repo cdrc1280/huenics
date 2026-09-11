@@ -49,6 +49,20 @@
             </div>
         @endif
 
+        {{-- Daily Quotation Inquiry Limit Banner with Countdown Timer --}}
+        <div id="quotation-top-alert" class="{{ !empty($hasSentToday) ? '' : 'hidden' }} mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    <span class="font-black">Daily Submission Limit Active:</span> You have submitted a quotation inquiry today from your IP (<span class="font-mono">{{ $clientIp ?? 'session' }}</span>). Limit: 1 send per day.
+                </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/60 px-3 py-1 rounded-lg border border-amber-300 dark:border-amber-700 self-stretch sm:self-auto justify-center">
+                <span class="text-[11px] uppercase tracking-wider text-amber-800 dark:text-amber-300 font-bold">Resets In:</span>
+                <span id="top-countdown-timer" class="font-mono font-black text-amber-900 dark:text-amber-100 text-xs tabular-nums">--h --m --s</span>
+            </div>
+        </div>
+
         <form id="quotation-form" method="POST" action="{{ route('customer.quotation.generate') }}">
             @csrf
             <input type="hidden" name="action" id="form-action" value="view">
@@ -258,15 +272,40 @@
                             Generate, print, or download your official Huenics Vendors Agreement Form quotation instantly. Your itemized specifications and volume schedules are formatted per company standards.
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="space-y-3 pt-2">
-                            <!-- Download PDF Button -->
+                        <!-- Action Buttons with Live Countdown Timer -->
+                        <div class="space-y-3 pt-2" id="quotation-action-container">
+                            <!-- Submit & Download PDF Button -->
                             <button type="submit" 
+                                    id="btn-submit-quote"
                                     onclick="document.getElementById('form-action').value='download_pdf'"
-                                    class="w-full bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] btn-interactive text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>Submit Quotation & Download PDF</span>
+                                    @disabled(!empty($hasSentToday))
+                                    class="w-full font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm {{ !empty($hasSentToday) ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 cursor-not-allowed select-none pointer-events-none' : 'bg-[#214fe0] hover:bg-[#1a42be] active:scale-[0.98] btn-interactive text-white hover:shadow-blue-500/25' }}">
+                                <svg id="quote-btn-icon" class="w-4 h-4 shrink-0 {{ !empty($hasSentToday) ? 'text-amber-500 animate-pulse' : 'text-white' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    @if(!empty($hasSentToday))
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    @endif
+                                </svg>
+                                <span id="quote-btn-text">
+                                    @if(!empty($hasSentToday))
+                                        Daily Limit Active • Resets in <span id="quote-countdown-timer" class="font-mono font-bold text-amber-700 dark:text-amber-300 tabular-nums">calculating...</span>
+                                    @else
+                                        Submit Quotation & Download PDF
+                                    @endif
+                                </span>
                             </button>
+
+                            <!-- Daily Limit Countdown Pill -->
+                            <div id="quotation-limit-badge" class="{{ !empty($hasSentToday) ? '' : 'hidden' }} p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-2 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span class="font-medium">1 quotation per day limit active</span>
+                                </div>
+                                <span id="badge-countdown-timer" class="font-mono font-black text-amber-700 dark:text-amber-300 text-xs tabular-nums">--:--:--</span>
+                            </div>
                         </div>
                     </div>
 
@@ -563,6 +602,185 @@
         return (parseFloat(amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    // =========================================================================
+    // Real-Time Daily Quotation Limit & Live Countdown Timer Engine
+    // =========================================================================
+    const isServerLocked = @json(!empty($hasSentToday));
+    const serverTodayStr = @json(date('Y-m-d'));
+    let countdownInterval = null;
+
+    function getLocalDateStr() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getSecondsUntilMidnight() {
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+        return Math.max(0, Math.floor((midnight - now) / 1000));
+    }
+
+    function formatCountdownTime(totalSecs) {
+        if (totalSecs <= 0) return '00h 00m 00s';
+        const h = Math.floor(totalSecs / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+        return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+    }
+
+    function lockQuotationButton() {
+        const btn = document.getElementById('btn-submit-quote');
+        const btnText = document.getElementById('quote-btn-text');
+        const btnIcon = document.getElementById('quote-btn-icon');
+        const badge = document.getElementById('quotation-limit-badge');
+        const topAlert = document.getElementById('quotation-top-alert');
+
+        if (!btn) return;
+
+        btn.dataset.locked = 'true';
+        btn.style.pointerEvents = 'none';
+
+        btn.classList.remove('bg-[#214fe0]', 'hover:bg-[#1a42be]', 'active:scale-[0.98]', 'btn-interactive', 'text-white', 'shadow-lg');
+        btn.classList.add('bg-slate-200', 'dark:bg-slate-800', 'text-slate-500', 'dark:text-slate-400', 'border', 'border-slate-300', 'dark:border-slate-700', 'cursor-not-allowed', 'select-none', 'pointer-events-none');
+
+        if (btnIcon) {
+            btnIcon.classList.remove('text-white');
+            btnIcon.classList.add('text-amber-500', 'animate-pulse');
+            btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />';
+        }
+
+        if (badge) badge.classList.remove('hidden');
+        if (topAlert) topAlert.classList.remove('hidden');
+
+        // Multi-channel local persistence across local date, server date, and cookie
+        const localDate = getLocalDateStr();
+        localStorage.setItem('quotation_sent_date_' + localDate, 'true');
+        localStorage.setItem('quotation_sent_date_' + serverTodayStr, 'true');
+
+        const secsUntilMidnight = getSecondsUntilMidnight();
+        document.cookie = `quotation_sent_date=${localDate}; max-age=${secsUntilMidnight}; path=/; SameSite=Lax`;
+
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        function tick() {
+            const remaining = getSecondsUntilMidnight();
+            if (remaining <= 0) {
+                unlockQuotationButton();
+                return;
+            }
+            const timeStr = formatCountdownTime(remaining);
+
+            const timerDisplays = document.querySelectorAll('#quote-countdown-timer, #badge-countdown-timer, #top-countdown-timer');
+            timerDisplays.forEach(el => {
+                if (el) el.textContent = timeStr;
+            });
+
+            if (btnText) {
+                btnText.innerHTML = `Daily Limit Active • Resets in <span id="quote-countdown-timer" class="font-mono font-bold text-amber-700 dark:text-amber-300 tabular-nums">${timeStr}</span>`;
+            }
+        }
+
+        tick();
+        countdownInterval = setInterval(tick, 1000);
+
+        // Defer disabling the button element slightly so browser native form POST triggers cleanly
+        setTimeout(() => {
+            btn.disabled = true;
+        }, 300);
+    }
+
+    function unlockQuotationButton() {
+        if (countdownInterval) clearInterval(countdownInterval);
+        const localDate = getLocalDateStr();
+        localStorage.removeItem('quotation_sent_date_' + localDate);
+        localStorage.removeItem('quotation_sent_date_' + serverTodayStr);
+        document.cookie = 'quotation_sent_date=; max-age=0; path=/;';
+
+        const btn = document.getElementById('btn-submit-quote');
+        const btnText = document.getElementById('quote-btn-text');
+        const btnIcon = document.getElementById('quote-btn-icon');
+        const badge = document.getElementById('quotation-limit-badge');
+        const topAlert = document.getElementById('quotation-top-alert');
+
+        if (!btn) return;
+
+        btn.disabled = false;
+        delete btn.dataset.locked;
+        btn.style.pointerEvents = 'auto';
+
+        btn.classList.remove('bg-slate-200', 'dark:bg-slate-800', 'text-slate-500', 'dark:text-slate-400', 'border', 'border-slate-300', 'dark:border-slate-700', 'cursor-not-allowed', 'select-none', 'pointer-events-none');
+        btn.classList.add('bg-[#214fe0]', 'hover:bg-[#1a42be]', 'active:scale-[0.98]', 'btn-interactive', 'text-white', 'shadow-lg');
+
+        if (btnIcon) {
+            btnIcon.classList.remove('text-amber-500', 'animate-pulse');
+            btnIcon.classList.add('text-white');
+            btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
+        }
+
+        if (btnText) {
+            btnText.textContent = 'Submit Quotation & Download PDF';
+        }
+
+        if (badge) badge.classList.add('hidden');
+        if (topAlert) topAlert.classList.add('hidden');
+    }
+
+    function initQuotationRateLimiter() {
+        const localDate = getLocalDateStr();
+        const localSent = localStorage.getItem('quotation_sent_date_' + localDate) === 'true'
+            || localStorage.getItem('quotation_sent_date_' + serverTodayStr) === 'true';
+        const hasCookieSent = document.cookie.includes('quotation_sent_date=');
+
+        if (isServerLocked || localSent || hasCookieSent) {
+            localStorage.setItem('quotation_sent_date_' + localDate, 'true');
+            localStorage.setItem('quotation_sent_date_' + serverTodayStr, 'true');
+            lockQuotationButton();
+        }
+
+        const btn = document.getElementById('btn-submit-quote');
+        if (btn && !btn.dataset.clickBound) {
+            btn.dataset.clickBound = 'true';
+            btn.addEventListener('click', function(e) {
+                if (btn.dataset.locked === 'true' || btn.disabled) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            });
+        }
+
+        const form = document.getElementById('quotation-form');
+        if (form && !form.dataset.limiterBound) {
+            form.dataset.limiterBound = 'true';
+            form.addEventListener('submit', function(e) {
+                const isLockedNow = isServerLocked
+                    || btn?.dataset.locked === 'true'
+                    || localStorage.getItem('quotation_sent_date_' + getLocalDateStr()) === 'true'
+                    || localStorage.getItem('quotation_sent_date_' + serverTodayStr) === 'true'
+                    || document.cookie.includes('quotation_sent_date=');
+
+                if (isLockedNow) {
+                    e.preventDefault();
+                    lockQuotationButton();
+                    alert('Daily Limit Active: Only 1 commercial quotation submission is permitted per day. Next submission resets at midnight.');
+                    return false;
+                }
+
+                if (!currentItems || currentItems.length === 0) {
+                    e.preventDefault();
+                    alert('Please add at least 1 product item to your quotation request.');
+                    return false;
+                }
+
+                // Immediately lock button & display live timer right on the button!
+                lockQuotationButton();
+            });
+        }
+    }
+
     // Expose builder functions globally for inline events
     window.addProductRow = addProductRow;
     window.onProductSelect = onProductSelect;
@@ -570,16 +788,21 @@
     window.deleteRow = deleteRow;
     window.clearAllItems = clearAllItems;
     window.initBuilder = initBuilder;
+    window.lockQuotationButton = lockQuotationButton;
+    window.unlockQuotationButton = unlockQuotationButton;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('items-tbody')) initBuilder();
+        initQuotationRateLimiter();
     });
     document.addEventListener('huenics:page-loaded', () => {
         if (document.getElementById('items-tbody')) initBuilder();
+        initQuotationRateLimiter();
     });
     // Immediate init if injected via SPA
     if (document.readyState !== 'loading' && document.getElementById('items-tbody')) {
         initBuilder();
+        initQuotationRateLimiter();
     }
 </script>
 @endpush
