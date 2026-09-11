@@ -14,7 +14,7 @@ class ListSubComponents extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Add Single Sub-Component')
+                ->label('Create Sub Component')
                 ->icon('heroicon-o-plus'),
         ];
     }

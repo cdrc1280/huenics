@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\InventoryItemResource;
 use App\Filament\Resources\ProductResource;
 use App\Filament\Resources\ProductResource\RelationManagers\SubComponentsRelationManager;
+use App\Filament\Resources\SubComponentResource\Pages\CreateSubComponent;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\ProductComponent;
@@ -12,6 +13,7 @@ use App\Models\User;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProductSubComponentsTest extends TestCase
@@ -247,5 +249,58 @@ class ProductSubComponentsTest extends TestCase
 
         $response = $this->get('/admin/inventory-items');
         $response->assertSuccessful();
+    }
+
+    public function test_standalone_sub_component_can_be_created_with_null_parent_product(): void
+    {
+        $component = ProductComponent::create([
+            'component_name' => 'Standalone High CRI LED Chip',
+            'product_code' => 'CHIP-CRI-95',
+            'category' => 'LED Emitters',
+            'wattage' => '15W',
+            'voltage' => '36V',
+            'color_temperature' => '4000K',
+            'unit' => 'pcs',
+            'cost_price' => 120.00,
+            'parent_product_id' => null,
+            'quantity' => 1.0000,
+            'component_group' => 'LED Emitters',
+            'option_name' => 'Standalone High CRI LED Chip',
+            'additional_cost' => 120.00,
+        ]);
+
+        $this->assertDatabaseHas('product_components', [
+            'id' => $component->id,
+            'parent_product_id' => null,
+            'component_name' => 'Standalone High CRI LED Chip',
+            'product_code' => 'CHIP-CRI-95',
+        ]);
+        $this->assertNull($component->parent_product_id);
+    }
+
+    public function test_filament_create_sub_component_page_successfully_creates_standalone_record(): void
+    {
+        $this->actingAs($this->admin);
+
+        Livewire::test(CreateSubComponent::class)
+            ->fillForm([
+                'component_name' => 'Filament Test Power Supply Unit',
+                'product_code' => 'PSU-24V-10A',
+                'category' => 'Power Supply',
+                'unit' => 'pcs',
+                'cost_price' => 450.00,
+                'wattage' => '240W',
+                'voltage' => '24V DC',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('product_components', [
+            'component_name' => 'Filament Test Power Supply Unit',
+            'product_code' => 'PSU-24V-10A',
+            'category' => 'Power Supply',
+            'parent_product_id' => null,
+            'additional_cost' => 450.00,
+        ]);
     }
 }

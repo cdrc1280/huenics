@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ProductResource\RelationManagers;
 
 use App\Enums\UnitOfMeasure;
-use App\Models\Product;
 use App\Models\ProductComponent;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -39,10 +38,30 @@ class SubComponentsRelationManager extends RelationManager
                 ->icon('heroicon-o-puzzle-piece')
                 ->schema([
                     Grid::make(3)->schema([
-                        Select::make('component_product_id')
-                            ->label('Link Existing Catalog Product (Optional)')
-                            ->placeholder('Select catalog item to auto-populate specifications...')
-                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                        Select::make('source_subcomponent_id')
+                            ->label('Select Sub-Component (from Sub-Components Table)')
+                            ->placeholder('Select sub-component from sub-components table...')
+                            ->options(function () {
+                                $standalone = ProductComponent::query()
+                                    ->whereNull('parent_product_id')
+                                    ->orderBy('component_name')
+                                    ->get();
+
+                                if ($standalone->isNotEmpty()) {
+                                    return $standalone->mapWithKeys(fn (ProductComponent $c) => [
+                                        $c->id => "{$c->effective_name}".($c->effective_code !== '—' ? " ({$c->effective_code})" : '').($c->cost_price > 0 ? ' — ₱'.number_format($c->cost_price, 2) : ''),
+                                    ]);
+                                }
+
+                                return ProductComponent::query()
+                                    ->whereNotNull('component_name')
+                                    ->orderBy('component_name')
+                                    ->get()
+                                    ->unique('component_name')
+                                    ->mapWithKeys(fn (ProductComponent $c) => [
+                                        $c->id => "{$c->effective_name}".($c->effective_code !== '—' ? " ({$c->effective_code})" : '').($c->cost_price > 0 ? ' — ₱'.number_format($c->cost_price, 2) : ''),
+                                    ]);
+                            })
                             ->searchable()
                             ->live()
                             ->afterStateUpdated(function ($state, callable $set) {
@@ -50,21 +69,24 @@ class SubComponentsRelationManager extends RelationManager
                                     return;
                                 }
 
-                                $catalogItem = Product::find($state);
-                                if ($catalogItem) {
-                                    $set('component_name', $catalogItem->canonical_name);
-                                    $set('product_code', $catalogItem->product_code);
-                                    $set('category', $catalogItem->category);
-                                    $set('wattage', $catalogItem->wattage);
-                                    $set('voltage', $catalogItem->voltage);
-                                    $set('color_temperature', $catalogItem->color_temperature);
-                                    $set('unit', $catalogItem->unit_default ?: 'pcs');
-                                    $set('cost_price', $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price);
-                                    $set('image_path', $catalogItem->image_path);
-                                    $set('component_group', $catalogItem->category ?: 'General');
-                                    $set('option_name', $catalogItem->canonical_name);
+                                $sub = ProductComponent::find($state);
+                                if ($sub) {
+                                    $set('component_name', $sub->effective_name);
+                                    $set('product_code', $sub->effective_code !== '—' ? $sub->effective_code : null);
+                                    $set('category', $sub->effective_category);
+                                    $set('wattage', $sub->wattage);
+                                    $set('voltage', $sub->voltage);
+                                    $set('color_temperature', $sub->color_temperature);
+                                    $set('unit', $sub->effective_unit ?: 'pcs');
+                                    $set('cost_price', $sub->effective_cost ?: 0.00);
+                                    $set('component_product_id', $sub->component_product_id);
+                                    $set('image_path', $sub->image_path);
+                                    $set('component_group', $sub->effective_category ?: 'General');
+                                    $set('option_name', $sub->effective_name ?: 'Part');
+                                    $set('additional_cost', $sub->effective_cost ?: 0.00);
                                 }
                             })
+                            ->dehydrated(false)
                             ->columnSpan(['default' => 3, 'lg' => 2]),
 
                         TextInput::make('quantity')
@@ -284,18 +306,38 @@ class SubComponentsRelationManager extends RelationManager
                     ->label('Bulk Add Sub-Components')
                     ->icon('heroicon-o-squares-plus')
                     ->color('primary')
-                    ->modalHeading('Bulk Add Sub-Components (Select Multiple Catalog Products)')
-                    ->modalDescription('Select multiple products from the catalogue dropdown to automatically attach them as sub-components / BOM parts.')
+                    ->modalHeading('Bulk Add Sub-Components to Finished Product')
+                    ->modalDescription('Select multiple parts from the master sub-components table to attach to this product\'s Bill of Materials (BOM).')
                     ->modalWidth('2xl')
                     ->form([
-                        Select::make('component_product_ids')
-                            ->label('Select Catalogue Products (Multiple Dropdown)')
+                        Select::make('component_subcomponent_ids')
+                            ->label('Select Sub-Components from Sub-Components Table (Multiple Dropdown)')
                             ->multiple()
-                            ->options(fn () => Product::orderBy('canonical_name')->pluck('canonical_name', 'id'))
+                            ->options(function () {
+                                $standalone = ProductComponent::query()
+                                    ->whereNull('parent_product_id')
+                                    ->orderBy('component_name')
+                                    ->get();
+
+                                if ($standalone->isNotEmpty()) {
+                                    return $standalone->mapWithKeys(fn (ProductComponent $c) => [
+                                        $c->id => "{$c->effective_name}".($c->effective_code !== '—' ? " ({$c->effective_code})" : '').($c->cost_price > 0 ? ' — ₱'.number_format($c->cost_price, 2) : ''),
+                                    ]);
+                                }
+
+                                return ProductComponent::query()
+                                    ->whereNotNull('component_name')
+                                    ->orderBy('component_name')
+                                    ->get()
+                                    ->unique('component_name')
+                                    ->mapWithKeys(fn (ProductComponent $c) => [
+                                        $c->id => "{$c->effective_name}".($c->effective_code !== '—' ? " ({$c->effective_code})" : '').($c->cost_price > 0 ? ' — ₱'.number_format($c->cost_price, 2) : ''),
+                                    ]);
+                            })
                             ->searchable()
                             ->required()
-                            ->placeholder('Search and select products...')
-                            ->helperText('Selected products will be bulk-created as BOM sub-components.'),
+                            ->placeholder('Search and select parts from sub-components table...')
+                            ->helperText('Selected sub-components will be attached to this product BOM.'),
 
                         TextInput::make('default_quantity')
                             ->label('Quantity per Parent Unit')
@@ -307,38 +349,40 @@ class SubComponentsRelationManager extends RelationManager
                     ])
                     ->action(function (array $data): void {
                         $parentProduct = $this->getOwnerRecord();
-                        $productIds = $data['component_product_ids'] ?? [];
+                        $subIds = $data['component_subcomponent_ids'] ?? [];
                         $qty = (float) ($data['default_quantity'] ?? 1.0);
                         $count = 0;
 
-                        foreach ($productIds as $prodId) {
-                            $catalogItem = Product::find($prodId);
-                            if (! $catalogItem) {
+                        foreach ($subIds as $subId) {
+                            $sub = ProductComponent::find($subId);
+                            if (! $sub) {
                                 continue;
                             }
 
                             ProductComponent::create([
                                 'parent_product_id' => $parentProduct->id,
-                                'component_product_id' => $catalogItem->id,
-                                'component_name' => $catalogItem->canonical_name,
-                                'product_code' => $catalogItem->product_code ?: $catalogItem->sku,
-                                'category' => $catalogItem->category ?: 'General',
-                                'wattage' => $catalogItem->wattage,
-                                'voltage' => $catalogItem->voltage,
-                                'color_temperature' => $catalogItem->color_temperature,
-                                'unit' => $catalogItem->unit_default ?: 'pcs',
-                                'cost_price' => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                                'component_product_id' => $sub->component_product_id,
+                                'component_name' => $sub->effective_name,
+                                'product_code' => $sub->effective_code !== '—' ? $sub->effective_code : null,
+                                'category' => $sub->effective_category,
+                                'wattage' => $sub->wattage,
+                                'voltage' => $sub->voltage,
+                                'color_temperature' => $sub->color_temperature,
+                                'unit' => $sub->effective_unit ?: 'pcs',
+                                'cost_price' => $sub->effective_cost ?: 0.00,
                                 'quantity' => $qty,
-                                'image_path' => $catalogItem->image_path,
-                                'component_group' => $catalogItem->category ?: 'General',
-                                'option_name' => $catalogItem->canonical_name,
-                                'additional_cost' => $catalogItem->base_cost_price > 0 ? $catalogItem->base_cost_price : $catalogItem->selling_price,
+                                'image_path' => $sub->image_path,
+                                'notes' => $sub->notes,
+                                'component_group' => $sub->effective_category ?: 'General',
+                                'option_name' => $sub->effective_name ?: 'Part',
+                                'additional_cost' => $sub->effective_cost ?: 0.00,
+                                'is_default' => true,
                             ]);
                             $count++;
                         }
 
                         Notification::make()
-                            ->title("{$count} Sub-Components Created")
+                            ->title("{$count} Sub-Components Attached")
                             ->body("Successfully attached {$count} parts to {$parentProduct->canonical_name}. Stocks and BOM capacity updated.")
                             ->success()
                             ->send();
