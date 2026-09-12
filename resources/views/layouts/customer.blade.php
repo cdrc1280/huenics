@@ -28,8 +28,7 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
 
-    <!-- Production Vector Icons (Lucide Icons) & Motion (Deferred Non-blocking) -->
-    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <!-- Production High-Performance Motion Assets -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
     @stack('styles')
@@ -37,7 +36,7 @@
         [x-cloak] { display: none !important; }
         
         /* -------------------------------------------------------------
-         * 3D Spatial Physics & Dynamic Specular Sheen (Antixor / Luxury Standard)
+         * 3D Spatial Physics & Tactile Surface Standard
          * ------------------------------------------------------------- */
         .perspective-1000 {
             perspective: 1000px;
@@ -52,18 +51,7 @@
             position: relative;
         }
         .glare-sheen {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 60%);
-            opacity: 0;
-            mix-blend-mode: overlay;
-            transition: opacity 0.25s ease;
-            z-index: 20;
-        }
-        .dark .glare-sheen {
-            background: radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.16) 0%, transparent 60%);
+            display: none;
         }
 
         [data-3d-depth] {
@@ -410,21 +398,12 @@
     <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur border-b border-slate-200 dark:border-slate-800/90 shadow-sm transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20 gap-2">
-                <!-- Authentic HISI Logo from PDF Header -->
+                <!-- Official Huenics Logo (Transparent) -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <a href="{{ route('customer.home') }}" class="flex items-center gap-2 sm:gap-3 group shrink-0" title="Huenics Industrial Sales Inc.">
-                        <div class="border-l-[3px] border-r-[3px] border-[#214fe0] dark:border-[#3b82f6] px-2 py-0.5 text-center shrink-0 bg-blue-50/50 dark:bg-blue-950/60 rounded-sm transition-colors">
-                            <div class="text-lg sm:text-2xl font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa] leading-none">HISI</div>
-                            <div class="text-[7.5px] sm:text-[9px] font-bold text-blue-900 dark:text-blue-200 tracking-tight whitespace-nowrap mt-0.5">Colors &bull; Techniques &bull; Technology</div>
-                        </div>
-                        <div class="border-l border-slate-200 dark:border-slate-800 pl-2.5 sm:pl-3 hidden sm:block shrink-0 transition-colors">
-                            <div class="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
-                                HUENICS
-                            </div>
-                            <div class="text-[10px] sm:text-xs font-extrabold tracking-tight text-[#214fe0] dark:text-[#60a5fa] uppercase leading-none mt-0.5">
-                                INDUSTRIAL SALES INC.
-                            </div>
-                        </div>
+                        <img src="{{ asset('images/huenics-logo.png') }}" alt="Huenics Industrial Sales Inc." class="h-7 sm:h-9 w-auto object-contain dark:hidden">
+                        <img src="{{ asset('images/huenics-logo-white.png') }}" alt="Huenics Industrial Sales Inc." class="h-7 sm:h-9 w-auto object-contain hidden dark:block">
+                        <span class="sr-only">HUENICS</span>
                     </a>
                 </div>
 
@@ -581,14 +560,8 @@
                 <!-- Col 1: Brand Info -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xs tracking-wider">
-                            HISI
-                        </div>
-                        <span class="text-lg font-bold text-white tracking-tight">HUENICS INDUSTRIAL</span>
+                        <img src="{{ asset('images/huenics-logo-white.png') }}" alt="Huenics Industrial Sales, Inc." class="h-8 w-auto object-contain">
                     </div>
-                    <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                        Colors &bull; Techniques &bull; Technology
-                    </p>
                     <p class="text-sm text-slate-400 leading-relaxed">
                         Huenics Industrial Sales Inc. (HISI) is a trusted supplier and direct importer of commercial lighting, C.O.B downlights, industrial electrical, and construction supplies in the Philippines.
                     </p>

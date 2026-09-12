@@ -4,11 +4,7 @@
 
 @section('content')
 <!-- Header Banner (PDF Crisp White in Light / Sleek Obsidian in Dark) -->
-<section class="bg-white dark:bg-[#070b14] ambient-mesh-hero py-12 border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden hisi-geometric-accent transition-colors duration-200 animate-fade-in-up">
-    <!-- Diagonal Stripes Accent -->
-    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#214fe0]/15 dark:from-blue-500/10 via-blue-500/5 to-transparent pointer-events-none"></div>
-    <div class="absolute -bottom-10 -left-10 w-64 h-64 pointer-events-none opacity-25 dark:opacity-15" style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);"></div>
-
+<section class="bg-white dark:bg-[#070b14] py-10 border-b border-zinc-200 dark:border-zinc-800 relative overflow-hidden transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -21,7 +17,7 @@
                 </p>
             </div>
             <a href="{{ route('customer.quotation-builder') }}" 
-               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md dark:shadow-[0_0_15px_rgba(33,79,224,0.3)] btn-interactive shrink-0">
+               class="inline-flex items-center gap-2 bg-[#214fe0] hover:bg-[#1a42be] text-white font-bold px-4 py-2.5 rounded text-xs sm:text-sm shadow-sm btn-interactive shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <span>Open Quotation Builder</span>
             </a>

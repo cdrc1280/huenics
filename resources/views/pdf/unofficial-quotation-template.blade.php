@@ -282,19 +282,9 @@
     <table class="header-table">
         <tr>
             <td style="vertical-align: middle;">
-                <table style="border-collapse: collapse; width: auto;">
-                    <tr>
-                        <td style="vertical-align: middle;">
-                            <div class="logo-bracket">[ HISI ]</div>
-                        </td>
-                        <td style="padding-left: 8px; vertical-align: middle;">
-                            <div class="company-header-text">HUENICS INDUSTRIAL SALES INC.</div>
-                            <div class="company-tagline">Colors &bull; Techniques &bull; Technology</div>
-                        </td>
-                    </tr>
-                </table>
+                @include('pdf.partials.logo', ['style' => 'max-height: 36px; width: auto; display: block;'])
             </td>
-            <td style="width: 36%; vertical-align: top; text-align: right;">
+            <td style="width: 36%; vertical-align: middle; text-align: right;">
                 <div class="vendors-banner">
                     VENDORS AGREEMENT FORM
                 </div>

@@ -117,6 +117,9 @@
             <tr>
                 {{-- Vendor Details (Left Column) --}}
                 <td style="width: 50%; border-right: 1px solid #000000; padding: 3px 5px;">
+                    <div style="margin-bottom: 3px;">
+                        @include('pdf.partials.logo', ['style' => 'max-height: 26px; width: auto; display: block;'])
+                    </div>
                     <table class="table-collapse">
                         <tr>
                             <td style="width: 85px; font-weight: bold;">Vendor:</td>

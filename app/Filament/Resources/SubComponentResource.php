@@ -78,12 +78,31 @@ class SubComponentResource extends Resource
                             ->placeholder('e.g. Meanwell LED Driver 12V 5A, Citizen COB Chip, E27 Aluminum Base')
                             ->required()
                             ->maxLength(255)
+                            ->unique(
+                                table: 'product_components',
+                                column: 'component_name',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn ($rule) => $rule->whereNull('parent_product_id')
+                            )
+                            ->validationMessages([
+                                'unique' => 'A sub-component with this Part Name already exists in the registry.',
+                            ])
                             ->columnSpan(['default' => 3, 'lg' => 2]),
 
                         TextInput::make('product_code')
                             ->label('Part Code / SKU / Model #')
                             ->placeholder('e.g. DRV-12V-5A, CHIP-COB-3500K')
                             ->maxLength(100)
+                            ->nullable()
+                            ->unique(
+                                table: 'product_components',
+                                column: 'product_code',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn ($rule) => $rule->whereNull('parent_product_id')
+                            )
+                            ->validationMessages([
+                                'unique' => 'A sub-component with this Part Code / SKU already exists in the registry.',
+                            ])
                             ->columnSpan(['default' => 3, 'lg' => 1]),
                     ]),
 

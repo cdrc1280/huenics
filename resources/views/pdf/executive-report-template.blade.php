@@ -162,7 +162,9 @@
     <table class="header-table">
         <tr>
             <td style="width: 55%; vertical-align: top;">
-                <div class="company-name">HUENICS INDUSTRIAL SALES INC.</div>
+                <div style="margin-bottom: 4px;">
+                    @include('pdf.partials.logo', ['style' => 'max-height: 34px; width: auto; display: block;'])
+                </div>
                 <div class="company-subtitle">
                     Direct Importer & Wholesale Distributor • Electrical, Lighting & Industrial Supplies<br>
                     2F Starmall EDSA-Shaw, Mandaluyong City, Metro Manila • Tel: #8561 6836

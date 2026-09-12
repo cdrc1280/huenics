@@ -162,6 +162,42 @@ class CustomerPortalTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_customer_can_download_unofficial_quotation_pdf_with_linked_product_ids(): void
+    {
+        $product = Product::create([
+            'sku' => 'TEST-DOWNLIGHT-01',
+            'canonical_name' => 'LED Downlight 7W Warm White',
+            'category' => 'Lighting',
+            'unit_default' => 'pcs',
+            'default_price' => 450.00,
+            'selling_price' => 450.00,
+            'image_path' => 'products/sample-downlight.jpg',
+            'is_active' => true,
+        ]);
+
+        $payload = [
+            'customer_name' => 'Engr. Roberto Santos',
+            'customer_company' => 'MGS Construction Corp.',
+            'phone_no' => '0917-123-4567',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'item_code' => $product->sku,
+                    'description' => $product->canonical_name,
+                    'quantity' => 10,
+                    'unit' => 'pcs',
+                    'unit_price' => 450.00,
+                ],
+            ],
+            'action' => 'download_pdf',
+        ];
+
+        $response = $this->post('/quotation/generate-unofficial', $payload);
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
     public function test_company_profile_products_are_stored_and_queryable(): void
     {
         $this->seed(HuenicsCompanyProfileProductSeeder::class);

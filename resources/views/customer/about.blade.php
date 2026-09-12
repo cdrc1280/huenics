@@ -5,13 +5,13 @@
 @section('content')
     <!-- About Header Hero (PDF Design: Crisp White in Light / Sleek Obsidian in Dark) -->
     <section
-        class="ambient-mesh-hero lg:py-18 hisi-geometric-accent relative overflow-hidden border-b border-slate-200 bg-white py-14 transition-colors duration-200 dark:border-slate-800/80 dark:bg-[#070b14]">
-        <div class="pointer-events-none absolute -bottom-10 -left-10 h-64 w-64 opacity-30 dark:opacity-20"
-            style="background: repeating-linear-gradient(45deg, rgba(33, 79, 224, 0.08), rgba(33, 79, 224, 0.08) 3px, transparent 3px, transparent 12px);">
-        </div>
-
+        class="lg:py-18 relative overflow-hidden border-b border-zinc-200 bg-white py-14 transition-colors duration-200 dark:border-zinc-800 dark:bg-[#070b14]">
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="animate-fade-in-up max-w-3xl space-y-3">
+                <div class="mb-3">
+                    <img src="{{ asset('images/huenics-logo.png') }}" alt="Huenics Industrial Sales Inc." class="h-10 sm:h-12 w-auto object-contain dark:hidden">
+                    <img src="{{ asset('images/huenics-logo-white.png') }}" alt="Huenics Industrial Sales Inc." class="h-10 sm:h-12 w-auto object-contain hidden dark:block">
+                </div>
                 <div
                     class="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50/80 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#214fe0] dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-[#60a5fa]">
                     <svg class="h-3.5 w-3.5 text-[#214fe0] dark:text-[#60a5fa]" fill="none" viewBox="0 0 24 24"
@@ -463,12 +463,7 @@
         class="border-t border-slate-200 bg-white py-16 transition-colors duration-200 dark:border-slate-800 dark:bg-[#0a0e1a]">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div
-                class="relative grid grid-cols-1 items-center gap-8 overflow-hidden rounded-2xl border border-slate-800 bg-[#080d1a] p-8 text-white shadow-lg sm:p-12 lg:grid-cols-12">
-                <!-- Diagonal pinstripes from brand styling -->
-                <div class="pointer-events-none absolute inset-0 opacity-10"
-                    style="background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 2px, transparent 2px, transparent 12px);">
-                </div>
-
+                class="relative grid grid-cols-1 items-center gap-8 overflow-hidden rounded-xl border border-zinc-800 bg-[#080d1a] p-8 text-white shadow-sm sm:p-12 lg:grid-cols-12">
                 <div class="relative z-10 space-y-4 lg:col-span-7">
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Head Office & Commercial
                         Desk</span>

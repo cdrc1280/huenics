@@ -45,18 +45,8 @@
         {{-- TOP LOGO & HEADER BANNER --}}
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
             <tr>
-                <td style="width: 60%; border: 1.5px solid #1e3a8a; padding: 3px 5px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="font-size: 20px; font-weight: bold; color: #1e3a8a; font-family: Arial, sans-serif; width: 70px; vertical-align: middle;">
-                                |HISI|
-                            </td>
-                            <td style="vertical-align: middle;">
-                                <div style="font-size: 11px; font-weight: bold; color: #1e3a8a;">HUENICS INDUSTRIAL SALES INC.</div>
-                                <div style="font-size: 7.5px; font-weight: bold; color: #2563eb;">Colors • Techniques • Technology</div>
-                            </td>
-                        </tr>
-                    </table>
+                <td style="width: 60%; border: 1.5px solid #1e3a8a; padding: 3px 5px; vertical-align: middle;">
+                    @include('pdf.partials.logo', ['style' => 'max-height: 36px; width: auto; display: block;'])
                 </td>
                 <td style="width: 2%;"></td>
                 <td style="width: 38%; background-color: #192756; text-align: center; vertical-align: middle; padding: 4px;">

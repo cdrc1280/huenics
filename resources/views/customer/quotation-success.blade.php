@@ -43,16 +43,13 @@
             
             <!-- Document Header with PDF HISI Logo -->
             <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 dark:border-slate-800 pb-6 print:border-slate-200">
-                <div class="flex items-start gap-3">
-                    <div class="border-l-[3px] border-r-[3px] border-[#214fe0] px-2.5 py-1 text-center shrink-0 bg-blue-50/50 dark:bg-[#152347] rounded-sm print:bg-blue-50/50">
-                        <div class="text-xl sm:text-2xl font-black tracking-widest text-[#214fe0] dark:text-[#60a5fa] leading-none print:text-[#214fe0]">HISI</div>
-                        <div class="text-[8px] font-bold text-blue-900 dark:text-blue-300 tracking-tight whitespace-nowrap mt-0.5 print:text-blue-900">Colors &bull; Techniques &bull; Technology</div>
+                <div class="flex items-start gap-4">
+                    <div class="shrink-0">
+                        <img src="{{ asset('images/huenics-logo.png') }}" alt="Huenics Industrial Sales Inc." class="h-10 sm:h-12 w-auto object-contain dark:hidden print:block">
+                        <img src="{{ asset('images/huenics-logo-white.png') }}" alt="Huenics Industrial Sales Inc." class="h-10 sm:h-12 w-auto object-contain hidden dark:block print:hidden">
                     </div>
-                    <div class="border-l border-slate-300 dark:border-slate-700 pl-3 print:border-slate-300">
-                        <div class="text-lg font-black text-slate-900 dark:text-white tracking-tight uppercase print:text-slate-900">
-                            Huenics Industrial Sales Inc.
-                        </div>
-                        <div class="text-xs text-slate-600 dark:text-slate-400 mt-1 space-y-0.5 print:text-slate-600">
+                    <div>
+                        <div class="text-xs text-slate-600 dark:text-slate-400 space-y-0.5 print:text-slate-600 mt-1">
                             <div>Unit 916 Avida Towers Intima, 497 Pres. Quirino Ave. Ext. Cor. Zulueta St., Paco, Manila</div>
                             <div>Tel. #8561 6836 &bull; CS: +63 968 8500720 &bull; Tech: +63 965 6287205</div>
                             <div>Email: huenicsindustrialsales@gmail.com &bull; crm.huenics777@gmail.com</div>

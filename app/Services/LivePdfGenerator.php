@@ -67,9 +67,13 @@ class LivePdfGenerator
         if (isset($cleanedData['items']) && is_array($cleanedData['items'])) {
             $productIds = array_filter(array_column($cleanedData['items'], 'product_id'));
             if (! empty($productIds)) {
-                $productImages = Product::whereIn('id', $productIds)
-                    ->whereNotNull('base64_image')
-                    ->pluck('base64_image', 'id');
+                $productImages = Product::query()
+                    ->whereIn('id', $productIds)
+                    ->whereNotNull('image_path')
+                    ->get(['id', 'image_path'])
+                    ->mapWithKeys(fn (Product $p) => [$p->id => $p->base64_image])
+                    ->filter()
+                    ->all();
 
                 foreach ($cleanedData['items'] as &$lineItem) {
                     if (empty($lineItem['base64_image']) && ! empty($lineItem['product_id'])) {

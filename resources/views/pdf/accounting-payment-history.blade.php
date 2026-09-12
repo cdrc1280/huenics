@@ -113,7 +113,9 @@
     <table class="header-table">
         <tr>
             <td>
-                <div class="company-name">HUENICS INDUSTRIAL SALES INC.</div>
+                <div style="margin-bottom: 4px;">
+                    @include('pdf.partials.logo', ['style' => 'max-height: 32px; width: auto; display: block;'])
+                </div>
                 <div class="company-sub">Unit 916 Avida Towers Intima, Paco, Manila | Tel: (02) 8561-6836</div>
                 <div class="company-sub">Finance & Treasury Settlement Ledger</div>
             </td>

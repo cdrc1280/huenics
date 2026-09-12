@@ -29,7 +29,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->sidebarCollapsibleOnDesktop()
-            ->brandName('Huenics')
+            ->brandName('Huenics Industrial Sales')
+            ->brandLogo(asset('images/huenics-logo.png'))
+            ->darkModeBrandLogo(asset('images/huenics-logo-white.png'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('images/huenics-logo.png'))
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Slate,

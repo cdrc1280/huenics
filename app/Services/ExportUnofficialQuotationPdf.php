@@ -52,9 +52,13 @@ class ExportUnofficialQuotationPdf
 
         $productIds = array_filter(array_column($items, 'product_id'));
         if (! empty($productIds)) {
-            $productImages = Product::whereIn('id', $productIds)
-                ->whereNotNull('base64_image')
-                ->pluck('base64_image', 'id');
+            $productImages = Product::query()
+                ->whereIn('id', $productIds)
+                ->whereNotNull('image_path')
+                ->get(['id', 'image_path'])
+                ->mapWithKeys(fn (Product $p) => [$p->id => $p->base64_image])
+                ->filter()
+                ->all();
 
             foreach ($items as &$item) {
                 if (empty($item['base64_image']) && ! empty($item['product_id'])) {

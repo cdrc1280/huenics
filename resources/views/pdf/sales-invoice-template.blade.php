@@ -177,7 +177,11 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>HUENICS INDUSTRIAL SALES INC.</h1>
+        <div style="text-align: center; margin-bottom: 5px;">
+            <div style="display: inline-block;">
+                @include('pdf.partials.logo', ['style' => 'max-height: 38px; width: auto; margin: 0 auto; display: block;'])
+            </div>
+        </div>
         <p>916 Avida Towers Intima Zulueta St., Brgy. 678 Zone 74, Dist. V, 1007 Paco, NCR, City of Manila, First District, Philippines</p>
         <p class="tin">VAT Reg. TIN: 010-707-000-00000</p>
     </div>

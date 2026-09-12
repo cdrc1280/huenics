@@ -12,9 +12,6 @@
         <div class="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"
             style="background-image: radial-gradient(rgba(33, 79, 224, 0.15) 1px, transparent 1px); background-size: 28px 28px;">
         </div>
-        <div
-            class="pointer-events-none absolute right-0 top-0 h-96 w-96 bg-gradient-to-bl from-blue-600/15 via-blue-500/5 to-transparent dark:from-blue-500/15">
-        </div>
 
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-8">
@@ -210,47 +207,30 @@
                 <!-- Right Column: Interactive 3D Photonic Light Bulb Stage (Lighting Engineering Core) -->
                 <div id="hero-stage-container"
                     class="relative flex w-full flex-col items-center justify-center px-2 sm:px-0 lg:col-span-5">
-                    <!-- Dynamic Backlight Halo (Subtle Photometric Radial Wash, Zero Fuzzy AI Neon Blobs) -->
-                    <div class="pointer-events-none absolute -z-0 h-72 w-72 rounded-full opacity-30 transition-all duration-700 sm:h-96 sm:w-96 lg:h-[440px] lg:w-[440px]"
-                        style="background: radial-gradient(circle, rgba(245, 158, 11, 0.20) 0%, rgba(37, 99, 235, 0.05) 50%, transparent 70%);">
-                    </div>
 
-                    <!-- Clean Mobile & Tablet Datum Strip: Precision Engineering Tags (Replaces Pill Badges) -->
+                    <!-- Mobile & Tablet Datum Strip: Precision Engineering Tags -->
                     <div class="mb-3 flex w-full flex-wrap items-center justify-center gap-1.5 px-2 lg:hidden">
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-500 px-2.5 py-0.5 font-mono text-[10px] font-extrabold text-white shadow-sm">
-                            <i data-lucide="star" class="h-2.5 w-2.5 text-amber-100"></i>
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-extrabold text-amber-700 dark:text-amber-300">
+                            <svg class="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             <span>20% OFF Volume</span>
                         </span>
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
-                            <i data-lucide="file-check-2" class="h-2.5 w-2.5 text-blue-500"></i>
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-zinc-300 bg-zinc-50 px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                            <svg class="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span>12% BIR VAT</span>
                         </span>
                         <span
-                            class="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white">
-                            <i data-lucide="truck" class="h-2.5 w-2.5 text-emerald-500"></i>
+                            class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-zinc-300 bg-zinc-50 px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                            <svg class="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
                             <span>Free Freight &ge; &#8369;20k</span>
                         </span>
                     </div>
 
                     <!-- 3D Spatial Perspective Stage -->
                     <div id="hero-3d-stage"
-                        class="xs:max-w-[340px] relative flex aspect-square w-full max-w-[300px] select-none items-center justify-center rounded-full border border-slate-700/50 bg-gradient-to-b from-slate-900/60 via-[#0b1120]/80 to-[#060913]/95 shadow-2xl backdrop-blur-md sm:max-w-[420px] dark:border-slate-800/80"
+                        class="stage-canvas-frame shadow-xl"
                         style="transform-style: preserve-3d; will-change: transform;">
-
-                        <div class="glare-sheen" style="transition: opacity 0.3s ease;"></div>
-
-                        <!-- Ambient Photometric Stage Wall Wash (Subtle & Minimized to Showcase Subject) -->
-                        <div id="luminaire-ambient-halo"
-                            class="pointer-events-none absolute inset-0 rounded-full transition-all duration-700"
-                            style="opacity: 0.30; background: radial-gradient(circle at 50% 50%, rgba(255, 184, 77, 0.18) 0%, rgba(245, 158, 11, 0.05) 32%, transparent 55%);">
-                        </div>
-
-                        <!-- Subtle Studio Vignette Glow -->
-                        <div
-                            class="bg-radial pointer-events-none absolute inset-0 rounded-full from-transparent via-transparent to-black/40">
-                        </div>
 
                         <!-- Three.js 3D WebGL Light Bulb Canvas Container -->
                         <div class="pointer-events-none relative z-10 flex h-full w-full items-center justify-center">
@@ -258,82 +238,81 @@
                                 class="pointer-events-auto h-full w-full cursor-grab rounded-full active:cursor-grabbing"
                                 style="touch-action: none; width: 100%; height: 100%;"></canvas>
 
-                            <!-- Center Hotspot Click-to-Toggle Overlay (Clean non-shifting hitbox) -->
+                            <!-- Center Hotspot Click-to-Toggle Overlay -->
                             <div id="luminaire-center-toggle"
                                 class="pointer-events-auto absolute z-20 flex h-32 w-32 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95 sm:h-36 sm:w-36"
                                 title="Click to Toggle Citizen COB LED ON / OFF">
                                 <span class="sr-only">Toggle Citizen COB LED</span>
                             </div>
 
-                            <!-- Technical Specification Tag (Docked Cleanly at Stage Bottom with Zero Overlap) -->
+                            <!-- Technical Specification Tag -->
                             <div id="luminaire-tech-tag"
-                                class="xs:text-[9px] pointer-events-none absolute inset-x-0 bottom-2.5 z-20 mx-auto flex w-fit max-w-[90%] items-center justify-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-blue-500/40 bg-slate-900/90 px-2 py-0.5 font-mono text-[8px] font-black uppercase tracking-normal text-white shadow-md backdrop-blur transition-all duration-300 sm:bottom-3.5 sm:max-w-[85%] sm:gap-1.5 sm:px-3 sm:py-1 sm:text-[10px] sm:tracking-wider dark:bg-[#0c1220]/95">
+                                class="pointer-events-none absolute inset-x-0 bottom-2.5 z-20 mx-auto flex w-fit max-w-[90%] items-center justify-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap rounded border border-zinc-700 bg-zinc-900/95 px-2.5 py-1 font-mono text-[9px] font-bold text-zinc-100 shadow backdrop-blur transition-all duration-300 sm:bottom-3.5 sm:text-[10px]">
                                 <span id="luminaire-status-dot"
-                                    class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-400 sm:h-2 sm:w-2"></span>
-                                <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K SOFT WHITE • 24°
-                                    SPOT • CRI 80</span>
+                                    class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 sm:h-2 sm:w-2"></span>
+                                <span id="luminaire-status-text" class="truncate">CITIZEN COB LED • 3000K SOFT WHITE • 24° SPOT • CRI 80</span>
                             </div>
                         </div>
 
-                        <!-- Floating Badge 1: 20% OFF Contractor Volume (Desktop Only - Top Right) -->
+                        <!-- Floating Badge 1: 20% OFF Contractor Volume -->
                         <div id="hero-badge-discount"
-                            class="pointer-events-auto absolute -right-4 top-2 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-amber-400/50 bg-amber-500 px-3 py-1 font-mono text-[11px] font-extrabold text-white shadow-md lg:flex"
+                            class="pointer-events-auto absolute -right-3 top-2 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] font-extrabold text-amber-700 dark:text-amber-300 lg:flex"
                             style="will-change: transform;">
-                            <i data-lucide="star" class="h-3.5 w-3.5 text-amber-100"></i>
+                            <svg class="h-3 w-3 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             <span>20% OFF Volume</span>
                         </div>
 
-                        <!-- Floating Badge 2: 12% BIR VAT Invoicing (Desktop Only - Mid Left) -->
+                        <!-- Floating Badge 2: 12% BIR VAT Invoicing -->
                         <div id="hero-badge-vat"
-                            class="pointer-events-auto absolute -left-6 top-1/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-3 py-1 font-mono text-[11px] font-bold text-slate-800 shadow-md backdrop-blur lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
+                            class="pointer-events-auto absolute -left-4 top-1/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded border border-zinc-300 bg-zinc-50/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-zinc-800 lg:flex dark:border-zinc-700 dark:bg-zinc-800/95 dark:text-zinc-200"
                             style="will-change: transform;">
-                            <i data-lucide="file-check-2" class="h-3.5 w-3.5 text-blue-500"></i>
+                            <svg class="h-3 w-3 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span>12% BIR VAT Invoicing</span>
                         </div>
 
-                        <!-- Floating Badge 3: Free Freight ≥ ₱20,000 (Desktop Only - Lower Right Quadrant) -->
+                        <!-- Floating Badge 3: Free Freight ≥ ₱20,000 -->
                         <div id="hero-badge-freight"
-                            class="pointer-events-auto absolute -right-6 top-2/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-3 py-1 font-mono text-[11px] font-bold text-slate-800 shadow-md backdrop-blur lg:flex dark:border-slate-700 dark:bg-[#0c1220]/95 dark:text-white"
+                            class="pointer-events-auto absolute -right-4 top-2/3 z-30 hidden items-center gap-1.5 whitespace-nowrap rounded border border-zinc-300 bg-zinc-50/95 px-2.5 py-0.5 font-mono text-[10px] font-bold text-zinc-800 lg:flex dark:border-zinc-700 dark:bg-zinc-800/95 dark:text-zinc-200"
                             style="will-change: transform;">
-                            <i data-lucide="truck" class="h-3.5 w-3.5 text-emerald-500"></i>
-                            <span>Free Freight &ge; &#8369; 20,000</span>
+                            <svg class="h-3 w-3 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                            <span>Free Freight &ge; &#8369;20,000</span>
                         </div>
                     </div>
 
-                    <!-- Tactile Industrial 3D Lighting Control Deck ("ON / OFF & Citizen COB CCT Selection") -->
+                    <!-- Tactile Industrial 3D Lighting Control Deck -->
                     <div
-                        class="xs:max-w-[360px] z-20 mt-4 flex w-full max-w-[320px] flex-col gap-2 rounded-2xl border border-slate-300/60 bg-slate-100/95 p-2 shadow-xl backdrop-blur-md sm:mt-5 sm:max-w-[400px] sm:p-2.5 dark:border-blue-500/30 dark:bg-[#0c1427]/95">
+                        class="mt-4 flex w-full max-w-[360px] flex-col gap-2 rounded-xl border border-zinc-300 bg-zinc-100/90 p-2.5 shadow-sm sm:mt-5 sm:max-w-[400px] dark:border-zinc-800 dark:bg-[#0b0f19]">
 
                         <!-- Console Tier 1: Primary Power Engine & Kelvin CCT Selector -->
                         <div class="flex w-full items-center justify-between gap-1.5 sm:gap-2">
                             <!-- Power Switch (ON / OFF) -->
                             <button type="button" id="luminaire-power-btn" onclick="window.toggleLuminairePower()"
-                                class="flex shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-xl bg-emerald-500 px-2.5 py-1.5 text-[10.5px] font-bold text-white shadow-md shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-600 active:scale-95 sm:gap-1.5 sm:px-3 sm:text-xs">
-                                <i data-lucide="power" class="h-3 w-3 sm:h-3.5 sm:w-3.5"></i>
+                                class="flex shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded bg-emerald-600 px-2.5 py-1.5 text-[10.5px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-emerald-700 active:scale-95 sm:gap-1.5 sm:px-3 sm:text-xs">
+                                <svg class="h-3 w-3 sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-.707-.707M5.636 5.636a9 9 0 000 12.728M12 3v9"/></svg>
                                 <span id="luminaire-power-label"><span class="xs:inline hidden">COB: </span>ON</span>
                             </button>
 
-                            <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) - Rigid 4-Column Grid Guaranteeing Zero Layout Shift -->
+                            <!-- Kelvin CCT Selector (3000K / 3500K / 4000K / 5000K) -->
                             <div
-                                class="grid flex-1 grid-cols-4 gap-0.5 rounded-xl border border-slate-300/60 bg-slate-200 p-0.5 dark:border-slate-700/60 dark:bg-slate-800/90">
+                                class="grid flex-1 grid-cols-4 gap-0.5 rounded border border-zinc-300 bg-zinc-200 p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
                                 <button type="button" data-cct="3000K" onclick="window.setLuminaireCCT('3000K', this)"
-                                    class="cct-btn xs:text-[10px] w-full cursor-pointer rounded-lg bg-amber-500 py-1 text-center text-[9.5px] font-black text-white shadow-md shadow-amber-500/30 transition-all duration-200 sm:text-[11px]"
-                                    title="3000K Soft White Glow (Warm White • 24° Spot • CRI 80)">
+                                    class="cct-btn w-full cursor-pointer rounded bg-amber-600 py-1 text-center text-[9.5px] font-bold text-white shadow-sm transition-all duration-200 sm:text-[11px]"
+                                    title="3000K Soft White Glow">
                                     3000K
                                 </button>
                                 <button type="button" data-cct="3500K" onclick="window.setLuminaireCCT('3500K', this)"
-                                    class="cct-btn xs:text-[10px] w-full cursor-pointer rounded-lg py-1 text-center text-[9.5px] font-black text-slate-500 transition-all duration-200 hover:text-slate-900 sm:text-[11px] dark:text-slate-400 dark:hover:text-white"
-                                    title="3500K Neutral Glow (Warm White • 24° Spot • CRI 80)">
+                                    class="cct-btn w-full cursor-pointer rounded py-1 text-center text-[9.5px] font-semibold text-zinc-600 transition-all duration-200 hover:text-zinc-900 sm:text-[11px] dark:text-zinc-400 dark:hover:text-white"
+                                    title="3500K Neutral Glow">
                                     3500K
                                 </button>
                                 <button type="button" data-cct="4000K" onclick="window.setLuminaireCCT('4000K', this)"
-                                    class="cct-btn xs:text-[10px] w-full cursor-pointer rounded-lg py-1 text-center text-[9.5px] font-black text-slate-500 transition-all duration-200 hover:text-slate-900 sm:text-[11px] dark:text-slate-400 dark:hover:text-white"
-                                    title="4000K Daylight Glow (Neutral White • 24° Spot • CRI 80)">
+                                    class="cct-btn w-full cursor-pointer rounded py-1 text-center text-[9.5px] font-semibold text-zinc-600 transition-all duration-200 hover:text-zinc-900 sm:text-[11px] dark:text-zinc-400 dark:hover:text-white"
+                                    title="4000K Daylight Glow">
                                     4000K
                                 </button>
                                 <button type="button" data-cct="5000K" onclick="window.setLuminaireCCT('5000K', this)"
-                                    class="cct-btn xs:text-[10px] w-full cursor-pointer rounded-lg py-1 text-center text-[9.5px] font-black text-slate-500 transition-all duration-200 hover:text-slate-900 sm:text-[11px] dark:text-slate-400 dark:hover:text-white"
-                                    title="5000K Crystal White Glow (Cool White • 24° Spot • CRI 80)">
+                                    class="cct-btn w-full cursor-pointer rounded py-1 text-center text-[9.5px] font-semibold text-zinc-600 transition-all duration-200 hover:text-zinc-900 sm:text-[11px] dark:text-zinc-400 dark:hover:text-white"
+                                    title="5000K Crystal White Glow">
                                     5000K
                                 </button>
                             </div>
@@ -341,23 +320,21 @@
 
                         <!-- Console Tier 2: 24° Optic Spot Reflector & Interactive High-Voltage Surge Ignition -->
                         <div
-                            class="flex w-full items-center justify-between gap-1.5 border-t border-slate-800/80 pt-1.5 sm:gap-2">
+                            class="flex w-full items-center justify-between gap-1.5 border-t border-zinc-200 pt-1.5 sm:gap-2 dark:border-zinc-800">
                             <!-- 24° Architectural Optic Badge -->
-                            <div class="xs:text-[10px] flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-700/60 bg-slate-800/90 px-2.5 py-1.5 font-mono text-[9.5px] font-bold text-amber-300 sm:text-[10.5px]"
+                            <div class="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded border border-zinc-300 bg-zinc-200/80 px-2.5 py-1.5 font-mono text-[9.5px] font-bold text-amber-700 sm:text-[10.5px] dark:border-zinc-700 dark:bg-zinc-800 dark:text-amber-300"
                                 title="Precision 24° Architectural Collimated Optic Spot Reflector • CRI 80">
-                                <svg class="h-3 w-3 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                                <svg class="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
                                 </svg>
                                 <span>24&deg; Optic Spot</span>
                             </div>
 
                             <!-- Interactive Surge / Pulse Animation Button -->
                             <button type="button" onclick="window.triggerLuminaireSurge()"
-                                class="flex flex-1 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-blue-500/30 bg-blue-500/15 px-2.5 py-1.5 text-[10.5px] font-semibold text-blue-300 transition-all hover:bg-blue-500/30 hover:text-white active:scale-95 sm:gap-1.5 sm:px-3 sm:text-xs"
+                                class="flex flex-1 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded border border-blue-600/30 bg-blue-600/10 px-2.5 py-1.5 text-[10.5px] font-semibold text-blue-700 transition-all hover:bg-blue-600/20 active:scale-95 sm:gap-1.5 sm:px-3 sm:text-xs dark:text-blue-300"
                                 title="Trigger High-Voltage Photonic Ignition Surge">
-                                <i data-lucide="zap" class="h-3 w-3 shrink-0 text-amber-400 sm:h-3.5 sm:w-3.5"></i>
+                                <svg class="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400 sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 <span>Surge</span>
                             </button>
                         </div>
@@ -674,12 +651,7 @@
     <!-- ==========================================================================
                  SECTION 4: SPECIAL CONTRACTOR DISCOUNT BANNER (Antixor Special Offer Banner)
                  ========================================================================== -->
-    <section class="relative overflow-hidden border-y border-slate-800 bg-[#080d1a] py-14 text-white">
-        <!-- Precision Grid Accent -->
-        <div class="pointer-events-none absolute inset-0 opacity-5"
-            style="background-image: linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px); background-size: 32px 32px;">
-        </div>
-
+    <section class="relative border-y border-zinc-800 bg-[#080d1a] py-14 text-white">
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col items-center justify-between gap-8 lg:flex-row">
                 <div class="space-y-3 text-center lg:text-left">
@@ -1270,11 +1242,7 @@
                  SECTION 11: FINAL CALL TO ACTION (Antixor High-Impact Closing Banner)
                  ========================================================================== -->
     <section
-        class="relative overflow-hidden bg-[#214fe0] py-16 text-center text-white dark:bg-gradient-to-r dark:from-[#152e80] dark:to-[#0d1d52]">
-        <div class="pointer-events-none absolute inset-0 opacity-10"
-            style="background: repeating-linear-gradient(45deg, #ffffff, #ffffff 3px, transparent 3px, transparent 15px);">
-        </div>
-
+        class="relative border-y border-blue-900/40 bg-[#163499] py-14 text-center text-white dark:border-zinc-800 dark:bg-[#0c1a4d]">
         <div class="relative z-10 mx-auto max-w-4xl space-y-6 px-4">
             <div
                 class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-100">

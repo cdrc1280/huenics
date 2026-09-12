@@ -41,9 +41,20 @@ class SubComponentsRelationManager extends RelationManager
                         Select::make('source_subcomponent_id')
                             ->label('Select Sub-Component (from Sub-Components Table)')
                             ->placeholder('Select sub-component from sub-components table...')
-                            ->options(function () {
+                            ->options(function (?RelationManager $livewire = null, ?ProductComponent $record = null) {
+                                $owner = $livewire?->getOwnerRecord();
+                                $existingNames = [];
+                                if ($owner) {
+                                    $existingQuery = $owner->components();
+                                    if ($record && $record->exists) {
+                                        $existingQuery->where('id', '!=', $record->id);
+                                    }
+                                    $existingNames = $existingQuery->pluck('component_name')->filter()->all();
+                                }
+
                                 $standalone = ProductComponent::query()
                                     ->whereNull('parent_product_id')
+                                    ->when(! empty($existingNames), fn ($q) => $q->whereNotIn('component_name', $existingNames))
                                     ->orderBy('component_name')
                                     ->get();
 
@@ -55,6 +66,7 @@ class SubComponentsRelationManager extends RelationManager
 
                                 return ProductComponent::query()
                                     ->whereNotNull('component_name')
+                                    ->when(! empty($existingNames), fn ($q) => $q->whereNotIn('component_name', $existingNames))
                                     ->orderBy('component_name')
                                     ->get()
                                     ->unique('component_name')
@@ -106,12 +118,39 @@ class SubComponentsRelationManager extends RelationManager
                             ->placeholder('e.g. LED Driver 12V 5A, E27 Aluminum Base, Citizen COB Chip')
                             ->required()
                             ->maxLength(255)
+                            ->unique(
+                                table: 'product_components',
+                                column: 'component_name',
+                                ignoreRecord: true,
+                                modifyRuleUsing: function ($rule, RelationManager $livewire) {
+                                    $parentId = $livewire->getOwnerRecord()?->getKey();
+
+                                    return $parentId ? $rule->where('parent_product_id', $parentId) : $rule;
+                                }
+                            )
+                            ->validationMessages([
+                                'unique' => 'This sub-component is already added to this product\'s BOM list.',
+                            ])
                             ->columnSpan(['default' => 3, 'lg' => 2]),
 
                         TextInput::make('product_code')
                             ->label('Component Code / Model #')
                             ->placeholder('e.g. DRV-12V-5A, BASE-E27-AL')
                             ->maxLength(100)
+                            ->nullable()
+                            ->unique(
+                                table: 'product_components',
+                                column: 'product_code',
+                                ignoreRecord: true,
+                                modifyRuleUsing: function ($rule, RelationManager $livewire) {
+                                    $parentId = $livewire->getOwnerRecord()?->getKey();
+
+                                    return $parentId ? $rule->where('parent_product_id', $parentId) : $rule;
+                                }
+                            )
+                            ->validationMessages([
+                                'unique' => 'A sub-component with this Code / Model # is already added to this product.',
+                            ])
                             ->columnSpan(['default' => 3, 'lg' => 1]),
                     ]),
 
